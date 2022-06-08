@@ -1,4 +1,9 @@
-[![Project generated with PyScaffold](https://img.shields.io/badge/-PyScaffold-005CA0?logo=pyscaffold)](https://pyscaffold.org/)
+[![Built Status](https://api.cirrus-ci.com/github/JoseAngelMartinB/robin.svg?branch=main)](https://cirrus-ci.com/github/JoseAngelMartinB/robin)
+[![ReadTheDocs](https://readthedocs.org/projects/robin/badge/?version=latest)](https://robin.readthedocs.io/en/stable/)
+[![Coveralls](https://img.shields.io/coveralls/github/JoseAngelMartinB/robin/main.svg)](https://coveralls.io/r/JoseAngelMartinB/robin)
+[![PyPI-Server](https://img.shields.io/pypi/v/robin.svg)](https://pypi.org/project/robin/)
+[![Conda-Forge](https://img.shields.io/conda/vn/conda-forge/robin.svg)](https://anaconda.org/conda-forge/robin)
+
 <!-- These are examples of badges you might also want to add to your README. Update the URLs accordingly.
 [![Built Status](https://api.cirrus-ci.com/github/<USER>/robin.svg?branch=main)](https://cirrus-ci.com/github/<USER>/robin)
 [![ReadTheDocs](https://readthedocs.org/projects/robin/badge/?version=latest)](https://robin.readthedocs.io/en/stable/)
@@ -7,13 +12,13 @@
 [![Conda-Forge](https://img.shields.io/conda/vn/conda-forge/robin.svg)](https://anaconda.org/conda-forge/robin)
 [![Monthly Downloads](https://pepy.tech/badge/robin/month)](https://pepy.tech/project/robin)
 [![Twitter](https://img.shields.io/twitter/url/http/shields.io.svg?style=social&label=Twitter)](https://twitter.com/robin)
+[![Project generated with PyScaffold](https://img.shields.io/badge/-PyScaffold-005CA0?logo=pyscaffold)](https://pyscaffold.org/)
 -->
 
-# robin
+![ROBIN (Rail mOBIlity simulatioN) logo](docs/_static/images/logo.png "ROBIN (Rail mOBIlity simulatioN)")
 
-> Add a short description here!
+ROBIN (Rail mOBIlity simulatioN)
 
-A longer description of your project goes here...
 
 ## Installation
 
@@ -42,13 +47,6 @@ Optional and needed only once after `git clone`:
    and checkout the configuration under `.pre-commit-config.yaml`.
    The `-n, --no-verify` flag of `git commit` can be used to deactivate pre-commit hooks temporarily.
 
-4. install [nbstripout] git hooks to remove the output cells of committed notebooks with:
-   ```bash
-   nbstripout --install --attributes notebooks/.gitattributes
-   ```
-   This is useful to avoid large diffs due to plots in your notebooks.
-   A simple `nbstripout --uninstall` will revert these changes.
-
 
 Then take a look into the `scripts` and `notebooks` folders.
 
@@ -59,7 +57,7 @@ Then take a look into the `scripts` and `notebooks` folders.
 2. Create concrete dependencies as `environment.lock.yml` for the exact reproduction of your
    environment with:
    ```bash
-   conda env export -n robin -f environment.lock.yml
+   conda env export -n robin -f environment.lock.yml --no-builds
    ```
    For multi-OS development, consider using `--no-builds` during the export.
 3. Update your current environment with respect to a new `environment.lock.yml` using:
@@ -76,11 +74,7 @@ Then take a look into the `scripts` and `notebooks` folders.
 ├── LICENSE.txt             <- License as chosen on the command-line.
 ├── README.md               <- The top-level README for developers.
 ├── configs                 <- Directory for configurations of model & application.
-├── data
-│   ├── external            <- Data from third party sources.
-│   ├── interim             <- Intermediate data that has been transformed.
-│   ├── processed           <- The final, canonical data sets for modeling.
-│   └── raw                 <- The original, immutable data dump.
+├── data                    <- Directtory for data files
 ├── docs                    <- Directory for Sphinx documentation in rst or md.
 ├── environment.yml         <- The conda environment file for reproducibility.
 ├── models                  <- Trained and serialized models, model predictions,
@@ -106,16 +100,14 @@ Then take a look into the `scripts` and `notebooks` folders.
 └── .pre-commit-config.yaml <- Configuration of pre-commit git hooks.
 ```
 
-<!-- pyscaffold-notes -->
+## Known Issues
+No known issues at this moment.
 
-## Note
 
-This project has been set up using [PyScaffold] 4.1.1 and the [dsproject extension] 0.7.2.
+## Support
+If you have any kind of problem with the program, please feel free to contact José Ángel Martin at JoseAngel.Martin@uclm.es and Ricardo García at Ricardo.Garcia@uclm.es
 
-[conda]: https://docs.conda.io/
-[pre-commit]: https://pre-commit.com/
-[Jupyter]: https://jupyter.org/
-[nbstripout]: https://github.com/kynan/nbstripout
-[Google style]: http://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings
-[PyScaffold]: https://pyscaffold.org/
-[dsproject extension]: https://github.com/pyscaffold/pyscaffoldext-dsproject
+
+## Authors
+
+This project is developed by the [MAT](https://blog.uclm.es/grupomat/) and [ORETO](https://www.uclm.es/Home/Misiones/Investigacion/OfertaCientificoTecnica/GruposInvestigacion/DetalleGrupo?idgrupo=75) research groups of the [Escuela Superior de Informática](https://esi.uclm.es) of the [University of Castilla-La Mancha (UCLM)](https://www.uclm.es).

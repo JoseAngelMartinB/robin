@@ -2,7 +2,7 @@ name: robin
 channels:
   - defaults
   - conda-forge
-  - pytorch
+  # - pytorch
   # - fastai
 dependencies:
   - python>=3.6
@@ -57,3 +57,10 @@ dependencies:
   - nbstripout
   - sphinx
   - recommonmark
+
+# To install the environment:
+# conda env create -f environment.yml
+
+# To update the environment:
+# conda activate robin
+# conda env update --file environment.yml --prune
