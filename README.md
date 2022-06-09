@@ -62,12 +62,14 @@ This project uses pre-commit, please make sure to install it before making any c
    pre-commit autoupdate
    ```
 
+For more information you can refer to the [contributing guide](CONTRIBUTING.rst).
+
+
 ### Project Organization
 ```
 ├── AUTHORS.md              <- List of developers and maintainers.
 ├── CHANGELOG.md            <- Changelog to keep track of new features and fixes.
 ├── CONTRIBUTING.md         <- Guidelines for contributing to this project.
-├── Dockerfile              <- Build a docker container with `docker build .`.
 ├── LICENSE.txt             <- License as chosen on the command-line.
 ├── README.md               <- The top-level README for developers.
 ├── configs                 <- Directory for configurations of model & application.

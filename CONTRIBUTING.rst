@@ -1,28 +1,3 @@
-.. todo:: THIS IS SUPPOSED TO BE AN EXAMPLE. MODIFY IT ACCORDING TO YOUR NEEDS!
-
-   The document assumes you are using a source repository service that promotes a
-   contribution model similar to `GitHub's fork and pull request workflow`_.
-   While this is true for the majority of services (like GitHub, GitLab,
-   BitBucket), it might not be the case for private repositories (e.g., when
-   using Gerrit).
-
-   Also notice that the code examples might refer to GitHub URLs or the text
-   might use GitHub specific terminology (e.g., *Pull Request* instead of *Merge
-   Request*).
-
-   Please make sure to check the document having these assumptions in mind
-   and update things accordingly.
-
-.. todo:: Provide the correct links/replacements at the bottom of the document.
-
-.. todo:: You might want to have a look on `PyScaffold's contributor's guide`_,
-
-   especially if your project is open source. The text should be very similar to
-   this template, but there are a few extra contents that you might decide to
-   also include, like mentioning labels of your issue tracker or automated
-   releases.
-
-
 ============
 Contributing
 ============
@@ -76,21 +51,19 @@ that any documentation update is done in the same way was a code contribution.
 
     e.g.,  reStructuredText_ or CommonMark_ with MyST_ extensions.
 
-.. todo:: If your project is hosted on GitHub, you can also mention the following tip:
 
-   .. tip::
-      Please notice that the `GitHub web interface`_ provides a quick way of
-      propose changes in ``robin``'s files. While this mechanism can
-      be tricky for normal code contributions, it works perfectly fine for
-      contributing to the docs, and can be quite handy.
+Please notice that the `GitHub web interface`_ provides a quick way of
+propose changes in ``robin``'s files. While this mechanism can
+be tricky for normal code contributions, it works perfectly fine for
+contributing to the docs, and can be quite handy.
 
-      If you are interested in trying this method out, please navigate to
-      the ``docs`` folder in the source repository_, find which file you
-      would like to propose changes and click in the little pencil icon at the
-      top, to open `GitHub's code editor`_. Once you finish editing the file,
-      please write a message in the form at the bottom of the page describing
-      which changes have you made and what are the motivations behind them and
-      submit your proposal.
+If you are interested in trying this method out, please navigate to
+the ``docs`` folder in the source repository_, find which file you
+would like to propose changes and click in the little pencil icon at the
+top, to open `GitHub's code editor`_. Once you finish editing the file,
+please write a message in the form at the bottom of the page describing
+which changes have you made and what are the motivations behind them and
+submit your proposal.
 
 When working on documentation changes in your local machine, you can
 compile them using |tox|_::
@@ -119,20 +92,6 @@ Before you work on any non-trivial code contribution it's best to first create
 a report in the `issue tracker`_ to start a discussion on the subject.
 This often provides additional considerations and avoids unnecessary work.
 
-Create an environment
----------------------
-
-Before you start coding, we recommend creating an isolated `virtual
-environment`_ to avoid any problems with your installed Python packages.
-This can easily be done via either |virtualenv|_::
-
-    virtualenv <PATH TO VENV>
-    source <PATH TO VENV>/bin/activate
-
-or Miniconda_::
-
-    conda create -n robin python=3 six virtualenv pytest pytest-cov
-    conda activate robin
 
 Clone the repository
 --------------------
@@ -142,21 +101,39 @@ Clone the repository
    page. This creates a copy of the code under your account on |the repository service|.
 #. Clone this copy to your local disk::
 
-    git clone git@github.com:YourLogin/robin.git
+    git clone git@github.com:JoseAngelMartinB/robin.git
     cd robin
 
-#. You should run::
 
-    pip install -U pip setuptools -e .
+Create an environment
+---------------------
 
-   to be able run ``putup --help``.
+Before you start coding, we recommend creating an isolated `virtual
+environment`_ to avoid any problems with your installed Python packages.
+This can easily be done via Miniconda_::
 
-   .. todo:: if you are not using pre-commit, please remove the following item:
+1. Create an environment `robin` with the help of [conda](https://anaconda.org):
+   ```
+   conda env create -f environment.yml
+   ```
+2. Activate the new environment with:
+   ```
+   conda activate robin
+   ```
 
-#. Install |pre-commit|_::
+> **_NOTE:_**  The conda environment will have the package `robin` installed in editable mode.
+> Some changes, e.g. in `setup.cfg`, might require you to run `pip install -e .` again.
 
-    pip install pre-commit
-    pre-commit install
+This project uses pre-commit, please make sure to install it before making any changes:
+
+3. install several [pre-commit] git hooks with:
+   ```bash
+   pre-commit install
+   ```
+   It is a good idea to update the hooks to the latest version:
+    ```bash
+   pre-commit autoupdate
+   ```
 
    ``robin`` comes with a lot of hooks configured to automatically help the
    developer to check the code being written.
@@ -181,8 +158,6 @@ Implement your changes
     git commit
 
    to record your changes in git_.
-
-   .. todo:: if you are not using pre-commit, please remove the following item:
 
    Please make sure to see the validation messages from |pre-commit|_ and fix
    any eventual issues.
@@ -314,8 +289,8 @@ on PyPI_, the following steps can be used to release a new version for
 .. |the repository service| replace:: GitHub
 .. |contribute button| replace:: "Create pull request"
 
-.. _repository: https://github.com/<USERNAME>/robin
-.. _issue tracker: https://github.com/<USERNAME>/robin/issues
+.. _repository: https://github.com/JoseAngelMartinB/robin
+.. _issue tracker: https://github.com/JoseAngelMartinB/robin/issues
 .. <-- end -->
 
 
