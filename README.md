@@ -1,10 +1,14 @@
+![](https://img.shields.io/pypi/pyversions/robin.svg)
 [![Built Status](https://api.cirrus-ci.com/github/JoseAngelMartinB/robin.svg?branch=main)](https://cirrus-ci.com/github/JoseAngelMartinB/robin)
 [![ReadTheDocs](https://readthedocs.org/projects/robin/badge/?version=latest)](https://robin.readthedocs.io/en/stable/)
 [![Coveralls](https://img.shields.io/coveralls/github/JoseAngelMartinB/robin/main.svg)](https://coveralls.io/r/JoseAngelMartinB/robin)
 [![PyPI-Server](https://img.shields.io/pypi/v/robin.svg)](https://pypi.org/project/robin/)
 [![Conda-Forge](https://img.shields.io/conda/vn/conda-forge/robin.svg)](https://anaconda.org/conda-forge/robin)
+![Licence](https://img.shields.io/badge/Licence-MIT-blue)
 
 <!-- These are examples of badges you might also want to add to your README. Update the URLs accordingly.
+[![Tests](https://github.com/JoseAngelMartinB/robin/actions/workflows/tests.yml/badge.svg)](https://github.com/JoseAngelMartinB/robin/actions/workflows/tests.yml)
+[![GitHub version](https://badge.fury.io/gh/JoseAngelMartinB%2Frobin.svg)](https://badge.fury.io/gh/JoseAngelMartinB%2Frobin)
 [![Built Status](https://api.cirrus-ci.com/github/<USER>/robin.svg?branch=main)](https://cirrus-ci.com/github/<USER>/robin)
 [![ReadTheDocs](https://readthedocs.org/projects/robin/badge/?version=latest)](https://robin.readthedocs.io/en/stable/)
 [![Coveralls](https://img.shields.io/coveralls/github/<USER>/robin/main.svg)](https://coveralls.io/r/<USER>/robin)
