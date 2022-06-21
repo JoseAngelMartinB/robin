@@ -128,7 +128,7 @@ idea to update it to load the latest packages from the `environment.yml`. Hence,
 executing stepts 1-2 you should execute the following command, note that `--prune` uninstalls 
 all the dependencies which were removed from the environment file::
 
-   conda activate myenv
+   conda activate robin
    conda env update --file environment.yml --prune
 
 This project uses pre-commit, please make sure to install it before making any changes:
