@@ -21,17 +21,17 @@ dependencies:
   # - altair
   # - yellowbrick
   # ML, STATS & DEEP LEARNING
-  # - statsmodels
-  # - scikit-learn
+  - scikit-learn
+  - statsmodels
   # - sktime
   # - tslearn
-  # - xgboost
+  - xgboost
   # - catboost
   # - lightgbm
   # - pytorch
   # - fastai  # activate fastai channel above!
-  # - tensorflow
-  # - keras
+  - tensorflow
+  - keras
   # - spacy
   # OTHER TOOLS
   # - optuna
