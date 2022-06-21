@@ -112,28 +112,36 @@ Before you start coding, we recommend creating an isolated `virtual
 environment`_ to avoid any problems with your installed Python packages.
 This can easily be done via Miniconda_::
 
-1. Create an environment `robin` with the help of [conda](https://anaconda.org):
-   ```
-   conda env create -f environment.yml
-   ```
-2. Activate the new environment with:
-   ```
-   conda activate robin
-   ```
+1. Create an environment `robin` with the help of [conda](https://anaconda.org)::
 
-> **_NOTE:_**  The conda environment will have the package `robin` installed in editable mode.
-> Some changes, e.g. in `setup.cfg`, might require you to run `pip install -e .` again.
+      conda env create -f environment.yml
+   
+2. Activate the new environment with::
+
+      conda activate robin
+
+**NOTE:**  The conda environment will have the package `robin` installed in editable mode.
+Some changes, e.g. in `setup.cfg`, might require you to run `pip install -e .` again.
+
+If you had already configured the `robin` virtual environment in the past, then it is a good 
+idea to update it to load the latest packages from the `environment.yml`. Hence, instead of
+executing stepts 1-2 you should execute the following command, note that `--prune` uninstalls 
+all the dependencies which were removed from the environment file::
+
+   conda activate myenv
+   conda env update --file environment.yml --prune
 
 This project uses pre-commit, please make sure to install it before making any changes:
 
-3. install several [pre-commit] git hooks with:
-   ```bash
-   pre-commit install
-   ```
-   It is a good idea to update the hooks to the latest version:
-    ```bash
-   pre-commit autoupdate
-   ```
+3. install several [pre-commit] git hooks with::
+   
+      bash
+      pre-commit install
+   
+   It is a good idea to update the hooks to the latest version::
+   
+      bash
+      pre-commit autoupdate
 
    ``robin`` comes with a lot of hooks configured to automatically help the
    developer to check the code being written.
@@ -143,7 +151,7 @@ Implement your changes
 
 #. Create a branch to hold your changes::
 
-    git checkout -b my-feature
+      git checkout -b my-feature
 
    and start making changes. Never work on the master branch!
 
@@ -154,8 +162,8 @@ Implement your changes
 
 #. When you’re done editing, do::
 
-    git add <MODIFIED FILES>
-    git commit
+      git add <MODIFIED FILES>
+      git commit
 
    to record your changes in git_.
 
