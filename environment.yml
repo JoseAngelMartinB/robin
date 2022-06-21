@@ -24,7 +24,7 @@ dependencies:
   - scikit-learn
   - statsmodels
   # - sktime
-  # - tslearn
+  # - tslearn cambio
   - xgboost
   # - catboost
   # - lightgbm
