@@ -1,3 +1,4 @@
+from typing import List
 class Station (object):
     def __init__(self,id:int,name:str,shortname:str):
         self.id=id
@@ -17,8 +18,8 @@ class TimeSlot (object):
     def __str__(self):
         return f'[{self.id},{self.classmark},{self.size}]'
     
-class Corridor (objet):
-    def __init__(self,id:int,liststation:list=[]):
+class Corridor (object):
+    def __init__(self,id:int,liststation:List[Station]=[]):
         self.id=id
         self.liststation=liststation
     def insertStation(self,station:Station):
