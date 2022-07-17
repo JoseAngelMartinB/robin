@@ -8,6 +8,7 @@ dependencies:
   - python>=3.6
   - pip
   # BASICS
+  - bs4
   - numpy
   - scipy
   - pandas
