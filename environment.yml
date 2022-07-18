@@ -53,7 +53,7 @@ dependencies:
   - pytest
   - pytest-cov
   - tox
-  - pre_commit
+  # - pre_commit
   - nbdime
   - nbstripout
   - sphinx
