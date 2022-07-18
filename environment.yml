@@ -9,6 +9,7 @@ dependencies:
   - pip
   # BASICS
   - bs4
+  - requests
   - numpy
   - scipy
   - pandas
