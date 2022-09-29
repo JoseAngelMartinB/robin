@@ -1,5 +1,7 @@
 # Contributors
 
+ROBIN is a Python package that has been developed in the framework of the project ["Analytics for Competitiveness and Seamless Mobility at Passenger and Freight Sustainable Transport - ACoSeM@SusTran"](https://acosemsustran.upc.edu).
+
 ## Main contributors
 
 * Ester del Castillo Herrera ([estercastilloherrera](https://github.com/estercastilloherrera))
