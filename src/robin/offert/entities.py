@@ -28,16 +28,16 @@ class Corridor (object):
         return f'[{self.id},{self.liststation}]'
     
 class Line (object):
-    def __init__(self, id:int, corr:Corridor, serviceType:Tuple=(), ltimetable:List[Tuple]=[]):
+    def __init__(self, id:int, corr:Corridor, serviceType:Tuple=(), timeTable:List[Tuple]=[]):
         self.id = id
         self.corr = corr
         #self.lstation = lstation
 
-        self.j = self.__getStops__(serviceType)  # j: Train stops
-        self.w = self.__getPairs__()  # w: Pairs origin-destination
+        self.J = self.__getStops__(serviceType)  # j: Train stops
+        self.W = self.__getPairs__()  # w: Pairs origin-destination
+        self.schedule = timeTable  # TBD - Get schedule - DEFAULT Left to Right
 
-        self.schedule = self.__getSchedule__()  # TBD - Get schedule - DEFAULT Left to Right
-        self.timetable=ltimetable # list of tuple (AT,DT)
+        # self.timetable=ltimetable # list of tuple (AT,DT)
 
     def __getStops__(self, lstation):
         """
@@ -53,17 +53,7 @@ class Line (object):
         Input: self
         Output: Returns a list of tuples with each pair of stations attended by the line instance
         """
-        return [(a, b) for i, a in enumerate(self.j) for b in self.j[i + 1:]]
-
-    # TODO: TBD
-    def __getSchedule__(self):
-        """
-        Input:
-            - self
-            - timetable
-        Output: Returns a list of tuple (AT, DT)
-        """
-        pass
+        return [(a, b) for i, a in enumerate(self.J) for b in self.J[i + 1:]]
         
     def insertStation(self,station:Station,AT:float,DT:float):
         self.lstation.append(station)
@@ -71,11 +61,6 @@ class Line (object):
 
     
 if __name__=='__main__':
-    #station1=Station(1,'station1','s1')
-    #station2=Station(2,'station2','s2')
-    #c=Corridor(1,[station1,station2])
-    #print(c)
-
     # Dummy definition - Stations in corridor MAD-BAR
     short_names = ("MAD", "GUA", "CAL", "ZAR", "LER", "TAR", "BAR")
     names = ("Madrid", "Guadalajara", "Calatayud", "Zaragoza", "Lerida", "Tarragona", "Barcelona")
@@ -111,34 +96,26 @@ if __name__=='__main__':
     # Time-table for services in corridor MAD-BAR
     # Type A: Way MAD --> BAR
     # Type B: Way MAD <-- BAR
-    time_table = {
-        "1A": ((0.0, 0.0), (15.6, 20.6), (58.6, 58.6), (79.3, 94.3), (127.0, 134.5), (153.5, 161.0), (185.1, 185.1)),
-        "2A": ((0.0, 0.0), (15.6, 15.6), (53.6, 58.6), (79.3, 94.3), (127.0, 134.5), (153.5, 161.0), (185.1, 185.1)),
-        "3A": ((0.0, 0.0), (15.6, 15.6), (53.6, 58.6), (79.3, 94.3), (127.0, 127.0), (146.0, 153.5), (177.6, 177.6)),
-        "4A": ((0.0, 0.0), (15.6, 15.6), (53.6, 53.6), (74.3, 89.3), (122.0, 122.0), (141.0, 141.0), (165.1, 165.1)),
-        "5A": ((0.0, 0.0), (15.6, 15.6), (53.6, 53.6), (74.3, 74.3), (107.0, 107.0), (126.0, 126.0), (150.1, 150.1)),
-        "6A": ((0.0, 0.0), (15.6, 15.6), (53.6, 53.6), (74.3, 89.3), (122.0, 122.0), (141.0, 148.5), (172.6, 172.6)),
-        "1B": ((185.1, 185.1), (164.5, 169.5), (126.5, 126.5), (90.8, 105.8), (50.6, 58.1), (24.1, 31.6), (0.0, 0.0)),
-        "2B": ((185.1, 185.1), (169.5, 169.5), (126.5, 131.5), (90.8, 105.8), (50.6, 58.1), (24.1, 31.6), (0.0, 0.0)),
-        "3B": ((177.6, 177.6), (162.0, 162.0), (119.0, 124.0), (83.3, 98.3), (50.6, 50.6), (24.1, 31.6), (0.0, 0.0)),
-        "4B": ((165.1, 165.1), (149.5, 149.5), (111.5, 111.5), (75.8, 90.8), (43.1, 43.1), (24.1, 24.1), (0.0, 0.0)),
-        "5B": ((150.1, 150.1), (134.5, 134.5), (96.5, 96.5), (75.8, 75.8), (43.1, 43.1), (24.1, 24.1), (0.0, 0.0)),
-        "6B": ((172.6, 172.6), (157.0, 157.0), (119.0, 119.0), (83.3, 98.3), (50.6, 50.6), (24.1, 31.6), (0.0, 0.0))}
+    time_table = {1: ((0.0, 0.0), (15.6, 20.6), (58.6, 58.6), (79.3, 94.3), (127.0, 134.5), (153.5, 161.0), (185.1, 185.1)),
+                  2: ((0.0, 0.0), (15.6, 15.6), (53.6, 58.6), (79.3, 94.3), (127.0, 134.5), (153.5, 161.0), (185.1, 185.1)),
+                  3: ((0.0, 0.0), (15.6, 15.6), (53.6, 58.6), (79.3, 94.3), (127.0, 127.0), (146.0, 153.5), (177.6, 177.6)),
+                  4: ((0.0, 0.0), (15.6, 15.6), (53.6, 53.6), (74.3, 89.3), (122.0, 122.0), (141.0, 141.0), (165.1, 165.1)),
+                  5: ((0.0, 0.0), (15.6, 15.6), (53.6, 53.6), (74.3, 74.3), (107.0, 107.0), (126.0, 126.0), (150.1, 150.1)),
+                  6: ((0.0, 0.0), (15.6, 15.6), (53.6, 53.6), (74.3, 89.3), (122.0, 122.0), (141.0, 148.5), (172.6, 172.6))}
 
-    # TODO: Define if schedule in allways independent of the travel-way
-    #timetable_line = [v for k, v in time_table.items() if str(line_type) in k]
-    timetable_line = []
-
-    lineMB = Line(1, corridorMB, services[service_type], timetable_line)
+    # TODO: Schedule is NOT always independent of the travel-way
+    lineMB = Line(1, corridorMB, services[service_type], time_table[service_type])
 
     print("Train stops 'j' in Line Madrid-Barcelona - Service type: ", service_type)
 
-    for j in lineMB.j:
-        print(j.__str__())
+    for j, schedule in zip(lineMB.J, lineMB.schedule):
+        AT = schedule[0]
+        DT = schedule[1]
+        print(j.__str__(), "- AT: ", AT, "DT: ", DT)
     print()
 
     print("Pairs of stations 'w' in Line Madrid-Barcelona - Service type: ", service_type)
 
-    for w in lineMB.w:
-        print(w[0].__str__(), w[1].__str__())
+    for i, w in enumerate(lineMB.W):
+        print("Origin: ", w[0].__str__(), " - Destination: ", w[1].__str__())
     print()
