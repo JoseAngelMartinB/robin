@@ -1,4 +1,6 @@
 from typing import List, Tuple
+
+
 class Station (object):
     def __init__(self,id:int,name:str,shortname:str):
         self.id=id
@@ -17,7 +19,8 @@ class TimeSlot (object):
         
     def __str__(self):
         return f'[{self.id},{self.classmark},{self.size}]'
-    
+
+
 class Corridor (object):
     def __init__(self,id:int,liststation:List[Station]=[]):
         self.id=id
@@ -26,7 +29,8 @@ class Corridor (object):
         self.liststation.append(station)
     def __str__(self):
         return f'[{self.id},{self.liststation}]'
-    
+
+
 class Line (object):
     def __init__(self, id:int, corr:Corridor, serviceType:Tuple=(), timeTable:List[Tuple]=[]):
         self.id = id
@@ -57,9 +61,39 @@ class Line (object):
         
     def insertStation(self,station:Station,AT:float,DT:float):
         self.lstation.append(station)
-        self.timetable.append((AT,DT))
+        self.timetable.append((AT,DT)) # TODO: (AT,DT) dependent on travel way --> Not a single (AT, DT) tuple?
 
-    
+
+# TODO
+class Seat(object):
+    # (id, hard, soft)
+    pass
+
+
+# TODO:
+class RollingStock(object):
+    # (id, TSP, hard_seats, train_capacity)
+    pass
+
+
+# TODO:
+class TSP(object):
+    # (id, name, short name)
+    pass
+
+
+# TODO:
+class Service(object):
+    # (id, date, line, time_slot, seat_type, schedule, price, type_capacity, TSP_capacity, rolling_stock)
+    pass
+
+
+# TODO:
+class Supply(object):
+    # (id, date, w(o, d), seat_offer, schedule, price on time t)
+    pass
+
+
 if __name__=='__main__':
     # Dummy definition - Stations in corridor MAD-BAR
     short_names = ("MAD", "GUA", "CAL", "ZAR", "LER", "TAR", "BAR")
@@ -111,7 +145,7 @@ if __name__=='__main__':
     for j, schedule in zip(lineMB.J, lineMB.schedule):
         AT = schedule[0]
         DT = schedule[1]
-        print(j.__str__(), "- AT: ", AT, "DT: ", DT)
+        print(j.__str__(), "- AT: ", AT, " - DT: ", DT)
     print()
 
     print("Pairs of stations 'w' in Line Madrid-Barcelona - Service type: ", service_type)
