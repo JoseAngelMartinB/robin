@@ -31,8 +31,6 @@ class Corridor (object):
         return f'[{self.id},{self.liststation}]'
 
 
-
-
 class Line (object):
     def __init__(self, id:int, corr:Corridor, serviceType:Tuple=(), timeTable:List[Tuple]=[]):
         self.id = id
@@ -102,6 +100,7 @@ class RollingStock(object):
     def __str__(self):
         return f'[{self.id},{self.name},{self.shortname}]'
 
+
 # TODO:
 class Service(object):
     # (id, date, line, time_slot, seat_type, time_table, price, type_capacity, TSP_capacity, rolling_stock)
@@ -116,9 +115,6 @@ class Service(object):
         self.typeCapacity = None
         self.tspCapacity = None
         self.rollingStock = None
-
-    def __str__(self):
-        return f'[{self.id},{self.name},{self.shortname}]'
 
 
 # TODO:
@@ -167,7 +163,6 @@ if __name__=='__main__':
     # Select service tye
     service_type = "1A" # MAD --> Bar
 
-
     # Time-table for services in corridor MAD-BAR
     # Type A: Way MAD --> BAR
     # Type B: Way MAD <-- BAR
@@ -203,18 +198,17 @@ if __name__=='__main__':
                           range(len(time_table[ka]) - 1)]
 
             # Get schedule for reverse travel way
-            schedule = [(round(sum(travelTime[i + 1:]) + sum(stopTime[i + 1:]), 1),
-                         round(sum(travelTime[i + 1:]) + sum(stopTime[i:]), 1))
+            schedule = [(round(sum(travelTime[i + 1:]) + sum(stopTime[i + 1:]) + 0.0, 1),
+                         round(sum(travelTime[i + 1:]) + sum(stopTime[i:]) + 0.0, 1))
                          for i in range(len(travelTime))]
 
-            time_table[kb] = schedule
+            time_table[kb] = tuple(schedule)
 
-    print("Time Table")
+    print("Time Table - Corridor MAD-BAR")
     for item in time_table.items():
         print(item)
     print()
 
-    # TODO: Schedule is NOT always independent on the travel-way
     lineMB = Line(1, corridorMB, services[int(service_type[0])], time_table[service_type])
 
     print("Train stops 'j' in Line Madrid-Barcelona - Service type: ", service_type)
