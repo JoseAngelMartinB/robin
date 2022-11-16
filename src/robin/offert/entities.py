@@ -31,6 +31,8 @@ class Corridor (object):
         return f'[{self.id},{self.liststation}]'
 
 
+
+
 class Line (object):
     def __init__(self, id:int, corr:Corridor, serviceType:Tuple=(), timeTable:List[Tuple]=[]):
         self.id = id
@@ -67,31 +69,69 @@ class Line (object):
 # TODO
 class Seat(object):
     # (id, hard, soft)
-    pass
+    def __init__(self, id:int, s1:Tuple=(), s2:Tuple=()):
+        # s1: hard limit. Linked to capacity constrains (e.g. tickets avaiable)
+        # s2: soft limit. (e.g. luggage availability)
+        self.id = id
+        self.s1 = s1
+        self.s3 = s2
 
-
-# TODO:
-class RollingStock(object):
-    # (id, TSP, hard_seats, train_capacity)
-    pass
+    def __str__(self):
+        return f'[{self.id}, {self.s1}, {self.s2}]'
 
 
 # TODO:
 class TSP(object):
-    # (id, name, short name)
-    pass
+    def __init__(self, id: int, name: str, shortname: str):
+        self.id = id
+        self.name = name
+        self.shortname = shortname
+
+    def __str__(self):
+        return f'[{self.id},{self.name},{self.shortname}]'
 
 
 # TODO:
+class RollingStock(object):
+    def __init__(self, id: int, tsp:TSP, S1:None, Kmax:None):
+        self.id = id
+        self.tsp = tsp
+        self.S1 = None
+        self.Kmax = None
+
+    def __str__(self):
+        return f'[{self.id},{self.name},{self.shortname}]'
+
+# TODO:
 class Service(object):
-    # (id, date, line, time_slot, seat_type, schedule, price, type_capacity, TSP_capacity, rolling_stock)
-    pass
+    # (id, date, line, time_slot, seat_type, time_table, price, type_capacity, TSP_capacity, rolling_stock)
+    def __init__(self, id: int, date:None, line:Line):
+        self.id = id
+        self.date = None
+        self.line = None
+        self.timeSlot = None
+        self.seatType = None
+        self.timeTable = None
+        self.price = None
+        self.typeCapacity = None
+        self.tspCapacity = None
+        self.rollingStock = None
+
+    def __str__(self):
+        return f'[{self.id},{self.name},{self.shortname}]'
 
 
 # TODO:
 class Supply(object):
     # (id, date, w(o, d), seat_offer, schedule, price on time t)
-    pass
+    def __init__(self, id: int, date: None, line: Line):
+        self.id = id
+        self.date = None
+        self.w = None
+        self.seats = None
+        self.seatType = None
+        self.timeTable = None
+        self.price = None
 
 
 if __name__=='__main__':
@@ -125,20 +165,57 @@ if __name__=='__main__':
                 6: (1, 0, 0, 1, 0, 1, 1)}
 
     # Select service tye
-    service_type = 1
+    service_type = "1A" # MAD --> Bar
+
 
     # Time-table for services in corridor MAD-BAR
     # Type A: Way MAD --> BAR
     # Type B: Way MAD <-- BAR
-    time_table = {1: ((0.0, 0.0), (15.6, 20.6), (58.6, 58.6), (79.3, 94.3), (127.0, 134.5), (153.5, 161.0), (185.1, 185.1)),
-                  2: ((0.0, 0.0), (15.6, 15.6), (53.6, 58.6), (79.3, 94.3), (127.0, 134.5), (153.5, 161.0), (185.1, 185.1)),
-                  3: ((0.0, 0.0), (15.6, 15.6), (53.6, 58.6), (79.3, 94.3), (127.0, 127.0), (146.0, 153.5), (177.6, 177.6)),
-                  4: ((0.0, 0.0), (15.6, 15.6), (53.6, 53.6), (74.3, 89.3), (122.0, 122.0), (141.0, 141.0), (165.1, 165.1)),
-                  5: ((0.0, 0.0), (15.6, 15.6), (53.6, 53.6), (74.3, 74.3), (107.0, 107.0), (126.0, 126.0), (150.1, 150.1)),
-                  6: ((0.0, 0.0), (15.6, 15.6), (53.6, 53.6), (74.3, 89.3), (122.0, 122.0), (141.0, 148.5), (172.6, 172.6))}
+    time_table = {
+        1: ((0.0, 0.0), (15.6, 20.6), (58.6, 58.6), (79.3, 94.3), (127.0, 134.5), (153.5, 161.0), (185.1, 185.1)),
+        2: ((0.0, 0.0), (15.6, 15.6), (53.6, 58.6), (79.3, 94.3), (127.0, 134.5), (153.5, 161.0), (185.1, 185.1)),
+        3: ((0.0, 0.0), (15.6, 15.6), (53.6, 58.6), (79.3, 94.3), (127.0, 127.0), (146.0, 153.5), (177.6, 177.6)),
+        4: ((0.0, 0.0), (15.6, 15.6), (53.6, 53.6), (74.3, 89.3), (122.0, 122.0), (141.0, 141.0), (165.1, 165.1)),
+        5: ((0.0, 0.0), (15.6, 15.6), (53.6, 53.6), (74.3, 74.3), (107.0, 107.0), (126.0, 126.0), (150.1, 150.1)),
+        6: ((0.0, 0.0), (15.6, 15.6), (53.6, 53.6), (74.3, 89.3), (122.0, 122.0), (141.0, 148.5), (172.6, 172.6))}
 
-    # TODO: Schedule is NOT always independent of the travel-way
-    lineMB = Line(1, corridorMB, services[service_type], time_table[service_type])
+    # Boolean: Time table independent of travel way?
+    scheduleIndTW = True
+    # If not independent --> New stop and travel times must be specified!
+
+    if scheduleIndTW:
+        for k in list(time_table.keys())[:]:
+            # Key name - Default travel way (List order)
+            ka = str(k) + "A"
+
+            # Key name - Reverse travel way (Reverse list order)
+            kb = str(k) + "B"
+
+            # Rename dict entry for key "n" with name "nA"
+            time_table[ka] = time_table.pop(k)
+
+            # Get stop time for each station
+            stopTime = [abs(x[0] - x[1]) for x in time_table[ka]]
+
+            # Get travel time between stations
+            # Insert travel time for 1st station - [0.0]
+            travelTime = [0.0] + [abs(time_table[ka][i + 1][0] - time_table[ka][i][1]) for i in
+                          range(len(time_table[ka]) - 1)]
+
+            # Get schedule for reverse travel way
+            schedule = [(round(sum(travelTime[i + 1:]) + sum(stopTime[i + 1:]), 1),
+                         round(sum(travelTime[i + 1:]) + sum(stopTime[i:]), 1))
+                         for i in range(len(travelTime))]
+
+            time_table[kb] = schedule
+
+    print("Time Table")
+    for item in time_table.items():
+        print(item)
+    print()
+
+    # TODO: Schedule is NOT always independent on the travel-way
+    lineMB = Line(1, corridorMB, services[int(service_type[0])], time_table[service_type])
 
     print("Train stops 'j' in Line Madrid-Barcelona - Service type: ", service_type)
 
