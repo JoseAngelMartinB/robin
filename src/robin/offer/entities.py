@@ -37,13 +37,13 @@ class Line(object):
         self.corr = corr
         #self.lstation = lstation
 
-        self.J = self.__getStops(serviceType)  # j: Train stops
-        self.W = self.__getPairs()  # w: Pairs origin-destination
+        self.J = self.__getstops(serviceType)  # j: Train stops
+        self.W = self.__getpairs()  # w: Pairs origin-destination
         self.schedule = timeTable  # TBD - Get schedule - DEFAULT Left to Right
 
         # self.timetable=ltimetable # list of tuple (AT,DT)
 
-    def __getStops(self, serviceType):
+    def __getstops(self, serviceType):
         """
         Private method to get the stops of the line
 
@@ -54,7 +54,7 @@ class Line(object):
         """
         return [s for i, s in zip(serviceType, self.corr.liststation) if i]
 
-    def __getPairs(self):
+    def __getpairs(self):
         """
         Private method to get each pair of stations of the line
 
