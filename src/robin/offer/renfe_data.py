@@ -1,3 +1,5 @@
+import pickle
+
 from getRenfeData import *
 from entities import *
 from tqdm import tqdm # Progress Bar
@@ -44,14 +46,23 @@ set_trip_ids = tuple(set(df['trip_id'].values))
 # Dict of routes
 # Key: trip_id
 # Value: sorted tuple of stop_id's in trip
-routes = {}
 
-for tid in tqdm(set_trip_ids):
-    df_lock = df.loc[df['trip_id'] == tid]
-    routes[tid] = tuple(df_lock['stop_id'].values)
+# Try to load dict from file
+try:
+    with open('renfe_data/routesDict.pkl', 'rb') as f:
+        routesDict = pickle.load(f)
+except FileNotFoundError:
+    # If file not found, create dict
+    routesDict = {}
+    for trip_id in tqdm(set_trip_ids):
+        routesDict[trip_id] = tuple(df[df['trip_id'] == trip_id]['stop_id'].values)
+
+    # Save dict to file
+    with open('renfe_data/routesDict.pkl', 'wb') as f:
+        pickle.dump(routesDict, f)
 
 # Find longest route
-longest_trip = max(routes.values(), key=lambda v: len(v))
+trip_id, longest_trip = max(routesDict.items(), key=lambda v: len(v[1]))
 
 # Get coordinates of each station in the longest trip
 stopsCoords = [stopsDict[s][1] for s in longest_trip]
@@ -60,7 +71,25 @@ stopsCoords.append(stopsDict[longest_trip[-1]][1])
 # Plot longest Route
 plot_route(stopsCoords)
 
+# Get arrival and departure times for each station in the longest trip
+df = renfe_schedules['stop_times']
 
+times = []
+# Get trip_id of the longest route
+
+for s in longest_trip:
+    times.append(tuple(df.loc[(df['trip_id'] == trip_id) & (df['stop_id'] == s)][['arrival_time', 'departure_time']].values[0]))
+print(times)
+
+
+def parse_time(time):
+    """Parse time string to datetime object"""
+    return datetime.datetime.strptime(time, '%H:%M:%S').time()
+
+
+# Parse times to datetime objects
+times = [[parse_time(t[0]), parse_time(t[1])] for t in times]
+print(times)
 
 
 
