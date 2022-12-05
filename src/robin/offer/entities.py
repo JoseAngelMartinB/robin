@@ -2,13 +2,14 @@ from typing import List, Tuple
 
 
 class Station(object):
-    def __init__(self, id:int, name:str, shortname:str):
+    def __init__(self, id:int, name : str, shortname : str, coords : Tuple[float, float]=None):
         self.id=id
         self.name=name
         self.shortname=shortname
+        self.coords=coords
     
     def __str__(self):
-        return f'[{self.id},{self.name},{self.shortname}]'
+        return f'[{self.id},{self.name},{self.shortname},{self.coords}]'
     
     
 class TimeSlot(object):
