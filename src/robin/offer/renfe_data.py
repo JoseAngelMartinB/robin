@@ -1,8 +1,5 @@
-import pickle
-
 from getRenfeData import *
 from entities import *
-from tqdm import tqdm  # Progress Bar
 
 savepath = 'renfe_data/'
 url = 'https://ssl.renfe.com/gtransit/Fichero_AV_LD/google_transit.zip'
@@ -40,34 +37,20 @@ stations = {int(s): Station(int(s), stopsDict[s][0], str(str(s)[:3].upper()), st
 # Get stop_times dataset
 df = renfe_schedules['stop_times']
 
-# Get set of trip_id's
-set_trip_ids = tuple(set(df['trip_id'].values))
+# Group dataframe by trip_id
+grouped_df = df.groupby('trip_id')
 
-# Dict of routes
-# Key: trip_id
-# Value: sorted tuple of stop_id's in trip
-
-# Try to load dict from file
-try:
-    with open('renfe_data/routesDict.pkl', 'rb') as f:
-        routesDict = pickle.load(f)
-except FileNotFoundError:
-    # If file not found, create dict
-    routesDict = {}
-    for trip_id in tqdm(set_trip_ids):
-        routesDict[trip_id] = tuple(df[df['trip_id'] == trip_id]['stop_id'].values)
-
-    # Save dict to file
-    with open('renfe_data/routesDict.pkl', 'wb') as f:
-        pickle.dump(routesDict, f)
+# Dictionary keys: trip_id, value: list of stop_ids
+routesSeries = grouped_df.apply(lambda g: tuple(g['stop_id']))
 
 stopTimes = renfe_schedules['stop_times']
 
 # org_id = 17000
 # des_id = 79400
-# get_trip(org_id, des_id, stopsDict, routesDict, df, stations, False)
+# Filter routesSeries that start at org_id and end at des_id
+# get_trip(org_id, dest_id, stopsDict, routesSeries, df, stations, False)
 
 org_id = 60000  # Madrid-Puerta de Atocha
 des_id = 71801  # Barcelona-Sants
-get_trip(org_id, des_id, stopsDict, routesDict, stopTimes, stations, False)
+get_trip(org_id, des_id, stopsDict, routesSeries, stopTimes, stations, False)
 

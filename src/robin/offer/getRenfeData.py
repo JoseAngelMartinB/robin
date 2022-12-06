@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
 from entities import *
 import pandas as pd
+import numpy as np
 import geopandas
 import requests
 import datetime
@@ -90,7 +91,11 @@ def plot_route(stops_coords):
 
     ax.add_geometries([poly], crs=ccrs.PlateCarree(), facecolor='none', edgecolor='0.5')
 
-    x, y = zip(*stops_coords)
+    # Unpack x and y coordinates from trip_coords array
+    x, y = tuple(stops_coords[0]), tuple(stops_coords[1])
+
+    stops_coords = tuple(zip(x, y))
+
     ax.scatter(x, y)
 
     for i, _ in enumerate(range(len(stops_coords) - 1)):
@@ -110,12 +115,12 @@ def plot_route(stops_coords):
     plt.show()
 
 
-def parse_time(time):
+def parse_time(times):
     """
     Parse time string to datetime object
     time: time string
     """
-    return datetime.datetime.strptime(time, '%H:%M:%S').time()
+    return tuple(map(lambda t: datetime.datetime.strptime(t, '%H:%M:%S').time(), times))
 
 
 def get_trip(org_id, dest_id, stops_dict, routes_dict, stop_times, stations, shortest=True):
@@ -131,38 +136,48 @@ def get_trip(org_id, dest_id, stops_dict, routes_dict, stop_times, stations, sho
     :return: None
     """
     # Search routes from org_id to dest_id
-    routes = {}
-    for tid, route in routes_dict.items():
-        if route[0] == org_id and route[-1] == dest_id:
-            routes[tid] = route
+    routes = routes_dict[routes_dict.apply(lambda r: r[0] == org_id and r[-1] == dest_id)]
 
-    # Get the shortest trip
+    # Apply function to each group and save results in new series
+    num_stops_series = routes.apply(lambda r: len(r))
+
     if shortest:
-        trip_id, trip = min(routes.items(), key=lambda v: len(v[1]))
+        # Get the trip_id of the shortest route
+        trip_id = num_stops_series.idxmin()
     else:
-        trip_id, trip = max(routes.items(), key=lambda v: len(v[1]))
+        # Get the trip_id of the fastest route
+        trip_id = num_stops_series.idxmax()
 
-    # Get coordinates of each station in trip
-    stops_coords = [stops_dict[s][1] for s in trip]
+    # Get the stops in the trip
+    trip_stops = stop_times[stop_times['trip_id'] == trip_id]['stop_id'].unique()
+
+    # Get the coordinates of each station in the trip
+    # Create function to get coordinates of a station
+    def get_coords(stop_id):
+        return stops_dict[stop_id][1]
+
+    # Create vectorized function that can be applied to numpy array
+    get_coords_vec = np.vectorize(get_coords)
+
+    # Apply vectorized function to trip_stops array and save result in new array
+    stops_coords = get_coords_vec(trip_stops)
 
     # Plot route
     plot_route(stops_coords)
 
     # Get arrival and departure times for each station
-    times = []
+    def get_times(stop_id, trip_id):
+        df_loc = stop_times.query('trip_id == @trip_id and stop_id == @stop_id')
+        return df_loc[['arrival_time', 'departure_time']].values[0]
 
-    for s in trip:
-        df_loc = stop_times.loc[(stop_times['trip_id'] == trip_id) & (stop_times['stop_id'] == s)]
-        times.append(tuple(df_loc[['arrival_time', 'departure_time']].values[0]))
-
-    print("Times: ", times)
-    print("Length Times: ", len(times))
+    times = stop_times[stop_times['trip_id'] == trip_id]['stop_id'].apply(get_times, args=(trip_id,))
+    print(times)
 
     # Parse times to datetime objects
-    times = [tuple([parse_time(t[0]), parse_time(t[1])]) for t in times]
+    times = times.apply(parse_time)
 
     # Define corridor of stations
-    new_corr = Corridor(1, trip)
+    new_corr = Corridor(1, trip_stops)
 
     new_service = []
     for i, t in enumerate(times):
