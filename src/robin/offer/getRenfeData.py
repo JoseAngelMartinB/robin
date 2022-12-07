@@ -3,7 +3,6 @@ import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
 from entities import *
 import pandas as pd
-import numpy as np
 import geopandas
 import requests
 import datetime
@@ -27,10 +26,10 @@ def download_data(url, path):
     filename = url.split('/')[-1]
 
     if not os.path.exists(path):
-       os.makedirs(path)
+        os.makedirs(path)
 
     try:
-        file_handle = os.open(path+filename, flags)
+        file_handle = os.open(path + filename, flags)
     except OSError as e:
         if e.errno == errno.EEXIST:  # Failed as the file already exists.
             print('File already exists!')
@@ -38,11 +37,11 @@ def download_data(url, path):
             raise
     else:  # No exception, so the file must have been created successfully.
         # Writing the file to the local file system
-        with open(path+filename, 'wb') as output_file:
+        with open(path + filename, 'wb') as output_file:
             output_file.write(req.content)
 
         # Unzip
-        shutil.unpack_archive(path+filename, path)
+        shutil.unpack_archive(path + filename, path)
 
         print('File downloaded successfully!')
 
@@ -92,14 +91,12 @@ def plot_route(stops_coords):
     ax.add_geometries([poly], crs=ccrs.PlateCarree(), facecolor='none', edgecolor='0.5')
 
     # Unpack x and y coordinates from trip_coords array
-    x, y = tuple(stops_coords[0]), tuple(stops_coords[1])
-
-    stops_coords = tuple(zip(x, y))
+    x, y = zip(*stops_coords)
 
     ax.scatter(x, y)
 
     for i, _ in enumerate(range(len(stops_coords) - 1)):
-        ax.annotate(text='', xy=stops_coords[i + 1], xytext=stops_coords[i], arrowprops=dict(arrowstyle='->'))
+        ax.annotate(text='', xy=stops_coords.iloc[i + 1], xytext=stops_coords.iloc[i], arrowprops=dict(arrowstyle='->'))
 
     bounds = poly.bounds  # minx, miny, max_x, max_y
     # (-18.167225714999915, 27.642238674000055, 4.337087436000047, 43.79344310100004)
@@ -123,20 +120,24 @@ def parse_time(times):
     return tuple(map(lambda t: datetime.datetime.strptime(t, '%H:%M:%S').time(), times))
 
 
-def get_trip(org_id, dest_id, stops_dict, routes_dict, stop_times, stations, shortest=True):
+def get_trip(org_id, dest_id, stop_times, stations, shortest=True):
     """
     Get trip from origin to destination
     :param org_id: id of origin station
     :param dest_id: id of destination station
-    :param stops_dict: dictionary of stops
-    :param routes_dict: dictionary of routes
     :param stop_times: dataframe of stop times
-    :param stations: dictionary of Station objects
+    :param stations: dataframe with stops information
     :param shortest: boolean to indicate if shortest or fastest trip is desired
     :return: None
     """
+    # Group dataframe by trip_id
+    grouped_df = stop_times.groupby('trip_id')
+
+    # Dictionary keys: trip_id, value: list of stop_ids
+    routes_series = grouped_df.apply(lambda g: tuple(g['stop_id']))
+
     # Search routes from org_id to dest_id
-    routes = routes_dict[routes_dict.apply(lambda r: r[0] == org_id and r[-1] == dest_id)]
+    routes = routes_series[routes_series.apply(lambda r: r[0] == org_id and r[-1] == dest_id)]
 
     # Apply function to each group and save results in new series
     num_stops_series = routes.apply(lambda r: len(r))
@@ -151,16 +152,17 @@ def get_trip(org_id, dest_id, stops_dict, routes_dict, stop_times, stations, sho
     # Get the stops in the trip
     trip_stops = stop_times[stop_times['trip_id'] == trip_id]['stop_id'].unique()
 
-    # Get the coordinates of each station in the trip
-    # Create function to get coordinates of a station
-    def get_coords(stop_id):
-        return stops_dict[stop_id][1]
+    def get_station(stop_id):
+        df_loc = stations.query('stop_id == @stop_id')
+        name, lon, lat = df_loc[['stop_name', 'stop_lon', 'stop_lat']].values[0]
+        short_name = name[:3]
+        return Station(stop_id, name, short_name, (lon, lat))
 
-    # Create vectorized function that can be applied to numpy array
-    get_coords_vec = np.vectorize(get_coords)
+    # Get the stations in the trip as Station objects
+    stations = stop_times[stop_times['trip_id'] == trip_id]['stop_id'].apply(get_station)
 
-    # Apply vectorized function to trip_stops array and save result in new array
-    stops_coords = get_coords_vec(trip_stops)
+    # Get the coordinates of the stops in the trip from stations
+    stops_coords = stations.apply(lambda s: s.coords)
 
     # Plot route
     plot_route(stops_coords)
@@ -171,13 +173,12 @@ def get_trip(org_id, dest_id, stops_dict, routes_dict, stop_times, stations, sho
         return df_loc[['arrival_time', 'departure_time']].values[0]
 
     times = stop_times[stop_times['trip_id'] == trip_id]['stop_id'].apply(get_times, args=(trip_id,))
-    print(times)
 
     # Parse times to datetime objects
     times = times.apply(parse_time)
 
     # Define corridor of stations
-    new_corr = Corridor(1, trip_stops)
+    new_corr = Corridor(1, stations)
 
     new_service = []
     for i, t in enumerate(times):
@@ -198,4 +199,4 @@ def get_trip(org_id, dest_id, stops_dict, routes_dict, stop_times, stations, sho
     for j, schedule in zip(new_line.J, stop_times):
         at = schedule[0]
         dt = schedule[1]
-        print(stations[j].name, j, "- AT: ", at, " - DT: ", dt)
+        print(j.name, j.id, "- AT: ", at, " - DT: ", dt)
