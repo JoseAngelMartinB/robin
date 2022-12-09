@@ -2,20 +2,24 @@ from bs4 import BeautifulSoup
 from get_renfe_data import *
 import pandas as pd
 import requests
-import json
 
+# Renfe search menu
+url = "https://www.renfe.com/content/renfe/es/es/viajar/informacion-util/horarios/app-horarios.html"
 
-stations = json.load(open('renfe_data/renfe.json'))['stations']
-dstations = {e['station']: e['id'] for e in stations}
+req = requests.get(url)
+soup = BeautifulSoup(req.text, 'html.parser')
 
+stations = get_stations(soup)
+
+print(stations)
 
 origin = 'Madrid (TODAS)'
 destination = 'Barcelona (TODAS)'
 
+origin_id = stations[origin]
+destination_id = stations[destination]
 
-origin_id = dstations[origin]
-destination_id = dstations[destination]
-
+# Renfe schedules
 url = f'https://horarios.renfe.com/HIRRenfeWeb/buscar.do?O={origin_id}&D={destination_id}&AF=2022&MF=MM&DF=DD&SF=NaN&ID=s'
 print(url)
 
@@ -39,5 +43,4 @@ df['Llegada'] = df['Llegada'].apply(lambda x: datetime.datetime.strptime(str(dat
 df['Duración'] = df['Llegada'] - df['Salida']
 df['Precio desde*'] = prices
 
-print(df.iloc[0])
-
+print(df.iloc[-1])

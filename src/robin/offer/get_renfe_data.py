@@ -262,6 +262,7 @@ def get_prices(soup):
 
 
 def get_stations(soup):
-    options = soup.find_all("option")
+    menu = soup.find('div', {'class': 'irf-search-shedule__container-ipt'})
+    options = menu.find_all('option')
 
-    return {opt['value']: opt.text for opt in options}
+    return {" ".join(filter(lambda x: x != "", opt.text.split(" "))): opt["value"] for opt in options}
