@@ -8,6 +8,7 @@ import requests
 import datetime
 import shutil
 import errno
+import re
 import os
 
 
@@ -130,14 +131,15 @@ def get_trip(org_id, dest_id, stop_times, stations, shortest=True):
     :param shortest: boolean to indicate if shortest or fastest trip is desired
     :return: None
     """
+
     # Group dataframe by trip_id
     grouped_df = stop_times.groupby('trip_id')
 
     # Dictionary keys: trip_id, value: list of stop_ids
     routes_series = grouped_df.apply(lambda g: tuple(g['stop_id']))
 
-    # Search routes from org_id to dest_id
-    routes = routes_series[routes_series.apply(lambda r: r[0] == org_id and r[-1] == dest_id)]
+    # Get all routes that contain org_id and dest_id
+    routes = routes_series[routes_series.apply(lambda r: org_id in r and dest_id in r)]
 
     # Apply function to each group and save results in new series
     num_stops_series = routes.apply(lambda r: len(r))
@@ -148,9 +150,6 @@ def get_trip(org_id, dest_id, stop_times, stations, shortest=True):
     else:
         # Get the trip_id of the fastest route
         trip_id = num_stops_series.idxmax()
-
-    # Get the stops in the trip
-    trip_stops = stop_times[stop_times['trip_id'] == trip_id]['stop_id'].unique()
 
     def get_station(stop_id):
         df_loc = stations.query('stop_id == @stop_id')
@@ -180,23 +179,89 @@ def get_trip(org_id, dest_id, stop_times, stations, shortest=True):
     # Define corridor of stations
     new_corr = Corridor(1, stations)
 
-    new_service = []
-    for i, t in enumerate(times):
-        # if At != Dt, then this Station is attended by the service
-        # or 1st / last Station (both considered attended)
-        if i in (0, len(times) - 1) or t[0] != t[1]:
-            new_service.append(1)
-        else:
-            new_service.append(0)
-
-    new_service = tuple(new_service)
+    new_service = tuple([1 if i in (0, len(times) - 1) or t[0] != t[1] else 0 for i, t in enumerate(times)])
 
     new_line = Line(1, new_corr, new_service, times)
 
     print("Train stops 'j' in Line")
+
+    # TODO: Check schedule in Line class
     stop_times = [t for (t, b) in zip(new_line.schedule, new_service) if b]
 
     for j, schedule in zip(new_line.J, stop_times):
         at = schedule[0]
         dt = schedule[1]
         print(j.name, j.id, "- AT: ", at, " - DT: ", dt)
+
+
+def is_number(s):
+    try:
+        float(s)
+        return True
+    except ValueError:
+        return False
+
+
+def get_date(soup):
+    table = soup.find('div', {'class': 'irf-travellers-table__container-time'})
+
+    p = table.find_all('span', {'class': 'irf-travellers-table__txt irf-travellers-table__txt--bold'})
+
+    months = {'Enero': 1,
+              'Febrero': 2,
+              'Marzo': 3,
+              'Abril': 4,
+              'Mayo': 5,
+              'Junio': 6,
+              'Julio': 7,
+              'Agosto': 8,
+              'Septiembre': 9,
+              'Octubre': 10,
+              'Noviembre': 11,
+              'Diciembre': 12}
+
+    date = []
+    for i in p:
+        s = i.find('script')
+
+        if s is not None:
+
+            s = s.text.split('\'')[1]
+
+            if s in months.keys():
+                date.append(str(months[s]))
+            if is_number(i.text):
+                x = re.sub(r'\s+', '', i.text)
+                date.append(x)
+
+    date = '-'.join(date)
+
+    date = datetime.datetime.strptime(date, '%d-%m-%Y').date()
+    return date
+
+
+def get_prices(soup):
+    table = soup.find('div', {'class': 'irf-travellers-table__container-table'})
+
+    prices = []
+    for tr in table.find_all("tr"):
+        trs = tr.find_all("td")
+
+        for td in trs:
+
+            t = td.find_all("div")
+            for d in t:
+                i = re.sub(r'\s+', '', d.text)
+                if "PrecioInternet" in i:
+                    raw_prices = re.sub(r'PrecioInternet|:', '', i).replace(",", ".")
+
+                    p = re.findall(r'[a-zA-Z]+|[0-9.]+', raw_prices)
+                    prices.append(p)
+
+    return prices
+
+
+def get_stations(soup):
+    options = soup.find_all("option")
+
+    return {opt['value']: opt.text for opt in options}
