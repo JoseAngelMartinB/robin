@@ -2,7 +2,7 @@ from cartopy.io import shapereader
 import matplotlib.pyplot as plt
 from bs4 import BeautifulSoup
 import cartopy.crs as ccrs
-from entities import *
+from src.robin.offer.entities import *
 import pandas as pd
 import geopandas
 import requests
@@ -257,7 +257,12 @@ def get_prices(soup):
                     raw_prices = re.sub(r'PrecioInternet|:', '', i).replace(",", ".")
 
                     p = re.findall(r'[a-zA-Z]+|[0-9.]+', raw_prices)
-                    prices.append(p)
+
+                    assert len(p) % 2 == 0, "Error parsing prices"
+
+                    d = {p[i]: float(p[i + 1]) for i in range(0, len(p), 2)}
+
+                    prices.append(d)
 
     return prices
 
