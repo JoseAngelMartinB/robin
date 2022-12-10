@@ -1,7 +1,4 @@
-from bs4 import BeautifulSoup
-from get_renfe_data import *
-import pandas as pd
-import requests
+from scraping.renfe import *
 
 # Renfe search menu
 url = "https://www.renfe.com/content/renfe/es/es/viajar/informacion-util/horarios/app-horarios.html"
@@ -30,33 +27,39 @@ req = requests.get(url)
 # Get table of schedules using Pandas dataframe
 df = pd.read_html(req.text, converters={'Salida': str, 'Llegada': str})[0]
 
+# TODO: Code optimization
+"""
+Function get_prices and get_stops both iter over the schedules table
+Possible optimization by merging both functions
+"""
+
 # Pandas unable to scrap all data, so we use BeautifulSoup to get the rest
 soup = BeautifulSoup(req.text, 'html.parser')
 
-# Retrieve date of search from the page
+# Retrieve date of search from the page (header)
 date = get_date(soup)
 print("Date: ", date)
-
-# Retrieve prices from the page.
-prices = get_prices(soup)
 
 # features = get_features(soup)
 df['Tren / Recorrido'] = df['Tren / Recorrido'].apply(lambda x: tuple(x.split(' ')))
 
 # Parse string dates to datetime objects
 df['Salida'] = df['Salida'].apply(lambda x: datetime.datetime.strptime(str(date)+"-"+x, '%Y-%m-%d-%H.%M'))
+
+# TODO: Date could not be correct if train departs day x and arrives day x+1
 df['Llegada'] = df['Llegada'].apply(lambda x: datetime.datetime.strptime(str(date)+"-"+x, '%Y-%m-%d-%H.%M'))
 
 # Get duration as time delta from arrival and departure columns
 df['Duración'] = df['Llegada'] - df['Salida']
 
 # Add prices
-df['Precio desde*'] = prices
+df['Precio desde*'] = get_prices(soup)
 
 # TODO: Deal with combined trips
 df = df[df["Tren / Recorrido"].apply(lambda x: not any("LD" in v for v in x))]
 
-df['Paradas'] = get_stops(soup).values() # get_stops returns a dictionary of stops
+# Add column with every stop in the trip
+df['Paradas'] = get_stops(soup).values()
 
 # Print dataframe
 print(df.iloc[-1])
