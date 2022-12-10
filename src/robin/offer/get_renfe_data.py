@@ -1,5 +1,6 @@
 from cartopy.io import shapereader
 import matplotlib.pyplot as plt
+from bs4 import BeautifulSoup
 import cartopy.crs as ccrs
 from entities import *
 import pandas as pd
@@ -266,3 +267,46 @@ def get_stations(soup):
     options = menu.find_all('option')
 
     return {" ".join(filter(lambda x: x != "", opt.text.split(" "))): opt["value"] for opt in options}
+
+
+def get_stops(soup):
+    stops_links = soup.find_all('a', {'class': 'irf-travellers-table__tbody-lnk irf-travellers-table__tbody-lnk--icon-left'})
+    root = "https://horarios.renfe.com/HIRRenfeWeb/"
+
+    stops_main = {}
+
+    for train in stops_links:
+        if "recorrido.do" in train["href"]:
+            js_link = str(train["href"]).replace("\n", "").replace("\t", "").replace(" ", "%20")
+
+            pattern = r'\("(.+)"\)'
+            match = re.search(pattern, js_link)
+
+            if match:
+                js_link = match.group(1)
+                key = " ".join(filter(lambda x: x != "", re.sub(r"\s+", " ", train.text).split(" ")))
+                stops_main[key] = root + js_link
+
+    for stop in stops_main:
+        req = requests.get(stops_main[stop])
+        soup = BeautifulSoup(req.text, 'html.parser')
+        table = soup.find('table', {'class': 'irf-renfe-travel__table cabecera_tabla'})
+
+        stops = {}
+        for row in table.find_all('tr'):
+            aux = row.find_all('td')
+
+            if aux:
+                station = " ".join(filter(lambda x: x != "", map(lambda x: re.sub(r'\s+', "", str(x)), aux[0].text.split(" "))))
+                departure_time = re.sub(r'\s+', "", aux[1].text)
+                arrival_time = re.sub(r'\s+', "", aux[2].text)
+                stops[station] = (departure_time, arrival_time)
+
+        stops_main[stop] = stops
+    return stops_main
+
+
+
+
+
+
