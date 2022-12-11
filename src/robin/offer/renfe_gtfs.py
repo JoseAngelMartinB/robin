@@ -1,4 +1,4 @@
-from src.robin.offer.scraping.renfe import *
+from src.robin.offer.gtfs.renfe import *
 
 savepath = 'renfe_data/'
 url = 'https://ssl.renfe.com/gtransit/Fichero_AV_LD/google_transit.zip'
