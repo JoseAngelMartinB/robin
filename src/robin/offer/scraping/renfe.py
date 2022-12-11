@@ -12,6 +12,13 @@ def is_number(s):
         return False
 
 
+def get_stations(soup):
+    menu = soup.find('div', {'class': 'irf-search-shedule__container-ipt'})
+    options = menu.find_all('option')
+
+    return {" ".join(filter(lambda x: x != "", opt.text.split(" "))): opt["value"] for opt in options}
+
+
 def get_date(soup):
     table = soup.find('div', {'class': 'irf-travellers-table__container-time'})
 
@@ -50,74 +57,68 @@ def get_date(soup):
     return date
 
 
-def get_prices(soup):
-    table = soup.find('div', {'class': 'irf-travellers-table__container-table'})
+def get_stops(url):
+    req = requests.get(url)
+    soup = BeautifulSoup(req.text, 'html.parser')
+    table = soup.find('table', {'class': 'irf-renfe-travel__table cabecera_tabla'})
 
-    prices = []
-    for tr in table.find_all("tr"):
-        trs = tr.find_all("td")
+    stops = {}
+    for row in table.find_all('tr'):
+        aux = row.find_all('td')
 
-        for td in trs:
+        if aux:
+            station = " ".join(
+                filter(lambda x: x != "", map(lambda x: re.sub(r'\s+', "", str(x)), aux[0].text.split(" "))))
+            departure_time = re.sub(r'\s+', "", aux[1].text)
+            arrival_time = re.sub(r'\s+', "", aux[2].text)
+            stops[station] = (departure_time, arrival_time)
 
-            t = td.find_all("div")
-            for d in t:
-                i = re.sub(r'\s+', '', d.text)
-                if "PrecioInternet" in i:
-                    raw_prices = re.sub(r'PrecioInternet|:', '', i).replace(",", ".")
-
-                    p = re.findall(r'[a-zA-Z]+|[0-9.]+', raw_prices)
-
-                    assert len(p) % 2 == 0, "Error parsing prices"
-
-                    d = {p[i]: float(p[i + 1]) for i in range(0, len(p), 2)}
-
-                    prices.append(d)
-
-    return prices
+    return stops
 
 
-def get_stations(soup):
-    menu = soup.find('div', {'class': 'irf-search-shedule__container-ipt'})
-    options = menu.find_all('option')
-
-    return {" ".join(filter(lambda x: x != "", opt.text.split(" "))): opt["value"] for opt in options}
-
-
-def get_stops(soup):
-    stops_links = soup.find_all('a', {'class': 'irf-travellers-table__tbody-lnk irf-travellers-table__tbody-lnk--icon-left'})
+def get_table(soup):
+    main_table = soup.find('div', {'class': 'irf-travellers-table__container-table'})
     root = "https://horarios.renfe.com/HIRRenfeWeb/"
 
-    stops_main = {}
+    table = []
+    for tr in main_table.find_all("tr", {'class': "odd irf-travellers-table__tr"}):
+        cols = tr.find_all("td", {'class': "txt_borde1 irf-travellers-table__td"})
 
-    for train in stops_links:
-        if "recorrido.do" in train["href"]:
-            js_link = str(train["href"]).replace("\n", "").replace("\t", "").replace(" ", "%20")
+        if not cols:
+            continue
 
-            pattern = r'\("(.+)"\)'
-            match = re.search(pattern, js_link)
+        train = cols[0].text
 
-            if match:
-                js_link = match.group(1)
-                key = " ".join(filter(lambda x: x != "", re.sub(r"\s+", " ", train.text).split(" ")))
-                stops_main[key] = root + js_link
+        try:
+            stops_link = cols[0].find('a')["href"]
+        except TypeError:
+            continue
 
-    for stop in stops_main:
-        req = requests.get(stops_main[stop])
-        soup = BeautifulSoup(req.text, 'html.parser')
-        table = soup.find('table', {'class': 'irf-renfe-travel__table cabecera_tabla'})
+        js_link = str(stops_link).replace("\n", "").replace("\t", "").replace(" ", "%20")
 
-        stops = {}
-        for row in table.find_all('tr'):
-            aux = row.find_all('td')
+        pattern = r'\("(.+)"\)'
+        match = re.search(pattern, js_link)
 
-            if aux:
-                station = " ".join(filter(lambda x: x != "", map(lambda x: re.sub(r'\s+', "", str(x)), aux[0].text.split(" "))))
-                departure_time = re.sub(r'\s+', "", aux[1].text)
-                arrival_time = re.sub(r'\s+', "", aux[2].text)
-                stops[station] = (departure_time, arrival_time)
+        if match:
+            js_link = match.group(1)
+            train_name = " ".join(filter(lambda x: x != "", re.sub(r"\s+", " ", train).split(" ")))
 
-        stops_main[stop] = stops
-    return stops_main
+        stops = get_stops(root + js_link)
+
+        p = cols[4].find("div")
+        i = re.sub(r'\s+', '', p.text)
+        raw_prices = re.sub(r'PrecioInternet|:', '', i).replace(",", ".")
+
+        p = re.findall(r'[a-zA-Z]+|[0-9.]+', raw_prices)
+
+        assert len(p) % 2 == 0, "Error parsing prices"
+
+        prices = {p[i]: float(p[i + 1]) for i in range(0, len(p), 2)}
+
+        table.append((train_name, stops, cols[1].text, cols[3].text, prices))
+
+    return table
+
 
 
 
