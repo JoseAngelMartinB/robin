@@ -1,4 +1,5 @@
 from scraping.renfe import *
+import pandas as pd
 
 # Renfe search menu
 url = "https://www.renfe.com/content/renfe/es/es/viajar/informacion-util/horarios/app-horarios.html"
@@ -24,7 +25,7 @@ print("Search url: ", url)
 
 req = requests.get(url)
 
-# Get table of schedules using Pandas dataframe
+# Get table of schedules using Pandas dataframe. Parse 'Arrival' and 'Departure' columns as strings
 df = pd.read_html(req.text, converters={'Salida': str, 'Llegada': str})[0]
 
 # TODO: Code optimization
@@ -46,7 +47,7 @@ df['Tren / Recorrido'] = df['Tren / Recorrido'].apply(lambda x: tuple(x.split(' 
 # Parse string dates to datetime objects
 df['Salida'] = df['Salida'].apply(lambda x: datetime.datetime.strptime(str(date)+"-"+x, '%Y-%m-%d-%H.%M'))
 
-# TODO: Date could not be correct if train departs day x and arrives day x+1
+# TODO: Date could not be correct if train departs day i and arrives day i+1
 df['Llegada'] = df['Llegada'].apply(lambda x: datetime.datetime.strptime(str(date)+"-"+x, '%Y-%m-%d-%H.%M'))
 
 # Get duration as time delta from arrival and departure columns
