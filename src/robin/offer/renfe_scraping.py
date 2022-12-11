@@ -31,6 +31,16 @@ soup = BeautifulSoup(req.text, 'html.parser')
 stations = get_stations(soup)
 print("Available stations: ", stations)
 
+names = tuple(list(stations.keys())[1:])
+
+pairs = [(x, y) for x in names for y in names if x != y]
+
+# TODO:
+# - For each pair of stations get the schedules table (filtered, only AVE)
+# - Set limit of days to search
+# - Concatenate dataframes
+# - Save dataframe to csv
+
 # Set origin and destination
 origin = 'Madrid (TODAS)'
 destination = 'Barcelona (TODAS)'
@@ -44,19 +54,17 @@ destination_id = stations[destination]
 # Renfe schedules search
 url = f'https://horarios.renfe.com/HIRRenfeWeb/buscar.do?O={origin_id}&D={destination_id}&AF=2022&MF=MM&DF=DD&SF=NaN&ID=s'
 
-print("Search url: ", url)
-
 req = requests.get(url)
 
-# Pandas unable to scrap all data, so we use BeautifulSoup to get the rest
+# Scraping with BeautifulSoup
 soup = BeautifulSoup(req.text, 'html.parser')
 
 # Retrieve date of search from the page (header)
 init_date = get_date(soup)
+print("Search url: ", url)
+print("Date: ", init_date)
 
 df = to_dataframe(soup, init_date)
-
-print(df.iloc[-1])
 
 date = init_date
 for i in range(2):
@@ -71,7 +79,7 @@ for i in range(2):
 
     url = f'https://horarios.renfe.com/HIRRenfeWeb/buscar.do?O={origin_id}&D={destination_id}&AF={year}&MF={month}&DF={day}&SF={weekday}&ID=s'
     print("Search url: ", url)
-    print(date)
+    print("Date: ", date)
 
     req = requests.get(url)
 
@@ -80,9 +88,11 @@ for i in range(2):
 
     df = pd.concat([df, to_dataframe(soup, date)])
 
+df = df.reset_index(drop=True)
+df = df[['Train', 'Stops', 'Departure', 'Arrival', 'Duration', 'Price']]
+
 print(df.describe())
 print(df.columns)
-print(df['Train'])
 print(df.iloc[-1])
 
 # Save dataframe to csv in datasets folder

@@ -84,16 +84,15 @@ def get_table(soup):
     for tr in main_table.find_all("tr", {'class': "odd irf-travellers-table__tr"}):
         cols = tr.find_all("td", {'class': "txt_borde1 irf-travellers-table__td"})
 
-        if not cols:
+        if not cols or len(cols) < 6:
             continue
 
-        train = cols[0].text
+        train_id = cols[0].text
+        train_name = tuple(filter(lambda x: x != "", re.sub(r"\s+", " ", train_id).split(" ")))
 
-        try:
-            stops_link = cols[0].find('a')["href"]
-        except TypeError:
-            continue
+        stops_link = cols[0].find('a')["href"]
 
+        # Get javascript link
         js_link = str(stops_link).replace("\n", "").replace("\t", "").replace(" ", "%20")
 
         pattern = r'\("(.+)"\)'
@@ -101,7 +100,6 @@ def get_table(soup):
 
         if match:
             js_link = match.group(1)
-            train_name = " ".join(filter(lambda x: x != "", re.sub(r"\s+", " ", train).split(" ")))
 
         stops = get_stops(root + js_link)
 
@@ -115,7 +113,12 @@ def get_table(soup):
 
         prices = {p[i]: float(p[i + 1]) for i in range(0, len(p), 2)}
 
-        table.append((train_name, stops, cols[1].text, cols[3].text, prices))
+        train = (train_name, stops, cols[1].text, cols[3].text, prices)
+
+        # Assert non empty values
+        assert all(v for v in train), "Error parsing train"
+
+        table.append(train)
 
     return table
 
