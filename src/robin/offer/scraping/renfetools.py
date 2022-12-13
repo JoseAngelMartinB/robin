@@ -1,4 +1,5 @@
 from bs4 import BeautifulSoup
+import pandas as pd
 import requests
 import datetime
 import re
@@ -58,6 +59,11 @@ def get_date(soup):
 
 
 def get_stops(url):
+    """
+    Returns dictionary of stops from url with stops information from renfe
+    :param url: url with stops information from renfe
+    :return: dictionary of stops, where keys are each station and values are a tuple with (arrival, departure) times
+    """
     req = requests.get(url)
     soup = BeautifulSoup(req.text, 'html.parser')
     table = soup.find('table', {'class': 'irf-renfe-travel__table cabecera_tabla'})
@@ -69,9 +75,18 @@ def get_stops(url):
         if aux:
             station = " ".join(
                 filter(lambda x: x != "", map(lambda x: re.sub(r'\s+', "", str(x)), aux[0].text.split(" "))))
-            departure_time = re.sub(r'\s+', "", aux[1].text)
-            arrival_time = re.sub(r'\s+', "", aux[2].text)
+            departure_time = re.sub(r'\s+', "", aux[1].text).replace(".", ":")
+
+            arrival_time = re.sub(r'\s+', "", aux[2].text).replace(".", ":")
+
             stops[station] = (departure_time, arrival_time)
+
+    # Get first and last keys of stops dictionary
+    first_key = list(stops.keys())[0]
+    last_key = list(stops.keys())[-1]
+
+    stops[first_key] = (stops[first_key][1], stops[first_key][1])
+    stops[last_key] = (stops[last_key][0], stops[last_key][0])
 
     return stops
 
@@ -87,8 +102,8 @@ def get_table(soup):
         if not cols or len(cols) < 6:
             continue
 
-        train_id = cols[0].text
-        train_name = tuple(filter(lambda x: x != "", re.sub(r"\s+", " ", train_id).split(" ")))
+        train_number, train_type = tuple(filter(lambda x: x != "", re.sub(r"\s+", " ", cols[0].text).split(" ")))
+        train_id = {train_type : train_number}
 
         stops_link = cols[0].find('a')["href"]
 
@@ -113,7 +128,7 @@ def get_table(soup):
 
         prices = {p[i]: float(p[i + 1]) for i in range(0, len(p), 2)}
 
-        train = (train_name, stops, cols[1].text, cols[3].text, prices)
+        train = (train_id, stops, cols[1].text, cols[3].text, prices)
 
         # Assert non empty values
         assert all(v for v in train), "Error parsing train"
@@ -121,6 +136,31 @@ def get_table(soup):
         table.append(train)
 
     return table
+
+
+def format_time(x):
+    """ Function receives "x", a string with time formatted as "2 h. 30 m." and returns a timedelta object """
+    h, m = filter(lambda t: is_number(t), x.split(" "))
+    return f'{h}:{m}'
+
+
+def to_timedelta(x):
+    """ Function receives "x", a string with time formatted as "2:30" and returns a timedelta object """
+    h, m = x.split(":")
+    return datetime.timedelta(hours=int(h), minutes=int(m))
+
+
+def to_dataframe(s, d):
+    table = get_table(s)
+
+    dfs = pd.DataFrame(table, columns=['Train', 'Stops', 'Departure', 'Duration', 'Price'])
+    dfs = dfs[dfs["Train"].apply(lambda x: "AVE" in x)].reset_index(drop=True)
+
+    dfs['Duration'] = dfs['Duration'].apply(lambda x: format_time(x))
+    dfs['Departure'] = dfs['Departure'].apply(lambda x: datetime.datetime.strptime(str(d) + "-" + x, '%Y-%m-%d-%H.%M'))
+    dfs['Arrival'] = dfs['Departure'] + dfs['Duration'].apply(lambda x: to_timedelta(x))
+
+    return dfs
 
 
 

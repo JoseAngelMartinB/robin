@@ -1,26 +1,4 @@
-from scraping.renfe import *
-import pandas as pd
-import datetime
-
-
-def format_time(x):
-    """ Function receives "x", a string with time formatted as "2 h. 30 m." and returns a timedelta object """
-    h, m = filter(lambda t: is_number(t), x.split(" "))
-    return datetime.timedelta(hours=int(h), minutes=int(m))
-
-
-def to_dataframe(s, d):
-    table = get_table(s)
-
-    dfs = pd.DataFrame(table, columns=['Train', 'Stops', 'Departure', 'Duration', 'Price'])
-    dfs = dfs[dfs["Train"].apply(lambda x: "AVE" in x)].reset_index(drop=True)
-
-    dfs['Duration'] = dfs['Duration'].apply(lambda x: format_time(x))
-    dfs['Departure'] = dfs['Departure'].apply(lambda x: datetime.datetime.strptime(str(d) + "-" + x, '%Y-%m-%d-%H.%M'))
-    dfs['Arrival'] = dfs['Departure'] + dfs['Duration']
-
-    return dfs
-
+from renfetools import *
 
 # Renfe search menu
 url = "https://www.renfe.com/content/renfe/es/es/viajar/informacion-util/horarios/app-horarios.html"
@@ -91,9 +69,9 @@ for i in range(2):
 df = df.reset_index(drop=True)
 df = df[['Train', 'Stops', 'Departure', 'Arrival', 'Duration', 'Price']]
 
-print(df.describe())
+print(df.describe(datetime_is_numeric=True))
 print(df.columns)
 print(df.iloc[-1])
 
 # Save dataframe to csv in datasets folder
-df.to_csv(f"{origin}_{destination}_{init_date}_{date}.csv", index=False)
+df.to_csv(f"datasets/{origin[:3].upper()}_{destination[:3].upper()}_{init_date}_{date}.csv", index=False)
