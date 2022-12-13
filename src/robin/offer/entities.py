@@ -56,7 +56,7 @@ class Line(object):
         Output:
             List of stops
         """
-        return [s for i, s in zip(servicetype, self.corr.liststation) if i]
+        return [s for i, s in zip(servicetype, self.corr.list_station) if i]
 
     def __getpairs(self):
         """
