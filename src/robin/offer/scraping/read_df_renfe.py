@@ -30,12 +30,6 @@ print(df.iloc[6])
 # Stops column to nested list
 stops = df['Stops'].apply(lambda d: list(d.keys())).values.tolist()
 
-# Define blacklist to remove words from stop name
-blacklist = ["PTA", "PUERTA", "CAMP", "DE"]
-
-# Remove blacklist words from stop name and get first word of each stop name
-stops = [[list(filter(lambda w: w not in blacklist, re.split(r'\W+', s)))[0] for s in trip] for trip in stops]
-
 # Initialize corridor with max length trip
 corridor = stops.pop(stops.index(max(stops, key=len)))
 
