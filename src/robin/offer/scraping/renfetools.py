@@ -73,13 +73,23 @@ def get_stops(url):
         aux = row.find_all('td')
 
         if aux:
-            station = " ".join(
-                filter(lambda x: x != "", map(lambda x: re.sub(r'\s+', "", str(x)), aux[0].text.split(" "))))
+            # Define blacklist to remove words from stop name
+            blacklist = ["", "PTA", "PUERTA", "CAMP", "DE"]
+
+            # Remove non-alphanumeric characters
+            raw_name = re.sub(r'[^a-zA-Z0-9 -]', '', aux[0].text)
+
+            # Split raw_name
+            raw_words = re.split(r'\W+', raw_name)
+
+            # Remove blacklist words from stop name and get first word of each stop name
+            station = tuple(filter(lambda w: w not in blacklist and len(w) > 1, raw_words))[0]
+
             departure_time = re.sub(r'\s+', "", aux[1].text).replace(".", ":")
 
             arrival_time = re.sub(r'\s+', "", aux[2].text).replace(".", ":")
 
-            stops[station] = (departure_time, arrival_time)
+            stops[station.upper()] = (departure_time, arrival_time)
 
     # Get first and last keys of stops dictionary
     first_key = list(stops.keys())[0]
