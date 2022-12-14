@@ -1,6 +1,7 @@
+from selenium import webdriver
 from bs4 import BeautifulSoup
+
 import pandas as pd
-import requests
 import datetime
 import re
 
@@ -39,18 +40,19 @@ def get_date(soup):
               'Diciembre': 12}
 
     date = []
+
     for i in p:
         s = i.find('script')
 
         if s is not None:
-
             s = s.text.split('\'')[1]
+
+            num = tuple(filter(lambda x: x != '', re.sub(r'\s+', " ", i.text).split(" ")))[1]
 
             if s in months.keys():
                 date.append(str(months[s]))
-            if is_number(i.text):
-                x = re.sub(r'\s+', '', i.text)
-                date.append(x)
+            if is_number(num):
+                date.append(num)
 
     date = '-'.join(date)
 
@@ -64,8 +66,13 @@ def get_stops(url):
     :param url: url with stops information from renfe
     :return: dictionary of stops, where keys are each station and values are a tuple with (arrival, departure) times
     """
-    req = requests.get(url)
-    soup = BeautifulSoup(req.text, 'html.parser')
+    sdriver = webdriver.Chrome()
+    sdriver.get(url)
+
+    soup = BeautifulSoup(sdriver.page_source, 'html.parser')
+
+    sdriver.close()
+
     table = soup.find('table', {'class': 'irf-renfe-travel__table cabecera_tabla'})
 
     stops = {}
@@ -128,7 +135,12 @@ def get_table(soup):
 
         stops = get_stops(root + js_link)
 
+        # p = cols[4].find("a")
+        # p_link = p["href"]
+        # get_prices(p_link)
+
         p = cols[4].find("div")
+
         i = re.sub(r'\s+', '', p.text)
         raw_prices = re.sub(r'PrecioInternet|:', '', i).replace(",", ".")
 
@@ -171,6 +183,11 @@ def to_dataframe(s, d):
     dfs['Arrival'] = dfs['Departure'] + dfs['Duration'].apply(lambda x: to_timedelta(x))
 
     return dfs
+
+
+def get_prices(js_link):
+    print(js_link)
+    exit()
 
 
 

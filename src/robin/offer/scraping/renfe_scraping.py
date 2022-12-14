@@ -3,8 +3,10 @@ from renfetools import *
 # Renfe search menu
 url = "https://www.renfe.com/content/renfe/es/es/viajar/informacion-util/horarios/app-horarios.html"
 
-req = requests.get(url)
-soup = BeautifulSoup(req.text, 'html.parser')
+driver = webdriver.Chrome()
+driver.get(url)
+
+soup = BeautifulSoup(driver.page_source, 'html.parser')
 
 stations = get_stations(soup)
 print("Available stations: ", stations)
@@ -32,10 +34,10 @@ destination_id = stations[destination]
 # Renfe schedules search
 url = f'https://horarios.renfe.com/HIRRenfeWeb/buscar.do?O={origin_id}&D={destination_id}&AF=2022&MF=MM&DF=DD&SF=NaN&ID=s'
 
-req = requests.get(url)
+driver.get(url)
 
 # Scraping with BeautifulSoup
-soup = BeautifulSoup(req.text, 'html.parser')
+soup = BeautifulSoup(driver.page_source, 'html.parser')
 
 # Retrieve date of search from the page (header)
 init_date = get_date(soup)
@@ -45,7 +47,7 @@ print("Date: ", init_date)
 df = to_dataframe(soup, init_date)
 
 date = init_date
-for i in range(2):
+for i in range(0):
     # Sum one day to date
     date += datetime.timedelta(days=1)
 
@@ -59,10 +61,10 @@ for i in range(2):
     print("Search url: ", url)
     print("Date: ", date)
 
-    req = requests.get(url)
+    driver.get(url)
 
     # Pandas unable to scrap all data, so we use BeautifulSoup to get the rest
-    soup = BeautifulSoup(req.text, 'html.parser')
+    soup = BeautifulSoup(driver.page_source, 'html.parser')
 
     df = pd.concat([df, to_dataframe(soup, date)])
 
@@ -75,3 +77,5 @@ print(df.iloc[-1])
 
 # Save dataframe to csv in datasets folder
 df.to_csv(f"datasets/{origin[:3].upper()}_{destination[:3].upper()}_{init_date}_{date}.csv", index=False)
+
+driver.close()
