@@ -18,7 +18,13 @@ class TimeSlot(object):
         self.id = id_
         self.class_mark = class_mark
         self.size = size
-        
+
+        # FROM YML SPECS
+        # self.start = start # datetime.time?
+        # self.mark = mark # datetime.timedelta?
+        # TODO: Not considered in specification table. self.end could be inferred from start and size
+        # self.end = end
+
     def __str__(self):
         return f'[{self.id},{self.class_mark},{self.size}]'
 
@@ -37,6 +43,7 @@ class Corridor(object):
 
 class Line(object):
     def __init__(self, id_: int, corr: Corridor, service_type: Tuple = (), timetable: List[Tuple] = []):
+        # Service type is a tuple of booleans indicating if the station is served by the line
         self.id = id_
         self.corr = corr
         # self.lstation = lstation
@@ -77,12 +84,13 @@ class Line(object):
 # TODO
 class Seat(object):
     # (id, hard, soft)
-    def __init__(self, id_: int, s1: Tuple=(), s2: Tuple = ()):
-        # s1: hard limit. Linked to capacity constrains (e.g. tickets avaiable)
-        # s2: soft limit. (e.g. luggage availability)
+    def __init__(self, id_: int, name: str, hard_type: int, soft_type: int):
+        # hard_type E.g. Linked to capacity constrains (e.g. tickets available)
+        # soft_type - E.g. Luggage availability
         self.id = id_
-        self.s1 = s1 # Hard limit - Tickets available?
-        self.s3 = s2 # Soft limit - Luggage compartment?
+        self.name = name
+        self.hard_type = hard_type  # E.g. Tickets available?
+        self.soft_type = soft_type  # E.g. Luggage compartment?
 
     def __str__(self):
         return f'[{self.id}, {self.s1}, {self.s2}]'
@@ -95,6 +103,10 @@ class TSP(object):
         self.name = name
         self.shortname = shortname
 
+        # TODO: Not considered in specification table
+        # Could retrieve information from RollingStock object?
+        # self.rolling_stock = rolling_stock
+
     def __str__(self):
         return f'[{self.id},{self.name},{self.shortname}]'
 
@@ -106,6 +118,10 @@ class RollingStock(object):
         self.tsp = tsp
         self.S1 = s1
         self.Kmax = kmax
+
+        # TODO: FROM YML SPECS
+        # self.name = name
+        # self.seats = seats E.G. key: hard_type, val: quantity - {1: 50, 2: 250}
 
     def __str__(self):
         return f'[{self.id},{self.name},{self.shortname}]'
