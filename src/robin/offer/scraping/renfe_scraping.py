@@ -23,12 +23,6 @@ names = tuple(list(stations.keys())[1:])
 
 pairs = [(x, y) for x in names for y in names if x != y]
 
-# TODO:
-# - For each pair of stations get the schedules table (filtered, only AVE)
-# - Set limit of days to search
-# - Concatenate dataframes
-# - Save dataframe to csv
-
 # Set origin and destination
 origin = 'Madrid (TODAS)'
 destination = 'Barcelona (TODAS)'

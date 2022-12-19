@@ -23,7 +23,7 @@ def get_stations(soup):
     return {" ".join(filter(lambda x: x != "", opt.text.split(" "))): opt["value"] for opt in options}
 
 
-def get_date(soup):
+def get_date(soup, selenium=False):
     table = soup.find('div', {'class': 'irf-travellers-table__container-time'})
 
     p = table.find_all('span', {'class': 'irf-travellers-table__txt irf-travellers-table__txt--bold'})
@@ -52,17 +52,20 @@ def get_date(soup):
             if s in months.keys():
                 date.append(str(months[s]))
 
-            """
-            # Selenium
-            num = tuple(filter(lambda x: x != '', re.sub(r'\s+', " ", i.text).split(" ")))[1]
+            # TODO: Merge both solutions into one that works for both cases
+            if selenium:
+                # Selenium
+                num = tuple(filter(lambda x: x != '', re.sub(r'\s+', " ", i.text).split(" ")))[1]
 
-            if is_number(num):
-                date.append(num)
-            """
+                if is_number(num):
+                    date.append(num)
+            else:
+                # Requests
+                num = tuple(filter(lambda x: x != '', re.sub(r'\s+', " ", i.text).split(" ")))[0]
 
-            if is_number(i.text):
-                x = re.sub(r'\s+', '', i.text)
-                date.append(x)
+                if is_number(i.text):
+                    x = re.sub(r'\s+', '', i.text)
+                    date.append(x)
 
     date = '-'.join(date)
 
@@ -151,6 +154,7 @@ def get_table(soup, url):
 
         stops = get_stops(root + js_link)
 
+        """
         p = cols[4].find("a")
         p_link = p["href"]
 
@@ -162,7 +166,7 @@ def get_table(soup, url):
                 get_prices(p_link, url)
                 break
         # Stop execution
-
+        """
         p = cols[4].find("div")
 
         i = re.sub(r'\s+', '', p.text)
@@ -209,9 +213,9 @@ def to_dataframe(s, d, url):
     return dfs
 
 
-def get_prices():
+def get_prices(org, dest, date):
     root = "https://venta.renfe.com/vol/"
-    search_url = f"buscarTren.do?tipoBusqueda=autocomplete&currenLocation=menuBusqueda&vengoderenfecom=SI&cdgoOrigen={org}&cdgoDestino={des}&idiomaBusqueda=“s”&FechaIdaSel={date}&_fechaIdaVisual={date}&adultos_=1&ninos_=0&ninosMenores=0&numJoven=0&numDorada=0&codPromocional="
+    search_url = f"buscarTren.do?tipoBusqueda=autocomplete&currenLocation=menuBusqueda&vengoderenfecom=SI&cdgoOrigen={org}&cdgoDestino={dest}&idiomaBusqueda=“s”&FechaIdaSel={date}&_fechaIdaVisual={date}&adultos_=1&ninos_=0&ninosMenores=0&numJoven=0&numDorada=0&codPromocional="
 
 
 
