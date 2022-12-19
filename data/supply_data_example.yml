@@ -1,0 +1,191 @@
+# Yaml datafile for supply data. Example data for testing.
+
+# Train stations
+stations:
+  - name: "Atocha"
+    city: "Madrid"
+    short_name: "MAD"
+  - name: "Zaragoza-Delicias"
+    city: "Zaragoza"
+    short_name: "ZAZ"
+  - name: "Barcelona-Sants"
+    city: "Barcelona"
+    short_name: "BCN"
+
+# Time slots (surcos)
+timeSlot:
+  - id: 1
+    start: "8:00"
+    end: "8:10"
+    mark: "8:05"
+  - id: 2
+    start: "12:15"
+    end: "12:25"
+    mark: "12:20"
+  - id: 3
+    start: "16:30"
+    end: "16:40"
+    mark: "16:35"
+  - id: 4
+    start: "20:45"
+    end: "20:55"
+    mark: "20:50"
+
+# Corridor
+corridor:
+  - id: 1
+    name: "Madrid-Barcelona"
+    stations:
+      - "MAD"
+      - "ZAZ"
+      - "BCN"
+    
+# Line
+line:
+  - id: 1
+    name: "L1"
+    corridor: 1
+    stops:
+      - station: "MAD"
+        departure_time: 0
+      - station: "ZAZ"
+        arrival_time: 79.3
+        departure_time: 94.3
+      - station: "BCN"
+        arrival_time: 185.1
+  - id: 2
+    name: "L1-reverse"
+    corridor: 1
+    stops:
+      - station: "BCN"
+        departure_time: 0
+      - station: "ZAZ"
+        arrival_time: 90.8
+        departure_time: 95.8
+      - station: "MAD"
+        arrival_time: 185.1
+  - id: 3
+    name: "L2"
+    corridor: 1
+    stops:
+      - station: "MAD"
+        departure_time: 0
+      - station: "BCN"
+        arrival_time: 150.1
+  - id: 4
+    name: "L2-reverse"
+    corridor: 1
+    stops:
+      - station: "BCN"
+        departure_time: 0
+      - station: "MAD"
+        arrival_time: 150.1
+
+# Seats
+seat:
+  - id: 1
+    name: "First class - With luggage"
+    hard_type: 1
+    soft_type: 1
+  - id: 2
+    name: "Second class - With luggage"
+    hard_type: 2
+    soft_type: 1
+  - id: 3
+    name: "First class - Without luggage"
+    hard_type: 1
+    soft_type: 2
+  - id: 4
+    name: "Second class - Without luggage"
+    hard_type: 2
+    soft_type: 2
+
+# Rolling stock
+rollingStock:
+  - id: 1
+    name: "Talgo 350"
+    seats:
+      - hard_type: 1
+        quantity: 50
+      - hard_type: 2
+        quantity: 250
+  - id: 2
+    name: "Talgo 350"
+    seats:
+      - hard_type: 1
+        quantity: 50
+      - hard_type: 2
+        quantity: 250
+  - id: 3
+    name: "Talgo 350"
+    seats:
+      - hard_type: 1
+        quantity: 50
+      - hard_type: 2
+        quantity: 250
+  - id: 4
+    name: "Talgo 200"
+    seats:
+      - hard_type: 2
+        quantity: 200
+  - id: 5
+    name: "Talgo 200"
+    seats:
+      - hard_type: 2
+        quantity: 200
+
+# Train service provider
+trainServiceProvider:
+  - id: 1
+    name: "Renfe"
+    rolling_stock: [1, 2, 3, 4, 5, 6]
+
+# Service
+service:
+  - id: 1
+    date: "2023-01-22"
+    line: 1
+    train_service_provider: 1
+    time_slot: 1
+    rolling_stock: 1
+    origin_destination_tuples:
+      - origin: "MAD"
+        destination: "ZAZ"
+        price: 50
+      - origin: "ZAZ"
+        destination: "BCN"
+        price: 40
+      - origin: "MAD"
+        destination: "BCN"
+        price: 90
+    type_of_capacity: "Train"
+  - id: 2
+    date: "2023-01-22"
+    line: 1
+    train_service_provider: 1
+    time_slot: 3
+    rolling_stock: 4
+    origin_destination_tuples:
+      - origin: "MAD"
+        destination: "ZAZ"
+        price: 50
+      - origin: "ZAZ"
+        destination: "BCN"
+        price: 40
+      - origin: "MAD"
+        destination: "BCN"
+        price: 90
+    type_of_capacity: "Train"
+  - id: 3
+    date: "2023-01-22"
+    line: 4
+    train_service_provider: 1
+    time_slot: 2
+    rolling_stock: 3
+    origin_destination_tuples:
+      - origin: "MAD"
+        destination: "BCN"
+        price: 95
+    type_of_capacity: "Train"
+
+
