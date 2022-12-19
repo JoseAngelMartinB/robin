@@ -1,5 +1,7 @@
 from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 from bs4 import BeautifulSoup
+import requests
 
 import pandas as pd
 import datetime
@@ -47,12 +49,20 @@ def get_date(soup):
         if s is not None:
             s = s.text.split('\'')[1]
 
-            num = tuple(filter(lambda x: x != '', re.sub(r'\s+', " ", i.text).split(" ")))[1]
-
             if s in months.keys():
                 date.append(str(months[s]))
+
+            """
+            # Selenium
+            num = tuple(filter(lambda x: x != '', re.sub(r'\s+', " ", i.text).split(" ")))[1]
+
             if is_number(num):
                 date.append(num)
+            """
+
+            if is_number(i.text):
+                x = re.sub(r'\s+', '', i.text)
+                date.append(x)
 
     date = '-'.join(date)
 
@@ -66,12 +76,18 @@ def get_stops(url):
     :param url: url with stops information from renfe
     :return: dictionary of stops, where keys are each station and values are a tuple with (arrival, departure) times
     """
-    sdriver = webdriver.Chrome()
-    sdriver.get(url)
+    # chrome_options = Options()
+    # chrome_options.add_argument("--headless")
 
-    soup = BeautifulSoup(sdriver.page_source, 'html.parser')
+    # sdriver = webdriver.Chrome(options=chrome_options)
+    # sdriver.get(url)
 
-    sdriver.close()
+    req = requests.get(url)
+    soup = BeautifulSoup(req.text, 'html.parser')
+
+    # soup = BeautifulSoup(sdriver.page_source, 'html.parser')
+
+    # sdriver.close()
 
     table = soup.find('table', {'class': 'irf-renfe-travel__table cabecera_tabla'})
 
@@ -108,7 +124,7 @@ def get_stops(url):
     return stops
 
 
-def get_table(soup):
+def get_table(soup, url):
     main_table = soup.find('div', {'class': 'irf-travellers-table__container-table'})
     root = "https://horarios.renfe.com/HIRRenfeWeb/"
 
@@ -135,9 +151,17 @@ def get_table(soup):
 
         stops = get_stops(root + js_link)
 
-        # p = cols[4].find("a")
-        # p_link = p["href"]
-        # get_prices(p_link)
+        p = cols[4].find("a")
+        p_link = p["href"]
+
+        links = cols[4].find_all("a")
+
+        for l in links:
+            if "javascript:comprarVOL" in l["href"]:
+                p_link = l["href"]
+                get_prices(p_link, url)
+                break
+        # Stop execution
 
         p = cols[4].find("div")
 
@@ -172,8 +196,8 @@ def to_timedelta(x):
     return datetime.timedelta(hours=int(h), minutes=int(m))
 
 
-def to_dataframe(s, d):
-    table = get_table(s)
+def to_dataframe(s, d, url):
+    table = get_table(s, url)
 
     dfs = pd.DataFrame(table, columns=['Train', 'Stops', 'Departure', 'Duration', 'Price'])
     dfs = dfs[dfs["Train"].apply(lambda x: "AVE" in x)].reset_index(drop=True)
@@ -185,9 +209,10 @@ def to_dataframe(s, d):
     return dfs
 
 
-def get_prices(js_link):
-    print(js_link)
-    exit()
+def get_prices():
+    root = "https://venta.renfe.com/vol/"
+    search_url = f"buscarTren.do?tipoBusqueda=autocomplete&currenLocation=menuBusqueda&vengoderenfecom=SI&cdgoOrigen={org}&cdgoDestino={des}&idiomaBusqueda=“s”&FechaIdaSel={date}&_fechaIdaVisual={date}&adultos_=1&ninos_=0&ninosMenores=0&numJoven=0&numDorada=0&codPromocional="
+
 
 
 
