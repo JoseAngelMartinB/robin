@@ -84,7 +84,10 @@ init_date = get_date(soup)
 print("Search url: ", url)
 print("Date: ", init_date)
 
-# TODO: Consider saving dicts in independent files using npy format
+# TODO: Consider saving dicts in independent files using npy format or csv
+# File with: trip_id, price1, price2, price3
+# File with: trip_id, sequence of stops
+
 df = to_dataframe(soup, init_date, url)
 
 date = init_date
@@ -123,3 +126,5 @@ print(df.iloc[-1])
 df.to_csv(f"datasets/{origin_id[:3].upper()}_{destination_id[:3].upper()}_{init_date}_{date}.csv", index=False)
 
 # driver.close()
+
+# Lorem Ipsum
