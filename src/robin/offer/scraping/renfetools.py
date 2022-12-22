@@ -1,5 +1,9 @@
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.by import By
+from selenium.common.exceptions import TimeoutException
 from bs4 import BeautifulSoup
 import requests
 
@@ -20,7 +24,7 @@ def get_stations(soup):
     menu = soup.find('div', {'class': 'irf-search-shedule__container-ipt'})
     options = menu.find_all('option')
 
-    return {" ".join(filter(lambda x: x != "", opt.text.split(" "))): opt["value"] for opt in options}
+    return {opt["value"]: " ".join(filter(lambda x: x != "", opt.text.split(" ")))for opt in options}
 
 
 def get_date(soup, selenium=False):
