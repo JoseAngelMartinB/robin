@@ -1,7 +1,7 @@
 from cartopy.io import shapereader
 import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
-from src.robin.offer.entities import *
+from src.robin.supply.entities import *
 import pandas as pd
 import geopandas
 import requests

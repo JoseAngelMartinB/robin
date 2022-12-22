@@ -1,5 +1,5 @@
-from src.robin.offer.scraping.renfetools import get_stations
-from src.robin.offer.gtfs.renfegtfstools import *
+from src.robin.supply.scraping.renfetools import get_stations
+from src.robin.supply.gtfs.renfegtfstools import *
 from bs4 import BeautifulSoup
 import requests
 
