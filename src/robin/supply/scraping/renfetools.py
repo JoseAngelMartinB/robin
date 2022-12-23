@@ -1,17 +1,69 @@
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.common.by import By
-from selenium.common.exceptions import TimeoutException
 from bs4 import BeautifulSoup
 import requests
-
+import difflib
 import pandas as pd
 import datetime
 import re
 
 
+def isTrain(r):
+    try:
+        r['cdgotren']
+        return True
+    except KeyError:
+        return False
+
+
+def get_prices(pcols):
+    prices = {}
+    for i, col in enumerate(pcols):
+        cb = col.find_all("button")
+
+        if cb:
+            for p in cb:
+                pd = p.find_all("div")
+                if pd:
+                    price = pd[1].text.split(" ")[0].replace(",", ".")
+                else:
+                    price = False
+        else:
+            # price = re.sub(r'\s+', '', col.text)
+            return {j: False for j in range(3)}
+
+        prices[i] = price
+
+    return prices
+
+
+def get_train(r, origin_id, destination_id, date):
+    train_id = r['cdgotren']
+    cols = r.find_all("td")
+
+    c1 = cols[1].find_all("div")
+    departure, duration = c1[0].text, c1[1].text
+
+    c3 = cols[3].find_all("div")
+    arrival, train_type = c3[0].text, c3[2].text
+
+    remove_blanks = lambda s: re.sub(r'\s+', '', s)
+
+    departure = remove_blanks(departure)
+    departure = datetime.datetime.strptime(str(date) + "-" + departure, '%d-%m-%Y-%H.%M')
+
+    duration = re.sub(r'\s+', ' ', duration)
+    duration_str = format_time(duration)
+    duration = to_timedelta(duration_str)
+
+    arrival = departure + duration
+
+    train_type = remove_blanks(train_type)
+
+    prices = get_prices(cols[4:-1])
+
+    return [train_id, train_type, departure, arrival, duration_str, prices]
+
+
+# Old scraping version using requests from here
 def is_number(s):
     try:
         float(s)
@@ -83,18 +135,9 @@ def get_stops(url):
     :param url: url with stops information from renfe
     :return: dictionary of stops, where keys are each station and values are a tuple with (arrival, departure) times
     """
-    # chrome_options = Options()
-    # chrome_options.add_argument("--headless")
-
-    # sdriver = webdriver.Chrome(options=chrome_options)
-    # sdriver.get(url)
 
     req = requests.get(url)
     soup = BeautifulSoup(req.text, 'html.parser')
-
-    # soup = BeautifulSoup(sdriver.page_source, 'html.parser')
-
-    # sdriver.close()
 
     table = soup.find('table', {'class': 'irf-renfe-travel__table cabecera_tabla'})
 
@@ -104,22 +147,42 @@ def get_stops(url):
 
         if aux:
             # Define blacklist to remove words from stop name
-            blacklist = ["", "PTA", "PUERTA", "CAMP", "DE"]
+            # blacklist = ["", "PTA", "PUERTA", "CAMP", "DE"]
 
             # Remove non-alphanumeric characters
             raw_name = re.sub(r'[^a-zA-Z0-9 -]', '', aux[0].text)
 
             # Split raw_name
             raw_words = re.split(r'\W+', raw_name)
+            name = " ".join(raw_words)
+            name = name.lower()
+
+            renfe_stations = pd.read_csv('datasets/renfe_stations.csv', sep=',')
+
+            gtfs_names = renfe_stations['stop_name'].values.tolist()
+            gtfs_names = list(map(lambda s: s.lower(), gtfs_names))
+            gtfs_names = list(map(lambda s: re.sub(r'[-/]', ' ', s), gtfs_names))
+
+            best_match = "Unknown"
+            bml = 0
+            for gn in gtfs_names:
+                gnl = gn.split(" ")
+
+                if sum([True for w in name.split(" ") if w in gnl]) > bml:
+                    best_match = gn
+
+            i = gtfs_names.index(best_match)
+
+            station_id = renfe_stations.iloc[i]['stop_id']
 
             # Remove blacklist words from stop name and get first word of each stop name
-            station = tuple(filter(lambda w: w not in blacklist and len(w) > 1, raw_words))[0]
+            # station = tuple(filter(lambda w: w not in blacklist and len(w) > 1, raw_words))[0]
 
             departure_time = re.sub(r'\s+', "", aux[1].text).replace(".", ":")
 
             arrival_time = re.sub(r'\s+', "", aux[2].text).replace(".", ":")
-
-            stops[station.upper()] = (departure_time, arrival_time)
+            # station.upper()
+            stops[station_id] = (departure_time, arrival_time)
 
     # Get first and last keys of stops dictionary
     first_key = list(stops.keys())[0]
@@ -142,8 +205,7 @@ def get_table(soup, url):
         if not cols or len(cols) < 6:
             continue
 
-        train_number, train_type = tuple(filter(lambda x: x != "", re.sub(r"\s+", " ", cols[0].text).split(" ")))
-        train_id = {train_type : train_number}
+        train_id, train_type = tuple(filter(lambda x: x != "", re.sub(r"\s+", " ", cols[0].text).split(" ")))
 
         stops_link = cols[0].find('a')["href"]
 
@@ -158,19 +220,6 @@ def get_table(soup, url):
 
         stops = get_stops(root + js_link)
 
-        """
-        p = cols[4].find("a")
-        p_link = p["href"]
-
-        links = cols[4].find_all("a")
-
-        for l in links:
-            if "javascript:comprarVOL" in l["href"]:
-                p_link = l["href"]
-                get_prices(p_link, url)
-                break
-        # Stop execution
-        """
         p = cols[4].find("div")
 
         i = re.sub(r'\s+', '', p.text)
@@ -182,7 +231,7 @@ def get_table(soup, url):
 
         prices = {p[i]: float(p[i + 1]) for i in range(0, len(p), 2)}
 
-        train = (train_id, stops, cols[1].text, cols[3].text, prices)
+        train = (train_id, train_type, stops, cols[1].text, cols[3].text, prices)
 
         # Assert non empty values
         assert all(v for v in train), "Error parsing train"
@@ -193,7 +242,7 @@ def get_table(soup, url):
 
 
 def format_time(x):
-    """ Function receives "x", a string with time formatted as "2 h. 30 m." and returns a timedelta object """
+    """ Function receives "x", a string with time formatted as "2 h. 30 m." and returns a string H:M """
     h, m = filter(lambda t: is_number(t), x.split(" "))
     return f'{h}:{m}'
 
@@ -207,24 +256,12 @@ def to_timedelta(x):
 def to_dataframe(s, d, url):
     table = get_table(s, url)
 
-    dfs = pd.DataFrame(table, columns=['Train', 'Stops', 'Departure', 'Duration', 'Price'])
-    dfs = dfs[dfs["Train"].apply(lambda x: "AVE" in x)].reset_index(drop=True)
+    dfs = pd.DataFrame(table, columns=['trip_id', 'train_type', 'stops', 'departure', 'duration', 'price'])
+    #dfs = dfs[dfs["train_type"].apply(lambda x: "AVE" in x)].reset_index(drop=True)
 
-    dfs['Duration'] = dfs['Duration'].apply(lambda x: format_time(x))
-    dfs['Departure'] = dfs['Departure'].apply(lambda x: datetime.datetime.strptime(str(d) + "-" + x, '%Y-%m-%d-%H.%M'))
-    dfs['Arrival'] = dfs['Departure'] + dfs['Duration'].apply(lambda x: to_timedelta(x))
+    dfs['duration'] = dfs['duration'].apply(lambda x: format_time(x))
+    dfs['departure'] = dfs['departure'].apply(lambda x: datetime.datetime.strptime(str(d) + "-" + x, '%Y-%m-%d-%H.%M'))
+    dfs['arrival'] = dfs['departure'] + dfs['duration'].apply(lambda x: to_timedelta(x))
 
     return dfs
-
-
-def get_prices(org, dest, date):
-    root = "https://venta.renfe.com/vol/"
-    search_url = f"buscarTren.do?tipoBusqueda=autocomplete&currenLocation=menuBusqueda&vengoderenfecom=SI&cdgoOrigen={org}&cdgoDestino={dest}&idiomaBusqueda=“s”&FechaIdaSel={date}&_fechaIdaVisual={date}&adultos_=1&ninos_=0&ninosMenores=0&numJoven=0&numDorada=0&codPromocional="
-
-
-
-
-
-
-
 

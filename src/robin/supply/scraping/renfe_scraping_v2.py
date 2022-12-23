@@ -115,36 +115,3 @@ print(df.iloc[-1])
 
 # Save dataframe to csv in datasets folder
 df.to_csv(f"datasets/{origin_id[:3].upper()}_{destination_id[:3].upper()}_{init_date}_{date}.csv", index=False)
-
-"""
-date = init_date
-for i in range(0):
-    # Sum one day to date
-    date += datetime.timedelta(days=1)
-
-    # Get year, month and day from date as strings
-    year, month, day = str(date).split("-")
-
-    # Get day of week starting at sunday = 0
-    weekday = date.weekday() + 1
-
-    url = f'https://horarios.renfe.com/HIRRenfeWeb/buscar.do?O={origin_id}&D={destination_id}&AF={year}&MF={month}&DF={day}&SF={weekday}&ID=s'
-    print("Search url: ", url)
-    print("Date: ", date)
-
-    req = requests.get(url)
-    soup = BeautifulSoup(req.text, 'html.parser')
-
-    df = pd.concat([df, to_dataframe(soup, date, url)])
-
-df = df.reset_index(drop=True)
-df = df[['Train', 'Stops', 'Departure', 'Arrival', 'Duration', 'Price']]
-
-print(df.describe(datetime_is_numeric=True))
-print(df.columns)
-print(df.iloc[-1])
-
-# Save dataframe to csv in datasets folder
-# df.to_csv(f"datasets/{origin_id[:3].upper()}_{destination_id[:3].upper()}_{init_date}_{date}.csv", index=False)
-"""
-
