@@ -1,4 +1,4 @@
-from src.robin.offer.entities import *
+from src.robin.supply.entities import *
 from renfetools import *
 
 from ast import literal_eval
