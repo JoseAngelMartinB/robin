@@ -14,16 +14,28 @@ class Station(object):
     
     
 class TimeSlot(object):
-    def __init__(self, id_: int, class_mark: float, size: float):
+    def __init__(self, id_: int, start: float, end: float):
         self.id = id_
-        self.class_mark = class_mark
-        self.size = size
+        self.start = start
+        self.end = end
+        self.class_mark = self.__get_class_mark()
+        self.size = self.__get_size()
 
-        # FROM YML SPECS
-        # self.start = start # datetime.time?
-        # self.mark = mark # datetime.timedelta?
-        # TODO: Not considered in specification table. self.end could be inferred from start and size
-        # self.end = end
+    # TODO: start and end as datetime.time?
+
+    def __get_class_mark(self) -> float:
+        """
+        Get class mark of time slot
+        :return: class mark
+        """
+        return (self.start + self.end) / 2
+
+    def __get_size(self) -> float:
+        """
+        Get size of time slot
+        :return: size
+        """
+        return self.end - self.start
 
     def __str__(self):
         return f'[{self.id},{self.class_mark},{self.size}]'
@@ -43,14 +55,15 @@ class Corridor(object):
 
 class Line(object):
     def __init__(self, id_: int, corr: Corridor, service_type: Tuple = (), timetable: List[Tuple] = []):
-        # Service type is a tuple of booleans indicating if the station is served by the line
+        # Service type is a tuple of booleans indicating which stations from the corridor are served
         self.id = id_
+        self.name = f'Line {id_}'  # TODO: get name from somewhere
         self.corr = corr
         # self.lstation = lstation
 
         self.J = self.__getstops(service_type)  # j: Train stops
         self.W = self.__getpairs()  # w: Pairs origin-destination
-        self.schedule = timetable  # TBD - Get schedule - DEFAULT Left to Right
+        self.schedule = timetable  # TODO: - Get schedule - DEFAULT Left to Right
 
         # self.timetable=ltimetable # list of tuple (AT,DT)
 
