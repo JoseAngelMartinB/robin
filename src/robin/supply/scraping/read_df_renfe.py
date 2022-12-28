@@ -1,8 +1,21 @@
 from src.robin.supply.entities import *
 from renfetools import *
-
+import numpy as np
 from ast import literal_eval
 import os
+
+
+prices = np.load("datasets/prices/prices_MAD_BAR_29-12-2022.npy", allow_pickle=True)
+
+print(prices)
+
+exit()
+
+# 1. Scrap trips range of days
+# 2. Scrap prices same range of days
+# 3. Load trips
+# 4. For each trip: get prices --> Load prices file for day i, and get key "service_id"
+# if not found, use default price dictionary with False values
 
 # Decode dictionaries in the dataframe
 converters = {'Train': literal_eval, 'Stops': literal_eval, 'Price': literal_eval}
