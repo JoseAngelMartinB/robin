@@ -71,7 +71,6 @@ for row in table.find_all("tr"):
     if isTrain(row):
         # trip_id, train_type, origin_id, destination_id, date_service, departure_time
         trains.append(get_train(row, origin_id, destination_id, date_str))
-        pass
     else:
         continue
     count += 1
@@ -82,36 +81,17 @@ for train in trains:
 print("Total trains: ", count)
 driver.close()
 
-df1 = pd.DataFrame.from_records(trains, columns=['trip_id', 'train_type', 'arrival', 'departure', 'duration', 'prices'])
-print(df1.head())
-print(df1.iloc[-1])
-
-# Renfe schedules search
-# Get year, month and day from date as strings
-year, month, day = str(date).split("-")
-
-# Get day of week starting at sunday = 0
-weekday = date.weekday() + 1
-url = f'https://horarios.renfe.com/HIRRenfeWeb/buscar.do?O={origin_id}&D={destination_id}&AF={year}&MF={month}&DF={day}&SF={weekday}&ID=s'
-
-req = requests.get(url)
-soup = BeautifulSoup(req.text, 'html.parser')
-
-# Retrieve date of search from the page (header)
-init_date = get_date(soup)
-print("Search url: ", url)
-print("Date: ", init_date)
-
-# TODO: Consider saving dicts in independent files using npy format or csv
-# File with: trip_id, price1, price2, price3
-# File with: trip_id, sequence of stops
-
-df = to_dataframe(soup, init_date, url)
+df = pd.DataFrame.from_records(trains, columns=['trip_id', 'train_type', 'arrival', 'departure', 'duration', 'prices'])
+df["service_id"] = df.apply(lambda x: x["trip_id"] + "_" + x["departure"].strftime("%d-%m-%Y-%H.%M"), axis=1)
 
 df = df.reset_index(drop=True)
-df = df[['trip_id', 'train_type', 'stops', 'departure', 'arrival', 'duration', 'price']]
-print(df.columns)
+df = df[['service_id', 'trip_id', 'train_type', 'arrival', 'departure', 'duration', 'prices']]
+
+print(df.head())
 print(df.iloc[-1])
 
-# Save dataframe to csv in datasets folder
-df.to_csv(f"datasets/{origin_id[:3].upper()}_{destination_id[:3].upper()}_{init_date}_{date}.csv", index=False)
+import numpy as np
+
+prices = dict(zip(df.service_id, df.prices))
+np.save(f"datasets/prices_{origin_id[:3].upper()}_{destination_id[:3].upper()}_{date_str}.npy", prices)
+
