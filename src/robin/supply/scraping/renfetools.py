@@ -1,6 +1,5 @@
 from bs4 import BeautifulSoup
 import requests
-import difflib
 import pandas as pd
 import datetime
 import re
@@ -257,11 +256,16 @@ def to_dataframe(s, d, url):
     table = get_table(s, url)
 
     dfs = pd.DataFrame(table, columns=['trip_id', 'train_type', 'stops', 'departure', 'duration', 'price'])
-    #dfs = dfs[dfs["train_type"].apply(lambda x: "AVE" in x)].reset_index(drop=True)
 
+    # Filter only AVE trains
+    dfs = dfs[dfs["train_type"].apply(lambda x: "AVE" in x)].reset_index(drop=True)
+
+    # Get service id using data from "trip_id" and "departure" columns
     dfs['duration'] = dfs['duration'].apply(lambda x: format_time(x))
     dfs['departure'] = dfs['departure'].apply(lambda x: datetime.datetime.strptime(str(d) + "-" + x, '%Y-%m-%d-%H.%M'))
     dfs['arrival'] = dfs['departure'] + dfs['duration'].apply(lambda x: to_timedelta(x))
+
+    dfs["service_id"] = dfs.apply(lambda x: x["trip_id"] + "_" + x["departure"].strftime("%d-%m-%Y-%H.%M"), axis=1)
 
     return dfs
 
