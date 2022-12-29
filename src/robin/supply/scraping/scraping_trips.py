@@ -1,60 +1,72 @@
 from renfetools import *
+import numpy as np
 
-# Renfe search menu
-url = "https://www.renfe.com/content/renfe/es/es/viajar/informacion-util/horarios/app-horarios.html"
 
-req = requests.get(url)
-soup = BeautifulSoup(req.text, 'html.parser')
+def renfe_scraping_trips(origin_id, destination_id, date, range_days):
+    print("Scraping trips...")
 
-stations = get_stations(soup)
+    init_date = date
+    for i in range(range_days):
+        # Get year, month and day from date as strings
+        year, month, day = str(date).split("-")
 
-# Set origin and destination
-origin = 60000  # Madrid Puerta de Atocha
-destination = 71801  # Barcelona Sants
+        # Get day of week starting at sunday = 0
+        weekday = date.weekday() + 1
 
-# Read csv from parallel directory
-df = pd.read_csv('datasets/renfe_stations.csv')
+        url = f'https://horarios.renfe.com/HIRRenfeWeb/buscar.do?O={origin_id}&D={destination_id}&AF={year}&MF={month}&DF={day}&SF={weekday}&ID=s'
+        print("Search url: ", url)
+        print("Date: ", date)
 
-origin_id = df[df['stop_id'] == origin]['renfe_id'].values[0]
-destination_id = df[df['stop_id'] == destination]['renfe_id'].values[0]
+        req = requests.get(url)
+        soup = BeautifulSoup(req.text, 'html.parser')
 
-# Get origin and destination id's to use in the search
-assert all(s in stations.keys() for s in (origin_id, destination_id)), "Invalid origin or destination"
+        if not i:
+            df = to_dataframe(soup, date, url)
+        else:
+            df = pd.concat([df, to_dataframe(soup, date, url)])
 
-# Get today's date
-date = datetime.date.today()
-date += datetime.timedelta(days=1)
+        # Sum one day to date
+        date += datetime.timedelta(days=1)
 
-# TODO: Consider saving dicts in independent files using npy format or csv
-# File with: trip_id, price1, price2, price3
-# File with: trip_id, sequence of stops
+    df = df.reset_index(drop=True)
+    df = df[['service_id', 'trip_id', 'train_type', 'stops', 'departure', 'arrival', 'duration', 'price']]
 
-for i in range(1):
-    # Get year, month and day from date as strings
-    year, month, day = str(date).split("-")
+    # print(df.describe(datetime_is_numeric=True))
+    print(df.columns)
+    print(df.iloc[-1])
 
-    # Get day of week starting at sunday = 0
-    weekday = date.weekday() + 1
+    end_date = date - datetime.timedelta(days=1)
 
-    url = f'https://horarios.renfe.com/HIRRenfeWeb/buscar.do?O={origin_id}&D={destination_id}&AF={year}&MF={month}&DF={day}&SF={weekday}&ID=s'
-    print("Search url: ", url)
-    print("Date: ", date)
+    # Save numpy file with prices
+    stop_times = dict(zip(df.service_id, df.stops))
+    print(stop_times)
 
-    req = requests.get(url)
-    soup = BeautifulSoup(req.text, 'html.parser')
+    list_stop_times = []
+    for k, v in stop_times.items():
+        stops = list(zip(v.keys(), v.values()))
 
-    df = pd.concat([df, to_dataframe(soup, date, url)])
+        for i, ts in enumerate(stops, 1):
+            list_stop_times.append([k, ts[0], *ts[1], i])
 
-    # Sum one day to date
-    date += datetime.timedelta(days=1)
+    df_stops = pd.DataFrame(list_stop_times, columns=['service_id', 'stop_id', 'arrival', 'departure', 'stop_sequence'])
+    
+    df_stops.to_csv(f"datasets/stop_times/stopTimes_{origin_id}_{destination_id}_{init_date}_{end_date}.csv", index=False, header=True)
+    print("Saved stop times")
 
-df = df.reset_index(drop=True)
-df = df[['service_id', 'trip_id', 'train_type', 'stops', 'departure', 'duration', 'price']]
+    # np.save(f"datasets/stop_times/stopTimes_{origin_id}_{destination_id}_{init_date}_{end_date}.npy", stop_times)
 
-print(df.describe(datetime_is_numeric=True))
-print(df.columns)
-print(df.iloc[-1])
+    df = df.drop('stops', axis=1)
+    df = df.drop('price', axis=1)
 
-# Save dataframe to csv in datasets folder
-# df.to_csv(f"datasets/{origin_id[:3].upper()}_{destination_id[:3].upper()}_{init_date}_{date}.csv", index=False)
+    # Save dataframe to csv in datasets folder
+    df.to_csv(f"datasets/trips/trips_{origin_id}_{destination_id}_{init_date}_{end_date}.csv", index=False)
+    print("Saved trips")
+
+
+if __name__ == "__main__":
+    date = datetime.date.today()
+    range_days = 1
+    origin_id = 'MADRI'
+    destination_id = 'BARCE'
+    renfe_scraping_trips(origin_id, destination_id, date, range_days)
 
