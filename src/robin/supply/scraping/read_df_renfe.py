@@ -3,19 +3,46 @@ from renfetools import *
 import numpy as np
 from ast import literal_eval
 import os
+import glob
 
+updated_file = max(glob.iglob(f'datasets/trips/*.csv'), key=os.path.getmtime)
 
-prices = np.load("datasets/prices/prices_MAD_BAR_29-12-2022.npy", allow_pickle=True)
+trips = pd.read_csv(updated_file, delimiter=',')
 
-print(prices)
+# E.g updated_file = 'datasets/trips/trips_MADRI_BARCE_2022-12-30_2023-01-03.csv'
+
+file_name = updated_file.split('/')[-1].split(".")[0]
+# E.g file_name = 'trips_MADRI_BARCE_2022-12-30_2023-01-03'
+
+file_name = "_".join(file_name.split("_")[1:])
+# E.g file_name = 'MADRI_BARCE_2022-12-30_2023-01-03'
+
+prices = pd.read_csv(f'datasets/prices/prices_{file_name}.csv', delimiter=',')
+stop_times = pd.read_csv(f'datasets/stop_times/stopTimes_{file_name}.csv', delimiter=',')
+
+origin_id, destination_id, departure, arrival = file_name.split('_')
+# E.g. origin_id = 'MADRI', destination_id = 'BARCE', departure = '2022-12-30', arrival = '2023-01-03'
+
+print(origin_id, destination_id, departure, arrival)
+
+# prices = np.load("datasets/prices/prices_MAD_BAR_29-12-2022.npy", allow_pickle=True)
+
+print(trips.head())
+print(prices.head())
+print(stop_times.head())
 
 exit()
 
-# 1. Scrap trips range of days
-# 2. Scrap prices same range of days
-# 3. Load trips
+# 1. Scrap trips range of days. DONE
+# 2. Scrap prices same range of days. DONE
+# 3. Load trips. DONE
 # 4. For each trip: get prices --> Load prices file for day i, and get key "service_id"
 # if not found, use default price dictionary with False values
+
+
+# Train network to predict prices:
+# Inputs: trip_id, day of week, (calendar info? type day (holidays?),today's date, date of trip
+# Outputs: Prices for type of seats 0, 1, 2
 
 # Decode dictionaries in the dataframe
 converters = {'Train': literal_eval, 'Stops': literal_eval, 'Price': literal_eval}
