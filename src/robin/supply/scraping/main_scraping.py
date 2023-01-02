@@ -41,7 +41,7 @@ assert all(s in stations.keys() for s in (origin_id, destination_id)), "Invalid 
 # Get today's date
 date = datetime.date.today()
 # date += datetime.timedelta(days=1)
-range_days = 4
+range_days = 80
 
 renfe_scraping_trips(origin_id, destination_id, date, range_days)
 
