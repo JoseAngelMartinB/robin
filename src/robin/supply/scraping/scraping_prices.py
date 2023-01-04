@@ -7,7 +7,6 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import TimeoutException
 
-
 def renfe_scraping_prices(origin_id: str, destination_id: str, date: datetime.date, range_days: int):
     """
     Scraping prices
@@ -32,6 +31,9 @@ def renfe_scraping_prices(origin_id: str, destination_id: str, date: datetime.da
     # chrome_options.add_argument("--disable-gpu")
     chrome_options.add_argument("--headless")  # Don't open browser window
 
+    # Initialize selenium web driver (will use local chrome driver) Requires chromedriver to be installed
+    driver = webdriver.Chrome(options=chrome_options)
+
     init_date = date # Save initial date
     for i in range(range_days):
         # Parse date to string with format %d-%m-%Y to generate the URL
@@ -46,9 +48,6 @@ def renfe_scraping_prices(origin_id: str, destination_id: str, date: datetime.da
         url = root + search_url
         print("Search url: ", url)
         print("Date: ", date)
-
-        # Initialize selenium web driver (will use local chrome driver) Requires chromedriver to be installed
-        driver = webdriver.Chrome(options=chrome_options)
 
         driver.get(url)
 
@@ -72,8 +71,6 @@ def renfe_scraping_prices(origin_id: str, destination_id: str, date: datetime.da
                 continue
             count += 1
 
-        driver.close()  # Close web driver
-
         df1 = pd.DataFrame.from_records(trains, columns=['trip_id', 'train_type', 'arrival', 'departure', 'duration', 'prices'])
         df1["service_id"] = df1.apply(lambda x: x["trip_id"] + "_" + x["departure"].strftime("%d-%m-%Y-%H.%M"), axis=1)
 
@@ -84,6 +81,8 @@ def renfe_scraping_prices(origin_id: str, destination_id: str, date: datetime.da
 
         # Sum one day to date
         date += datetime.timedelta(days=1)
+
+    driver.close()  # Close web driver
 
     df = df.reset_index(drop=True)
 
