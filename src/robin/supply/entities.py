@@ -115,7 +115,6 @@ class TSP(object):
         self.id = id_
         self.name = name
         self.shortname = shortname
-
         # TODO: Not considered in specification table
         # Could retrieve information from RollingStock object?
         # self.rolling_stock = rolling_stock
@@ -126,18 +125,18 @@ class TSP(object):
 
 # TODO:
 class RollingStock(object):
-    def __init__(self, id: int, tsp: TSP, s1: None, kmax: None):
-        self.id = id
+    def __init__(self, id_: int, name: str, tsp: TSP, seats: dict):
+        self.id = id_
+        self.name = name
         self.tsp = tsp
-        self.S1 = s1
-        self.Kmax = kmax
+        self.seats = seats
 
         # TODO: FROM YML SPECS
         # self.name = name
         # self.seats = seats E.G. key: hard_type, val: quantity - {1: 50, 2: 250}
 
     def __str__(self):
-        return f'[{self.id},{self.name},{self.shortname}]'
+        return f'[{self.id},{self.name},{self.tsp},{self.seats}]'
 
 
 # TODO:
