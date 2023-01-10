@@ -106,48 +106,48 @@ class Seat(object):
         self.soft_type = soft_type  # E.g. Luggage compartment?
 
     def __str__(self):
-        return f'[{self.id}, {self.s1}, {self.s2}]'
+        return f'[{self.id}, {self.name}, {self.hard_type}, {self.soft_type}]'
 
 
-# TODO:
 class TSP(object):
     def __init__(self, id_: int, name: str, shortname: str):
-        self.id = id_
-        self.name = name
-        self.shortname = shortname
-        # TODO: Not considered in specification table
-        # Could retrieve information from RollingStock object?
-        # self.rolling_stock = rolling_stock
+        self.id = id_  # Agency ID: 1071
+        self.name = name  # Agency Name: RENFE OPERADORA
+        self.shortname = shortname  # Agency Short Name: RENFE
 
     def __str__(self):
         return f'[{self.id},{self.name},{self.shortname}]'
 
 
-# TODO:
 class RollingStock(object):
     def __init__(self, id_: int, name: str, tsp: TSP, seats: dict):
-        self.id = id_
+        self.id = id_  #
         self.name = name
         self.tsp = tsp
         self.seats = seats
-
-        # TODO: FROM YML SPECS
-        # self.name = name
-        # self.seats = seats E.G. key: hard_type, val: quantity - {1: 50, 2: 250}
 
     def __str__(self):
         return f'[{self.id},{self.name},{self.tsp},{self.seats}]'
 
 
-# TODO:
 class Service(object):
-    # (id, date, line, time_slot, seat_type, time_table, price, type_capacity, TSP_capacity, rolling_stock)
-    def __init__(self, id_: int, day: datetime.datetime, line: Line):
+    def __init__(self, id_: int,
+                 date: datetime.datetime,
+                 line: Line,
+                 tsp: TSP,
+                 rolling_stock: RollingStock,
+                 capacity_type: bool):
+
         self.id = id_
+        self.date = date
         self.line = line
-        self.timeslot = None
-        self.train = None
-        self.day = None
+        self.TSP = tsp
+        self.rolling_stock = rolling_stock
+        self.W = self.line.W
+        self.capacity = capacity_type  # True if "Train Capacity"
+
+    def __str__(self):
+        return f"Service {self.id} on {self.date} operated by {self.TSP.shortname}"
 
 
 # TODO:
