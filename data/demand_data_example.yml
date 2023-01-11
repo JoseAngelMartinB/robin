@@ -1,0 +1,106 @@
+# Yaml datafile for demand data. Example data for testing.
+
+# Market
+# stations are noted by their short name
+market:
+  - id: 1
+    departure_station: "MAD"
+    arrival_station: "ZAZ"
+  - id: 2
+    departure_station: "ZAZ"
+    arrival_station: "BCN"
+  - id: 3
+    departure_station: "MAD"
+    arrival_station: "BCN"
+
+# Pattern User
+# arrival_time is a normal distribution in hours
+# purchase_day is a discrete uniform distribution
+# seats utility are ranked between [0, 1] noted that 0 means no utility and 1 maximum utility
+# penalties are linear functions between [0, 1] noted that 0 means no penality and 1 maximum penalty
+# TODO: error
+patternUser:
+  - id: 1
+    arrival_time:
+      - mean: 8
+        std: 1
+    purchase_day:
+      - first_day: 9
+        last_day: 13
+    forbidden_departure_hours:
+      - start: 9
+        end: null
+    seats:
+      - id: 1
+        utility: 0.1
+      - id: 2
+        utility: 0.2
+      - id: 3
+        utility: 0.5
+      - id: 4
+        utility: 0.8
+    penalties:
+      - arrival_time: 1
+      - departure_time: 0.7
+      - cost: 0.05
+      - traveling_time: 0.4
+    error: null
+  - id: 2
+    arrival_time:
+      - mean: 18
+        std: 3
+    purchase_day:
+      - first_day: 13
+        last_day: 15
+    forbidden_departure_hours:
+      - start: 6
+        end: 14
+    seats:
+      - id: 1
+        utility: 0.1
+      - id: 2
+        utility: 0.9
+      - id: 3
+        utility: 0
+      - id: 4
+        utility: 0.6
+    penalties:
+      - arrival_time: 0.1
+      - departure_time: 0.2
+      - cost: 0.8
+      - traveling_time: 0.3
+    error: null
+
+# Pattern Demand
+# passengers is a discrete uniform distribution
+# patternUsers probabilities are directly specified
+patternDemand:
+  - id: 1
+    market: 3
+    passengers:
+      - low: 600
+        high: 1000
+    patternUsers:
+      - id: 1
+        percentage: 0.7
+      - id: 2
+        percentage: 0.3
+  - id: 2
+    market: 3
+    passengers:
+      - low: 1400
+        high: 2200
+    patternUsers:
+      - id: 1
+        percentage: 0.2
+      - id: 2
+        percentage: 0.8
+
+# Day
+day:
+  - id: 1
+    date: "2023-01-10"
+    patternDemand: 1
+  - id: 2
+    date: "2023-01-13"
+    patternDemand: 2
