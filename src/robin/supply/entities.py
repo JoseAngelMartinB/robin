@@ -57,7 +57,7 @@ class Line(object):
     def __init__(self, id_: int, corr: Corridor, service_type: Tuple = (), timetable: List[Tuple] = []):
         # Service type is a tuple of booleans indicating which stations from the corridor are served
         self.id = id_
-        self.name = f'Line {id_}'  # TODO: get name from somewhere
+        self.name = f'Line {id_}'
         self.corr = corr
         # self.lstation = lstation
 
@@ -94,12 +94,8 @@ class Line(object):
         self.timetable.append((at, dt))  # TODO: (AT,DT) dependent on travel way --> Not a single (AT, DT) tuple?
 
 
-# TODO
 class Seat(object):
-    # (id, hard, soft)
     def __init__(self, id_: int, name: str, hard_type: int, soft_type: int):
-        # hard_type E.g. Linked to capacity constrains (e.g. tickets available)
-        # soft_type - E.g. Luggage availability
         self.id = id_
         self.name = name
         self.hard_type = hard_type  # E.g. Tickets available?
@@ -109,31 +105,22 @@ class Seat(object):
         return f'[{self.id}, {self.s1}, {self.s2}]'
 
 
-# TODO:
 class TSP(object):
-    def __init__(self, id_: int, name: str, shortname: str):
+    def __init__(self, id_: int, name: str, rolling_stock: List = []):
         self.id = id_
         self.name = name
-        self.shortname = shortname
-        # TODO: Not considered in specification table
-        # Could retrieve information from RollingStock object?
-        # self.rolling_stock = rolling_stock
+        self.rolling_stock = rolling_stock  # TODO:
 
     def __str__(self):
-        return f'[{self.id},{self.name},{self.shortname}]'
+        return f'[{self.id},{self.name},{self.rolling_stock}]'
 
 
-# TODO:
 class RollingStock(object):
     def __init__(self, id_: int, name: str, tsp: TSP, seats: dict):
         self.id = id_
         self.name = name
         self.tsp = tsp
-        self.seats = seats
-
-        # TODO: FROM YML SPECS
-        # self.name = name
-        # self.seats = seats E.G. key: hard_type, val: quantity - {1: 50, 2: 250}
+        self.seats = seats  # E.G. key: hard_type, val: quantity - {1: 50, 2: 250}
 
     def __str__(self):
         return f'[{self.id},{self.name},{self.tsp},{self.seats}]'
@@ -144,6 +131,7 @@ class Service(object):
     # (id, date, line, time_slot, seat_type, time_table, price, type_capacity, TSP_capacity, rolling_stock)
     def __init__(self, id_: int, day: datetime.datetime, line: Line):
         self.id = id_
+        self.day = day
         self.line = line
         self.timeslot = None
         self.train = None
