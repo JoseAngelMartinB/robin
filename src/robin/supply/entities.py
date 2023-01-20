@@ -132,7 +132,6 @@ class Line(object):
         self.timetable.append((at, dt))  # TODO: (AT,DT) dependent on travel way --> Not a single (AT, DT) tuple?
 
 
-# TODO
 class Seat(object):
     def __init__(self, id_: int, name: str, hard_type: int, soft_type: int):
         self.id = id_
@@ -141,7 +140,7 @@ class Seat(object):
         self.soft_type = soft_type  # E.g. Luggage compartment?
 
     def __str__(self):
-        return f'[{self.id}, {self.s1}, {self.s2}]'
+        return f'[{self.id}, {self.hard_type}, {self.soft_type}]'
 
 
 class TSP(object):
