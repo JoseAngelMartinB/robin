@@ -3,6 +3,15 @@ import datetime
 
 
 class Station(object):
+    """
+    Station class
+
+    Attributes:
+        id (int): Station ID
+        name (str): Station name
+        shortname (str): Station short name
+        coords (Tuple[float, float]): Station coordinates (latitude, longitude)
+    """
     def __init__(self, id_: int, name: str, shortname: str, coords: Tuple[float, float] = None):
         self.id = id_
         self.name = name
@@ -14,6 +23,16 @@ class Station(object):
     
     
 class TimeSlot(object):
+    """
+    Time slot class
+
+    Attributes:
+        id (int): Time slot ID
+        start (float): Time slot start time
+        end (float): Time slot end time
+        class_mark (float): Time slot class mark
+        size (float): Time slot size
+    """
     def __init__(self, id_: int, start: float, end: float):
         self.id = id_
         self.start = start
@@ -42,6 +61,15 @@ class TimeSlot(object):
 
 
 class Corridor(object):
+    """
+    Corridor class
+
+    Attributes:
+        id (int): Corridor ID
+        list_station (List[Station]): List of stations in corridor
+    """
+
+    # Corridor could be a tree structure (parent-child relationship between stations)
     def __init__(self, id_: int, list_station: List[Station] = []):
         self.id = id_
         self.list_station = list_station
@@ -54,6 +82,16 @@ class Corridor(object):
 
 
 class Line(object):
+    """
+    Line class
+
+    Attributes:
+        id (int): Line ID
+        name (str): Line name
+        corr (Corridor): Line corridor
+        lstation (List[Station]): List of stations in line
+        timetable (List[Tuple]): List of tuples (arrival time, departure time)
+    """
     def __init__(self, id_: int, corr: Corridor, service_type: Tuple = (), timetable: List[Tuple] = []):
         # Service type is a tuple of booleans indicating which stations from the corridor are served
         self.id = id_
@@ -137,15 +175,18 @@ class Service(object):
         self.train = None
         self.day = None
 
+    def __str__(self):
+        return f'[{self.id},{self.day},{self.line}]'
+
 
 # TODO:
 class Supply(object):
     # (id, date, w(o, d), seat_offer, schedule, price on time t)
-    def __init__(self, id_: int, date: None, line: Line):
+    def __init__(self, id_: int, date: datetime.date, w: Tuple[Station, Station]):
         self.id = id_
-        self.date = None
-        self.w = None
-        self.seats = None
-        self.seatType = None
-        self.timeTable = None
-        self.price = None
+        self.w = w
+
+        # Get supply for a given date and a given pair of stations
+
+        # Retrieve information from the database
+        # Build services with the information from the database
