@@ -132,6 +132,7 @@ class Line(object):
         self.timetable.append((at, dt))  # TODO: (AT,DT) dependent on travel way --> Not a single (AT, DT) tuple?
 
 
+# TODO
 class Seat(object):
     def __init__(self, id_: int, name: str, hard_type: int, soft_type: int):
         self.id = id_

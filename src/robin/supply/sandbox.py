@@ -103,9 +103,38 @@ print(renfeTSP)
 
 dictTSPs = {renfeTSP.id: renfeTSP}
 
+# RollingStock defines train model and default capacity for a TSP. Wagons configuration may change.
+
+# Renfe High-Speed Trains:
+# models = ("S-100", "S-102/112", "S-103", "S-104", "S-114", "AVLO")
+# capacity = (329, 200, 200, 200, 200, 200)
+
 # Dummy definition Rolling Stock
 renfeRS = RollingStock(1, "TALGO AVRIL", dictTSPs[1071], {1: 50, 2: 75})
 print(renfeRS)
+
+# Renfe Seats
+seat_names = ("Basico", "Elige", "Premium")
+hard_type = (1, 1, 2)  # 1: Tourist seats, 2: Premium seats
+soft_type = (1, 1, 1)  # 1: With Luggage. Up to 3 pieces of luggage (25Kg Max)
+
+renfe_HS_seats = [Seat(i, n, h, s) for i, n, h, s in zip(range(1, len(seat_names) + 1), seat_names, hard_type, soft_type)]
+
+print("Renfe High-Speed Seats", *renfe_HS_seats)
+
+# Renfe dummy service definition
+first_service = Service(1, datetime.date.today(), lineMB, renfeTSP, renfeRS, True)
+
+print(first_service)
+
+
+
+
+
+
+
+
+
 
 
 
