@@ -156,7 +156,7 @@ def get_stops(url):
             name = " ".join(raw_words)
             name = name.lower()
 
-            renfe_stations = pd.read_csv('datasets/renfe_stations.csv', sep=',')
+            renfe_stations = pd.read_csv('../../datasets/scraping/renfe/renfe_stations.csv', sep=',')
 
             gtfs_names = renfe_stations['stop_name'].values.tolist()
             gtfs_names = list(map(lambda s: s.lower(), gtfs_names))
