@@ -29,7 +29,7 @@ stop_lat: Station latitude
 stop_lon: Station longitude
 """
 
-df = pd.read_csv('datasets/renfe_stations.csv')
+df = pd.read_csv('../../datasets/scraping/renfe/renfe_stations.csv')
 
 # Get Renfe stations ids from previous csv
 origin_id = df[df['stop_id'] == origin]['renfe_id'].values[0]

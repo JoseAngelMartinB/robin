@@ -5,7 +5,7 @@ from ast import literal_eval
 import os
 import glob
 
-updated_file = max(glob.iglob(f'datasets/trips/*.csv'), key=os.path.getmtime)
+updated_file = max(glob.iglob(f'../../datasets/scraping/renfe/trips/*.csv'), key=os.path.getmtime)
 
 trips = pd.read_csv(updated_file, delimiter=',')
 
@@ -17,8 +17,8 @@ file_name = updated_file.split('/')[-1].split(".")[0]
 file_name = "_".join(file_name.split("_")[1:])
 # E.g file_name = 'MADRI_BARCE_2022-12-30_2023-01-03'
 
-prices = pd.read_csv(f'datasets/prices/prices_{file_name}.csv', delimiter=',')
-stop_times = pd.read_csv(f'datasets/stop_times/stopTimes_{file_name}.csv', delimiter=',')
+prices = pd.read_csv(f'../../datasets/scraping/renfe/prices/prices_{file_name}.csv', delimiter=',')
+stop_times = pd.read_csv(f'../../datasets/scraping/renfe/stop_times/stopTimes_{file_name}.csv', delimiter=',')
 
 origin_id, destination_id, departure, arrival = file_name.split('_')
 # E.g. origin_id = 'MADRI', destination_id = 'BARCE', departure = '2022-12-30', arrival = '2023-01-03'
@@ -52,7 +52,7 @@ datetime_cols = ['Departure', 'Arrival']
 
 # Get filenames of csv files in datasets/ folder
 path = 'datasets/'
-filenames = [path+fn for fn in os.listdir('datasets/') if fn.endswith('.csv')]
+filenames = [path + fn for fn in os.listdir('datasets/') if fn.endswith('.csv')]
 
 # Get updated file
 updated_file = max(filenames, key=os.path.getctime)

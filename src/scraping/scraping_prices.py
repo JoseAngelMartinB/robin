@@ -105,11 +105,12 @@ def renfe_scraping_prices(origin_id: str, destination_id: str, date: datetime.da
 
     df_prices = pd.DataFrame(list_prices, columns=['service_id', '0', '1', '2'])
 
-    df_prices.to_csv(f"datasets/prices/prices_{origin_id}_{destination_id}_{init_date}_{end_date}.csv", index=False)
+    df_prices.to_csv(f"../../datasets/scraping/renfe/prices/TEST_prices_{origin_id}_{destination_id}_{init_date}_{end_date}.csv", index=False)
 
 
 if __name__ == "__main__":
     date = datetime.date.today()
+    date += datetime.timedelta(days=1)  # Tomorrow
     range_days = 1
     origin_id = 'MADRI'
     destination_id = 'BARCE'
