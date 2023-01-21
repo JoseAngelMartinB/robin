@@ -2,13 +2,16 @@
 
 # Train stations
 stations:
-  - name: "Atocha"
+  - id: "60000"
+    name: "Atocha"
     city: "Madrid"
     short_name: "MAD"
-  - name: "Zaragoza-Delicias"
+  - id: "04040"
+    name: "Zaragoza-Delicias"
     city: "Zaragoza"
     short_name: "ZAZ"
-  - name: "Barcelona-Sants"
+  - id: "71801"
+    name: "Barcelona-Sants"
     city: "Barcelona"
     short_name: "BCN"
 
@@ -30,12 +33,16 @@ timeSlot:
     start: "20:45"
     end: "20:55"
     mark: "20:50"
+  - id: 5
+    start: "23:45"
+    end: "00:45"
+    mark: "00:15"
 
 # Corridor
 corridor:
   - id: 1
     name: "Madrid-Barcelona"
-    stations: ["MAD", "ZAZ", "BCN"]
+    stations: ["60000", "04040", "71801"]  # ["MAD", "ZAZ", "BCN"]
     
 # Line
 line:
