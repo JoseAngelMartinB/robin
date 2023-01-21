@@ -71,7 +71,6 @@ for rs in rolling_stock.values():
     print(rs)
 print()
 
-
 print("TSP: ")
 tsp = {}
 for op in supply_data_example['trainServiceProvider']:
@@ -82,6 +81,45 @@ for op in supply_data_example['trainServiceProvider']:
 for op in tsp.values():
     print(op)
 print()
+
+print("Services: ")
+services = {}
+for s in supply_data_example['service']:
+    service_data = list(s.values())
+    service_id, service_date = service_data[:2]
+    service_line = lines[service_data[2]]
+    service_tsp = tsp[service_data[3]]
+    service_time_slot = timeSlots[service_data[4]]
+    service_rs = rolling_stock[service_data[5]]
+    service_stops = service_data[6]
+
+    service_prices = {}
+    for s in service_stops:
+        org, des, prices = tuple(s.values())
+        prices = {tup[0]: tup[1] for tup in [tuple(t.values()) for t in prices]}
+
+        service_prices[(org, des)] = prices
+    service_capacity = service_data[7]
+
+    services[service_id] = Service(service_id,
+                                   service_date,
+                                   service_line,
+                                   service_tsp,
+                                   service_time_slot,
+                                   service_rs,
+                                   service_prices,
+                                   service_capacity)
+
+for service in services.values():
+    print(service)
+print()
+
+
+my_travel = Supply(1, "BCN", "MAD", datetime.datetime(day=22, month=1, year=2023).date(), services.values())
+
+print("My Travel: ")
+for s in my_travel.services:
+    print(s)
 
 exit()
 
