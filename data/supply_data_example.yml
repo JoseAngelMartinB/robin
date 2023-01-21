@@ -2,15 +2,15 @@
 
 # Train stations
 stations:
-  - id: "60000"
+  - id: "MAD"
     name: "Atocha"
     city: "Madrid"
     short_name: "MAD"
-  - id: "04040"
+  - id: "ZAZ"
     name: "Zaragoza-Delicias"
     city: "Zaragoza"
     short_name: "ZAZ"
-  - id: "71801"
+  - id: "BCN"
     name: "Barcelona-Sants"
     city: "Barcelona"
     short_name: "BCN"
