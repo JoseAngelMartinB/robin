@@ -71,7 +71,7 @@ def renfe_scraping_prices(origin_id: str, destination_id: str, date: datetime.da
                 continue
             count += 1
 
-        df1 = pd.DataFrame.from_records(trains, columns=['trip_id', 'train_type', 'arrival', 'departure', 'duration', 'prices'])
+        df1 = pd.DataFrame.from_records(trains, columns=['trip_id', 'train_type', 'departure', 'arrival', 'duration', 'prices'])
         df1["service_id"] = df1.apply(lambda x: x["trip_id"] + "_" + x["departure"].strftime("%d-%m-%Y-%H.%M"), axis=1)
 
         if not i:  # If first iteration, create csv file
@@ -87,7 +87,7 @@ def renfe_scraping_prices(origin_id: str, destination_id: str, date: datetime.da
     df = df.reset_index(drop=True)
 
     # Reorder columns
-    df = df[['service_id', 'trip_id', 'train_type', 'arrival', 'departure', 'duration', 'prices']]
+    df = df[['service_id', 'trip_id', 'train_type', 'departure', 'arrival', 'duration', 'prices']]
 
     print(df.columns)
     print(df.iloc[-1])
@@ -105,7 +105,7 @@ def renfe_scraping_prices(origin_id: str, destination_id: str, date: datetime.da
 
     df_prices = pd.DataFrame(list_prices, columns=['service_id', '0', '1', '2'])
 
-    df_prices.to_csv(f"../../datasets/scraping/renfe/prices/TEST_prices_{origin_id}_{destination_id}_{init_date}_{end_date}.csv", index=False)
+    df_prices.to_csv(f"../../datasets/scraping/renfe/prices/prices_{origin_id}_{destination_id}_{init_date}_{end_date}.csv", index=False)
 
 
 if __name__ == "__main__":
