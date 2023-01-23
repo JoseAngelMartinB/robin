@@ -70,7 +70,7 @@ def renfe_scraping_trips(origin_id: str, destination_id: str, date: datetime.dat
     df_stops = pd.DataFrame(list_stop_times, columns=['service_id', 'stop_id', 'arrival', 'departure', 'stop_sequence'])
 
     # Save stop_times dataframe to csv
-    df_stops.to_csv(f"../../datasets/scraping/renfe/stop_times/TEST_stopTimes_{origin_id}_{destination_id}_{init_date}_{end_date}.csv", index=False, header=True)
+    df_stops.to_csv(f"../../datasets/scraping/renfe/stop_times/stopTimes_{origin_id}_{destination_id}_{init_date}_{end_date}.csv", index=False, header=True)
     print("Saved stop times")
 
     # Remove stops and price columns
@@ -78,7 +78,7 @@ def renfe_scraping_trips(origin_id: str, destination_id: str, date: datetime.dat
     df = df.drop('price', axis=1)
 
     # Save trips dataframe to csv in datasets folder
-    df.to_csv(f"../../datasets/scraping/renfe/trips/TEST_trips_{origin_id}_{destination_id}_{init_date}_{end_date}.csv", index=False)
+    df.to_csv(f"../../datasets/scraping/renfe/trips/trips_{origin_id}_{destination_id}_{init_date}_{end_date}.csv", index=False)
     print("Saved trips")
 
 
