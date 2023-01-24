@@ -5,7 +5,8 @@ from ast import literal_eval
 import os
 import glob
 
-updated_file = max(glob.iglob(f'../../datasets/scraping/renfe/trips/*.csv'), key=os.path.getmtime)
+# updated_file = max(glob.iglob(f'../../datasets/scraping/renfe/trips/*.csv'), key=os.path.getmtime)
+updated_file = f'../../datasets/scraping/renfe/trips/trips_MADRI_BARCE_2023-02-01_2023-02-28.csv'
 
 trips = pd.read_csv(updated_file, delimiter=',')
 
@@ -25,11 +26,85 @@ origin_id, destination_id, departure, arrival = file_name.split('_')
 
 print(origin_id, destination_id, departure, arrival)
 
-# prices = np.load("datasets/prices/prices_MAD_BAR_29-12-2022.npy", allow_pickle=True)
+def get_trip_price(service_id, prices):
+    # Get price for service_id, If not found, return default price
+    try:
+        price = prices[prices['service_id'] == service_id][['0', '1', '2']].values[0]
+        price = tuple(price)
+    except IndexError:
+        price = (False, False, False)
+    return price
+
+
+trips['prices'] = trips['service_id'].apply(lambda x: get_trip_price(x, prices))
+
+# Filter trips by prices to remove trips with column 0, 1 or 2 equal to False
+trips = trips[trips['prices'].apply(lambda x: x[0] != False and x[1] != False and x[2] != False)]
 
 print(trips.head())
-print(prices.head())
 print(stop_times.head())
+print(prices.head())
+
+# Build Corridor MAD-BAR
+
+# Group dataframe by trip_id
+grouped_df = stop_times.groupby('service_id')
+
+# Stops column to nested list
+list_stations = grouped_df.apply(lambda d: list(d['stop_id'])).values.tolist()
+
+# Initialize corridor with max length trip
+corridor = list_stations.pop(list_stations.index(max(list_stations, key=len)))
+
+# Complete corridor with other stops that are not in the initial defined corridor
+for trip in list_stations:
+    for i, s in enumerate(trip):
+        if s not in corridor:
+            corridor.insert(corridor.index(trip[i-1])+1, s)
+
+renfe_stations = pd.read_csv('../../datasets/scraping/renfe/renfe_stations.csv')
+
+stations = {}
+for s in corridor:
+    name = renfe_stations[renfe_stations['stop_id'] == s]['stop_name'].values[0]
+    city = renfe_stations[renfe_stations['stop_id'] == s]['stop_name'].values[0]
+    shortname = str(renfe_stations[renfe_stations['stop_id'] == s]['stop_name'].values[0])[:3].upper()
+    coords = tuple(renfe_stations[renfe_stations['stop_id'] == s][['stop_lat', 'stop_lon']].values[0])
+
+    stations[s] = Station(s, name, city, shortname, coords)
+
+corrMadBar = Corridor(1, "MAD-BAR", stations.values())
+
+print("Corridor: ")
+print(corrMadBar)
+
+# Build Lines
+def get_line(stops):
+    line_data = {s: (a, d) for s, a, d in zip(stops['stop_id'], stops['arrival'], stops['departure'])}
+
+    idx = stops['service_id'].values[0].split("_")[0]
+
+    return Line(idx, f"Line {idx}", corrMadBar, line_data)
+
+
+routes_lines = grouped_df.apply(lambda x: get_line(x))
+
+print(routes_lines.head())
+
+# Build Dict of Services
+"""
+services[service_id] = Service(service_id,
+                                   service_date,
+                                   service_line,
+                                   service_tsp,
+                                   service_time_slot,
+                                   service_rs,
+                                   service_prices,
+                                   service_capacity)
+"""
+
+#print(prices.head())
+#print(stop_times.head())
 
 exit()
 
