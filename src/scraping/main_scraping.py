@@ -39,9 +39,12 @@ destination_id = df[df['stop_id'] == destination]['renfe_id'].values[0]
 assert all(s in stations.keys() for s in (origin_id, destination_id)), "Invalid origin or destination"
 
 # Get today's date
-date = datetime.date.today()
+# date = datetime.date.today()
 # date += datetime.timedelta(days=1)
-range_days = 80
+
+# string "dd/mm/yyyy" to datetime.date
+date = datetime.datetime.strptime("01/02/2023", "%d/%m/%Y").date()
+range_days = 28
 
 renfe_scraping_trips(origin_id, destination_id, date, range_days)
 
