@@ -73,8 +73,9 @@ class Corridor(object):
     Corridor class
 
     Attributes:
-        id (int): Corridor ID
-        list_station (List[Station]): List of stations in corridor
+        id: int - Corridor ID
+        name: str - Corridor name
+        stations (List[Station]): List of stations in corridor
     """
 
     # Be aware: Corridor could be a tree structure (parent-child relationship between stations)
@@ -96,7 +97,7 @@ class Line(object):
         id (int): Line ID
         name (str): Line name
         corridor (Corridor): Line corridor
-        timetable (List[dict]): List of dictionaries [{stations: (arrival, departure)}]
+        timetable dict: Dictionary {stations: (arrival, departure)}
     """
     def __init__(self, id_: int, name: str, corridor: Corridor, timetable: dict):
         # Service type is a tuple of booleans indicating which stations from the corridor are served
