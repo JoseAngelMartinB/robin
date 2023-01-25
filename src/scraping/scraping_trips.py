@@ -83,8 +83,9 @@ def renfe_scraping_trips(origin_id: str, destination_id: str, date: datetime.dat
 
 
 if __name__ == "__main__":
-    date = datetime.date.today()
-    date += datetime.timedelta(days=1)
+    # date = datetime.date.today()
+    # date += datetime.timedelta(days=1)
+    date = datetime.datetime.strptime("01-02-2023", "%d-%m-%Y").date()
     range_days = 1
     origin_id = 'MADRI'  # Renfe id for Madrid Puerta de Atocha
     destination_id = 'BARCE'  # Renfe id for Barcelona Sants
