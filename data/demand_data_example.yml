@@ -1,7 +1,6 @@
 # Yaml datafile for demand data. Example data for testing.
 
 # Market
-# stations are noted by their short name
 market:
   - id: 1
     departure_station: "MAD"
@@ -14,22 +13,19 @@ market:
     arrival_station: "BCN"
 
 # Pattern User
-# arrival_time is a normal distribution in hours
-# purchase_day is a discrete uniform distribution
-# seats utility are ranked between [0, 1] noted that 0 means no utility and 1 maximum utility
-# penalties are linear functions between [0, 1] noted that 0 means no penality and 1 maximum penalty
-# TODO: error
 patternUser:
   - id: 1
     arrival_time:
-      - mean: 8
-        std: 1
+      distribution: norm
+      loc: 8
+      scale: 1
     purchase_day:
-      - first_day: 9
-        last_day: 13
+      distribution: norm 
+      loc: 7
+      scale: 2
     forbidden_departure_hours:
-      - start: 9
-        end: null
+      start: 9
+      end: 24
     seats:
       - id: 1
         utility: 0.1
@@ -39,22 +35,42 @@ patternUser:
         utility: 0.5
       - id: 4
         utility: 0.8
-    penalties:
-      - arrival_time: 1
-      - departure_time: 0.7
-      - cost: 0.05
-      - traveling_time: 0.4
-    error: null
+    penalty_arrival_time:
+      function: linear
+      m: 1
+      x: 1
+      b: 0
+    penalty_departure_time:
+      function: linear
+      m: 1
+      x: 0.7
+      b: 0
+    penalty_cost:
+      function: linear
+      m: 1
+      x: 0.05
+      b: 0
+    penalty_traveling_time:
+      function: linear
+      m: 1
+      x: 0.4
+      b: 0
+    error:
+      distribution: norm
+      loc: 0.2
+      scale: 0.1
   - id: 2
     arrival_time:
-      - mean: 18
-        std: 3
+      distribution: norm
+      loc: 18
+      scale: 3
     purchase_day:
-      - first_day: 13
-        last_day: 15
+      distribution: norm 
+      loc: 4
+      scale: 1.5
     forbidden_departure_hours:
-      - start: 6
-        end: 14
+      start: 6
+      end: 14
     seats:
       - id: 1
         utility: 0.1
@@ -64,32 +80,48 @@ patternUser:
         utility: 0
       - id: 4
         utility: 0.6
-    penalties:
-      - arrival_time: 0.1
-      - departure_time: 0.2
-      - cost: 0.8
-      - traveling_time: 0.3
-    error: null
+    penalty_arrival_time:
+      function: linear
+      m: 1
+      x: 0.1
+      b: 0
+    penalty_departure_time:
+      function: linear
+      m: 1
+      x: 0.2
+      b: 0
+    penalty_cost:
+      function: linear
+      m: 1
+      x: 0.8
+      b: 0
+    penalty_traveling_time:
+      function: linear
+      m: 1
+      x: 0.3
+      b: 0
+    error:
+      distribution: norm
+      loc: 0.1
+      scale: 0.05
 
 # Pattern Demand
-# passengers is a discrete uniform distribution
-# patternUsers probabilities are directly specified
 patternDemand:
   - id: 1
-    market: 3
     passengers:
-      - low: 600
-        high: 1000
+      distribution: randint
+      low: 600
+      high: 1000
     patternUsers:
       - id: 1
         percentage: 0.7
       - id: 2
         percentage: 0.3
   - id: 2
-    market: 3
     passengers:
-      - low: 1400
-        high: 2200
+      distribution: randint
+      low: 1400
+      high: 2200
     patternUsers:
       - id: 1
         percentage: 0.2
