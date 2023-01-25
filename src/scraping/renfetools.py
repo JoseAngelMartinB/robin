@@ -140,6 +140,12 @@ def get_stops(url):
 
     table = soup.find('table', {'class': 'irf-renfe-travel__table cabecera_tabla'})
 
+    renfe_stations = pd.read_csv('../../datasets/scraping/renfe/renfe_stations.csv', sep=',')
+
+    gtfs_names = renfe_stations['stop_name'].values.tolist()
+    gtfs_names = list(map(lambda s: s.lower(), gtfs_names))
+    gtfs_names = list(map(lambda s: re.sub(r'[-/]', ' ', s), gtfs_names))
+
     stops = {}
     for row in table.find_all('tr'):
         aux = row.find_all('td')
@@ -152,27 +158,26 @@ def get_stops(url):
             raw_name = re.sub(r'[^a-zA-Z0-9 -]', '', aux[0].text)
 
             # Split raw_name
-            raw_words = re.split(r'\W+', raw_name)
+            raw_words = [w for w in re.split(r'\W+', raw_name) if w]
             name = " ".join(raw_words)
             name = name.lower()
-
-            renfe_stations = pd.read_csv('../../datasets/scraping/renfe/renfe_stations.csv', sep=',')
-
-            gtfs_names = renfe_stations['stop_name'].values.tolist()
-            gtfs_names = list(map(lambda s: s.lower(), gtfs_names))
-            gtfs_names = list(map(lambda s: re.sub(r'[-/]', ' ', s), gtfs_names))
 
             best_match = "Unknown"
             bml = 0
             for gn in gtfs_names:
                 gnl = gn.split(" ")
 
-                if sum([True for w in name.split(" ") if w in gnl]) > bml:
+                if name == gn:
+                    best_match = gn
+                    break
+                elif sum([True for w in name.split(" ") if w in gnl]) > bml:
                     best_match = gn
 
-            i = gtfs_names.index(best_match)
-
-            station_id = renfe_stations.iloc[i]['stop_id']
+            try:
+                i = gtfs_names.index(best_match)
+                station_id = renfe_stations.iloc[i]['stop_id']
+            except ValueError:
+                station_id = "00000"
 
             # Remove blacklist words from stop name and get first word of each stop name
             # station = tuple(filter(lambda w: w not in blacklist and len(w) > 1, raw_words))[0]
