@@ -24,10 +24,10 @@ def get_prices(pcols):
                 if pd:
                     price = pd[1].text.split(" ")[0].replace(",", ".")
                 else:
-                    price = False
+                    price = float("NaN")
         else:
             # price = re.sub(r'\s+', '', col.text)
-            return {j: False for j in range(3)}
+            return {j: float("NaN") for j in range(3)}
 
         prices[i] = price
 
@@ -140,7 +140,7 @@ def get_stops(url):
 
     table = soup.find('table', {'class': 'irf-renfe-travel__table cabecera_tabla'})
 
-    renfe_stations = pd.read_csv('../../datasets/scraping/renfe/renfe_stations.csv', sep=',')
+    renfe_stations = pd.read_csv('../../datasets/scraping/renfe/renfe_stations.csv', sep=',', dtype={'stop_id': str})
 
     gtfs_names = renfe_stations['stop_name'].values.tolist()
     gtfs_names = list(map(lambda s: s.lower(), gtfs_names))
