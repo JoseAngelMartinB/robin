@@ -5,65 +5,88 @@ from ast import literal_eval
 import os
 import glob
 
+# 0. Import data
+
+# Get last updated file in selected folder
 # updated_file = max(glob.iglob(f'../../datasets/scraping/renfe/trips/*.csv'), key=os.path.getmtime)
+
+# File with Renfe data for february 2023 (AVE)
+# E.g updated_file = '../../datasets/scraping/renfe/trips/trips_MADRI_BARCE_2022-12-30_2023-01-03.csv'
 updated_file = f'../../datasets/scraping/renfe/trips/trips_MADRI_BARCE_2023-02-01_2023-02-28.csv'
 
-trips = pd.read_csv(updated_file, delimiter=',')
+# 0.1 Import trips
+trips = pd.read_csv(updated_file, delimiter=',', dtype={'trip_id': str})
 
-# E.g updated_file = 'datasets/trips/trips_MADRI_BARCE_2022-12-30_2023-01-03.csv'
-
-file_name = updated_file.split('/')[-1].split(".")[0]
 # E.g file_name = 'trips_MADRI_BARCE_2022-12-30_2023-01-03'
+file_name = updated_file.split('/')[-1].split(".")[0]
 
-file_name = "_".join(file_name.split("_")[1:])
 # E.g file_name = 'MADRI_BARCE_2022-12-30_2023-01-03'
+file_name = "_".join(file_name.split("_")[1:])
 
+# 0.2 Import prices
 prices = pd.read_csv(f'../../datasets/scraping/renfe/prices/prices_{file_name}.csv', delimiter=',')
-stop_times = pd.read_csv(f'../../datasets/scraping/renfe/stop_times/stopTimes_{file_name}.csv', delimiter=',')
 
-origin_id, destination_id, departure, arrival = file_name.split('_')
-# E.g. origin_id = 'MADRI', destination_id = 'BARCE', departure = '2022-12-30', arrival = '2023-01-03'
+# 0.3 Import stops
+stop_times = pd.read_csv(f'../../datasets/scraping/renfe/stop_times/stopTimes_{file_name}.csv',
+                         delimiter=',',
+                         dtype={'stop_id': str})
 
-print(origin_id, destination_id, departure, arrival)
+# Get metadata from file name
+# E.g. origin_id = 'MADRI', destination_id = 'BARCE', start_date = '2022-12-30', end_date = '2023-01-03'
+origin_id, destination_id, start_date, end_date = file_name.split('_')
+
+print(f"Origin:{origin_id} - Destionation:{destination_id}\nSince: {start_date}, Until: {end_date}")
+
 
 def get_trip_price(service_id, prices):
-    # Get price for service_id, If not found, return default price
+    """
+    Get trip price from prices dataframe
+
+    :param
+        service_id: string
+        prices: dataframe with prices
+
+    :return
+        price: tuple of floats (three types of seats for Renfe AVE)
+    """
+    # Get price for service_id, If not found, return default price (Tuple of NaN values)
     try:
         price = prices[prices['service_id'] == service_id][['0', '1', '2']].values[0]
         price = tuple(price)
     except IndexError:
-        price = (False, False, False)
+        price = tuple([float("NaN") for _ in range(3)])
     return price
 
 
 trips['prices'] = trips['service_id'].apply(lambda x: get_trip_price(x, prices))
 
-# Filter trips by prices to remove trips with column 0, 1 or 2 equal to False
-trips = trips[trips['prices'].apply(lambda x: x[0] != False and x[1] != False and x[2] != False)]
+# Filter trips by price column to remove trips with any NaN value
+trips = trips[trips['prices'].apply(lambda x: not any(np.isnan(x)))]
 
+print("Head trips: ")
 print(trips.head())
-print(stop_times.head())
-print(prices.head())
 
-# Build Corridor MAD-BAR
+# 1. Build Corridor MAD-BAR
 
-# Group dataframe by trip_id
+# 1.1 Group dataframe by trip_id
 grouped_df = stop_times.groupby('service_id')
 
-# Stops column to nested list
+# 1.2 Get nested list with stops for each trip
 list_stations = grouped_df.apply(lambda d: list(d['stop_id'])).values.tolist()
 
-# Initialize corridor with max length trip
+# 1.3 Initialize corridor with max length trip
 corridor = list_stations.pop(list_stations.index(max(list_stations, key=len)))
 
-# Complete corridor with other stops that are not in the initial defined corridor
+# 1.4 Complete corridor with other stops that are not in the initial defined corridor
 for trip in list_stations:
     for i, s in enumerate(trip):
         if s not in corridor:
-            corridor.insert(corridor.index(trip[i-1])+1, s)
+            corridor.insert(corridor.index(trip[i+1]), s)
 
-renfe_stations = pd.read_csv('../../datasets/scraping/renfe/renfe_stations.csv')
+# 1.5 Parse stations. Use Adif stop_id retrieve station info (name, lat, lon)
+renfe_stations = pd.read_csv('../../datasets/scraping/renfe/renfe_stations.csv', delimiter=',', dtype={'stop_id': str})
 
+# 1.6 Build dictionary of stations with stop_id as key and Station() object as value
 stations = {}
 for s in corridor:
     name = renfe_stations[renfe_stations['stop_id'] == s]['stop_name'].values[0]
@@ -73,10 +96,17 @@ for s in corridor:
 
     stations[s] = Station(s, name, city, shortname, coords)
 
-corrMadBar = Corridor(1, "MAD-BAR", stations.values())
+# 1.7 Build Corridor
+first_station, last_station = tuple(stations.values())[::len(stations)-1]
+corr_name = first_station.shortname + "-" + last_station.shortname
+corrMadBar = Corridor(1, corr_name, list(stations.values()))
 
+# Print stations in Corridor() object
 print("Corridor: ")
-print(corrMadBar)
+print("Name: ", corrMadBar.name)
+for s in corrMadBar.stations:
+    print(s)
+
 
 # Build Lines
 def get_line(stops):
@@ -89,6 +119,7 @@ def get_line(stops):
 
 routes_lines = grouped_df.apply(lambda x: get_line(x))
 
+print("Lines: ")
 print(routes_lines.head())
 
 # Build Dict of Services
