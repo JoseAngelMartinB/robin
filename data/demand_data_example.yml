@@ -12,8 +12,8 @@ market:
     departure_station: "MAD"
     arrival_station: "BCN"
 
-# Pattern User
-patternUser:
+# User Pattern
+userPattern:
   - id: 1
     arrival_time:
       distribution: norm
@@ -105,8 +105,8 @@ patternUser:
       loc: 0.1
       scale: 0.05
 
-# Pattern Demand
-patternDemand:
+# Demand Pattern
+demandPattern:
   - id: 1
     passengers:
       distribution: randint
