@@ -3,9 +3,29 @@ class InvalidDistributionException(Exception):
     pass
 
 
-class Market:
-    """A market is composed by the origin and destination stations."""
+class Station:
+    """
+    Dummy class for a station.
+    
+    NOTE: This class is not yet implemented. It is just a placeholder.
+    """
     pass
+
+
+class Market:
+    """
+    A market is composed by the departure and arrival stations.
+
+    Attributes:
+        id (int): The market id.
+        departure_station (Station): The departure station.
+        arrival_station (Station): The arrival station.
+    """
+
+    def __init__(self, id: int, departure_station: Station, arrival_station: Station) -> None:
+        self.id = id
+        self.departure_station = departure_station
+        self.arrival_station = arrival_station
 
 
 class UserPattern:
