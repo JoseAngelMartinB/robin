@@ -39,9 +39,9 @@ def get_scipy_distribution(distribution_name: str, is_discrete: bool) -> Callabl
         InvalidContinuousDistributionException: Raised when the given distribution is not a continuous distribution.
         InvalidDiscreteDistributionException: Raised when the given distribution is not a discrete distribution.
     """
-    if is_discrete and distribution_name in stats._continuous_distns._distn_names:
+    if is_discrete and distribution_name in stats._continuous_distns._distn_names: # type: ignore
         raise InvalidDiscreteDistributionException(distribution_name)
-    elif not is_discrete and distribution_name in stats._discrete_distns._distn_names:
+    elif not is_discrete and distribution_name in stats._discrete_distns._distn_names: # type: ignore
         raise InvalidContinuousDistributionException(distribution_name)
     
     distribution = getattr(stats, distribution_name, None)

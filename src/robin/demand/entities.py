@@ -5,6 +5,8 @@ from .utils import get_function, get_scipy_distribution
 
 from typing import Dict, Mapping, Union, Tuple
 
+import numpy as np
+
 
 class Station:
     """
@@ -227,8 +229,68 @@ class UserPattern:
 
 
 class DemandPattern:
-    """A demand pattern is determined by the potential demand and the distribution of user patterns."""
-    pass
+    """
+    A demand pattern is determined by the potential demand and the distribution of user patterns.
+
+    Attributes:
+        id (int): The demand pattern id.
+        potential_demand(Callable): The potential demand distribution.
+        potential_demand_kwargs (Mapping[str, Union[int, float]]): The potential demand distribution named parameters.
+        user_pattern_distribution (Dict[int, float]): The user pattern distribution.
+
+    Raises:
+        InvalidDistributionException: Raised when the given distribution is not contained in SciPy.
+        InvalidContinuousDistributionException: Raised when the given distribution is not a continuous distribution.
+        InvalidDiscreteDistributionException: Raised when the given distribution is not a discrete distribution.
+        ValueError: Raised when the user pattern distribution does not sum up to 1.
+    """
+    
+    def __init__(
+            self,
+            id_: int,
+            potential_demand: str,
+            potential_demand_kwargs: Mapping[str, Union[int, float]],
+            user_pattern_distribution: Dict[int, float]
+        ) -> None:
+        """
+        Initializes the demand pattern.
+
+        Args:
+            id_ (int): The demand pattern id.
+            potential_demand (str): The potential demand distribution name.
+            potential_demand_kwargs (dict): The potential demand distribution named parameters.
+            user_pattern_distribution (dict): The user pattern distribution.
+
+        Raises:
+            InvalidDistributionException: Raised when the given distribution is not contained in SciPy.
+            InvalidContinuousDistributionException: Raised when the given distribution is not a continuous distribution.
+            InvalidDiscreteDistributionException: Raised when the given distribution is not a discrete distribution.
+        """
+        self.id = id_
+        self.potential_demand = get_scipy_distribution(distribution_name=potential_demand, is_discrete=True)
+        self.potential_demand_kwargs = potential_demand_kwargs
+        self.user_pattern_distribution = user_pattern_distribution
+
+    def get_potential_demand(self) -> int:
+        """
+        Returns the potential demand.
+
+        Returns:
+            int: The potential demand.
+        """
+        return self.potential_demand.rvs(**self.potential_demand_kwargs)
+    
+    def get_user_pattern(self) -> int:
+        """
+        Samples a user pattern according to the user pattern distribution.
+
+        Returns:
+            int: The user pattern.
+
+        Raises:
+            ValueError: Raised when the user pattern distribution does not sum up to 1.
+        """
+        return np.random.choice(list(self.user_pattern_distribution.keys()), p=list(self.user_pattern_distribution.values()))
 
 
 class Day:
