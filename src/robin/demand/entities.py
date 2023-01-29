@@ -24,8 +24,8 @@ class Market:
         arrival_station (Station): The arrival station.
     """
 
-    def __init__(self, id: int, departure_station: Station, arrival_station: Station) -> None:
-        self.id = id
+    def __init__(self, id_: int, departure_station: Station, arrival_station: Station) -> None:
+        self.id = id_
         self.departure_station = departure_station
         self.arrival_station = arrival_station
 
@@ -63,7 +63,7 @@ class UserPattern:
     
     def __init__(
             self,
-            id: int,
+            id_: int,
             arrival_time: str,
             arrival_time_kwargs: Mapping[str, Union[int, float]],
             purchase_day: str,
@@ -81,7 +81,7 @@ class UserPattern:
             error: str,
             error_kwargs: Mapping[str, Union[int, float]]
         ) -> None:
-        self.id = id
+        self.id = id_
         self.arrival_time = self._get_scipy_distribution(distribution_name=arrival_time, is_discrete=False)
         self.arrival_time_kwargs = arrival_time_kwargs
         self.purchase_day = self._get_scipy_distribution(distribution_name=purchase_day, is_discrete=True)
