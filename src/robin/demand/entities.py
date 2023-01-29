@@ -18,6 +18,15 @@ class Station:
     pass
 
 
+class TimeSlot:
+    """
+    Dummy class for a time slot.
+    
+    NOTE: This class is not yet implemented. It is just a placeholder.
+    """
+    pass
+
+
 class Market:
     """
     A market is composed by the departure and arrival stations.
@@ -374,5 +383,78 @@ class Day:
 
 
 class Passenger:
-    """A passenger is defined by his/her user pattern, the origin-destination pair, the desired day and time of arrival and the day of purchase."""
-    pass
+    """
+    A passenger is defined by his/her user pattern, the origin-destination pair, the desired day and time of arrival and the day of purchase.
+    
+    Attributes:
+        id (int): The passenger id.
+        user_pattern (UserPattern): The user pattern that this passengers belongs.
+        market (Market): The market composed by the origin-destination station pair.
+        arrival_day (Day): The desired day of arrival.
+        arrival_time (TimeSlot): The desired time of arrival.
+        purchase_day (Day): The day of purchase of the train ticket.
+    """
+    
+    def __init__(self, id_: int, user_pattern: UserPattern, market: Market, arrival_day: Day, arrival_time: TimeSlot, purchase_day: Day) -> None:
+        """
+        Initializes a passenger.
+
+        Args:
+            id_ (int): The passenger id.
+            user_pattern (UserPattern): The user pattern that this passengers belongs.
+            market (Market): The market composed by the origin-destination station pair.
+            arrival_day (Day): The desired day of arrival.
+            arrival_time (TimeSlot): The desired time of arrival.
+            purchase_day (Day): The day of purchase of the train ticket.
+        """
+        self.id = id_
+        self.user_pattern = user_pattern
+        self.market = market
+        self.arrival_day = arrival_day
+        self.arrival_time = arrival_time
+        self.purchase_day = purchase_day
+
+    def get_user_pattern(self) -> UserPattern:
+        """
+        Returns the user pattern.
+
+        Returns:
+            UserPattern: The user pattern.
+        """
+        return self.user_pattern
+    
+    def get_market(self) -> Market:
+        """
+        Returns the market.
+
+        Returns:
+            Market: The market.
+        """
+        return self.market
+    
+    def get_arrival_day(self) -> Day:
+        """
+        Returns the arrival day.
+
+        Returns:
+            Day: The arrival day.
+        """
+        return self.arrival_day
+    
+    def get_arrival_time(self) -> TimeSlot:
+        """
+        Returns the arrival time.
+
+        Returns:
+            TimeSlot: The arrival time.
+        """
+        return self.arrival_time
+    
+    def get_purchase_day(self) -> Day:
+        """
+        Returns the purchase day.
+
+        Returns:
+            Day: The purchase day.
+        """
+        return self.purchase_day
