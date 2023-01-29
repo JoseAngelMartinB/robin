@@ -1,16 +1,24 @@
-"""Fucntions for demand module."""
+"""Functions for demand module."""
 
-
-def linear(m: float, x: float, b: float) -> float:
+class Function:
     """
-    Linear function.
+    Functions for demand module.
 
-    Args:
-        m (float): The slope.
-        x (float): The x value.
-        b (float): The y-intercept.
-
-    Returns:
-        float: The y value.
+    Attributes:
+        linear (staticmethod): Linear function.
     """
-    return m * x + b
+
+    @staticmethod
+    def linear(m: float, x: float, b: float) -> float:
+        """
+        Linear function.
+
+        Args:
+            m (float): The slope.
+            x (float): The x value.
+            b (float): The y-intercept.
+
+        Returns:
+            float: The y value.
+        """
+        return m * x + b
