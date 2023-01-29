@@ -10,7 +10,7 @@ class InvalidDistributionException(Exception):
         super().__init__(msg, *args, **kwargs)
 
 
-class InvalidContinuousDistributionException(Exception):
+class InvalidContinuousDistributionException(InvalidDistributionException):
     """Raised when the given distribution is not a continuous distribution."""
 
     def __init__(self, distribution_name: str, *args, **kwargs):
@@ -19,12 +19,21 @@ class InvalidContinuousDistributionException(Exception):
         super().__init__(msg, *args, **kwargs)
 
 
-class InvalidDiscreteDistributionException(Exception):
+class InvalidDiscreteDistributionException(InvalidDistributionException):
     """Raised when the given distribution is not a discrete distribution."""
     
     def __init__(self, distribution_name: str, *args, **kwargs):
         msg = (f"The distribution '{distribution_name}' is not a continuous distribution. "
                'See details at: https://docs.scipy.org/doc/scipy/reference/stats.html#continuous-distributions')
+        super().__init__(msg, *args, **kwargs)
+
+
+class InvalidForbiddenDepartureHoursException(Exception):
+    """Raised when the given forbidden departure hours are not valid."""
+    
+    def __init__(self, forbidden_departure_hours: tuple, *args, **kwargs):
+        msg = (f"The forbidden departure hours '{forbidden_departure_hours}' are not valid. "
+               'They must be a tuple of two integers between 0 and 23.')
         super().__init__(msg, *args, **kwargs)
 
 
