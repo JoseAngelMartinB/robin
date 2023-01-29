@@ -20,12 +20,12 @@ userPattern:
       loc: 8
       scale: 1
     purchase_day:
-      distribution: norm 
-      loc: 7
-      scale: 2
+      distribution: randint
+      low: 2
+      high: 7
     forbidden_departure_hours:
       start: 9
-      end: 24
+      end: 23
     seats:
       - id: 1
         utility: 0.1
@@ -65,9 +65,9 @@ userPattern:
       loc: 18
       scale: 3
     purchase_day:
-      distribution: norm 
-      loc: 4
-      scale: 1.5
+      distribution: randint
+      low: 0
+      high: 4
     forbidden_departure_hours:
       start: 6
       end: 14
