@@ -29,6 +29,24 @@ class Market:
         self.departure_station = departure_station
         self.arrival_station = arrival_station
 
+    def get_departure_station(self) -> Station:
+        """
+        Get the departure station.
+
+        Returns:
+            Station: The departure station.
+        """
+        return self.departure_station
+    
+    def get_arrival_station(self) -> Station:
+        """
+        Get the arrival station.
+
+        Returns:
+            Station: The arrival station.
+        """
+        return self.arrival_station
+
 
 class UserPattern:
     """
