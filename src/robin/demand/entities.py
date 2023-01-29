@@ -28,6 +28,14 @@ class Market:
     """
 
     def __init__(self, id_: int, departure_station: Station, arrival_station: Station) -> None:
+        """
+        Initialize a market.
+
+        Args:
+            id_ (int): The market id.
+            departure_station (Station): The departure station.
+            arrival_station (Station): The arrival station.
+        """
         self.id = id_
         self.departure_station = departure_station
         self.arrival_station = arrival_station
@@ -57,22 +65,22 @@ class UserPattern:
 
     Attributes:
         id (int): The user pattern id.
-        arrival_time (str): The arrival time distribution name.
-        arrival_time_kwargs (dict): The arrival time distribution parameters.
-        purchase_day (str): The purchase day distribution name.
-        purchase_day_kwargs (dict): The purchase day distribution named parameters.
-        forbidden_departure_hours (tuple): The forbidden departure hours.
-        seats (dict): The utility of the seats.
-        penalty_arrival_time (str): The penalty function name for the arrival time.
-        penalty_arrival_time_kwargs (dict): The penalty function named parameters.
-        penalty_departure_time (str): The penalty function name for the departure time.
-        penalty_departure_time_kwargs (dict): The penalty function named parameters.
-        penalty_cost (str): The penalty function name for the cost.
-        penalty_cost_kwargs (dict): The penalty function named parameters.
-        penalty_traveling_time (str): The penalty function name for the travel time.
-        penalty_traveling_time_kwargs (dict): The penalty function named parameters.
-        error (str): The error distribution name.
-        error_kwargs (dict): The error distribution named parameters.
+        arrival_time (Callable): The arrival time distribution function.
+        arrival_time_kwargs (Mapping[str, Union[int, float]]): The arrival time distribution parameters.
+        purchase_day (Callable): The purchase day distribution function.
+        purchase_day_kwargs (Mapping[str, Union[int, float]]): The purchase day distribution named parameters.
+        forbidden_departure_hours (Tuple[int, int]): The forbidden departure hours.
+        seats (Dict[int, float]): The utility of the seats.
+        penalty_arrival_time (Callable): The penalty function for the arrival time.
+        penalty_arrival_time_kwargs (Mapping[str, Union[int, float]]): The penalty function named parameters.
+        penalty_departure_time (Callable): The penalty function for the departure time.
+        penalty_departure_time_kwargs (Mapping[str, Union[int, float]]): The penalty function named parameters.
+        penalty_cost (Callable): The penalty function for the cost.
+        penalty_cost_kwargs (Mapping[str, Union[int, float]]): The penalty function named parameters.
+        penalty_traveling_time (Callable): The penalty function for the travel time.
+        penalty_traveling_time_kwargs (Mapping[str, Union[int, float]]): The penalty function named parameters.
+        error (Callable): The error distribution function.
+        error_kwargs (Mapping[str, Union[int, float]]): The error distribution named parameters.
 
     Raises:
         InvalidDistributionException: Raised when the given distribution is not contained in SciPy.
@@ -102,6 +110,35 @@ class UserPattern:
             error: str,
             error_kwargs: Mapping[str, Union[int, float]]
         ) -> None:
+        """
+        Initialize a user pattern.
+
+        Args:
+            id_ (int): The user pattern id.
+            arrival_time (str): The arrival time distribution name.
+            arrival_time_kwargs (Mapping[str, Union[int, float]]): The arrival time distribution named parameters.
+            purchase_day (str): The purchase day distribution name.
+            purchase_day_kwargs (Mapping[str, Union[int, float]]): The purchase day distribution named parameters.
+            forbidden_departure_hours (Tuple[int, int]): The forbidden departure hours.
+            seats (Dict[int, float]): The utility of the seats.
+            penalty_arrival_time (str): The penalty function name for the arrival time.
+            penalty_arrival_time_kwargs (Mapping[str, Union[int, float]]): The penalty function named parameters.
+            penalty_departure_time (str): The penalty function name for the departure time.
+            penalty_departure_time_kwargs (Mapping[str, Union[int, float]]): The penalty function named parameters.
+            penalty_cost (str): The penalty function name for the cost.
+            penalty_cost_kwargs (Mapping[str, Union[int, float]]): The penalty function named parameters.
+            penalty_traveling_time (str): The penalty function name for the travel time.
+            penalty_traveling_time_kwargs (Mapping[str, Union[int, float]]): The penalty function named parameters.
+            error (str): The error distribution name.
+            error_kwargs (Mapping[str, Union[int, float]]): The error distribution named parameters.
+        
+        Raises:
+            InvalidDistributionException: Raised when the given distribution is not contained in SciPy.
+            InvalidContinuousDistributionException: Raised when the given distribution is not a continuous distribution.
+            InvalidDiscreteDistributionException: Raised when the given distribution is not a discrete distribution.
+            InvalidForbiddenDepartureHoursException: Raised when the given forbidden departure hours are not valid.
+            InvalidFunctionException: Raised when the given function is not contained in the ROBIN module.
+        """
         self.id = id_
         self.arrival_time = get_scipy_distribution(distribution_name=arrival_time, is_discrete=False)
         self.arrival_time_kwargs = arrival_time_kwargs
@@ -234,7 +271,7 @@ class DemandPattern:
 
     Attributes:
         id (int): The demand pattern id.
-        potential_demand(Callable): The potential demand distribution.
+        potential_demand(Callable): The potential demand distribution function.
         potential_demand_kwargs (Mapping[str, Union[int, float]]): The potential demand distribution named parameters.
         user_pattern_distribution (Dict[int, float]): The user pattern distribution.
 
@@ -253,7 +290,7 @@ class DemandPattern:
             user_pattern_distribution: Dict[int, float]
         ) -> None:
         """
-        Initializes the demand pattern.
+        Initializes a demand pattern.
 
         Args:
             id_ (int): The demand pattern id.
