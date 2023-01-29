@@ -1,5 +1,6 @@
 """Exceptions for the demand module."""
 
+
 class InvalidDistributionException(Exception):
     """Raised when the given distribution is not contained in SciPy."""
     
@@ -24,4 +25,12 @@ class InvalidDiscreteDistributionException(Exception):
     def __init__(self, distribution_name: str, *args, **kwargs):
         msg = (f"The distribution '{distribution_name}' is not a continuous distribution. "
                'See details at: https://docs.scipy.org/doc/scipy/reference/stats.html#continuous-distributions')
+        super().__init__(msg, *args, **kwargs)
+
+
+class InvalidFunctionException(Exception):
+    """Raised when the given function is not contained in the ROBIN module."""
+    
+    def __init__(self, function_name: str, *args, **kwargs):
+        msg = f"The function '{function_name}' is not contained in the ROBIN module."
         super().__init__(msg, *args, **kwargs)
