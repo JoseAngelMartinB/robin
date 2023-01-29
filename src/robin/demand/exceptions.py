@@ -1,3 +1,5 @@
+"""Exceptions for the demand module."""
+
 class InvalidDistributionException(Exception):
     """Raised when the given distribution is not contained in SciPy."""
     pass
