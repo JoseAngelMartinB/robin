@@ -5,6 +5,7 @@ from .utils import get_function, get_scipy_distribution
 
 from typing import Dict, Mapping, Union, Tuple
 
+import datetime
 import numpy as np
 
 
@@ -331,8 +332,45 @@ class DemandPattern:
 
 
 class Day:
-    """A day is described as its actual date and demand pattern."""
-    pass
+    """
+    A day is described as its actual date and demand pattern.
+    
+    Attributes:
+        id (int): The day id.
+        date (datetime.date): The actual date.
+        demand_pattern (DemandPattern): The associated demand pattern.
+    """
+    
+    def __init__(self, id_: int, date: datetime.date, demand_pattern: DemandPattern) -> None:
+        """
+        Initializes a day.
+
+        Args:
+            id_ (int): The day id.
+            date (datetime.date): The actual date.
+            demand_pattern (DemandPattern): The associated demand pattern.
+        """
+        self.id = id_
+        self.date = date
+        self.demand_pattern = demand_pattern
+
+    def get_date(self) -> datetime.date:
+        """
+        Returns the date.
+
+        Returns:
+            datetime.date: The date.
+        """
+        return self.date
+    
+    def get_demand_pattern(self) -> DemandPattern:
+        """
+        Returns the demand pattern.
+
+        Returns:
+            DemandPattern: The demand pattern.
+        """
+        return self.demand_pattern
 
 
 class Passenger:
