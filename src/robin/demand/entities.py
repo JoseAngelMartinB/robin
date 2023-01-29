@@ -1,8 +1,9 @@
-from .exceptions import *
-from .functions import Function
+"""Entities for the demand module."""
 
-from scipy import stats
-from typing import Callable, Dict, Mapping, Union, Tuple
+from .exceptions import InvalidForbiddenDepartureHoursException
+from .utils import get_function, get_scipy_distribution
+
+from typing import Dict, Mapping, Union, Tuple
 
 
 class Station:
@@ -100,24 +101,24 @@ class UserPattern:
             error_kwargs: Mapping[str, Union[int, float]]
         ) -> None:
         self.id = id_
-        self.arrival_time = self._get_scipy_distribution(distribution_name=arrival_time, is_discrete=False)
+        self.arrival_time = get_scipy_distribution(distribution_name=arrival_time, is_discrete=False)
         self.arrival_time_kwargs = arrival_time_kwargs
-        self.purchase_day = self._get_scipy_distribution(distribution_name=purchase_day, is_discrete=True)
+        self.purchase_day = get_scipy_distribution(distribution_name=purchase_day, is_discrete=True)
         self.purchase_day_kwargs = purchase_day_kwargs
         self.forbidden_departure_hours = self._check_forbidden_departure_hours(forbidden_departure_hours=forbidden_departure_hours)
         self.seats = seats
-        self.penalty_arrival_time = self._get_function(function_name=penalty_arrival_time)
+        self.penalty_arrival_time = get_function(function_name=penalty_arrival_time)
         self.penalty_arrival_time_kwargs = penalty_arrival_time_kwargs
-        self.penalty_departure_time = self._get_function(function_name=penalty_departure_time)
+        self.penalty_departure_time = get_function(function_name=penalty_departure_time)
         self.penalty_departure_time_kwargs = penalty_departure_time_kwargs
-        self.penalty_cost = self._get_function(function_name=penalty_cost)
+        self.penalty_cost = get_function(function_name=penalty_cost)
         self.penalty_cost_kwargs = penalty_cost_kwargs
-        self.penalty_traveling_time = self._get_function(function_name=penalty_traveling_time)
+        self.penalty_traveling_time = get_function(function_name=penalty_traveling_time)
         self.penalty_traveling_time_kwargs = penalty_traveling_time_kwargs
-        self.error = self._get_scipy_distribution(distribution_name=error, is_discrete=False)
+        self.error = get_scipy_distribution(distribution_name=error, is_discrete=False)
         self.error_kwargs = error_kwargs
 
-    def _check_forbidden_departure_hours(self, forbidden_departure_hours: tuple) -> tuple:
+    def _check_forbidden_departure_hours(self, forbidden_departure_hours: Tuple[int, int]) -> Tuple[int, int]:
         """
         Checks if the given forbidden departure hours are valid.
 
@@ -139,47 +140,6 @@ class UserPattern:
         elif forbidden_departure_hours[0] >= forbidden_departure_hours[1]:
             raise InvalidForbiddenDepartureHoursException(forbidden_departure_hours)
         return forbidden_departure_hours
-
-    def _get_function(self, function_name: str) -> Callable:
-        """
-        Returns the function from the given name.
-
-        Args:
-            function_name (str): The function name.
-
-        Returns:
-            Callable: The function from the given name.
-        """
-        function = getattr(Function, function_name, None)
-        if not function:
-            raise InvalidFunctionException(function_name)
-        return function
-
-    def _get_scipy_distribution(self, distribution_name: str, is_discrete: bool) -> Callable:
-        """
-        Returns the distribution function from SciPy.
-
-        Args:
-            distribution_name (str): The distribution name.
-            is_discrete (bool): Whether the distribution is discrete or not.
-
-        Returns:
-            Callable: The distribution function from SciPy.
-
-        Raises:
-            InvalidDistributionException: Raised when the given distribution is not contained in SciPy.
-            InvalidContinuousDistributionException: Raised when the given distribution is not a continuous distribution.
-            InvalidDiscreteDistributionException: Raised when the given distribution is not a discrete distribution.
-        """
-        if is_discrete and distribution_name in stats._continuous_distns._distn_names:
-            raise InvalidDiscreteDistributionException(distribution_name)
-        elif not is_discrete and distribution_name in stats._discrete_distns._distn_names:
-            raise InvalidContinuousDistributionException(distribution_name)
-        
-        distribution = getattr(stats, distribution_name, None)
-        if not distribution:
-            raise InvalidDistributionException(distribution_name)
-        return distribution
     
     def get_arrival_time(self) -> float:
         """
@@ -211,12 +171,12 @@ class UserPattern:
         """
         return self.seats.get(seat, 0)
     
-    def get_forbidden_departure_hours(self) -> tuple:
+    def get_forbidden_departure_hours(self) -> Tuple[int, int]:
         """
         Returns the forbidden departure hours.
 
         Returns:
-            tuple: The forbidden departure hours.
+            Tuple[int, int]: The forbidden departure hours.
         """
         return self.forbidden_departure_hours
     
