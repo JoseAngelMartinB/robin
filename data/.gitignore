@@ -6,6 +6,7 @@
 
 # Ignore everything in the nested directories, except specific files
 scraping/renfe/*
+!scraping/renfe/renfe_stations.csv
 !scraping/renfe/prices/prices_MADRI_BARCE_2023-02-01_2023-02-28.csv
 !scraping/renfe/trips/trips_MADRI_BARCE_2023-02-01_2023-02-28.csv
 !scraping/renfe/stop_times/stop_times_MADRI_BARCE_2023-02-01_2023-02-28.csv
