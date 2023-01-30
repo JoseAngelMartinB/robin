@@ -12,20 +12,20 @@ market:
     departure_station: "MAD"
     arrival_station: "BCN"
 
-# Pattern User
-patternUser:
+# User Pattern
+userPattern:
   - id: 1
     arrival_time:
       distribution: norm
       loc: 8
       scale: 1
     purchase_day:
-      distribution: norm 
-      loc: 7
-      scale: 2
+      distribution: randint
+      low: 2
+      high: 7
     forbidden_departure_hours:
       start: 9
-      end: 24
+      end: 23
     seats:
       - id: 1
         utility: 0.1
@@ -65,9 +65,9 @@ patternUser:
       loc: 18
       scale: 3
     purchase_day:
-      distribution: norm 
-      loc: 4
-      scale: 1.5
+      distribution: randint
+      low: 0
+      high: 4
     forbidden_departure_hours:
       start: 6
       end: 14
@@ -105,8 +105,8 @@ patternUser:
       loc: 0.1
       scale: 0.05
 
-# Pattern Demand
-patternDemand:
+# Demand Pattern
+demandPattern:
   - id: 1
     passengers:
       distribution: randint
