@@ -26,7 +26,7 @@ def get_trip_price(service_id: str, seats: Tuple[Seat], price_df: pd.DataFrame):
     except IndexError:
         prices = tuple([float("NaN") for _ in range(3)])
 
-    return {s: p for s, p in zip(seats, prices)}
+    return {s.id: p for s, p in zip(seats, prices)}
 
 
 def get_line(stops: pd.DataFrame, corr: Corridor):
@@ -64,7 +64,7 @@ def get_trip_line(service_id: str, lines: dict):
     return line
 
 
-def get_service(service_id: str, departure: str, arrival: str, price: tuple, line: Line, tsp, rs):
+def get_service(service_id: str, departure: str, arrival: str, price: dict, line: Line, tsp, rs):
     """
     Get Service() object from Renfe data
 
@@ -83,14 +83,14 @@ def get_service(service_id: str, departure: str, arrival: str, price: tuple, lin
     departure = departure.split(" ")[1][:-3]
     arrival = arrival.split(" ")[1][:-3]
     line = line
-    time_slot = TimeSlot(id_.split("_")[0], departure, arrival)
+    time_slot = TimeSlot(int(id_.split("_")[0]), departure, arrival)
 
     return Service(id_,
                    date,
                    line,
-                   tsp,
+                   tsp.id,
                    time_slot,
-                   rs,
+                   rs.id,
                    price,
                    "Train")
 
@@ -128,9 +128,9 @@ def load_scraping(file_path):
     # E.g. origin_id = 'MADRI', destination_id = 'BARCE', start_date = '2022-12-30', end_date = '2023-01-03'
     origin_id, destination_id, start_date, end_date = file_name.split('_')
 
-    print(f"Origin:{origin_id} - Destionation:{destination_id}\nSince: {start_date}, Until: {end_date}")
+    print(f"Origin:{origin_id} - Destination:{destination_id}\nSince: {start_date}, Until: {end_date}")
 
-    # 3. Build seats for Renfe AVE
+    # 0.4 Build seats for Renfe AVE
     renfe_seats = (Seat(1, "Turista", 1, 1), Seat(2, "Turista Plus", 1, 2), Seat(3, "Preferente", 2, 1))
 
     trips['prices'] = trips['service_id'].apply(lambda x: get_trip_price(x, renfe_seats, prices))
@@ -196,11 +196,10 @@ def load_scraping(file_path):
                                                          renfe_rs[0]),
                                    axis=1)
 
-    return trips['service'].values.tolist()
+    return trips['service'].values.tolist(), renfe_seats, corrMadBar, renfe_tsp, renfe_rs
 
 
 if __name__ == '__main__':
     file_path = '../../data/scraping/renfe/trips/trips_MADRI_BARCE_2023-02-01_2023-02-28.csv'
-    services = load_scraping(file_path)
-    # TODO: Separate seats, tsp, rs, corridor
-    print(services[1])
+    services, seats, corridor, tsp, rolling_stock = load_scraping(file_path)
+    print(services[0])
