@@ -1,5 +1,0 @@
-# Ignore everything in this directory
-.gitignore
-# Except this file
-!.gitignore
-!prices_MADRI_BARCE_2023-02-01_2023-02-28.csv
