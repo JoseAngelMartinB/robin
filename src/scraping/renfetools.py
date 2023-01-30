@@ -75,7 +75,7 @@ def get_stations(soup):
     menu = soup.find('div', {'class': 'irf-search-shedule__container-ipt'})
     options = menu.find_all('option')
 
-    return {opt["value"]: " ".join(filter(lambda x: x != "", opt.text.split(" ")))for opt in options}
+    return {opt["value"]: " ".join(filter(lambda x: x != "", opt.text.split(" "))) for opt in options}
 
 
 def get_date(soup, selenium=False):
