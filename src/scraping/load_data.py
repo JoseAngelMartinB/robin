@@ -8,12 +8,13 @@ import glob
 
 
 # Aux functions
-def get_trip_price(service_id: str, price_df: pd.DataFrame):
+def get_trip_price(service_id: str, seats: Tuple[Seat], price_df: pd.DataFrame):
     """
     Get trip price from prices dataframe
 
     Args:
         service_id: string
+        seats: tuple of Seat() objects
         price_df: dataframe with prices
 
     Returns:
@@ -21,11 +22,11 @@ def get_trip_price(service_id: str, price_df: pd.DataFrame):
     """
     # Get price for service_id, If not found, return default price (Tuple of NaN values)
     try:
-        price = price_df[price_df['service_id'] == service_id][['0', '1', '2']].values[0]
-        price = tuple(price)
+        prices = price_df[price_df['service_id'] == service_id][['0', '1', '2']].values[0]
     except IndexError:
-        price = tuple([float("NaN") for _ in range(3)])
-    return price
+        prices = tuple([float("NaN") for _ in range(3)])
+
+    return {s: p for s, p in zip(seats, prices)}
 
 
 def get_line(stops: pd.DataFrame, corr: Corridor):
@@ -116,10 +117,10 @@ def load_scraping(file_path):
     # 0.2 Import prices
     path = file_path.split("/")
 
-    prices = pd.read_csv(f'{"/".join(path[:path.index("datasets")])}/datasets/scraping/renfe/prices/prices_{file_name}.csv', delimiter=',')
+    prices = pd.read_csv(f'{"/".join(path[:path.index("data")])}/data/scraping/renfe/prices/prices_{file_name}.csv', delimiter=',')
 
     # 0.3 Import stops
-    stop_times = pd.read_csv(f'{"/".join(path[:path.index("datasets")])}/datasets/scraping/renfe/stop_times/stopTimes_{file_name}.csv',
+    stop_times = pd.read_csv(f'{"/".join(path[:path.index("data")])}/data/scraping/renfe/stop_times/stopTimes_{file_name}.csv',
                              delimiter=',',
                              dtype={'stop_id': str})
 
@@ -129,10 +130,13 @@ def load_scraping(file_path):
 
     print(f"Origin:{origin_id} - Destionation:{destination_id}\nSince: {start_date}, Until: {end_date}")
 
-    trips['prices'] = trips['service_id'].apply(lambda x: get_trip_price(x, prices))
+    # 3. Build seats for Renfe AVE
+    renfe_seats = (Seat(1, "Turista", 1, 1), Seat(2, "Turista Plus", 1, 2), Seat(3, "Preferente", 2, 1))
+
+    trips['prices'] = trips['service_id'].apply(lambda x: get_trip_price(x, renfe_seats, prices))
 
     # Filter trips by price column to remove trips with any NaN value
-    trips = trips[trips['prices'].apply(lambda x: not any(np.isnan(x)))]
+    trips = trips[trips['prices'].apply(lambda x: not any(np.isnan(p) for p in x.values()))]
 
     # 1. Build Corridor MAD-BAR
 
@@ -152,7 +156,7 @@ def load_scraping(file_path):
                 corridor.insert(corridor.index(trip[i + 1]), s)
 
     # 1.5 Parse stations. Use Adif stop_id retrieve station info (name, lat, lon)
-    renfe_stations = pd.read_csv(f'{"/".join(path[:path.index("datasets")])}/datasets/scraping/renfe/renfe_stations.csv', delimiter=',', dtype={'stop_id': str})
+    renfe_stations = pd.read_csv(f'{"/".join(path[:path.index("data")])}/data/scraping/renfe/renfe_stations.csv', delimiter=',', dtype={'stop_id': str})
 
     # 1.6 Build dictionary of stations with stop_id as key and Station() object as value
     stations = {}
@@ -176,10 +180,6 @@ def load_scraping(file_path):
 
     trips['lines'] = trips['service_id'].apply(lambda x: get_trip_line(x, set_lines))
 
-    # 3. Build seats for Renfe AVE
-    renfe_seats = (Seat(1, "Turista", 1, 1), Seat(2, "Turista Plus", 1, 2), Seat(3, "Preferente", 2, 1))
-    renfe_seats = {s.id: s for s in renfe_seats}
-
     # 4. Build RollingStock for Renfe AVE
     renfe_rs = [RollingStock(1, "S-114", {1: 250, 2: 50})]
 
@@ -200,6 +200,7 @@ def load_scraping(file_path):
 
 
 if __name__ == '__main__':
-    file_path = '../../datasets/scraping/renfe/trips/trips_MADRI_BARCE_2023-02-01_2023-02-28.csv'
+    file_path = '../../data/scraping/renfe/trips/trips_MADRI_BARCE_2023-02-01_2023-02-28.csv'
     services = load_scraping(file_path)
-    print(services[0])
+    # TODO: Separate seats, tsp, rs, corridor
+    print(services[1])
