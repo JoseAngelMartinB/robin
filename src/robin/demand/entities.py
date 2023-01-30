@@ -283,7 +283,7 @@ class DemandPattern:
         id (int): The demand pattern id.
         potential_demand(Callable): The potential demand distribution function.
         potential_demand_kwargs (Mapping[str, Union[int, float]]): The potential demand distribution named parameters.
-        user_pattern_distribution (Dict[int, float]): The user pattern distribution.
+        user_pattern_distribution (Dict[UserPattern, float]): The user pattern distribution.
 
     Raises:
         InvalidDistributionException: Raised when the given distribution is not contained in SciPy.
@@ -297,7 +297,7 @@ class DemandPattern:
             id_: int,
             potential_demand: str,
             potential_demand_kwargs: Mapping[str, Union[int, float]],
-            user_pattern_distribution: Dict[int, float]
+            user_pattern_distribution: Dict[UserPattern, float]
         ) -> None:
         """
         Initializes a demand pattern.
@@ -327,12 +327,12 @@ class DemandPattern:
         """
         return self.potential_demand.rvs(**self.potential_demand_kwargs)
     
-    def get_user_pattern(self) -> int:
+    def get_user_pattern(self) -> UserPattern:
         """
         Samples a user pattern according to the user pattern distribution.
 
         Returns:
-            int: The user pattern.
+            UserPattern: The user pattern.
 
         Raises:
             ValueError: Raised when the user pattern distribution does not sum up to 1.
