@@ -43,7 +43,7 @@ for line in supply_data_example['line']:
 
     lines[line_data[0]] = Line(line_data[0],
                                line_data[1],
-                               corridors[line_data[2]],
+                               corridors[line_data[2]].id,
                                timetable)
 
 for line in lines.values():
@@ -75,8 +75,7 @@ print("TSP: ")
 tsp = {}
 for op in supply_data_example['trainServiceProvider']:
     op_data = list(op.values())
-    op_rs = list(filter(lambda t: t.id in op_data[2], rolling_stock.values()))
-    tsp[op_data[0]] = TSP(op_data[0], op_data[1], op_rs)
+    tsp[op_data[0]] = TSP(op_data[0], op_data[1], op_data[2])
 
 for op in tsp.values():
     print(op)
