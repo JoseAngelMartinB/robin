@@ -2,3 +2,4 @@
 .gitignore
 # Except this file
 !.gitignore
+!trips_MADRI_BARCE_2023-02-01_2023-02-28.csv
