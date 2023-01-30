@@ -53,7 +53,7 @@ def import_datasets(path):
     data = {}
     for fn in os.listdir(path):
         if fn.endswith('.txt'):
-            data[fn.split(".")[0]] = pd.read_csv(path + fn, delimiter=',')
+            data[fn.split(".")[0]] = pd.read_csv(path + fn, delimiter=',', dtype={'stop_id': str})
 
     return data
 
