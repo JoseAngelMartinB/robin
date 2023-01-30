@@ -140,7 +140,7 @@ def get_stops(url):
 
     table = soup.find('table', {'class': 'irf-renfe-travel__table cabecera_tabla'})
 
-    renfe_stations = pd.read_csv('../../datasets/scraping/renfe/renfe_stations.csv', sep=',', dtype={'stop_id': str})
+    renfe_stations = pd.read_csv('../../data/scraping/renfe/renfe_stations.csv', sep=',', dtype={'stop_id': str})
 
     gtfs_names = renfe_stations['stop_name'].values.tolist()
     gtfs_names = list(map(lambda s: s.lower(), gtfs_names))
