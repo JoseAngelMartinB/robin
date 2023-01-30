@@ -11,7 +11,7 @@ import pandas as pd
 renfe_stations = pd.read_csv('../../../data/scraping/renfe/renfe_stations.csv', delimiter=',', dtype={'stop_id': str})
 
 # Load supply data from scraping
-services = load_scraping(f'../../../data/scraping/renfe/trips/trips_MADRI_BARCE_2023-02-01_2023-02-28.csv')
+services, seats, corridor, tsp, rolling_stock = load_scraping(f'../../../data/scraping/renfe/trips/trips_MADRI_BARCE_2023-02-01_2023-02-28.csv')
 
 
 # Request user input: origin, destination, date
@@ -20,7 +20,7 @@ while True:
     destination = input("Destination: ")
 
     try:
-        date = datetime.datetime.strptime(input("Date (dd-mm-yyyy): "), "%d-%m-%Y")
+        date = datetime.datetime.strptime(input("Date (dd-mm-yyyy): "), "%d-%m-%Y").date()
     except ValueError:
         print("Invalid date")
         continue
@@ -35,7 +35,7 @@ print("Line: ", dummy_service.line)
 
 my_travel = Supply(1, origin, destination, date, services)
 
+print("Supply: ")
+
 for s in my_travel.services:
     print(s)
-
-print(my_travel)
