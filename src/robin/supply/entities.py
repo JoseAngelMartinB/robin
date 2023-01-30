@@ -48,7 +48,9 @@ class TimeSlot(object):
     def __get_class_mark(self) -> datetime.timedelta:
         """
         Get class mark of time slot
-        :return: class mark
+
+        Returns:
+            class mark: time delta object
         """
 
         if self.end < self.start:
@@ -58,7 +60,9 @@ class TimeSlot(object):
     def __get_size(self) -> datetime.timedelta:
         """
         Get size of time slot
-        :return: size
+
+        Returns:
+            size: time delta object
         """
         if self.end < self.start:
             return (self.end + datetime.timedelta(days=1)) - self.start
@@ -94,9 +98,9 @@ class Line(object):
     Line class
 
     Attributes:
-        id (int): Line ID
-        name (str): Line name
-        corridor (Corridor): Line corridor
+        id: Integer with line ID
+        name: String with line name
+        corridor: Corridor object
         timetable dict: Dictionary {stations: (arrival, departure)}
     """
     def __init__(self, id_: int, name: str, corridor: Corridor, timetable: dict):
@@ -109,26 +113,12 @@ class Line(object):
         self.timetable = timetable  # t: Timetable
         self.pairs = self.__getpairs()  # w: Pairs origin-destination
 
-    def __getstops(self, servicetype):
-        """
-        DEPRECATED
-        Private method to get the stops of the line
-
-        Input arguments:
-            serviceType: Tuple with the service type
-        Output:
-            List of stops
-        """
-        return [s for i, s in zip(servicetype, self.corridor.stations) if i]
-
     def __getpairs(self):
         """
-        Private method to get each pair of stations of the line
+        Private method to get each pair of stations of the line, using the stops list
 
-        Input arguments:
-            None
-        Output:
-            List of pairs
+        Returns:
+            List of tuple pairs (origin, destination)
         """
         return [(a, b) for i, a in enumerate(self.stops) for b in self.stops[i + 1:]]
 
@@ -137,6 +127,15 @@ class Line(object):
 
 
 class Seat(object):
+    """
+    Seat class
+
+    Attributes:
+        id: Integer with seat ID
+        name: String with seat name
+        hard_type: Integer with hard type
+        soft_type: Integer with soft type
+    """
     def __init__(self, id_: int, name: str, hard_type: int, soft_type: int):
         self.id = id_
         self.name = name
@@ -148,6 +147,14 @@ class Seat(object):
 
 
 class RollingStock(object):
+    """
+    Rolling stock class
+
+    Attributes:
+        id: Integer with rolling stock ID
+        name: String with rolling stock name
+        seats: Dictionary {seat_id: Seat object}
+    """
     def __init__(self, id_: int, name: str, seats: dict):
         self.id = id_
         self.name = name
@@ -158,12 +165,26 @@ class RollingStock(object):
 
 
 class TSP(object):
+    """
+    TSP class
+
+    Attributes:
+        id: Integer with TSP ID
+        name: String with TSP name
+        rolling_stock: List of RollingStock objects
+    """
     def __init__(self, id_: int, name: str, rolling_stock=None):
         self.id = id_
         self.name = name
         self.rolling_stock = rolling_stock if rolling_stock is not None else []
 
     def add_rolling_stock(self, rs: RollingStock):
+        """
+        Method to add a new rolling stock to a TSP object
+
+        Args:
+            rs: RollingStock object
+        """
         self.rolling_stock.append(rs)
 
     def __str__(self):
@@ -172,6 +193,19 @@ class TSP(object):
 
 
 class Service(object):
+    """
+    Service class
+
+    Attributes:
+        id: Integer with service ID
+        date: Date of service
+        line: Line object
+        tsp: TSP object
+        timeSlot: TimeSlot object
+        rollingStock: RollingStock object
+        prices: Dictionary {seat_type: price}
+        capacity: String with capacity type
+    """
     def __init__(self,
                  id_: int,
                  date: str,
@@ -192,13 +226,27 @@ class Service(object):
         self.capacity = capacity
 
     def __str__(self):
-        return f'[{self.id}, {self.date}, {self.line.stops}, {self.tsp.name}, \n,' \
-               f'{self.timeSlot}, {self.rollingStock.id}, \n,' \
-               f'{self.prices}, {self.capacity}]'
+        return f'{self.id}, \n' \
+               f'{self.date}, \n' \
+               f'{self.line.stops}, \n' \
+               f'{self.tsp.name}, \n,' \
+               f'{self.timeSlot}, \n' \
+               f'{self.rollingStock.id}, \n,' \
+               f'{self.prices}, \n' \
+               f'{self.capacity}'
 
 
 class Supply(object):
-    # (id, date, w(o, d), seat_offer, schedule, price on time t)
+    """
+    Supply class.
+
+    Attributes:
+        id: Integer with supply ID
+        origin: String with origin station id
+        destination: String with destination station id
+        date: Date of supply
+        services: List of Service objects
+    """
     def __init__(self, id_: int, origin: str, destination: str, date: datetime.date, services: List[Service]):
         self.id = id_
         self.origin = origin
@@ -208,22 +256,26 @@ class Supply(object):
 
     def __getservices(self, services: List[Service]):
         """
-        Private method to get the services that satisfy the user requirements (origin, destination, date)
+        Private method to get the services that meet the user requests (origin, destination, date)
+
         Args:
-            services: List of services
+            services: List of Service objects
 
         Returns:
-            Filtered List of services
+            Filtered List of Service objects
         """
-        my_services = []
+        filtered_services = []
 
         for s in services:
             if s.date == self.date:
                 try:
                     if s.line.stops.index(self.origin) < s.line.stops.index(self.destination):
-                        my_services.append(s)
+                        filtered_services.append(s)
+
+                    # if (origin, destination) in s.line.pairs:
+                    #     my_services.append(s)
                 except ValueError:
                     pass
 
-        return my_services
+        return filtered_services
 
