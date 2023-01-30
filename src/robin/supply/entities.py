@@ -103,7 +103,7 @@ class Line(object):
         corridor: Corridor object
         timetable dict: Dictionary {stations: (arrival, departure)}
     """
-    def __init__(self, id_: int, name: str, corridor: Corridor, timetable: dict):
+    def __init__(self, id_: int, name: str, corridor: int, timetable: dict):
         # Service type is a tuple of booleans indicating which stations from the corridor are served
         self.id = id_
         self.name = name
@@ -123,7 +123,7 @@ class Line(object):
         return [(a, b) for i, a in enumerate(self.stops) for b in self.stops[i + 1:]]
 
     def __str__(self):
-        return f'[{self.id}, {self.name}, {self.corridor}, {self.timetable}]'
+        return f'[{self.id}, {self.name}, Corridor id: {self.corridor}, {self.timetable}]'
 
 
 class Seat(object):
@@ -171,14 +171,14 @@ class TSP(object):
     Attributes:
         id: Integer with TSP ID
         name: String with TSP name
-        rolling_stock: List of RollingStock objects
+        rolling_stock: List of RollingStock id's (int)
     """
-    def __init__(self, id_: int, name: str, rolling_stock=None):
+    def __init__(self, id_: int, name: str, rolling_stock: List[int] = None):
         self.id = id_
         self.name = name
         self.rolling_stock = rolling_stock if rolling_stock is not None else []
 
-    def add_rolling_stock(self, rs: RollingStock):
+    def add_rolling_stock(self, rs: int):
         """
         Method to add a new rolling stock to a TSP object
 
@@ -188,8 +188,7 @@ class TSP(object):
         self.rolling_stock.append(rs)
 
     def __str__(self):
-        rs_ids = [rs.id for rs in self.rolling_stock]
-        return f'[{self.id}, {self.name}, {rs_ids}]'
+        return f'[{self.id}, {self.name}, {self.rolling_stock}]'
 
 
 class Service(object):
@@ -226,14 +225,16 @@ class Service(object):
         self.capacity = capacity
 
     def __str__(self):
-        return f'{self.id}, \n' \
-               f'{self.date}, \n' \
-               f'{self.line.stops}, \n' \
-               f'{self.tsp.name}, \n,' \
-               f'{self.timeSlot}, \n' \
-               f'{self.rollingStock.id}, \n,' \
-               f'{self.prices}, \n' \
-               f'{self.capacity}'
+        new_line = "\n\t\t"
+        return f'Service id: {self.id} \n' \
+               f'\tDate of service: {self.date} \n' \
+               f'\tStops: {self.line.stops} \n' \
+               f'\tTrain Service Provider: {self.tsp} \n' \
+               f'\tTime Slot: {self.timeSlot} \n' \
+               f'\tRolling Stock: {self.rollingStock} \n' \
+               f'\tPrices: \n' \
+               f'\t\t{new_line.join(f"{key}: {value}" for key, value in self.prices.items())} \n' \
+               f'\tCapacity type: {self.capacity}'
 
 
 class Supply(object):
