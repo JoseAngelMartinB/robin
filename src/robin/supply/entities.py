@@ -193,7 +193,7 @@ class Service(object):
 
     def __str__(self):
         return f'[{self.id}, {self.date}, {self.line.stops}, {self.tsp.name}, \n,' \
-               f'{self.timeSlot.id}, {self.rollingStock.id}, \n,' \
+               f'{self.timeSlot}, {self.rollingStock.id}, \n,' \
                f'{self.prices}, {self.capacity}]'
 
 
@@ -206,7 +206,15 @@ class Supply(object):
         self.date = date
         self.services = self.__getservices(services)
 
-    def __getservices(self, services):
+    def __getservices(self, services: List[Service]):
+        """
+        Private method to get the services that satisfy the user requirements (origin, destination, date)
+        Args:
+            services: List of services
+
+        Returns:
+            Filtered List of services
+        """
         my_services = []
 
         for s in services:
