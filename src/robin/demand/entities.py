@@ -37,16 +37,16 @@ class Market:
         arrival_station (Station): The arrival station.
     """
 
-    def __init__(self, id_: int, departure_station: Station, arrival_station: Station) -> None:
+    def __init__(self, id: int, departure_station: Station, arrival_station: Station) -> None:
         """
         Initialize a market.
 
         Args:
-            id_ (int): The market id.
+            id (int): The market id.
             departure_station (Station): The departure station.
             arrival_station (Station): The arrival station.
         """
-        self.id = id_
+        self.id = id
         self.departure_station = departure_station
         self.arrival_station = arrival_station
 
@@ -67,6 +67,15 @@ class Market:
             Station: The arrival station.
         """
         return self.arrival_station
+    
+    def __repr__(self) -> str:
+        """
+        Returns the representation of the market.
+
+        Returns:
+            str: The representation of the market.
+        """
+        return f'{self.__class__.__name__}(id={self.id}, departure_station={self.departure_station}, arrival_station={self.arrival_station})'
 
 
 class UserPattern:
@@ -102,7 +111,7 @@ class UserPattern:
     
     def __init__(
             self,
-            id_: int,
+            id: int,
             arrival_time: str,
             arrival_time_kwargs: Mapping[str, Union[int, float]],
             purchase_day: str,
@@ -124,7 +133,7 @@ class UserPattern:
         Initialize a user pattern.
 
         Args:
-            id_ (int): The user pattern id.
+            id (int): The user pattern id.
             arrival_time (str): The arrival time distribution name.
             arrival_time_kwargs (Mapping[str, Union[int, float]]): The arrival time distribution named parameters.
             purchase_day (str): The purchase day distribution name.
@@ -149,7 +158,7 @@ class UserPattern:
             InvalidForbiddenDepartureHoursException: Raised when the given forbidden departure hours are not valid.
             InvalidFunctionException: Raised when the given function is not contained in the ROBIN module.
         """
-        self.id = id_
+        self.id = id
         self.arrival_time = get_scipy_distribution(distribution_name=arrival_time, is_discrete=False)
         self.arrival_time_kwargs = arrival_time_kwargs
         self.purchase_day = get_scipy_distribution(distribution_name=purchase_day, is_discrete=True)
@@ -274,6 +283,34 @@ class UserPattern:
         """
         return self.error.rvs(**self.error_kwargs)
 
+    def __repr__(self) -> str:
+        """
+        Returns the string representation of the user pattern.
+
+        Returns:
+            str: The string representation of the user pattern.
+        """
+        return (
+            f'{self.__class__.__name__}('
+            f'id={self.id}, '
+            f'arrival_time={self.arrival_time}, '
+            f'arrival_time_kwargs={self.arrival_time_kwargs}, '
+            f'purchase_day={self.purchase_day}, '
+            f'purchase_day_kwargs={self.purchase_day_kwargs}, '
+            f'forbidden_departure_hours={self.forbidden_departure_hours}, '
+            f'seats={self.seats}, '
+            f'penalty_arrival_time={self.penalty_arrival_time}, '
+            f'penalty_arrival_time_kwargs={self.penalty_arrival_time_kwargs}, '
+            f'penalty_departure_time={self.penalty_departure_time}, '
+            f'penalty_departure_time_kwargs={self.penalty_departure_time_kwargs}, '
+            f'penalty_cost={self.penalty_cost}, '
+            f'penalty_cost_kwargs={self.penalty_cost_kwargs}, '
+            f'penalty_traveling_time={self.penalty_traveling_time}, '
+            f'penalty_traveling_time_kwargs={self.penalty_traveling_time_kwargs}, '
+            f'error={self.error}, '
+            f'error_kwargs={self.error_kwargs})'
+        )
+
 
 class DemandPattern:
     """
@@ -294,26 +331,26 @@ class DemandPattern:
     
     def __init__(
             self,
-            id_: int,
+            id: int,
             potential_demand: str,
             potential_demand_kwargs: Mapping[str, Union[int, float]],
-            user_pattern_distribution: Dict[UserPattern, float]
+            user_pattern_distribution: Mapping[UserPattern, float]
         ) -> None:
         """
         Initializes a demand pattern.
 
         Args:
-            id_ (int): The demand pattern id.
+            id (int): The demand pattern id.
             potential_demand (str): The potential demand distribution name.
-            potential_demand_kwargs (dict): The potential demand distribution named parameters.
-            user_pattern_distribution (dict): The user pattern distribution.
+            potential_demand_kwargs (Mapping[str, Union[int, float]]): The potential demand distribution named parameters.
+            user_pattern_distribution (Mapping[UserPattern, float]): The user pattern distribution.
 
         Raises:
             InvalidDistributionException: Raised when the given distribution is not contained in SciPy.
             InvalidContinuousDistributionException: Raised when the given distribution is not a continuous distribution.
             InvalidDiscreteDistributionException: Raised when the given distribution is not a discrete distribution.
         """
-        self.id = id_
+        self.id = id
         self.potential_demand = get_scipy_distribution(distribution_name=potential_demand, is_discrete=True)
         self.potential_demand_kwargs = potential_demand_kwargs
         self.user_pattern_distribution = user_pattern_distribution
@@ -339,6 +376,21 @@ class DemandPattern:
         """
         return np.random.choice(list(self.user_pattern_distribution.keys()), p=list(self.user_pattern_distribution.values()))
 
+    def __repr__(self) -> str:
+        """
+        Returns the string representation of the demand pattern.
+
+        Returns:
+            str: The string representation of the demand pattern.
+        """
+        return (
+            f'{self.__class__.__name__}('
+            f'id={self.id}, '
+            f'potential_demand={self.potential_demand}, '
+            f'potential_demand_kwargs={self.potential_demand_kwargs}, '
+            f'user_pattern_distribution={self.user_pattern_distribution})'
+        )
+
 
 class Day:
     """
@@ -350,16 +402,16 @@ class Day:
         demand_pattern (DemandPattern): The associated demand pattern.
     """
     
-    def __init__(self, id_: int, date: datetime.date, demand_pattern: DemandPattern) -> None:
+    def __init__(self, id: int, date: datetime.date, demand_pattern: DemandPattern) -> None:
         """
         Initializes a day.
 
         Args:
-            id_ (int): The day id.
+            id(int): The day id.
             date (datetime.date): The actual date.
             demand_pattern (DemandPattern): The associated demand pattern.
         """
-        self.id = id_
+        self.id = id
         self.date = date
         self.demand_pattern = demand_pattern
 
@@ -381,6 +433,20 @@ class Day:
         """
         return self.demand_pattern
 
+    def __repr__(self) -> str:
+        """
+        Returns the string representation of the day.
+
+        Returns:
+            str: The string representation of the day.
+        """
+        return (
+            f'{self.__class__.__name__}('
+            f'id={self.id}, '
+            f'date={self.date}, '
+            f'demand_pattern={self.demand_pattern})'
+        )
+
 
 class Passenger:
     """
@@ -391,23 +457,23 @@ class Passenger:
         user_pattern (UserPattern): The user pattern that this passengers belongs.
         market (Market): The market composed by the origin-destination station pair.
         arrival_day (Day): The desired day of arrival.
-        arrival_time (TimeSlot): The desired time of arrival.
-        purchase_day (Day): The day of purchase of the train ticket.
+        arrival_time (float): The desired time of arrival.
+        purchase_day (int): The day of purchase of the train ticket.
     """
     
-    def __init__(self, id_: int, user_pattern: UserPattern, market: Market, arrival_day: Day, arrival_time: TimeSlot, purchase_day: Day) -> None:
+    def __init__(self, id: int, user_pattern: UserPattern, market: Market, arrival_day: Day, arrival_time: float, purchase_day: int) -> None:
         """
         Initializes a passenger.
 
         Args:
-            id_ (int): The passenger id.
+            id (int): The passenger id.
             user_pattern (UserPattern): The user pattern that this passengers belongs.
             market (Market): The market composed by the origin-destination station pair.
             arrival_day (Day): The desired day of arrival.
-            arrival_time (TimeSlot): The desired time of arrival.
-            purchase_day (Day): The day of purchase of the train ticket.
+            arrival_time (float): The desired time of arrival.
+            purchase_day (int): The day of purchase of the train ticket.
         """
-        self.id = id_
+        self.id = id
         self.user_pattern = user_pattern
         self.market = market
         self.arrival_day = arrival_day
@@ -441,20 +507,37 @@ class Passenger:
         """
         return self.arrival_day
     
-    def get_arrival_time(self) -> TimeSlot:
+    def get_arrival_time(self) -> float:
         """
         Returns the arrival time.
 
         Returns:
-            TimeSlot: The arrival time.
+            float: The arrival time.
         """
         return self.arrival_time
     
-    def get_purchase_day(self) -> Day:
+    def get_purchase_day(self) -> int:
         """
         Returns the purchase day.
 
         Returns:
-            Day: The purchase day.
+            int: The purchase day.
         """
         return self.purchase_day
+    
+    def __repr__(self) -> str:
+        """
+        Returns the string representation of the passenger.
+
+        Returns:
+            str: The string representation of the passenger.
+        """
+        return (
+            f'{self.__class__.__name__}('
+            f'id={self.id}, '
+            f'user_pattern={self.user_pattern}, '
+            f'market={self.market}, '
+            f'arrival_day={self.arrival_day}, '
+            f'arrival_time={self.arrival_time}, '
+            f'purchase_day={self.purchase_day})'
+        )
