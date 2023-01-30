@@ -15,12 +15,12 @@ market:
 # User Pattern
 userPattern:
   - id: 1
-    arrival_time:
-      distribution: norm
+    arrival_time: norm
+    arrival_time_kwargs:
       loc: 8
       scale: 1
-    purchase_day:
-      distribution: randint
+    purchase_day: randint
+    purchase_day_kwargs:
       low: 2
       high: 7
     forbidden_departure_hours:
@@ -35,37 +35,37 @@ userPattern:
         utility: 0.5
       - id: 4
         utility: 0.8
-    penalty_arrival_time:
-      function: linear
+    penalty_arrival_time: linear
+    penalty_arrival_time_kwargs:
       m: 1
       x: 1
       b: 0
-    penalty_departure_time:
-      function: linear
+    penalty_departure_time: linear
+    penalty_departure_time_kwargs:
       m: 1
       x: 0.7
       b: 0
-    penalty_cost:
-      function: linear
+    penalty_cost: linear
+    penalty_cost_kwargs:
       m: 1
       x: 0.05
       b: 0
-    penalty_traveling_time:
-      function: linear
+    penalty_traveling_time: linear
+    penalty_traveling_time_kwargs:
       m: 1
       x: 0.4
       b: 0
-    error:
-      distribution: norm
+    error: norm
+    error_kwargs:
       loc: 0.2
       scale: 0.1
   - id: 2
-    arrival_time:
-      distribution: norm
+    arrival_time: norm
+    arrival_time_kwargs:
       loc: 18
       scale: 3
-    purchase_day:
-      distribution: randint
+    purchase_day: randint
+    purchase_day_kwargs:
       low: 0
       high: 4
     forbidden_departure_hours:
@@ -80,49 +80,49 @@ userPattern:
         utility: 0
       - id: 4
         utility: 0.6
-    penalty_arrival_time:
-      function: linear
+    penalty_arrival_time: linear
+    penalty_arrival_time_kwargs:
       m: 1
       x: 0.1
       b: 0
-    penalty_departure_time:
-      function: linear
+    penalty_departure_time: linear
+    penalty_departure_time_kwargs:
       m: 1
       x: 0.2
       b: 0
-    penalty_cost:
-      function: linear
+    penalty_cost: linear
+    penalty_cost_kwargs:
       m: 1
       x: 0.8
       b: 0
-    penalty_traveling_time:
-      function: linear
+    penalty_traveling_time: linear
+    penalty_traveling_time_kwargs:
       m: 1
       x: 0.3
       b: 0
-    error:
-      distribution: norm
+    error: norm
+    error_kwargs:
       loc: 0.1
       scale: 0.05
 
 # Demand Pattern
 demandPattern:
   - id: 1
-    passengers:
-      distribution: randint
+    potential_demand: randint
+    potential_demand_kwargs:
       low: 600
       high: 1000
-    patternUsers:
+    user_pattern_distribution:
       - id: 1
         percentage: 0.7
       - id: 2
         percentage: 0.3
   - id: 2
-    passengers:
-      distribution: randint
+    potential_demand: randint
+    potential_demand_kwargs:
       low: 1400
       high: 2200
-    patternUsers:
+    user_pattern_distribution:
       - id: 1
         percentage: 0.2
       - id: 2
@@ -132,7 +132,7 @@ demandPattern:
 day:
   - id: 1
     date: "2023-01-10"
-    patternDemand: 1
+    demandPattern: 1
   - id: 2
     date: "2023-01-13"
-    patternDemand: 2
+    demandPattern: 2
