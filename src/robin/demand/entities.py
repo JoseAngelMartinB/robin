@@ -49,31 +49,13 @@ class Market:
         self.id = id
         self.departure_station = departure_station
         self.arrival_station = arrival_station
-
-    def get_departure_station(self) -> Station:
-        """
-        Get the departure station.
-
-        Returns:
-            Station: The departure station.
-        """
-        return self.departure_station
-    
-    def get_arrival_station(self) -> Station:
-        """
-        Get the arrival station.
-
-        Returns:
-            Station: The arrival station.
-        """
-        return self.arrival_station
     
     def __repr__(self) -> str:
         """
-        Returns the representation of the market.
+        Returns the debuggable string representation of the market.
 
         Returns:
-            str: The representation of the market.
+            str: The debuggable string representation of the market.
         """
         return f'{self.__class__.__name__}(id={self.id}, departure_station={self.departure_station}, arrival_station={self.arrival_station})'
 
@@ -159,21 +141,21 @@ class UserPattern:
             InvalidFunctionException: Raised when the given function is not contained in the ROBIN module.
         """
         self.id = id
-        self.arrival_time = get_scipy_distribution(distribution_name=arrival_time, is_discrete=False)
+        self._arrival_time = get_scipy_distribution(distribution_name=arrival_time, is_discrete=False)
         self.arrival_time_kwargs = arrival_time_kwargs
-        self.purchase_day = get_scipy_distribution(distribution_name=purchase_day, is_discrete=True)
+        self._purchase_day = get_scipy_distribution(distribution_name=purchase_day, is_discrete=True)
         self.purchase_day_kwargs = purchase_day_kwargs
         self.forbidden_departure_hours = self._check_forbidden_departure_hours(forbidden_departure_hours=forbidden_departure_hours)
         self.seats = seats
-        self.penalty_arrival_time = get_function(function_name=penalty_arrival_time)
+        self._penalty_arrival_time = get_function(function_name=penalty_arrival_time)
         self.penalty_arrival_time_kwargs = penalty_arrival_time_kwargs
-        self.penalty_departure_time = get_function(function_name=penalty_departure_time)
+        self._penalty_departure_time = get_function(function_name=penalty_departure_time)
         self.penalty_departure_time_kwargs = penalty_departure_time_kwargs
-        self.penalty_cost = get_function(function_name=penalty_cost)
+        self._penalty_cost = get_function(function_name=penalty_cost)
         self.penalty_cost_kwargs = penalty_cost_kwargs
-        self.penalty_traveling_time = get_function(function_name=penalty_traveling_time)
+        self._penalty_traveling_time = get_function(function_name=penalty_traveling_time)
         self.penalty_traveling_time_kwargs = penalty_traveling_time_kwargs
-        self.error = get_scipy_distribution(distribution_name=error, is_discrete=False)
+        self._error = get_scipy_distribution(distribution_name=error, is_discrete=False)
         self.error_kwargs = error_kwargs
 
     def _check_forbidden_departure_hours(self, forbidden_departure_hours: Tuple[int, int]) -> Tuple[int, int]:
@@ -199,23 +181,25 @@ class UserPattern:
             raise InvalidForbiddenDepartureHoursException(forbidden_departure_hours)
         return forbidden_departure_hours
     
-    def get_arrival_time(self) -> float:
+    @property
+    def arrival_time(self) -> float:
         """
-        Returns the arrival time.
+        Returns a random variable sample from the arrival time distribution.
 
         Returns:
-            float: The arrival time.
+            float: A random variable sample from the distribution.
         """
-        return self.arrival_time.rvs(**self.arrival_time_kwargs)
+        return self._arrival_time.rvs(**self.arrival_time_kwargs)
     
-    def get_purchase_day(self) -> int:
+    @property
+    def purchase_day(self) -> int:
         """
-        Returns the purchase day.
+        Returns a random variable sample from the purchase day distribution.
 
         Returns:
-            int: The purchase day.
+            float: A random variable sample from the distribution.
         """
-        return self.purchase_day.rvs(**self.purchase_day_kwargs)
+        return self._purchase_day.rvs(**self.purchase_day_kwargs)
     
     def get_seat_utility(self, seat: int) -> float:
         """
@@ -229,66 +213,62 @@ class UserPattern:
         """
         return self.seats.get(seat, 0)
     
-    def get_forbidden_departure_hours(self) -> Tuple[int, int]:
+    @property
+    def penalty_arrival_time(self) -> float:
         """
-        Returns the forbidden departure hours.
+        Returns a random variable sample from the arrival time penalty function.
 
         Returns:
-            Tuple[int, int]: The forbidden departure hours.
+            float: The arrival time penalty function.
         """
-        return self.forbidden_departure_hours
+        return self._penalty_arrival_time(**self.penalty_arrival_time_kwargs)
     
-    def get_penalty_arrival_time(self) -> float:
+    @property
+    def penalty_departure_time(self) -> float:
         """
-        Returns the penalty for the arrival time.
+        Returns a random variable sample from the penalty function for the departure time.
 
         Returns:
-            float: The penalty for the arrival time.
+            float: The penalty function for the departure time.
         """
-        return self.penalty_arrival_time(**self.penalty_arrival_time_kwargs)
+        return self._penalty_departure_time(**self.penalty_departure_time_kwargs)
     
-    def get_penalty_departure_time(self) -> float:
+    @property
+    def penalty_cost(self) -> float:
         """
-        Returns the penalty for the departure time.
+        Returns a random variable sample from the penalty function for the cost.
 
         Returns:
-            float: The penalty for the departure time.
+            float: The penalty function for the cost.
         """
-        return self.penalty_departure_time(**self.penalty_departure_time_kwargs)
+        return self._penalty_cost(**self.penalty_cost_kwargs)
     
-    def get_penalty_cost(self) -> float:
+    @property
+    def penalty_traveling_time(self) -> float:
         """
-        Returns the penalty for the cost.
+        Returns a random variable sample from the penalty function for the traveling time.
 
         Returns:
-            float: The penalty for the cost.
+            float: The penalty function for the traveling time.
         """
-        return self.penalty_cost(**self.penalty_cost_kwargs)
+        return self._penalty_traveling_time(**self.penalty_traveling_time_kwargs)
     
-    def get_penalty_traveling_time(self) -> float:
+    @property
+    def error(self) -> float:
         """
-        Returns the penalty for the traveling time.
+        Returns a random variable sample from the error distribution.
 
         Returns:
-            float: The penalty for the traveling time.
+            float: A random variable sample from the distribution.
         """
-        return self.penalty_traveling_time(**self.penalty_traveling_time_kwargs)
-    
-    def get_error(self) -> float:
-        """
-        Returns the error.
-
-        Returns:
-            float: The error.
-        """
-        return self.error.rvs(**self.error_kwargs)
+        return self._error.rvs(**self.error_kwargs)
 
     def __repr__(self) -> str:
         """
-        Returns the string representation of the user pattern.
+        Returns the debuggable representation of the user pattern.
 
         Returns:
-            str: The string representation of the user pattern.
+            str: The debuggable representation of the user pattern.
         """
         return (
             f'{self.__class__.__name__}('
@@ -351,18 +331,19 @@ class DemandPattern:
             InvalidDiscreteDistributionException: Raised when the given distribution is not a discrete distribution.
         """
         self.id = id
-        self.potential_demand = get_scipy_distribution(distribution_name=potential_demand, is_discrete=True)
+        self._potential_demand = get_scipy_distribution(distribution_name=potential_demand, is_discrete=True)
         self.potential_demand_kwargs = potential_demand_kwargs
         self.user_pattern_distribution = user_pattern_distribution
 
-    def get_potential_demand(self) -> int:
+    @property
+    def potential_demand(self) -> int:
         """
-        Returns the potential demand.
+        Returns a random variable sample from the potential demand distribution.
 
         Returns:
-            int: The potential demand.
+            int: A random variable sample from the distribution.
         """
-        return self.potential_demand.rvs(**self.potential_demand_kwargs)
+        return self._potential_demand.rvs(**self.potential_demand_kwargs)
     
     def get_user_pattern(self) -> UserPattern:
         """
@@ -378,10 +359,10 @@ class DemandPattern:
 
     def __repr__(self) -> str:
         """
-        Returns the string representation of the demand pattern.
+        Returns the debuggable string representation of the demand pattern.
 
         Returns:
-            str: The string representation of the demand pattern.
+            str: The debuggable string representation of the demand pattern.
         """
         return (
             f'{self.__class__.__name__}('
@@ -424,55 +405,27 @@ class Day:
         Returns:
             List[Passenger]: The generated passengers.
         """
-        potential_demand = self.get_demand_pattern().get_potential_demand()
-        user_pattern = self.get_demand_pattern().get_user_pattern()
+        user_pattern = self.demand_pattern.get_user_pattern()
         passengers = []
-        for i in range(potential_demand):
+        for i in range(self.demand_pattern.potential_demand):
             passengers.append(
                 Passenger(
                     id=i + id_offset,
                     user_pattern=user_pattern,
                     market=self.market,
                     arrival_day=self,
-                    arrival_time=user_pattern.get_arrival_time(), # TODO: Check forbidden arrival time
-                    purchase_day=user_pattern.get_purchase_day(),
+                    arrival_time=user_pattern.arrival_time, # TODO: Check forbidden arrival time
+                    purchase_day=user_pattern.purchase_day,
                 )
             )
         return passengers
 
-    def get_date(self) -> datetime.date:
-        """
-        Returns the date.
-
-        Returns:
-            datetime.date: The date.
-        """
-        return self.date
-    
-    def get_demand_pattern(self) -> DemandPattern:
-        """
-        Returns the demand pattern.
-
-        Returns:
-            DemandPattern: The demand pattern.
-        """
-        return self.demand_pattern
-
-    def get_market(self) -> Market:
-        """
-        Returns the market.
-
-        Returns:
-            Market: The market.
-        """
-        return self.market
-
     def __repr__(self) -> str:
         """
-        Returns the string representation of the day.
+        Returns the debuggable string representation of the day.
 
         Returns:
-            str: The string representation of the day.
+            str: The debuggable string representation of the day.
         """
         return (
             f'{self.__class__.__name__}('
@@ -514,58 +467,13 @@ class Passenger:
         self.arrival_day = arrival_day
         self.arrival_time = arrival_time
         self.purchase_day = purchase_day
-
-    def get_user_pattern(self) -> UserPattern:
-        """
-        Returns the user pattern.
-
-        Returns:
-            UserPattern: The user pattern.
-        """
-        return self.user_pattern
-    
-    def get_market(self) -> Market:
-        """
-        Returns the market.
-
-        Returns:
-            Market: The market.
-        """
-        return self.market
-    
-    def get_arrival_day(self) -> Day:
-        """
-        Returns the arrival day.
-
-        Returns:
-            Day: The arrival day.
-        """
-        return self.arrival_day
-    
-    def get_arrival_time(self) -> float:
-        """
-        Returns the arrival time.
-
-        Returns:
-            float: The arrival time.
-        """
-        return self.arrival_time
-    
-    def get_purchase_day(self) -> int:
-        """
-        Returns the purchase day.
-
-        Returns:
-            int: The purchase day.
-        """
-        return self.purchase_day
     
     def __repr__(self) -> str:
         """
-        Returns the string representation of the passenger.
+        Returns the debuggable string representation of the passenger.
 
         Returns:
-            str: The string representation of the passenger.
+            str: The debuggable string representation of the passenger.
         """
         return (
             f'{self.__class__.__name__}('
