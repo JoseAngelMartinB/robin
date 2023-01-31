@@ -202,6 +202,7 @@ class UserPattern:
         Returns:
             float: A random variable sample from the distribution.
         """
+        # TODO: Check forbidden arrival time
         return self._arrival_time.rvs(**self.arrival_time_kwargs)
     
     @property
@@ -410,7 +411,7 @@ class DemandPattern:
 
 class Day:
     """
-    A day is described as its actual date and demand pattern.
+    A day is described as a date with and associated demand pattern in a market.
     
     Attributes:
         id (int): The day id.
@@ -440,16 +441,16 @@ class Day:
         Returns:
             List[Passenger]: The generated passengers.
         """
-        user_pattern = self.demand_pattern.get_user_pattern() # BUG: The user pattern deppends on the user
         passengers = []
         for i in range(self.demand_pattern.potential_demand):
+            user_pattern = self.demand_pattern.get_user_pattern()
             passengers.append(
                 Passenger(
                     id=i + id_offset,
                     user_pattern=user_pattern,
                     market=self.market,
                     arrival_day=self,
-                    arrival_time=user_pattern.arrival_time, # TODO: Check forbidden arrival time
+                    arrival_time=user_pattern.arrival_time,
                     purchase_day=user_pattern.purchase_day,
                 )
             )
