@@ -50,6 +50,15 @@ class Market:
         self.departure_station = departure_station
         self.arrival_station = arrival_station
     
+    def __str__(self) -> str:
+        """
+        Returns a human readable string representation of the market.
+
+        Returns:
+            str: A human readable string representation of the market.
+        """
+        return f'{self.departure_station} - {self.arrival_station}'
+
     def __repr__(self) -> str:
         """
         Returns the debuggable string representation of the market.
@@ -66,6 +75,7 @@ class UserPattern:
 
     Attributes:
         id (int): The user pattern id.
+        name(str): The user pattern name.
         arrival_time (Callable): The arrival time distribution function.
         arrival_time_kwargs (Mapping[str, Union[int, float]]): The arrival time distribution parameters.
         purchase_day (Callable): The purchase day distribution function.
@@ -94,6 +104,7 @@ class UserPattern:
     def __init__(
             self,
             id: int,
+            name: str,
             arrival_time: str,
             arrival_time_kwargs: Mapping[str, Union[int, float]],
             purchase_day: str,
@@ -116,6 +127,7 @@ class UserPattern:
 
         Args:
             id (int): The user pattern id.
+            name(str): The user pattern name.
             arrival_time (str): The arrival time distribution name.
             arrival_time_kwargs (Mapping[str, Union[int, float]]): The arrival time distribution named parameters.
             purchase_day (str): The purchase day distribution name.
@@ -141,6 +153,7 @@ class UserPattern:
             InvalidFunctionException: Raised when the given function is not contained in the ROBIN module.
         """
         self.id = id
+        self.name = name
         self._arrival_time = get_scipy_distribution(distribution_name=arrival_time, is_discrete=False)
         self.arrival_time_kwargs = arrival_time_kwargs
         self._purchase_day = get_scipy_distribution(distribution_name=purchase_day, is_discrete=True)
@@ -263,6 +276,15 @@ class UserPattern:
         """
         return self._error.rvs(**self.error_kwargs)
 
+    def __str__(self) -> str:
+        """
+        Returns a human readable string representation of the user pattern.
+
+        Returns:
+            str: A human readable string representation of the user pattern.
+        """
+        return self.name
+    
     def __repr__(self) -> str:
         """
         Returns the debuggable representation of the user pattern.
@@ -298,6 +320,7 @@ class DemandPattern:
 
     Attributes:
         id (int): The demand pattern id.
+        name(str): The demand pattern name.
         potential_demand(Callable): The potential demand distribution function.
         potential_demand_kwargs (Mapping[str, Union[int, float]]): The potential demand distribution named parameters.
         user_pattern_distribution (Mapping[UserPattern, float]): The user pattern distribution.
@@ -312,6 +335,7 @@ class DemandPattern:
     def __init__(
             self,
             id: int,
+            name: str,
             potential_demand: str,
             potential_demand_kwargs: Mapping[str, Union[int, float]],
             user_pattern_distribution: Mapping[UserPattern, float]
@@ -321,6 +345,7 @@ class DemandPattern:
 
         Args:
             id (int): The demand pattern id.
+            name(str): The demand pattern name.
             potential_demand (str): The potential demand distribution name.
             potential_demand_kwargs (Mapping[str, Union[int, float]]): The potential demand distribution named parameters.
             user_pattern_distribution (Mapping[UserPattern, float]): The user pattern distribution.
@@ -331,6 +356,7 @@ class DemandPattern:
             InvalidDiscreteDistributionException: Raised when the given distribution is not a discrete distribution.
         """
         self.id = id
+        self.name = name
         self._potential_demand = get_scipy_distribution(distribution_name=potential_demand, is_discrete=True)
         self.potential_demand_kwargs = potential_demand_kwargs
         self.user_pattern_distribution = user_pattern_distribution
@@ -357,6 +383,15 @@ class DemandPattern:
         """
         return np.random.choice(list(self.user_pattern_distribution.keys()), p=list(self.user_pattern_distribution.values()))
 
+    def __str__(self) -> str:
+        """
+        Returns a human readable string representation of the demand pattern.
+
+        Returns:
+            str: A human readable string representation of the demand pattern.
+        """
+        return self.name
+    
     def __repr__(self) -> str:
         """
         Returns the debuggable string representation of the demand pattern.
@@ -405,7 +440,7 @@ class Day:
         Returns:
             List[Passenger]: The generated passengers.
         """
-        user_pattern = self.demand_pattern.get_user_pattern()
+        user_pattern = self.demand_pattern.get_user_pattern() # BUG: The user pattern deppends on the user
         passengers = []
         for i in range(self.demand_pattern.potential_demand):
             passengers.append(
@@ -419,6 +454,15 @@ class Day:
                 )
             )
         return passengers
+
+    def __str__(self) -> str:
+        """
+        Returns a human readable string representation of the day.
+
+        Returns:
+            str: A human readable string representation of the day.
+        """
+        return str(self.date)
 
     def __repr__(self) -> str:
         """
@@ -467,7 +511,16 @@ class Passenger:
         self.arrival_day = arrival_day
         self.arrival_time = arrival_time
         self.purchase_day = purchase_day
-    
+
+    def __str__(self) -> str:
+        """
+        Returns a human readable string representation of the passenger.
+
+        Returns:
+            str: A human readable string representation of the passenger.
+        """  
+        return f'{self.id}, {self.market}, {self.user_pattern}, {self.arrival_day}, {self.arrival_time}, {self.purchase_day}'
+
     def __repr__(self) -> str:
         """
         Returns the debuggable string representation of the passenger.
