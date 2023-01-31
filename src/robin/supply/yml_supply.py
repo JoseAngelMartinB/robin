@@ -103,9 +103,9 @@ for s in supply_data_example['service']:
     services[service_id] = Service(service_id,
                                    service_date,
                                    service_line,
-                                   service_tsp,
+                                   service_tsp.id,
                                    service_time_slot,
-                                   service_rs,
+                                   service_rs.id,
                                    service_prices,
                                    service_capacity)
 
@@ -113,25 +113,11 @@ for service in services.values():
     print(service)
 print()
 
-
-my_travel = Supply(1, "BCN", "MAD", datetime.datetime(day=22, month=1, year=2023).date(), services.values())
+origin = "BCN"
+destination = "MAD"
+date = datetime.datetime(day=22, month=1, year=2023).date()
+my_travel = Supply(1, origin, destination, date, list(services.values()))
 
 print("My Travel: ")
 for s in my_travel.services:
     print(s)
-
-exit()
-
-# Import data from database
-database = None
-
-# Define day and a pair of stations
-day = datetime.datetime(day=15, month=2, year=2023)
-print("Search day: ", day)
-
-origin = 60000
-destination = 71801
-
-my_request = Supply(id_=1, date=day, w=(origin, destination))
-
-# Get Services from Supply
