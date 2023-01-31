@@ -400,9 +400,10 @@ class Day:
         id (int): The day id.
         date (datetime.date): The actual date.
         demand_pattern (DemandPattern): The associated demand pattern.
+        market (Market): The associated market.
     """
     
-    def __init__(self, id: int, date: datetime.date, demand_pattern: DemandPattern) -> None:
+    def __init__(self, id: int, date: datetime.date, demand_pattern: DemandPattern, market: Market) -> None:
         """
         Initializes a day.
 
@@ -414,6 +415,7 @@ class Day:
         self.id = id
         self.date = date
         self.demand_pattern = demand_pattern
+        self.market = market
 
     def get_date(self) -> datetime.date:
         """
@@ -433,6 +435,15 @@ class Day:
         """
         return self.demand_pattern
 
+    def get_market(self) -> Market:
+        """
+        Returns the market.
+
+        Returns:
+            Market: The market.
+        """
+        return self.market
+
     def __repr__(self) -> str:
         """
         Returns the string representation of the day.
@@ -445,6 +456,7 @@ class Day:
             f'id={self.id}, '
             f'date={self.date}, '
             f'demand_pattern={self.demand_pattern})'
+            f'market={self.market})'
         )
 
 
