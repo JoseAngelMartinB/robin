@@ -3,7 +3,7 @@
 from .exceptions import InvalidForbiddenDepartureHoursException
 from .utils import get_function, get_scipy_distribution
 
-from typing import Dict, Mapping, Union, Tuple
+from typing import List, Mapping, Union, Tuple
 
 import datetime
 import numpy as np
@@ -89,7 +89,7 @@ class UserPattern:
         purchase_day (Callable): The purchase day distribution function.
         purchase_day_kwargs (Mapping[str, Union[int, float]]): The purchase day distribution named parameters.
         forbidden_departure_hours (Tuple[int, int]): The forbidden departure hours.
-        seats (Dict[int, float]): The utility of the seats.
+        seats (Mapping[int, float]): The utility of the seats.
         penalty_arrival_time (Callable): The penalty function for the arrival time.
         penalty_arrival_time_kwargs (Mapping[str, Union[int, float]]): The penalty function named parameters.
         penalty_departure_time (Callable): The penalty function for the departure time.
@@ -117,7 +117,7 @@ class UserPattern:
             purchase_day: str,
             purchase_day_kwargs: Mapping[str, Union[int, float]],
             forbidden_departure_hours: Tuple[int, int],
-            seats: Dict[int, float],
+            seats: Mapping[int, float],
             penalty_arrival_time: str,
             penalty_arrival_time_kwargs: Mapping[str, Union[int, float]],
             penalty_departure_time: str,
@@ -139,7 +139,7 @@ class UserPattern:
             purchase_day (str): The purchase day distribution name.
             purchase_day_kwargs (Mapping[str, Union[int, float]]): The purchase day distribution named parameters.
             forbidden_departure_hours (Tuple[int, int]): The forbidden departure hours.
-            seats (Dict[int, float]): The utility of the seats.
+            seats (Mapping[int, float]): The utility of the seats.
             penalty_arrival_time (str): The penalty function name for the arrival time.
             penalty_arrival_time_kwargs (Mapping[str, Union[int, float]]): The penalty function named parameters.
             penalty_departure_time (str): The penalty function name for the departure time.
@@ -320,7 +320,7 @@ class DemandPattern:
         id (int): The demand pattern id.
         potential_demand(Callable): The potential demand distribution function.
         potential_demand_kwargs (Mapping[str, Union[int, float]]): The potential demand distribution named parameters.
-        user_pattern_distribution (Dict[UserPattern, float]): The user pattern distribution.
+        user_pattern_distribution (Mapping[UserPattern, float]): The user pattern distribution.
 
     Raises:
         InvalidDistributionException: Raised when the given distribution is not contained in SciPy.
@@ -417,6 +417,29 @@ class Day:
         self.demand_pattern = demand_pattern
         self.market = market
 
+    def generate_passengers(self, id_offset: int = 1) -> List['Passenger']:
+        """
+        Generates passengers according to the demand pattern.
+
+        Returns:
+            List[Passenger]: The generated passengers.
+        """
+        potential_demand = self.get_demand_pattern().get_potential_demand()
+        user_pattern = self.get_demand_pattern().get_user_pattern()
+        passengers = []
+        for i in range(potential_demand):
+            passengers.append(
+                Passenger(
+                    id=i + id_offset,
+                    user_pattern=user_pattern,
+                    market=self.market,
+                    arrival_day=self,
+                    arrival_time=user_pattern.get_arrival_time(), # TODO: Check forbidden arrival time
+                    purchase_day=user_pattern.get_purchase_day(),
+                )
+            )
+        return passengers
+
     def get_date(self) -> datetime.date:
         """
         Returns the date.
@@ -455,7 +478,7 @@ class Day:
             f'{self.__class__.__name__}('
             f'id={self.id}, '
             f'date={self.date}, '
-            f'demand_pattern={self.demand_pattern})'
+            f'demand_pattern={self.demand_pattern}), '
             f'market={self.market})'
         )
 
