@@ -1,10 +1,8 @@
-from entities import *
+from src.robin.supply.entities import *
 import yaml
 
-with open('../../../data/supply_data_example.yml', 'r') as file:
+with open('data/supply_data_example.yml', 'r') as file:
     supply_data_example = yaml.safe_load(file)
-
-print(supply_data_example)
 
 # Get list of Station objects from YML data
 stations = {tuple(s.values())[0]: Station(*s.values()) for s in supply_data_example['stations']}
@@ -26,10 +24,12 @@ print("Corridors: ")
 corridors = {}
 for c in supply_data_example['corridor']:
     corridor_data = list(c.values())
+    corr_stations = list(filter(lambda s: s.id in corridor_data[2], stations.values()))
+    corr_stations_ids = [s.id for s in corr_stations]
 
     corridors[corridor_data[0]] = Corridor(corridor_data[0],
                                            corridor_data[1],
-                                           list(filter(lambda s: s.id in corridor_data[2], stations.values())))
+                                           corr_stations_ids)
 
 for c in corridors.values():
     print(c)
