@@ -1,10 +1,10 @@
-from typing import List, Tuple
+from typing import List, Tuple, Mapping
 import datetime
 
 
 class Station(object):
     """
-    Station class
+    Station: Railway facility where trains stop to load or unload passengers, freight or both.
 
     Attributes:
         id (int): Station ID
@@ -18,6 +18,15 @@ class Station(object):
         self.city = city
         self.shortname = shortname
         self.coords = coords
+
+    def add_coords(self, coords: Tuple[float, float]) -> None:
+        """
+        Add coordinates to a Station object
+
+        Args:
+            coords: Tuple of floats (latitude, longitude)
+        """
+        self.coords = coords
     
     def __str__(self):
         return f'[{self.id}, {self.name}, {self.shortname}, {self.coords}]'
@@ -25,44 +34,45 @@ class Station(object):
     
 class TimeSlot(object):
     """
-    Time slot class
+    TimeSlot: Discrete time interval
 
     Attributes:
         id (int): Time slot ID
-        start (float): Time slot start time
-        end (float): Time slot end time
-        class_mark (float): Time slot class mark
-        size (float): Time slot size
+        start (datetime.timedelta): Time slot start time
+        end (datetime.timedelta): Time slot end time
+        class_mark (datetime.timedelta): Time slot class mark
+        size (datetime.timedelta): Time slot size
     """
     def __init__(self, id_: int, start: str, end: str):
         self.id = id_
+
         start_hour, start_min = start.split(':')
         self.start = datetime.timedelta(hours=int(start_hour), minutes=int(start_min))
 
         end_hour, end_min = end.split(':')
         self.end = datetime.timedelta(hours=int(end_hour), minutes=int(end_min))
 
-        self.class_mark = self.__get_class_mark()
-        self.size = self.__get_size()
+        self.class_mark = self._get_class_mark()
+        self.size = self._get_size()
 
-    def __get_class_mark(self) -> datetime.timedelta:
+    def _get_class_mark(self) -> datetime.timedelta:
         """
         Get class mark of time slot
 
         Returns:
-            class mark: time delta object
+            class mark (datetime.timedelta): Time slot class mark
         """
 
         if self.end < self.start:
             return (self.start + self.end + datetime.timedelta(days=1)) / 2 - datetime.timedelta(days=1)
         return (self.start + self.end) / 2
 
-    def __get_size(self) -> datetime.timedelta:
+    def _get_size(self) -> datetime.timedelta:
         """
         Get size of time slot
 
         Returns:
-            size: time delta object
+            size (datetime.timedelta): Time slot size
         """
         if self.end < self.start:
             return (self.end + datetime.timedelta(days=1)) - self.start
@@ -74,46 +84,45 @@ class TimeSlot(object):
 
 class Corridor(object):
     """
-    Corridor class
+    Corridor: Sequence of stations.
 
     Attributes:
-        id: int - Corridor ID
-        name: str - Corridor name
-        stations (List[Station]): List of stations in corridor
+        id (int): Corridor ID
+        name (str): Corridor name
+        stations (List[int]): List of Station IDs of which the Corridor is composed
     """
 
-    # Be aware: Corridor could be a tree structure (parent-child relationship between stations)
-    def __init__(self, id_: int, name: str, stations: List[Station]):
+    # TODO: Corridor as a tree structure (parent-child relationship between stations)
+    def __init__(self, id_: int, name: str, stations: List[int]):
         self.id = id_
         self.name = name
         self.stations = stations
 
     def __str__(self):
-        short_names = [s.shortname for s in self.stations]
-        return f'[{self.id}, {self.name}, {short_names}]'
+        return f'[{self.id}, {self.name}, {self.stations}]'
 
 
 class Line(object):
     """
-    Line class
+    Line: Sequence of stations being served by a train with a timetable.
 
     Attributes:
-        id: Integer with line ID
-        name: String with line name
-        corridor: Corridor object
-        timetable dict: Dictionary {stations: (arrival, departure)}
+        id (int): Line ID
+        name (str): Line name
+        corridor (int): Corridor ID where the Line belongs to
+        stops (List[int]): List of Station IDs being served by the Line
+        timetable (Mapping[str, Tuple[float, float]]): {Station ID (str): (arrival (str), departure (str)}
+        pairs (List[Tuple[str, str]]): List of pairs of stations (origin, destination)
     """
-    def __init__(self, id_: int, name: str, corridor: int, timetable: dict):
-        # Service type is a tuple of booleans indicating which stations from the corridor are served
+    def __init__(self, id_: int, name: str, corridor: int, timetable: Mapping[str, Tuple[float, float]]):
         self.id = id_
         self.name = name
-        self.name = f'Line {id_}'
         self.corridor = corridor
-        self.stops = list(timetable.keys())  # j: Train stops
-        self.timetable = timetable  # t: Timetable
-        self.pairs = self.__getpairs()  # w: Pairs origin-destination
+        self.stops = list(timetable.keys())
+        self.timetable = timetable
+        self.pairs = self._getpairs()
 
-    def __getpairs(self):
+    def _getpairs(self):
         """
         Private method to get each pair of stations of the line, using the stops list
 
@@ -128,19 +137,19 @@ class Line(object):
 
 class Seat(object):
     """
-    Seat class
+    Seat: Seat type of train.
 
     Attributes:
-        id: Integer with seat ID
-        name: String with seat name
-        hard_type: Integer with hard type
-        soft_type: Integer with soft type
+        id (int): Seat ID
+        name (str): Seat type name
+        hard_type (int): Hard seat type
+        soft_type (int): Soft seat type
     """
     def __init__(self, id_: int, name: str, hard_type: int, soft_type: int):
         self.id = id_
         self.name = name
-        self.hard_type = hard_type  # E.g. Tickets available?
-        self.soft_type = soft_type  # E.g. Luggage compartment?
+        self.hard_type = hard_type
+        self.soft_type = soft_type
 
     def __str__(self):
         return f'[{self.id}, {self.name}, {self.hard_type}, {self.soft_type}]'
@@ -148,17 +157,17 @@ class Seat(object):
 
 class RollingStock(object):
     """
-    Rolling stock class
+    Rolling Stock: Locomotives, Carriages, Wagons, or other vehicles used on a railway.
 
     Attributes:
-        id: Integer with rolling stock ID
-        name: String with rolling stock name
-        seats: Dictionary {seat_id: Seat object}
+        id (int): Rolling Stock ID
+        name (str): Rolling Stock name
+        seats (Mapping[int, int]): Number of seats for each hard_type {hard_type1: quantity1, hard_type2: quantity2}
     """
-    def __init__(self, id_: int, name: str, seats: dict):
+    def __init__(self, id_: int, name: str, seats: Mapping[int, int]):
         self.id = id_
         self.name = name
-        self.seats = seats  # {seat_type: quantity}
+        self.seats = seats
 
     def __str__(self):
         return f'[{self.id},{self.name},{self.seats}]'
@@ -166,26 +175,26 @@ class RollingStock(object):
 
 class TSP(object):
     """
-    TSP class
+    TSP: Train Service Provider. Company that provides train services.
 
     Attributes:
-        id: Integer with TSP ID
-        name: String with TSP name
-        rolling_stock: List of RollingStock id's (int)
+        id (int): Train Service Provider ID
+        name (name): Name of the Train Service Provider
+        rolling_stock List[int]: List of RollingStock id's (int)
     """
-    def __init__(self, id_: int, name: str, rolling_stock: List[int] = None):
+    def __init__(self, id_: int, name: str, rolling_stock_ids: List[int] = None):
         self.id = id_
         self.name = name
-        self.rolling_stock = rolling_stock if rolling_stock is not None else []
+        self.rolling_stock = rolling_stock_ids if rolling_stock_ids is not None else []
 
-    def add_rolling_stock(self, rs: int):
+    def add_rolling_stock(self, rs_id: int):
         """
-        Method to add a new rolling stock to a TSP object
+        Method to add new Rolling stock ID to a TSP object
 
         Args:
-            rs: RollingStock object
+            rs_id: RollingStock object
         """
-        self.rolling_stock.append(rs)
+        self.rolling_stock.append(rs_id)
 
     def __str__(self):
         return f'[{self.id}, {self.name}, {self.rolling_stock}]'
@@ -193,26 +202,28 @@ class TSP(object):
 
 class Service(object):
     """
-    Service class
+    Service: Travel options provided by a TSP between stations in a Line with a timetable,
+    capacity constrains defined by the Rolling Stock, capacity managed by Train or ???
+    and with the possibility with different seat types, each with a specific price.
 
     Attributes:
-        id: Integer with service ID
-        date: Date of service
-        line: Line object
-        tsp: TSP object
-        timeSlot: TimeSlot object
-        rollingStock: RollingStock object
-        prices: Dictionary {seat_type: price}
-        capacity: String with capacity type
+        id (str): Service ID
+        date (datetime.date): Day of sevice (day, month, year, without time)
+        line (int): Line ID
+        tsp (int): TSP ID
+        timeSlot (TimeSlot) : Time Slot
+        rollingStock (int): Rolling Stock ID
+        prices Mapping[Tuple[str, str], Mapping[int, float]]: {(org, dest): {seat_type: price, ...}}
+        capacity (str): String with capacity type
     """
     def __init__(self,
-                 id_: int,
+                 id_: str,
                  date: str,
                  line: Line,
-                 tsp: TSP,
-                 time_slot: TimeSlot,
-                 rolling_stock: RollingStock,
-                 prices: dict,
+                 tsp: int,
+                 time_slot: TimeSlot,  # TODO: Change to TimeSlot ID
+                 rolling_stock: int,
+                 prices: Mapping[Tuple[str, str], Mapping[int, float]],
                  capacity: str):
 
         self.id = id_
@@ -239,44 +250,37 @@ class Service(object):
 
 class Supply(object):
     """
-    Supply class.
+    Supply:
 
     Attributes:
-        id: Integer with supply ID
-        origin: String with origin station id
-        destination: String with destination station id
-        date: Date of supply
-        services: List of Service objects
+        id (int): Supply ID
+        origin (str): String with origin station id
+        destination (str): String with destination station id
+        date (datetime.date): Date of supply (day, month, year, without time)
+        services (List[Service]): List of Service objects
     """
     def __init__(self, id_: int, origin: str, destination: str, date: datetime.date, services: List[Service]):
         self.id = id_
         self.origin = origin
         self.destination = destination
         self.date = date
-        self.services = self.__getservices(services)
+        self.services = self.__getservices(services)  # TODO: Change to services ID'S
 
-    def __getservices(self, services: List[Service]):
+    def __getservices(self, services: List[Service]) -> List[Service]:
         """
         Private method to get the services that meet the user requests (origin, destination, date)
 
         Args:
-            services: List of Service objects
+            services (List[Service]): List of Service objects
 
         Returns:
-            Filtered List of Service objects
+            List[Service]: Filtered List of Service objects
         """
         filtered_services = []
 
         for s in services:
-            if s.date == self.date:
-                try:
-                    if s.line.stops.index(self.origin) < s.line.stops.index(self.destination):
-                        filtered_services.append(s)
-
-                    # if (origin, destination) in s.line.pairs:
-                    #     my_services.append(s)
-                except ValueError:
-                    pass
+            if s.date == self.date and (self.origin, self.destination) in s.line.pairs:
+                filtered_services.append(s)
 
         return filtered_services
 
