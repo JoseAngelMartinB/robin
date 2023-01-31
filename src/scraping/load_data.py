@@ -1,5 +1,6 @@
 import pandas as pd
 
+from typing import Tuple, List, Dict
 from src.robin.supply.entities import *
 from src.scraping.renfetools import *
 import numpy as np
@@ -42,7 +43,7 @@ def get_line(stops: pd.DataFrame, corr: Corridor):
 
     idx = stops['service_id'].values[0].split("_")[0]
 
-    return Line(idx, f"Line {idx}", corr, line_data)
+    return Line(idx, f"Line {idx}", corr.id, line_data)
 
 
 def get_trip_line(service_id: str, lines: dict):
@@ -64,7 +65,14 @@ def get_trip_line(service_id: str, lines: dict):
     return line
 
 
-def get_service(service_id: str, departure: str, arrival: str, price: dict, line: Line, tsp, rs):
+def get_service(service_id: str,
+                departure: str,
+                arrival: str,
+                price: dict,
+                line: Line,
+                tsp: TSP,
+                rs: RollingStock,
+                corridor: Corridor):
     """
     Get Service() object from Renfe data
 
@@ -74,6 +82,9 @@ def get_service(service_id: str, departure: str, arrival: str, price: dict, line
         arrival: string
         price: tuple of floats
         line: Line() object
+        tsp: TSP() object
+        rs: RollingStock() object
+        corridor: Corridor() object
 
     Returns:
         Service() object
@@ -85,42 +96,52 @@ def get_service(service_id: str, departure: str, arrival: str, price: dict, line
     line = line
     time_slot = TimeSlot(int(id_.split("_")[0]), departure, arrival)
 
+    total_prices = {}
+    stations = corridor.stations
+    dict_prices = {p: np.round(np.linspace(price[p] / 2, price[p], len(stations) - 1), 2) for p in price}
+
+    for p in line.pairs:
+        l = len(stations[stations.index(p[0]):stations.index(p[1]) + 1]) - 2
+
+        try:
+            total_prices[p] = {p: dict_prices[p][l] for p in dict_prices}
+        except IndexError:
+            total_prices[p] = {p: dict_prices[p][-1] for p in dict_prices}
+
     return Service(id_,
                    date,
                    line,
                    tsp.id,
                    time_slot,
                    rs.id,
-                   price,
+                   total_prices,
                    "Train")
 
 
-def load_scraping(file_path):
+def load_scraping(file):
     # 0. Import data
 
     # Get last updated file in selected folder
     # updated_file = max(glob.iglob(f'../../datasets/scraping/renfe/trips/*.csv'), key=os.path.getmtime)
+    # file = updated_file
 
     # File with Renfe data for february 2023 (AVE)
-    # E.g updated_file = '../../datasets/scraping/renfe/trips/trips_MADRI_BARCE_2022-12-30_2023-01-03.csv'
-    updated_file = file_path
+    # E.g updated_file = 'datasets/scraping/renfe/trips/trips_MADRI_BARCE_2022-12-30_2023-01-03.csv'
 
     # 0.1 Import trips
-    trips = pd.read_csv(updated_file, delimiter=',', dtype={'trip_id': str})
+    trips = pd.read_csv(file, delimiter=',', dtype={'trip_id': str})
 
     # E.g file_name = 'trips_MADRI_BARCE_2022-12-30_2023-01-03'
-    file_name = updated_file.split('/')[-1].split(".")[0]
+    file_name = file.split('/')[-1].split(".")[0]
 
     # E.g file_name = 'MADRI_BARCE_2022-12-30_2023-01-03'
     file_name = "_".join(file_name.split("_")[1:])
 
     # 0.2 Import prices
-    path = file_path.split("/")
-
-    prices = pd.read_csv(f'{"/".join(path[:path.index("data")])}/data/scraping/renfe/prices/prices_{file_name}.csv', delimiter=',')
+    prices = pd.read_csv(f'data/scraping/renfe/prices/prices_{file_name}.csv', delimiter=',')
 
     # 0.3 Import stops
-    stop_times = pd.read_csv(f'{"/".join(path[:path.index("data")])}/data/scraping/renfe/stop_times/stopTimes_{file_name}.csv',
+    stop_times = pd.read_csv(f'data/scraping/renfe/stop_times/stopTimes_{file_name}.csv',
                              delimiter=',',
                              dtype={'stop_id': str})
 
@@ -156,7 +177,7 @@ def load_scraping(file_path):
                 corridor.insert(corridor.index(trip[i + 1]), s)
 
     # 1.5 Parse stations. Use Adif stop_id retrieve station info (name, lat, lon)
-    renfe_stations = pd.read_csv(f'{"/".join(path[:path.index("data")])}/data/scraping/renfe/renfe_stations.csv', delimiter=',', dtype={'stop_id': str})
+    renfe_stations = pd.read_csv(f'data/scraping/renfe/renfe_stations.csv', delimiter=',', dtype={'stop_id': str})
 
     # 1.6 Build dictionary of stations with stop_id as key and Station() object as value
     stations = {}
@@ -171,7 +192,7 @@ def load_scraping(file_path):
     # 1.7 Build Corridor
     first_station, last_station = tuple(stations.values())[::len(stations) - 1]
     corr_name = first_station.shortname + "-" + last_station.shortname
-    corrMadBar = Corridor(1, corr_name, list(stations.values()))
+    corrMadBar = Corridor(1, corr_name, list(stations.keys()))
 
     # 2. Build Lines
     routes_lines = grouped_df.apply(lambda x: get_line(x, corrMadBar))
@@ -184,7 +205,7 @@ def load_scraping(file_path):
     renfe_rs = [RollingStock(1, "S-114", {1: 250, 2: 50})]
 
     # 5. Build TSP for Renfe
-    renfe_tsp = TSP(1, "Renfe", renfe_rs)
+    renfe_tsp = TSP(1, "Renfe", [rs.id for rs in renfe_rs])
 
     # 6. Build Services
     trips['service'] = trips.apply(lambda x: get_service(x['service_id'],
@@ -193,7 +214,8 @@ def load_scraping(file_path):
                                                          x['prices'],
                                                          x['lines'],
                                                          renfe_tsp,
-                                                         renfe_rs[0]),
+                                                         renfe_rs[0],
+                                                         corrMadBar),
                                    axis=1)
 
     return trips['service'].values.tolist(), renfe_seats, corrMadBar, renfe_tsp, renfe_rs
