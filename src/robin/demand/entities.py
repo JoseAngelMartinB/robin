@@ -554,3 +554,56 @@ class Passenger:
             f'arrival_time={self.arrival_time}, '
             f'purchase_day={self.purchase_day})'
         )
+
+
+class Demand:
+    """
+    A demand is a collection of days, where each day is associated with a demand pattern and a market.
+    
+    Attributes:
+        days (List[Day]): The list of days.
+    """
+    
+    def __init__(self, days: List[Day]) -> None:
+        """
+        Initializes a demand.
+
+        Args:
+            days (List[Day]): The list of days.
+        """
+        self.days = days
+    
+    def generate_passengers(self) -> List['Passenger']:
+        """
+        Generates the passengers for all days.
+
+        Returns:
+            List[Passenger]: The generated passengers.
+        """
+        passengers = []
+        id_offset = 1
+        for day in self.days:
+            passengers += day.generate_passengers(id_offset)
+            id_offset += len(passengers)
+        return passengers
+
+    def __str__(self) -> str:
+        """
+        Returns a human readable string representation of the demand.
+
+        Returns:
+            str: A human readable string representation of the demand.
+        """
+        return str(self.days)
+
+    def __repr__(self) -> str:
+        """
+        Returns the debuggable string representation of the demand.
+
+        Returns:
+            str: The debuggable string representation of the demand.
+        """
+        return (
+            f'{self.__class__.__name__}('
+            f'days={self.days})'
+        )
