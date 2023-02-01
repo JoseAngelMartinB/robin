@@ -7,6 +7,15 @@ import re
 
 
 def get_time(time):
+    """
+    Function which returns a datetime.timedelta object from a string time in format HH:MM
+
+    Args:
+        time: string time in format HH:MM
+
+    Returns:
+        datetime.timedelta object
+    """
     r = re.compile('.*:.*')
 
     if not all([r.match(time), len(time.split(":")) == 2, all(t.isdigit() for t in time.split(":"))]):
@@ -20,6 +29,15 @@ def get_time(time):
 
 
 def get_date(date):
+    """
+    Function which returns a datetime.date object from a string date in format DD-MM-YYYY
+
+    Args:
+        date: string date in format DD-MM-YYYY
+
+    Returns:
+        datetime.date object
+    """
     r = re.compile('.*-.*-.*')
 
     if not all([r.match(date), len(date.split("-")) == 3, all(t.isdigit() for t in date.split("-"))]):
