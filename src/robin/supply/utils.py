@@ -26,7 +26,8 @@ def get_date(date):
         raise InvalidDateStringFormat(date)
 
     d, m, y = (int(t) for t in date.split("-"))
-    if d not in range(0, 366) and m not in range(1, 13) and y not in range(2020, 2100):
+    if d not in range(0, 32) and m not in range(1, 13) and y not in range(2020, 2100):
         raise InvalidDateStringFormat(date)
 
+    # Day could be out of range for month - if so, datetime will raise a ValueError Exception
     return datetime.datetime.strptime(date, "%d-%m-%Y").date()
