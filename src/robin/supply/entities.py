@@ -1,3 +1,7 @@
+"""Entities for the supply module."""
+
+from .utils import get_time
+
 from typing import List, Tuple, Mapping
 import datetime
 
@@ -19,7 +23,7 @@ class Station(object):
         self.shortname = shortname
         self.coords = coords
 
-    def add_coords(self, coords: Tuple[float, float]) -> None:
+    def add_coords(self, coords: Tuple[float, float]):
         """
         Add coordinates to a Station object
 
@@ -30,8 +34,8 @@ class Station(object):
     
     def __str__(self):
         return f'[{self.id}, {self.name}, {self.shortname}, {self.coords}]'
-    
-    
+
+
 class TimeSlot(object):
     """
     TimeSlot: Discrete time interval
@@ -45,13 +49,8 @@ class TimeSlot(object):
     """
     def __init__(self, id_: int, start: str, end: str):
         self.id = id_
-
-        start_hour, start_min = start.split(':')
-        self.start = datetime.timedelta(hours=int(start_hour), minutes=int(start_min))
-
-        end_hour, end_min = end.split(':')
-        self.end = datetime.timedelta(hours=int(end_hour), minutes=int(end_min))
-
+        self.start = get_time(start)
+        self.end = get_time(end)
         self.class_mark = self._get_class_mark()
         self.size = self._get_size()
 
@@ -92,7 +91,7 @@ class Corridor(object):
         stations (List[int]): List of Station IDs of which the Corridor is composed
     """
 
-    # TODO: Corridor as a tree structure (parent-child relationship between stations)
+    # TODO: Corridor as a tree structure (parent-child relationship between stations - List[Tuple[str, str]]??)
     def __init__(self, id_: int, name: str, stations: List[int]):
         self.id = id_
         self.name = name
@@ -211,7 +210,7 @@ class Service(object):
         date (datetime.date): Day of sevice (day, month, year, without time)
         line (int): Line ID
         tsp (int): TSP ID
-        timeSlot (TimeSlot) : Time Slot
+        timeSlot (TimeSlot): Time Slot
         rollingStock (int): Rolling Stock ID
         prices Mapping[Tuple[str, str], Mapping[int, float]]: {(org, dest): {seat_type: price, ...}}
         capacity (str): String with capacity type
@@ -280,6 +279,7 @@ class Supply(object):
 
         for s in services:
             if s.date == self.date and (self.origin, self.destination) in s.line.pairs:
+                # TODO: Filter prices
                 filtered_services.append(s)
 
         return filtered_services
