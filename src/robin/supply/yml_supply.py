@@ -1,4 +1,8 @@
-from src.robin.supply.entities import *
+"""Supply entities from YAML data."""
+
+from .entities import Station, TimeSlot, Corridor, Line, Seat, RollingStock, TSP, Service, Supply
+
+import datetime
 import yaml
 
 with open('data/supply_data_example.yml', 'r') as file:
