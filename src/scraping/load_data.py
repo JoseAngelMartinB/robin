@@ -218,10 +218,10 @@ def load_scraping(file):
                                                          corrMadBar),
                                    axis=1)
 
-    return trips['service'].values.tolist(), renfe_seats, corrMadBar, renfe_tsp, renfe_rs
+    return trips['service'].values.tolist(), stations, renfe_seats, corrMadBar, renfe_tsp, renfe_rs
 
 
 if __name__ == '__main__':
-    file_path = '../../data/scraping/renfe/trips/trips_MADRI_BARCE_2023-02-01_2023-02-28.csv'
-    services, seats, corridor, tsp, rolling_stock = load_scraping(file_path)
+    file_path = 'data/scraping/renfe/trips/trips_MADRI_BARCE_2023-02-01_2023-02-28.csv'
+    services, stations, seats, corridor, tsp, rolling_stock = load_scraping(file_path)
     print(services[0])
