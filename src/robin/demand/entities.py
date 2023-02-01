@@ -7,6 +7,7 @@ from typing import List, Mapping, Union, Tuple
 
 import datetime
 import numpy as np
+import yaml
 
 
 class Station:
@@ -572,8 +573,57 @@ class Demand:
             days (List[Day]): The list of days.
         """
         self.days = days
+
+    @classmethod
+    def from_yaml(cls, path: str) -> 'Demand':
+        """
+        Creates a demand from a YAML file.
+
+        TODO: This method is too long. Refactor it.
+
+        Args:
+            path (str): The path to the YAML file.
+
+        Returns:
+            Demand: The demand created from the YAML file.
+        """
+        with open(path, 'r') as f:
+            demand_yaml = f.read()
+
+        data = yaml.safe_load(demand_yaml)
+
+        markets = {}
+        user_patterns = {}
+        demand_patterns = {}
+        days = {}
+
+        for key, value in data.items():
+            if key == 'market':
+                for market in value:
+                    markets[market['id']] = Market(**market)
+            elif key == 'userPattern':
+                for userPattern in value:
+                    forbidden_departure_hours = tuple(userPattern['forbidden_departure_hours'].values())
+                    userPattern.pop('forbidden_departure_hours', None)
+                    user_patterns[userPattern['id']] = UserPattern(forbidden_departure_hours=forbidden_departure_hours, **userPattern)
+            elif key == 'demandPattern':
+                for demandPattern in value:
+                    user_pattern_distribution = {}
+                    for demand_upd in demandPattern['user_pattern_distribution']:
+                        user_pattern_distribution[user_patterns[demand_upd['id']]] = demand_upd['percentage']
+                    demandPattern.pop('user_pattern_distribution', None)
+                    demand_patterns[demandPattern['id']] = DemandPattern(user_pattern_distribution=user_pattern_distribution, **demandPattern)
+            elif key == 'day':
+                for day in value:
+                    id_ = day['id']
+                    date = datetime.datetime.strptime(day['date'], '%Y-%m-%d').date()
+                    demand_pattern = demand_patterns[day['demandPattern']]
+                    market = markets[day['market']]
+                    days[day['id']] = Day(id=id_, date=date, demand_pattern=demand_pattern, market=market)
+
+        return cls(list(days.values()))
     
-    def generate_passengers(self) -> List['Passenger']:
+    def generate_passengers(self) -> List[Passenger]:
         """
         Generates the passengers for all days.
 
