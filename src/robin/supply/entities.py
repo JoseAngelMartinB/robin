@@ -262,7 +262,7 @@ class Supply(object):
         self.id = id_
         self.origin = origin
         self.destination = destination
-        self.date = date
+        self.date = datetime.date
         self.services = self.__getservices(services)  # TODO: Change to services ID'S
 
     def __getservices(self, services: List[Service]) -> List[Service]:
