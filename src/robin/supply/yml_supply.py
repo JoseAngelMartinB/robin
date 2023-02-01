@@ -117,6 +117,11 @@ for service in services.values():
     print(service)
 print()
 
+print("Available stations: ")
+for sid in stations:
+    print(f'Station ID: {sid} - Station name: {stations[sid].name}')
+print()
+
 origin = "BCN"
 destination = "MAD"
 date = datetime.datetime(day=22, month=1, year=2023).date()
