@@ -26,7 +26,7 @@ userPattern:
       high: 7
     forbidden_departure_hours:
       start: 9
-      end: 23
+      end: 24
     seats:
       - id: 1
         utility: 0.1

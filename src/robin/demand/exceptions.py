@@ -1,6 +1,15 @@
 """Exceptions for the demand module."""
 
 
+class InvalidArrivalTimeException(Exception):
+    """Raised when it could not be generated a valid arrival time."""
+    
+    def __init__(self, name: str, forbidden_departure_hours: tuple, *args, **kwargs):
+        msg = (f"It could not be generated a valid arrival time in 100 iterations. "
+               f"The forbidden departure hours are '{forbidden_departure_hours}' for the '{name}' user pattern.")
+        super().__init__(msg, *args, **kwargs)
+
+
 class InvalidDistributionException(Exception):
     """Raised when the given distribution is not contained in SciPy."""
     
@@ -33,7 +42,7 @@ class InvalidForbiddenDepartureHoursException(Exception):
     
     def __init__(self, forbidden_departure_hours: tuple, *args, **kwargs):
         msg = (f"The forbidden departure hours '{forbidden_departure_hours}' are not valid. "
-               'They must be a ordered tuple of two integers between 0 and 23.')
+               'They must be a ordered tuple of two integers between 0 and 24.')
         super().__init__(msg, *args, **kwargs)
 
 

@@ -1,6 +1,6 @@
 """Entities for the demand module."""
 
-from .exceptions import InvalidForbiddenDepartureHoursException
+from .exceptions import InvalidArrivalTimeException, InvalidForbiddenDepartureHoursException
 from .utils import get_function, get_scipy_distribution
 
 from typing import List, Mapping, Union, Tuple
@@ -188,7 +188,7 @@ class UserPattern:
             raise InvalidForbiddenDepartureHoursException(forbidden_departure_hours)
         elif not all(isinstance(hour, int) for hour in forbidden_departure_hours):
             raise InvalidForbiddenDepartureHoursException(forbidden_departure_hours)
-        elif any(hour < 0 or hour > 23 for hour in forbidden_departure_hours):
+        elif any(hour < 0 or hour > 24 for hour in forbidden_departure_hours):
             raise InvalidForbiddenDepartureHoursException(forbidden_departure_hours)
         elif forbidden_departure_hours[0] >= forbidden_departure_hours[1]:
             raise InvalidForbiddenDepartureHoursException(forbidden_departure_hours)
@@ -198,12 +198,28 @@ class UserPattern:
     def arrival_time(self) -> float:
         """
         Returns a random variable sample from the arrival time distribution.
+        
+        It takes into account the forbidden departure hours.
 
         Returns:
             float: A random variable sample from the distribution.
+
+        Raises:
+            InvalidArrivalTimeException: Raised when it could not be generated a valid arrival time.
         """
-        # TODO: Check forbidden arrival time
-        return self._arrival_time.rvs(**self.arrival_time_kwargs)
+        arrival_time = self._arrival_time.rvs(**self.arrival_time_kwargs)
+        is_valid_arrival_time = arrival_time >= self.forbidden_departure_hours[0] and arrival_time <= self.forbidden_departure_hours[1]
+        iteration_count = 0
+
+        while is_valid_arrival_time and iteration_count < 100:
+            arrival_time = self._arrival_time.rvs(**self.arrival_time_kwargs)
+            is_valid_arrival_time = arrival_time >= self.forbidden_departure_hours[0] and arrival_time <= self.forbidden_departure_hours[1]
+            iteration_count += 1
+
+        if iteration_count >= 100:
+            raise InvalidArrivalTimeException(self.name, self.forbidden_departure_hours)
+        
+        return arrival_time
     
     @property
     def purchase_day(self) -> int:
