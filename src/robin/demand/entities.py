@@ -93,6 +93,7 @@ class UserPattern:
         penalty_traveling_time_kwargs (Mapping[str, Union[int, float]]): The penalty function named parameters.
         error (Callable): The error distribution function.
         error_kwargs (Mapping[str, Union[int, float]]): The error distribution named parameters.
+        arrival_time_maximum_iterations (int): The maximum number of iterations for the arrival time distribution.
 
     Raises:
         InvalidDistributionException: Raised when the given distribution is not contained in SciPy.
@@ -121,7 +122,8 @@ class UserPattern:
             penalty_traveling_time: str,
             penalty_traveling_time_kwargs: Mapping[str, Union[int, float]],
             error: str,
-            error_kwargs: Mapping[str, Union[int, float]]
+            error_kwargs: Mapping[str, Union[int, float]],
+            arrival_time_maximum_iterations: int = 100,
         ) -> None:
         """
         Initialize a user pattern.
@@ -145,6 +147,7 @@ class UserPattern:
             penalty_traveling_time_kwargs (Mapping[str, Union[int, float]]): The penalty function named parameters.
             error (str): The error distribution name.
             error_kwargs (Mapping[str, Union[int, float]]): The error distribution named parameters.
+            arrival_time_maximum_iterations (int): The maximum number of iterations for the arrival time distribution.
         
         Raises:
             InvalidDistributionException: Raised when the given distribution is not contained in SciPy.
@@ -171,6 +174,7 @@ class UserPattern:
         self.penalty_traveling_time_kwargs = penalty_traveling_time_kwargs
         self._error = get_scipy_distribution(distribution_name=error, is_discrete=False)
         self.error_kwargs = error_kwargs
+        self.arrival_time_maximum_iterations = arrival_time_maximum_iterations
 
     def _check_forbidden_departure_hours(self, forbidden_departure_hours: Tuple[int, int]) -> Tuple[int, int]:
         """
@@ -212,13 +216,13 @@ class UserPattern:
         is_valid_arrival_time = arrival_time >= self.forbidden_departure_hours[0] and arrival_time <= self.forbidden_departure_hours[1]
         iteration_count = 0
 
-        while is_valid_arrival_time and iteration_count < 100:
+        while is_valid_arrival_time and iteration_count < self.arrival_time_maximum_iterations:
             arrival_time = self._arrival_time.rvs(**self.arrival_time_kwargs)
             is_valid_arrival_time = arrival_time >= self.forbidden_departure_hours[0] and arrival_time <= self.forbidden_departure_hours[1]
             iteration_count += 1
 
-        if iteration_count >= 100:
-            raise InvalidArrivalTimeException(self.name, self.forbidden_departure_hours)
+        if iteration_count >= self.arrival_time_maximum_iterations:
+            raise InvalidArrivalTimeException(self.name, self.forbidden_departure_hours, self.arrival_time_maximum_iterations)
         
         return arrival_time
     

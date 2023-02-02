@@ -4,8 +4,8 @@
 class InvalidArrivalTimeException(Exception):
     """Raised when it could not be generated a valid arrival time."""
     
-    def __init__(self, name: str, forbidden_departure_hours: tuple, *args, **kwargs):
-        msg = (f"It could not be generated a valid arrival time in 100 iterations. "
+    def __init__(self, name: str, forbidden_departure_hours: tuple, iterations: int, *args, **kwargs):
+        msg = (f"It could not be generated a valid arrival time in {iterations} iterations. "
                f"The forbidden departure hours are '{forbidden_departure_hours}' for the '{name}' user pattern.")
         super().__init__(msg, *args, **kwargs)
 
