@@ -16,6 +16,6 @@ date = datetime.datetime(day=22, month=1, year=2023).date()
 
 services = my_supply.generate('BCN', 'MAD', datetime.datetime(year=2023, month=1, day=22).date())
 
-print("My Travel: ")
+print(f'Travel options - Travel from {origin} to {destination} on {date}:')
 for s in services:
     print(s)
