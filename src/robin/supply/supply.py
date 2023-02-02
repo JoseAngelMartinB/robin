@@ -1,7 +1,6 @@
 """Supply entities from dummy scraping data (Renfe)."""
 
-from .entities import Station, TimeSlot, Corridor, Line, Seat, RollingStock, TSP, Service, Supply
-from .utils import get_date
+from src.robin.supply.utils import get_date
 from src.scraping.load_data import load_scraping
 
 import pandas as pd
@@ -20,7 +19,7 @@ while True:
     origin = input("Departure station ID: ")
     destination = input("Arrival station ID: ")
 
-    date = get_date(input("Date (dd-mm-yyyy): "))
+    date = get_date(input("Date (yyyy-mm-dd): "))
 
     # Check if origin and destination are in the list of stations operated by Renfe
     if all(s in renfe_stations['stop_id'].values.tolist() for s in (origin, destination)) and origin != destination:
@@ -30,10 +29,6 @@ dummy_service = services[0]
 print("Service: ", dummy_service)
 print("Line: ", dummy_service.line)
 
-# Supply() obtains a List[Service] that match the user request (origin, destination, datetime.date)
-my_travel = Supply(1, origin, destination, date, services)
-
-print("Supply: ")
-
-for s in my_travel.services:
-    print(s)
+# TODO: Save data to YML file
+# TODO: New TSP data
+# TODO: Check entities ID's -> Change to objects (e.g. Station, Service, etc.)
