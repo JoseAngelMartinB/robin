@@ -1,9 +1,10 @@
 """Entities for the supply module."""
 
-from .utils import get_time
+from src.robin.supply.utils import get_time, get_date
 
 from typing import List, Tuple, Mapping
 import datetime
+import yaml
 
 
 class Station(object):
@@ -88,11 +89,11 @@ class Corridor(object):
     Attributes:
         id (int): Corridor ID
         name (str): Corridor name
-        stations (List[int]): List of Station IDs of which the Corridor is composed
+        stations (List[Station]): List of Station's of which the Corridor is composed
     """
 
     # TODO: Corridor as a tree structure (parent-child relationship between stations - List[Tuple[str, str]]??)
-    def __init__(self, id_: int, name: str, stations: List[int]):
+    def __init__(self, id_: int, name: str, stations: List[Station]):
         self.id = id_
         self.name = name
         self.stations = stations
@@ -108,12 +109,12 @@ class Line(object):
     Attributes:
         id (int): Line ID
         name (str): Line name
-        corridor (int): Corridor ID where the Line belongs to
-        stops (List[int]): List of Station IDs being served by the Line
-        timetable (Mapping[str, Tuple[float, float]]): {Station ID (str): (arrival (str), departure (str)}
-        pairs (List[Tuple[str, str]]): List of pairs of stations (origin, destination)
+        corridor (Corridor): Corridor ID where the Line belongs to
+        stops (List[Station]): List of Station IDs being served by the Line
+        timetable (Mapping[Station, Tuple[float, float]]): {Station (Station): (arrival (str), departure (str)}
+        pairs (List[Tuple[Station, Station]]): List of pairs of stations (origin, destination)
     """
-    def __init__(self, id_: int, name: str, corridor: int, timetable: Mapping[str, Tuple[float, float]]):
+    def __init__(self, id_: int, name: str, corridor: Corridor, timetable: Mapping[Station, Tuple[float, float]]):
         self.id = id_
         self.name = name
         self.corridor = corridor
@@ -179,19 +180,19 @@ class TSP(object):
     Attributes:
         id (int): Train Service Provider ID
         name (name): Name of the Train Service Provider
-        rolling_stock List[int]: List of RollingStock id's (int)
+        rolling_stock List[int]: List of RollingStock's ID's
     """
-    def __init__(self, id_: int, name: str, rolling_stock_ids: List[int] = None):
+    def __init__(self, id_: int, name: str, rolling_stock: List[int] = None):
         self.id = id_
         self.name = name
-        self.rolling_stock = rolling_stock_ids if rolling_stock_ids is not None else []
+        self.rolling_stock = rolling_stock if rolling_stock is not None else []
 
     def add_rolling_stock(self, rs_id: int):
         """
         Method to add new Rolling stock ID to a TSP object
 
         Args:
-            rs_id: RollingStock object
+            rs_id (int): New Rolling Stock ID
         """
         self.rolling_stock.append(rs_id)
 
@@ -207,26 +208,26 @@ class Service(object):
 
     Attributes:
         id (str): Service ID
-        date (datetime.date): Day of sevice (day, month, year, without time)
-        line (int): Line ID
-        tsp (int): TSP ID
+        date (datetime.date): Day of service (day, month, year, without time)
+        line (Line): Line
+        tsp (TSP): TSP
         timeSlot (TimeSlot): Time Slot
-        rollingStock (int): Rolling Stock ID
-        prices Mapping[Tuple[str, str], Mapping[int, float]]: {(org, dest): {seat_type: price, ...}}
+        rollingStock (RollingStock): Rolling Stock
+        prices Mapping[Tuple[str, str], Mapping[str, float]]: {(org station ID, dest station ID): {seat_type ID: price}}
         capacity (str): String with capacity type
     """
     def __init__(self,
                  id_: str,
                  date: str,
                  line: Line,
-                 tsp: int,
-                 time_slot: TimeSlot,  # TODO: Change to TimeSlot ID
-                 rolling_stock: int,
-                 prices: Mapping[Tuple[str, str], Mapping[int, float]],
+                 tsp: TSP,
+                 time_slot: TimeSlot,
+                 rolling_stock: RollingStock,
+                 prices: Mapping[Tuple[Station, Station], Mapping[Seat, float]],
                  capacity: str):
 
         self.id = id_
-        self.date = datetime.datetime.strptime(date, '%Y-%m-%d').date()
+        self.date = get_date(date)
         self.line = line
         self.tsp = tsp
         self.timeSlot = time_slot
@@ -249,38 +250,129 @@ class Service(object):
 
 class Supply(object):
     """
-    Supply:
+    Supply: Intended to provide a list of services that meet the user requests (origin, destination, date)
 
     Attributes:
-        id (int): Supply ID
-        origin (str): String with origin station id
-        destination (str): String with destination station id
-        date (datetime.date): Date of supply (day, month, year, without time)
-        services (List[Service]): List of Service objects
+        services (List[Service]): List of all Services available objects
     """
-    def __init__(self, id_: int, origin: str, destination: str, date: datetime.date, services: List[Service]):
-        self.id = id_
-        self.origin = origin
-        self.destination = destination
-        self.date = datetime.date
-        self.services = self.__getservices(services)  # TODO: Change to services ID'S
+    # data attribute will be a dict of variable shape
+    def __init__(self, data: None): # data attribute will be a dict of variable shape
+        self.data = data if data is not None else {}
+        self.stations = self._get_stations()
+        self.timeSlots = self._get_time_slots()
+        self.corridors = self._get_corridors()
+        self.lines = self._get_lines()
+        self.seats = self._get_seats()
+        self.rollingStock = self._get_rolling_stock()
+        self.tsps = self._get_tsps()
+        self.services = self._get_services()
 
-    def __getservices(self, services: List[Service]) -> List[Service]:
+    @classmethod
+    def from_yaml(cls, path: str):
+        with open(path, 'r') as file:
+            return cls(yaml.safe_load(file))
+
+    def generate(self, origin: Station, destination: Station, date: datetime.date) -> List[Service]:
         """
-        Private method to get the services that meet the user requests (origin, destination, date)
+        Method to get the services that meet the user requests (origin, destination, date)
 
         Args:
-            services (List[Service]): List of Service objects
+            origin (Station): Origin Station object
+            destination (Station): Destination Station object
+            date (datetime.date): Date of service (day, month, year, without time)
 
         Returns:
             List[Service]: Filtered List of Service objects
         """
         filtered_services = []
 
-        for s in services:
-            if s.date == self.date and (self.origin, self.destination) in s.line.pairs:
-                # TODO: Filter prices
+        for s in self.services.values():
+            if s.date == date and (origin, destination) in s.line.pairs:
                 filtered_services.append(s)
 
         return filtered_services
 
+    def _get_stations(self, key='stations'):
+        return {tuple(s.values())[0]: Station(*s.values()) for s in self.data[key]}
+
+    def _get_time_slots(self, key='timeSlot'):
+        return {tuple(ts.values())[0]: TimeSlot(*list(ts.values())[:-1]) for ts in self.data[key]}
+
+    def _get_corridors(self, key='corridor'):
+        corridors = {}
+        for c in self.data[key]:
+            corridor_data = list(c.values())
+            corr_stations = list(filter(lambda s: s in corridor_data[2], self.stations))
+            corr_stations = [s for s in corr_stations]
+
+            corridors[corridor_data[0]] = Corridor(corridor_data[0],
+                                                   corridor_data[1],
+                                                   corr_stations)
+
+        return corridors
+
+    def _get_lines(self, key='line'):
+        lines = {}
+        for line in self.data[key]:
+            line_data = list(line.values())
+            timetable = {tuple(s.values())[0]: tuple(s.values())[1:] for s in line_data[3]}
+
+            lines[line_data[0]] = Line(line_data[0],
+                                       line_data[1],
+                                       self.corridors[line_data[2]],
+                                       timetable)
+
+        return lines
+
+    def _get_seats(self, key='seat'):
+        return {tuple(s.values())[0]: Seat(*s.values()) for s in self.data[key]}
+
+    def _get_rolling_stock(self, key='rollingStock'):
+        rolling_stock = {}
+        for rs in self.data[key]:
+            rs_data = list(rs.values())
+            rs_seats = {tuple(s.values())[0]: tuple(s.values())[1] for s in rs_data[2]}
+
+            rolling_stock[rs_data[0]] = RollingStock(rs_data[0],
+                                                     rs_data[1],
+                                                     rs_seats)
+
+        return rolling_stock
+
+    def _get_tsps(self, key='trainServiceProvider'):
+        tsp = {}
+        for op in self.data[key]:
+            op_data = list(op.values())
+            tsp[op_data[0]] = TSP(op_data[0], op_data[1], op_data[2])
+
+        return tsp
+
+    def _get_services(self, key='service'):
+        services = {}
+        for s in self.data[key]:
+            service_data = list(s.values())
+            service_id, service_date = service_data[:2]
+            service_line = self.lines[service_data[2]]
+            service_tsp = self.tsps[service_data[3]]
+            service_time_slot = self.timeSlots[service_data[4]]
+            service_rs = self.rollingStock[service_data[5]]
+            service_stops = service_data[6]
+
+            service_prices = {}
+            for s in service_stops:
+                org, des, prices = tuple(s.values())
+                prices = {tup[0]: tup[1] for tup in [tuple(t.values()) for t in prices]}
+
+                service_prices[(org, des)] = prices
+            service_capacity = service_data[7]
+
+            services[service_id] = Service(service_id,
+                                           service_date,
+                                           service_line,
+                                           service_tsp,
+                                           service_time_slot,
+                                           service_rs,
+                                           service_prices,
+                                           service_capacity)
+
+        return services
