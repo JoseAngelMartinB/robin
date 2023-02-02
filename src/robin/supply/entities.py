@@ -224,7 +224,7 @@ class Service(object):
                  time_slot: TimeSlot,
                  rolling_stock: RollingStock,
                  prices: Mapping[Tuple[Station, Station], Mapping[Seat, float]],
-                 capacity: str):
+                 capacity: str):  # TODO: Check capacity in docs
 
         self.id = id_
         self.date = get_date(date)
@@ -256,7 +256,7 @@ class Supply(object):
         services (List[Service]): List of all Services available objects
     """
     # data attribute will be a dict of variable shape
-    def __init__(self, data: None): # data attribute will be a dict of variable shape
+    def __init__(self, data: None):  # TODO: Check data type annotation
         self.data = data if data is not None else {}
         self.stations = self._get_stations()
         self.timeSlots = self._get_time_slots()
