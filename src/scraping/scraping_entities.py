@@ -1,14 +1,16 @@
-"""Supply entities from dummy scraping data (Renfe)."""
+"""Scraping data to YAML (Renfe)."""
 
 from src.robin.supply.utils import get_date
 from src.scraping.load_data import load_scraping
-
+from src.robin.supply.entities import *
 import pandas as pd
 
 renfe_stations = pd.read_csv('data/scraping/renfe/renfe_stations.csv', delimiter=',', dtype={'stop_id': str})
 
 # Load supply data from scraping
-services, stations, seats, corridor, tsp, rolling_stock = load_scraping(f'data/scraping/renfe/trips/trips_MADRI_BARCE_2023-02-01_2023-02-28.csv')
+services, stations, seats, corridor, tsp, rolling_stock = load_scraping(
+    f'data/scraping/renfe/trips/trips_MADRI_BARCE_2023-02-01_2023-02-28.csv')
+
 
 print("Available stations: ")
 for sid in corridor.stations:
