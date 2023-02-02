@@ -1,121 +1,10 @@
-import pandas as pd
+from src.scraping.yaml_utils import *
 
-from typing import Tuple, List, Dict
-from src.robin.supply.entities import *
-from src.scraping.renfetools import *
 import numpy as np
+import yaml
+
 import os
 import glob
-
-
-# Aux functions
-def get_trip_price(service_id: str, seats: Tuple[Seat], price_df: pd.DataFrame):
-    """
-    Get trip price from prices dataframe
-
-    Args:
-        service_id: string
-        seats: tuple of Seat() objects
-        price_df: dataframe with prices
-
-    Returns:
-        price: tuple of floats (three types of seats for Renfe AVE)
-    """
-    # Get price for service_id, If not found, return default price (Tuple of NaN values)
-    try:
-        prices = price_df[price_df['service_id'] == service_id][['0', '1', '2']].values[0]
-    except IndexError:
-        prices = tuple([float("NaN") for _ in range(3)])
-
-    return {s.id: p for s, p in zip(seats, prices)}
-
-
-def get_line(stops: pd.DataFrame, corr: Corridor):
-    """
-    Get line from stops dataframe
-    Args:
-        stops: dataframe with stops
-        corr: Corridor() object
-    Returns:
-         Line() object
-    """
-    line_data = {s: (a, d) for s, a, d in zip(stops['stop_id'], stops['arrival'], stops['departure'])}
-
-    idx = stops['service_id'].values[0].split("_")[0]
-
-    return Line(idx, f"Line {idx}", corr.id, line_data)
-
-
-def get_trip_line(service_id: str, lines: dict):
-    """
-    Get trip line from set_lines dictionary
-
-    Args:
-        service_id: string.
-        lines: dictionary with lines.
-
-    Returns:
-        line: Line() object.
-    """
-    try:
-        line = lines[service_id.split("_")[0]]
-    except KeyError:
-        raise KeyError(f"Line not found for service_id: {service_id}")
-
-    return line
-
-
-def get_service(service_id: str,
-                departure: str,
-                arrival: str,
-                price: dict,
-                line: Line,
-                tsp: TSP,
-                rs: RollingStock,
-                corridor: Corridor):
-    """
-    Get Service() object from Renfe data
-
-    Args:
-        service_id: string
-        departure: string
-        arrival: string
-        price: tuple of floats
-        line: Line() object
-        tsp: TSP() object
-        rs: RollingStock() object
-        corridor: Corridor() object
-
-    Returns:
-        Service() object
-    """
-    id_ = service_id
-    date = departure.split(" ")[0]
-    departure = departure.split(" ")[1][:-3]
-    arrival = arrival.split(" ")[1][:-3]
-    line = line
-    time_slot = TimeSlot(int(id_.split("_")[0]), departure, arrival)
-
-    total_prices = {}
-    stations = corridor.stations
-    dict_prices = {p: np.round(np.linspace(price[p] / 2, price[p], len(stations) - 1), 2) for p in price}
-
-    for p in line.pairs:
-        l = len(stations[stations.index(p[0]):stations.index(p[1]) + 1]) - 2
-
-        try:
-            total_prices[p] = {p: dict_prices[p][l] for p in dict_prices}
-        except IndexError:
-            total_prices[p] = {p: dict_prices[p][-1] for p in dict_prices}
-
-    return Service(id_,
-                   date,
-                   line,
-                   tsp.id,
-                   time_slot,
-                   rs.id,
-                   total_prices,
-                   "Train")
 
 
 def load_scraping(file):
@@ -138,10 +27,10 @@ def load_scraping(file):
     file_name = "_".join(file_name.split("_")[1:])
 
     # 0.2 Import prices
-    prices = pd.read_csv(f'data/scraping/renfe/prices/prices_{file_name}.csv', delimiter=',')
+    prices = pd.read_csv(f'../../data/scraping/renfe/prices/prices_{file_name}.csv', delimiter=',')
 
     # 0.3 Import stops
-    stop_times = pd.read_csv(f'data/scraping/renfe/stop_times/stopTimes_{file_name}.csv',
+    stop_times = pd.read_csv(f'../../data/scraping/renfe/stop_times/stopTimes_{file_name}.csv',
                              delimiter=',',
                              dtype={'stop_id': str})
 
@@ -177,7 +66,7 @@ def load_scraping(file):
                 corridor.insert(corridor.index(trip[i + 1]), s)
 
     # 1.5 Parse stations. Use Adif stop_id retrieve station info (name, lat, lon)
-    renfe_stations = pd.read_csv(f'data/scraping/renfe/renfe_stations.csv', delimiter=',', dtype={'stop_id': str})
+    renfe_stations = pd.read_csv(f'../../data/scraping/renfe/renfe_stations.csv', delimiter=',', dtype={'stop_id': str})
 
     # 1.6 Build dictionary of stations with stop_id as key and Station() object as value
     stations = {}
@@ -189,10 +78,34 @@ def load_scraping(file):
 
         stations[s] = Station(s, name, city, shortname, coords)
 
+    print(list(stations.values())[0])
+
+    def write_to_yaml(filename, objects, key):
+        def represent_list(dumper, data):
+            return dumper.represent_sequence(u'tag:yaml.org,2002:seq', data, flow_style=True)
+
+        # yaml.SafeDumper.add_representer(list, represent_list)
+
+        with open(filename, 'r') as yaml_file:
+            yaml_file_mod = yaml.safe_load(yaml_file)
+            yaml_file_mod.update(objects)
+
+        if yaml_file_mod:
+            with open(filename, 'w') as yaml_file:
+                yaml.safe_dump(yaml_file_mod, yaml_file,  allow_unicode=True)
+
+    write_to_yaml('../../data/supply_data.yml',
+                  {'stations': [station_to_dict(stn) for stn in stations.values()]},
+                  'stations')
+
     # 1.7 Build Corridor
     first_station, last_station = tuple(stations.values())[::len(stations) - 1]
     corr_name = first_station.shortname + "-" + last_station.shortname
     corrMadBar = Corridor(1, corr_name, list(stations.keys()))
+
+    write_to_yaml('../../data/supply_data.yml',
+                  {'corridor': [corridor_to_dict(corr) for corr in [corrMadBar]]},
+                  'corridor')
 
     # 2. Build Lines
     routes_lines = grouped_df.apply(lambda x: get_line(x, corrMadBar))
@@ -222,6 +135,12 @@ def load_scraping(file):
 
 
 if __name__ == '__main__':
-    file_path = 'data/scraping/renfe/trips/trips_MADRI_BARCE_2023-02-01_2023-02-28.csv'
+    path = '../../data/supply_data_example.yml'
+    with open(path, 'r') as file:
+        yml_example = yaml.safe_load(file)
+
+    print(yml_example)
+
+    file_path = '../../data/scraping/renfe/trips/trips_MADRI_BARCE_2023-02-01_2023-02-28.csv'
     services, stations, seats, corridor, tsp, rolling_stock = load_scraping(file_path)
-    print(services[0])
+    #print(services[0])
