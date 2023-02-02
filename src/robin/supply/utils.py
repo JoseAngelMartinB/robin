@@ -1,6 +1,6 @@
 """Utils for the supply module."""
 
-from .exceptions import InvalidTimeStringFormat, InvalidDateStringFormat
+from src.robin.supply.exceptions import InvalidTimeStringFormat, InvalidDateStringFormat
 
 import datetime
 import re
@@ -33,7 +33,7 @@ def get_date(date):
     Function which returns a datetime.date object from a string date in format DD-MM-YYYY
 
     Args:
-        date: string date in format DD-MM-YYYY
+        date: string date in format YYYY-mm-dd
 
     Returns:
         datetime.date object
@@ -43,9 +43,9 @@ def get_date(date):
     if not all([r.match(date), len(date.split("-")) == 3, all(t.isdigit() for t in date.split("-"))]):
         raise InvalidDateStringFormat(date)
 
-    d, m, y = (int(t) for t in date.split("-"))
+    y, m, d = (int(t) for t in date.split("-"))
     if d not in range(0, 32) and m not in range(1, 13) and y not in range(2020, 2100):
         raise InvalidDateStringFormat(date)
 
     # Day could be out of range for month - if so, datetime will raise a ValueError Exception
-    return datetime.datetime.strptime(date, "%d-%m-%Y").date()
+    return datetime.datetime.strptime(date, "%Y-%m-%d").date()
