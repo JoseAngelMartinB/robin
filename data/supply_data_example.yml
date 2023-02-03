@@ -51,39 +51,47 @@ line:
     corridor: 1
     stops:
       - station: "MAD"
+        arrival_time: 0
         departure_time: 0
       - station: "ZAZ"
         arrival_time: 79.3
         departure_time: 94.3
       - station: "BCN"
         arrival_time: 185.1
+        departure_time: 185.1
   - id: 2
     name: "L1-reverse"
     corridor: 1
     stops:
       - station: "BCN"
+        arrival_time: 0
         departure_time: 0
       - station: "ZAZ"
         arrival_time: 90.8
         departure_time: 95.8
       - station: "MAD"
         arrival_time: 185.1
+        departure_time: 185.1
   - id: 3
     name: "L2"
     corridor: 1
     stops:
       - station: "MAD"
+        arrival_time: 0
         departure_time: 0
       - station: "BCN"
         arrival_time: 150.1
+        departure_time: 150.1
   - id: 4
     name: "L2-reverse"
     corridor: 1
     stops:
       - station: "BCN"
+        arrival_time: 0
         departure_time: 0
       - station: "MAD"
         arrival_time: 150.1
+        departure_time: 150.1
 
 # Seats
 seat:
