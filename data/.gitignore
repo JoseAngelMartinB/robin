@@ -3,6 +3,7 @@
 # Except this file
 !.gitignore
 !supply_data_example.yml
+!supply_data.yml
 
 # Ignore everything in the nested directories, except specific files
 scraping/renfe/*
