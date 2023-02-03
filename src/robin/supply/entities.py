@@ -17,6 +17,7 @@ class Station(object):
         shortname (str): Station short name
         coords (Tuple[float, float]): Station coordinates (latitude, longitude)
     """
+
     def __init__(self, id_: int, name: str, city: str, shortname: str, coords: Tuple[float, float] = None):
         self.id = id_
         self.name = name
@@ -32,7 +33,7 @@ class Station(object):
             coords: Tuple of floats (latitude, longitude)
         """
         self.coords = coords
-    
+
     def __str__(self):
         return f'[{self.id}, {self.name}, {self.shortname}, {self.coords}]'
 
@@ -48,6 +49,7 @@ class TimeSlot(object):
         class_mark (datetime.timedelta): Time slot class mark
         size (datetime.timedelta): Time slot size
     """
+
     def __init__(self, id_: int, start: str, end: str):
         self.id = id_
         self.start = get_time(start)
@@ -110,11 +112,12 @@ class Line(object):
         id (int): Line ID
         name (str): Line name
         corridor (Corridor): Corridor ID where the Line belongs to
-        stops (List[Station]): List of Station IDs being served by the Line
-        timetable (Mapping[Station, Tuple[float, float]]): {Station (Station): (arrival (str), departure (str)}
-        pairs (List[Tuple[Station, Station]]): List of pairs of stations (origin, destination)
+        stops (List[str]): List of Station IDs being served by the Line
+        timetable (Mapping[str, Tuple[float, float]]): {station ID: (arrival (float), departure (float)}  # TODO:
+        pairs (List[Tuple[str, str]]): List of pairs of station ID's (origin, destination)
     """
-    def __init__(self, id_: int, name: str, corridor: Corridor, timetable: Mapping[Station, Tuple[float, float]]):
+
+    def __init__(self, id_: int, name: str, corridor: Corridor, timetable: Mapping[str, Tuple[float, float]]):
         self.id = id_
         self.name = name
         self.corridor = corridor
@@ -145,6 +148,7 @@ class Seat(object):
         hard_type (int): Hard seat type
         soft_type (int): Soft seat type
     """
+
     def __init__(self, id_: int, name: str, hard_type: int, soft_type: int):
         self.id = id_
         self.name = name
@@ -164,6 +168,7 @@ class RollingStock(object):
         name (str): Rolling Stock name
         seats (Mapping[int, int]): Number of seats for each hard_type {hard_type1: quantity1, hard_type2: quantity2}
     """
+
     def __init__(self, id_: int, name: str, seats: Mapping[int, int]):
         self.id = id_
         self.name = name
@@ -182,6 +187,7 @@ class TSP(object):
         name (name): Name of the Train Service Provider
         rolling_stock List[int]: List of RollingStock's ID's
     """
+
     def __init__(self, id_: int, name: str, rolling_stock: List[int] = None):
         self.id = id_
         self.name = name
@@ -216,6 +222,7 @@ class Service(object):
         prices Mapping[Tuple[str, str], Mapping[str, float]]: {(org station ID, dest station ID): {seat_type ID: price}}
         capacity (str): String with capacity type
     """
+
     def __init__(self,
                  id_: str,
                  date: str,
@@ -255,17 +262,18 @@ class Supply(object):
     Attributes:
         services (List[Service]): List of all Services available objects
     """
+
     # data attribute will be a dict of variable shape
     def __init__(self, data: None):  # TODO: Check data type annotation
         self.data = data if data is not None else {}
-        self.stations = self._get_stations()
-        self.timeSlots = self._get_time_slots()
-        self.corridors = self._get_corridors()
-        self.lines = self._get_lines()
-        self.seats = self._get_seats()
-        self.rollingStock = self._get_rolling_stock()
-        self.tsps = self._get_tsps()
-        self.services = self._get_services()
+        self.stations = {} if 'stations' not in self.data else self._get_stations(key='stations')
+        self.timeSlots = {} if 'timeSlot' not in self.data else self._get_time_slots(key='timeSlot')
+        self.corridors = {} if 'corridor' not in self.data else self._get_corridors(key='corridor')
+        self.lines = {} if 'line' not in self.data else self._get_lines(key='line')
+        self.seats = {} if 'seat' not in self.data else self._get_seats(key='seat')
+        self.rollingStock = {} if 'rollingStock' not in self.data else self._get_rolling_stock(key='rollingStock')
+        self.tsps = {} if 'trainServiceProvider' not in self.data else self._get_tsps(key='trainServiceProvider')
+        self.services = {} if 'service' not in self.data else self._get_services(key='service')
 
     @classmethod
     def from_yaml(cls, path: str):
@@ -292,79 +300,179 @@ class Supply(object):
 
         return filtered_services
 
-    def _get_stations(self, key='stations'):
-        return {tuple(s.values())[0]: Station(*s.values()) for s in self.data[key]}
+    def _get_stations(self, key='stations') -> Mapping[str, Station]:
+        """
+        Private method to build a dict of Station objects from YAML data
+
+        Args:
+            key (str): Key to access the data in the YAML file. Default: 'stations'.
+
+        Returns:
+            Mapping[str, Station]: Dict of Station objects {station_id: Station object}
+        """
+        stations = {}
+        for s in self.data[key]:
+            assert all(k in s.keys() for k in ('id', 'name', 'short_name', 'city')), "Incomplete Station data"
+
+            coords = tuple(s.get('coordinates', {'lat': None, 'lon': None}).values())
+
+            stations[s['id']] = Station(s['id'], s['name'], s['city'], s['short_name'], coords)
+        return stations
 
     def _get_time_slots(self, key='timeSlot'):
-        return {tuple(ts.values())[0]: TimeSlot(*list(ts.values())[:-1]) for ts in self.data[key]}
+        """
+        Private method to build a dict of TimeSlot objects from YAML data
+
+        Args:
+            key (str): Key to access the data in the YAML file. Default: 'timeSlot'.
+
+        Returns:
+            Mapping[str, TimeSlot]: Dict of TimeSlot objects {time_slot_id: TimeSlot object}
+        """
+        time_slots = {}
+        for ts in self.data[key]:
+            assert all(k in ts.keys() for k in ('id', 'start', 'end')), "Incomplete TimeSlot data"
+
+            time_slots[ts['id']] = TimeSlot(ts['id'], ts['start'], ts['end'])
+        return time_slots
 
     def _get_corridors(self, key='corridor'):
+        """
+        Private method to build a dict of Corridor objects from YAML data
+
+        Args:
+            key (str): Key to access the data in the YAML file. Default: 'corridor'.
+
+        Returns:
+            Mapping[str, Corridor]: Dict of Corridor objects {corridor_id: Corridor object}
+        """
         corridors = {}
         for c in self.data[key]:
-            corridor_data = list(c.values())
-            corr_stations = list(filter(lambda s: s in corridor_data[2], self.stations))
-            corr_stations = [s for s in corr_stations]
+            assert all(k in c.keys() for k in ('id', 'name', 'stations')), "Incomplete Corridor data"
+            assert all(s in self.stations.keys() for s in c['stations']), "Station not found in Station list"
 
-            corridors[corridor_data[0]] = Corridor(corridor_data[0],
-                                                   corridor_data[1],
-                                                   corr_stations)
+            corr_stations = [s for s in c['stations']]
+
+            corridors[c['id']] = Corridor(c['id'], c['name'], corr_stations)
 
         return corridors
 
     def _get_lines(self, key='line'):
-        lines = {}
-        for line in self.data[key]:
-            line_data = list(line.values())
-            timetable = {tuple(s.values())[0]: tuple(s.values())[1:] for s in line_data[3]}
+        """
+        Private method to build a dict of Line objects from YAML data
 
-            lines[line_data[0]] = Line(line_data[0],
-                                       line_data[1],
-                                       self.corridors[line_data[2]],
-                                       timetable)
+        Args:
+            key (str): Key to access the data in the YAML file. Default: 'line'.
+
+        Returns:
+            Mapping[str, Line]: Dict of Line objects {line_id: Line object}
+        """
+        lines = {}
+        for ln in self.data[key]:
+            assert all(k in ln.keys() for k in ('id', 'name', 'corridor', 'stops')), "Incomplete Line data"
+
+            assert ln['corridor'] in self.corridors.keys(), "Corridor not found in Corridor list"
+            corr = self.corridors[ln['corridor']]
+
+            for stn in ln['stops']:
+                assert all(k in stn for k in ('station', 'arrival_time', 'departure_time')), "Incomplete Stops data"
+
+            assert all(s['station'] in corr.stations for s in ln['stops']), "Station not found in Corridor list"
+
+            timetable = {s['station']: (s['arrival_time'], s['departure_time']) for s in ln['stops']}
+            lines[ln['id']] = Line(ln['id'], ln['name'], corr, timetable)
 
         return lines
 
     def _get_seats(self, key='seat'):
-        return {tuple(s.values())[0]: Seat(*s.values()) for s in self.data[key]}
+        """
+        Private method to build a dict of Seat objects from YAML data
+
+        Args:
+            key (str): Key to access the data in the YAML file. Default: 'seat'.
+
+        Returns:
+            Mapping[str, Seat]: Dict of Seat objects {seat_id: Seat object}
+        """
+        seats = {}
+        for s in self.data[key]:
+            assert all(k in s.keys() for k in ('id', 'name', 'hard_type', 'soft_type')), "Incomplete Seat data"
+
+            seats[s['id']] = Seat(s['id'], s['name'], s['hard_type'], s['soft_type'])
+
+        return seats
 
     def _get_rolling_stock(self, key='rollingStock'):
+        """
+        Private method to build a dict of RollingStock objects from YAML data
+
+        Args:
+            key (str): Key to access the data in the YAML file. Default: 'rollingStock'.
+
+        Returns:
+            Mapping[str, RollingStock]: Dict of RollingStock objects {rolling_stock_id: RollingStock object}
+        """
         rolling_stock = {}
         for rs in self.data[key]:
-            rs_data = list(rs.values())
-            rs_seats = {tuple(s.values())[0]: tuple(s.values())[1] for s in rs_data[2]}
+            assert all(k in rs.keys() for k in ('id', 'name', 'seats')), "Incomplete RollingStock data"
 
-            rolling_stock[rs_data[0]] = RollingStock(rs_data[0],
-                                                     rs_data[1],
-                                                     rs_seats)
+            for st in rs['seats']:
+                assert all(k in st for k in ('hard_type', 'quantity')), "Incomplete seats data for RS"
+
+            rs_seats = {s['hard_type']: s['quantity'] for s in rs['seats']}
+
+            rolling_stock[rs['id']] = RollingStock(rs['id'],
+                                                   rs['name'],
+                                                   rs_seats)
 
         return rolling_stock
 
     def _get_tsps(self, key='trainServiceProvider'):
+        """
+        Private method to build a dict of TSP objects from YAML data
+
+        Args:
+            key (str): Key to access the data in the YAML file. Default: 'trainServiceProvider'.
+
+        Returns:
+            Mapping[str, TSP]: Dict of TSP objects {tsp_id: TSP object}
+        """
         tsp = {}
         for op in self.data[key]:
-            op_data = list(op.values())
-            tsp[op_data[0]] = TSP(op_data[0], op_data[1], op_data[2])
+            assert all(k in op.keys() for k in ('id', 'name', 'rolling_stock')), "Incomplete TSP data"
+
+            tsp[op['id']] = TSP(op['id'], op['name'], op['rolling_stock'])
 
         return tsp
 
     def _get_services(self, key='service'):
         services = {}
         for s in self.data[key]:
-            service_data = list(s.values())
-            service_id, service_date = service_data[:2]
-            service_line = self.lines[service_data[2]]
-            service_tsp = self.tsps[service_data[3]]
-            service_time_slot = self.timeSlots[service_data[4]]
-            service_rs = self.rollingStock[service_data[5]]
-            service_stops = service_data[6]
+            service_keys = ('id', 'date', 'line', 'train_service_provider', 'time_slot', 'rolling_stock',
+                            'origin_destination_tuples', 'type_of_capacity')
+            assert all(k in s.keys() for k in service_keys), "Incomplete Service data"
+
+            service_id = s['id']
+            service_date = s['date']
+            service_line = self.lines[s['line']]
+            service_tsp = self.tsps[s['train_service_provider']]
+            service_time_slot = self.timeSlots[s['time_slot']]
+            service_rs = self.rollingStock[s['rolling_stock']]
 
             service_prices = {}
-            for s in service_stops:
-                org, des, prices = tuple(s.values())
-                prices = {tup[0]: tup[1] for tup in [tuple(t.values()) for t in prices]}
+            for od in s['origin_destination_tuples']:
+                assert all(k in od.keys() for k in ('origin', 'destination', 'seats')), "Incomplete Service data - Price"
+
+                org = od['origin']
+                des = od['destination']
+                for st in od['seats']:
+                    assert all(k in st for k in ('seat', 'price')), "Incomplete seats data for Service"
+
+                prices = {st['seat']: st['price'] for st in od['seats']}
 
                 service_prices[(org, des)] = prices
-            service_capacity = service_data[7]
+
+            service_capacity = s['type_of_capacity']
 
             services[service_id] = Service(service_id,
                                            service_date,
