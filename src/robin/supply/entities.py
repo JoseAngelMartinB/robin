@@ -1,6 +1,7 @@
 """Entities for the supply module."""
 
 from src.robin.supply.utils import get_time, get_date
+from copy import deepcopy
 
 from typing import List, Tuple, Mapping
 import datetime
@@ -290,13 +291,15 @@ class Supply(object):
             date (datetime.date): Date of service (day, month, year, without time)
 
         Returns:
-            List[Service]: Filtered List of Service objects
+            List[Service]: List of deep copies of Service objects that meet the user requests
         """
         filtered_services = []
 
         for s in self.services.values():
             if s.date == date and (origin, destination) in s.line.pairs:
-                filtered_services.append(s)
+                new_s = deepcopy(s)
+                new_s.prices = {p: new_s.prices[p] for p in new_s.prices if p == (origin, destination)}
+                filtered_services.append(new_s)
 
         return filtered_services
 
@@ -446,6 +449,15 @@ class Supply(object):
         return tsp
 
     def _get_services(self, key='service'):
+        """
+        Private method to build a dict of Service objects from YAML data
+
+        Args:
+            key (str): Key to access the data in the YAML file. Default: 'service'.
+
+        Returns:
+            Mapping[str, Service]: Dict of Service objects {service_id: Service object}
+        """
         services = {}
         for s in self.data[key]:
             service_keys = ('id', 'date', 'line', 'train_service_provider', 'time_slot', 'rolling_stock',
@@ -461,7 +473,7 @@ class Supply(object):
 
             service_prices = {}
             for od in s['origin_destination_tuples']:
-                assert all(k in od.keys() for k in ('origin', 'destination', 'seats')), "Incomplete Service data - Price"
+                assert all(k in od.keys() for k in ('origin', 'destination', 'seats')), "Incomplete Service prices"
 
                 org = od['origin']
                 des = od['destination']
