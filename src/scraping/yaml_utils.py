@@ -1,5 +1,7 @@
-from src.robin.supply.entities import Station, TimeSlot, Corridor, Line, Seat, RollingStock, TSP, Service
+import datetime
 
+from src.robin.supply.entities import Station, TimeSlot, Corridor, Line, Seat, RollingStock, TSP, Service
+from src.robin.supply.utils import get_time, get_date
 from typing import Tuple, List, Dict
 import pandas as pd
 import numpy as np
@@ -15,8 +17,8 @@ def station_to_dict(obj: Station):
 
 def time_slot_to_dict(obj: TimeSlot):
     return {'id': obj.id,
-            'start': obj.start,
-            'end': obj.end}
+            'start': str(obj.start)[:-3],
+            'end': str(obj.end)[:-3]}
 
 
 def corridor_to_dict(obj: Corridor):
@@ -26,23 +28,28 @@ def corridor_to_dict(obj: Corridor):
 
 
 def line_to_dict(obj: Line):
+    stops = []
+    for s in obj.timetable:
+        arr, dep = obj.timetable[s]
+        stops.append({'station': s, 'arrival_time': arr, 'departure_time': dep})
+
     return {'id': obj.id,
             'name': obj.name,
             'corridor': obj.corridor,
-            'stops': obj.stops}
+            'stops': stops}
 
 
 def seat_to_dict(obj: Seat):
     return {'id': obj.id,
             'name': obj.name,
-            'hart_type': obj.hard_type,
+            'hard_type': obj.hard_type,
             'soft_type': obj.soft_type}
 
 
 def rolling_stock_to_dict(obj: RollingStock):
     return {'id': obj.id,
             'name': obj.name,
-            'seats': obj.seats}
+            'seats': [{'hard_type': s, 'quantity': obj.seats[s]} for s in obj.seats]}
 
 
 def tsp_to_dict(obj: TSP):
@@ -52,13 +59,20 @@ def tsp_to_dict(obj: TSP):
 
 
 def service_to_dict(obj: Service):
+    prices = []
+    for k, v in obj.prices.items():
+        prices.append({'origin': k[0],
+                       'destination': k[1],
+                       'seats': [{'seat': ks, 'price': float(ps)} for ks, ps in v.items()]})
+
     return {'id': obj.id,
-            'date': obj.date,
-            'line': obj.line,
-            'train_service_provider': obj.tsp,
-            'time_slot': obj.timeSlot,
-            'rolling_stock': obj.rollingStock,
-            'origin_destination_tuples': obj.prices}
+            'date': str(obj.date),
+            'line': obj.line.id,
+            'train_service_provider': obj.tsp.id,
+            'time_slot': obj.timeSlot.id,
+            'rolling_stock': obj.rollingStock.id,
+            'origin_destination_tuples': prices,
+            'type_of_capacity': obj.capacity}
 
 
 def get_trip_price(service_id: str, seats: Tuple[Seat], price_df: pd.DataFrame):
@@ -143,10 +157,18 @@ def get_service(service_id: str,
     """
     id_ = service_id
     date = departure.split(" ")[0]
+
     departure = departure.split(" ")[1][:-3]
-    arrival = arrival.split(" ")[1][:-3]
+    # arrival = arrival.split(" ")[1][:-3]
+
     line = line
-    time_slot = TimeSlot(int(id_.split("_")[0]), departure, arrival)
+    ts_init = departure
+    ts_end = str(get_time(departure) + datetime.timedelta(minutes=10))[:-3]
+    delta = datetime.timedelta(minutes=10)
+    ts_id = int(str(get_time(departure).seconds // 60) + str(delta.seconds // 60))
+    time_slot = TimeSlot(ts_id,
+                         ts_init,
+                         ts_end)
 
     total_prices = {}
     stations = corridor.stations
