@@ -1,3 +1,5 @@
+import datetime
+
 from src.scraping.yaml_utils import *
 
 import numpy as np
@@ -88,15 +90,22 @@ def load_scraping(file):
 
         with open(filename, 'r') as yaml_file:
             yaml_file_mod = yaml.safe_load(yaml_file)
-            yaml_file_mod.update(objects)
+            try:
+                yaml_file_mod.update(objects)
+            except AttributeError:
+                yaml_file_mod = objects
 
         if yaml_file_mod:
             with open(filename, 'w') as yaml_file:
-                yaml.safe_dump(yaml_file_mod, yaml_file,  allow_unicode=True)
+                yaml.safe_dump(yaml_file_mod, yaml_file, sort_keys=False, allow_unicode=True)
 
     write_to_yaml('../../data/supply_data.yml',
                   {'stations': [station_to_dict(stn) for stn in stations.values()]},
                   'stations')
+
+    write_to_yaml('../../data/supply_data.yml',
+                  {'seat': [seat_to_dict(s) for s in renfe_seats]},
+                  'seat')
 
     # 1.7 Build Corridor
     first_station, last_station = tuple(stations.values())[::len(stations) - 1]
@@ -114,11 +123,23 @@ def load_scraping(file):
 
     trips['lines'] = trips['service_id'].apply(lambda x: get_trip_line(x, set_lines))
 
+    write_to_yaml('../../data/supply_data.yml',
+                  {'line': [line_to_dict(ln) for ln in trips['lines'].values.tolist()]},
+                  'line')
+
     # 4. Build RollingStock for Renfe AVE
     renfe_rs = [RollingStock(1, "S-114", {1: 250, 2: 50})]
 
+    write_to_yaml('../../data/supply_data.yml',
+                  {'rollingStock': [rolling_stock_to_dict(rs) for rs in renfe_rs]},
+                  'rollingStock')
+
     # 5. Build TSP for Renfe
     renfe_tsp = TSP(1, "Renfe", [rs.id for rs in renfe_rs])
+
+    write_to_yaml('../../data/supply_data.yml',
+                  {'trainServiceProvider': [tsp_to_dict(t) for t in [renfe_tsp]]},
+                  'trainServiceProvider')
 
     # 6. Build Services
     trips['service'] = trips.apply(lambda x: get_service(x['service_id'],
@@ -130,6 +151,17 @@ def load_scraping(file):
                                                          renfe_rs[0],
                                                          corrMadBar),
                                    axis=1)
+
+    my_services = trips['service'].values.tolist()
+    time_slots = {s.timeSlot.id: s.timeSlot for s in my_services}
+
+    write_to_yaml('../../data/supply_data.yml',
+                  {'timeSlot': [time_slot_to_dict(s) for s in time_slots.values()]},
+                  'timeSlot')
+
+    write_to_yaml('../../data/supply_data.yml',
+                  {'service': [service_to_dict(s) for s in trips['service'].values.tolist()]},
+                  'service')
 
     return trips['service'].values.tolist(), stations, renfe_seats, corrMadBar, renfe_tsp, renfe_rs
 
