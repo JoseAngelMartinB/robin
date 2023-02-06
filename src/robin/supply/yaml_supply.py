@@ -3,7 +3,7 @@
 from src.robin.supply.entities import Supply
 from src.robin.supply.utils import get_date
 
-my_supply = Supply.from_yaml("../../../data/supply_data_example.yml")
+my_supply = Supply.from_yaml("../../../data/supply_data.yml")
 
 print("Available stations: ")
 for sid in my_supply.stations:
