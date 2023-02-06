@@ -114,7 +114,7 @@ class Line(object):
         name (str): Line name
         corridor (Corridor): Corridor ID where the Line belongs to
         stops (List[str]): List of Station IDs being served by the Line
-        timetable (Mapping[str, Tuple[float, float]]): {station ID: (arrival (float), departure (float)}  # TODO:
+        timetable (Mapping[str, Tuple[float, float]]): {station ID: (arrival (float), departure (float)}
         pairs (List[Tuple[str, str]]): List of pairs of station ID's (origin, destination)
     """
 
@@ -248,6 +248,7 @@ class Service(object):
         return f'Service id: {self.id} \n' \
                f'\tDate of service: {self.date} \n' \
                f'\tStops: {self.line.stops} \n' \
+               f'\tLine times: {list(self.line.timetable.values())} \n' \
                f'\tTrain Service Provider: {self.tsp} \n' \
                f'\tTime Slot: {self.timeSlot} \n' \
                f'\tRolling Stock: {self.rollingStock} \n' \
@@ -258,14 +259,15 @@ class Service(object):
 
 class Supply(object):
     """
-    Supply: Intended to provide a list of services that meet the user requests (origin, destination, date)
+    Supply: Services available in the system that meet the users requirements:
+    From origin station ID (str), to destination station ID (str), on date D as datetime.date object (YYYY-MM-DD)
 
     Attributes:
-        services (List[Service]): List of all Services available objects
+        data (Mapping[Mapping, Mapping]): Nested dictionary with the required data for the supply module following the
+        structure from supply_data_example.yml file
     """
 
-    # data attribute will be a dict of variable shape
-    def __init__(self, data: None):  # TODO: Check data type annotation
+    def __init__(self, data: Mapping[str, Mapping]):  # TODO: Check data type annotation
         self.data = data if data is not None else {}
         self.stations = {} if 'stations' not in self.data else self._get_stations(key='stations')
         self.timeSlots = {} if 'timeSlot' not in self.data else self._get_time_slots(key='timeSlot')
@@ -278,16 +280,26 @@ class Supply(object):
 
     @classmethod
     def from_yaml(cls, path: str):
+        """
+        Class method to create a Supply object from a yaml file
+
+        Args:
+            path (str): Path to the yaml file
+
+        Returns:
+            Supply object
+        """
         with open(path, 'r') as file:
             return cls(yaml.safe_load(file))
 
-    def generate(self, origin: Station, destination: Station, date: datetime.date) -> List[Service]:
+    def generate(self, origin: str, destination: str, date: datetime.date) -> List[Service]:
         """
-        Method to get the services that meet the user requests (origin, destination, date)
+        Generate a List of Services available in the system that meet the users requirements:
+        From origin station ID, to destination station ID, on date D
 
         Args:
-            origin (Station): Origin Station object
-            destination (Station): Destination Station object
+            origin (str): Origin Station ID
+            destination (str): Destination Station ID
             date (datetime.date): Date of service (day, month, year, without time)
 
         Returns:
@@ -382,7 +394,7 @@ class Supply(object):
 
             assert all(s['station'] in corr.stations for s in ln['stops']), "Station not found in Corridor list"
 
-            timetable = {s['station']: (s['arrival_time'], s['departure_time']) for s in ln['stops']}
+            timetable = {s['station']: (float(s['arrival_time']), float(s['departure_time'])) for s in ln['stops']}
             lines[ln['id']] = Line(ln['id'], ln['name'], corr, timetable)
 
         return lines
