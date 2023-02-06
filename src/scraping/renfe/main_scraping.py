@@ -29,7 +29,7 @@ stop_lat: Station latitude
 stop_lon: Station longitude
 """
 
-df = pd.read_csv('../../data/scraping/renfe/renfe_stations.csv')
+df = pd.read_csv('../../../data/scraping/renfe/renfe_stations.csv')
 
 # Get Renfe stations ids from previous csv
 origin_id = df[df['stop_id'] == origin]['renfe_id'].values[0]
@@ -42,9 +42,9 @@ assert all(s in stations.keys() for s in (origin_id, destination_id)), "Invalid 
 # date = datetime.date.today()
 # date += datetime.timedelta(days=1)
 
-# string "dd/mm/yyyy" to datetime.date
-date = datetime.datetime.strptime("01/02/2023", "%d/%m/%Y").date()
-range_days = 28
+# string "YYYY-mm-dd" to datetime.date
+date = datetime.datetime.strptime("2023-03-01", "%Y-%m-%d").date()
+range_days = 31
 
 renfe_scraping_trips(origin_id, destination_id, date, range_days)
 

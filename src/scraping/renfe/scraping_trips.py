@@ -1,5 +1,5 @@
-from renfetools import *
-
+from src.scraping.renfe.renfetools import *
+from src.robin.supply.utils import get_time
 
 def renfe_scraping_trips(origin_id: str, destination_id: str, date: datetime.date, range_days: int):
     """
@@ -58,6 +58,21 @@ def renfe_scraping_trips(origin_id: str, destination_id: str, date: datetime.dat
     # values: other dictionary with stops {station_id: (arrival, departure), ...}
     stop_times = dict(zip(df.service_id, df.stops))
 
+
+
+    for st in stop_times:
+        for i, s in enumerate(stop_times[st]):
+            if i == 0:
+                relative = relative = get_time(stop_times[st][s][0])
+
+            arrival, departure = stop_times[st][s]
+            arrival = (get_time(arrival) - relative).seconds // 60
+            departure = (get_time(departure) - relative).seconds // 60
+
+            stop_times[st][s] = (arrival, departure)
+
+
+
     # List of lists for the previous dictionary to build a dataframe with the following columns:
     # 'service_id', 'stop_id', 'arrival', 'departure', 'stop_sequence'
     list_stop_times = []
@@ -69,8 +84,10 @@ def renfe_scraping_trips(origin_id: str, destination_id: str, date: datetime.dat
 
     df_stops = pd.DataFrame(list_stop_times, columns=['service_id', 'stop_id', 'arrival', 'departure', 'stop_sequence'])
 
+
+
     # Save stop_times dataframe to csv
-    df_stops.to_csv(f"../../datasets/scraping/renfe/stop_times/stopTimes_{origin_id}_{destination_id}_{init_date}_{end_date}.csv", index=False, header=True)
+    df_stops.to_csv(f"../../../data/scraping/renfe/stop_times/stopTimes_{origin_id}_{destination_id}_{init_date}_{end_date}.csv", index=False, header=True)
     print("Saved stop times")
 
     # Remove stops and price columns
@@ -78,14 +95,14 @@ def renfe_scraping_trips(origin_id: str, destination_id: str, date: datetime.dat
     df = df.drop('price', axis=1)
 
     # Save trips dataframe to csv in datasets folder
-    df.to_csv(f"../../datasets/scraping/renfe/trips/trips_{origin_id}_{destination_id}_{init_date}_{end_date}.csv", index=False)
+    df.to_csv(f"../../../data/scraping/renfe/trips/trips_{origin_id}_{destination_id}_{init_date}_{end_date}.csv", index=False)
     print("Saved trips")
 
 
 if __name__ == "__main__":
     # date = datetime.date.today()
     # date += datetime.timedelta(days=1)
-    date = datetime.datetime.strptime("01-02-2023", "%d-%m-%Y").date()
+    date = datetime.datetime.strptime("01-03-2023", "%d-%m-%Y").date()
     range_days = 1
     origin_id = 'MADRI'  # Renfe id for Madrid Puerta de Atocha
     destination_id = 'BARCE'  # Renfe id for Barcelona Sants

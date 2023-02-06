@@ -105,7 +105,7 @@ def renfe_scraping_prices(origin_id: str, destination_id: str, date: datetime.da
 
     df_prices = pd.DataFrame(list_prices, columns=['service_id', '0', '1', '2'])
 
-    df_prices.to_csv(f"../../datasets/scraping/renfe/prices/prices_{origin_id}_{destination_id}_{init_date}_{end_date}.csv", index=False)
+    df_prices.to_csv(f"../../../data/scraping/renfe/prices/prices_{origin_id}_{destination_id}_{init_date}_{end_date}.csv", index=False)
 
 
 if __name__ == "__main__":

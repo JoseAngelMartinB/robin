@@ -6,6 +6,12 @@ import re
 
 
 def isTrain(r):
+    """
+    Check if the row from scraping data is a train
+
+    Args:
+        r (bs4.element.Tag): Row from scraping data
+    """
     try:
         r['cdgotren']
         return True
@@ -14,6 +20,15 @@ def isTrain(r):
 
 
 def get_prices(pcols):
+    """
+    Get prices from a row of prices
+
+    Args:
+        pcols (bs4.element.ResultSet): Row of prices
+
+    Returns:
+        dict: Prices for each class
+    """
     prices = {}
     for i, col in enumerate(pcols):
         cb = col.find_all("button")
@@ -62,7 +77,6 @@ def get_train(r, origin_id, destination_id, date):
     return [train_id, train_type, departure, arrival, duration_str, prices]
 
 
-# Old scraping version using requests from here
 def is_number(s):
     try:
         float(s)
@@ -79,6 +93,15 @@ def get_stations(soup):
 
 
 def get_date(soup, selenium=False):
+    """
+    Get date from soup
+
+    Args:
+        soup (bs4.BeautifulSoup): Soup from scraping data
+
+    Returns:
+        datetime.date
+    """
     table = soup.find('div', {'class': 'irf-travellers-table__container-time'})
 
     p = table.find_all('span', {'class': 'irf-travellers-table__txt irf-travellers-table__txt--bold'})
@@ -115,9 +138,6 @@ def get_date(soup, selenium=False):
                 if is_number(num):
                     date.append(num)
             else:
-                # Requests
-                num = tuple(filter(lambda x: x != '', re.sub(r'\s+', " ", i.text).split(" ")))[0]
-
                 if is_number(i.text):
                     x = re.sub(r'\s+', '', i.text)
                     date.append(x)
@@ -130,9 +150,13 @@ def get_date(soup, selenium=False):
 
 def get_stops(url):
     """
-    Returns dictionary of stops from url with stops information from renfe
-    :param url: url with stops information from renfe
-    :return: dictionary of stops, where keys are each station and values are a tuple with (arrival, departure) times
+    Returns dictionary of stops from url with stops information from Renfe
+
+    Args:
+        url (str): url with stops information from renfe
+
+    Returns:
+        dict: dictionary of stops, where keys are each station and values are a tuple with (arrival, departure) times
     """
 
     req = requests.get(url)
@@ -140,7 +164,7 @@ def get_stops(url):
 
     table = soup.find('table', {'class': 'irf-renfe-travel__table cabecera_tabla'})
 
-    renfe_stations = pd.read_csv('../../data/scraping/renfe/renfe_stations.csv', sep=',', dtype={'stop_id': str})
+    renfe_stations = pd.read_csv('../../../data/scraping/renfe/renfe_stations.csv', sep=',', dtype={'stop_id': str})
 
     gtfs_names = renfe_stations['stop_name'].values.tolist()
     gtfs_names = list(map(lambda s: s.lower(), gtfs_names))
@@ -151,9 +175,6 @@ def get_stops(url):
         aux = row.find_all('td')
 
         if aux:
-            # Define blacklist to remove words from stop name
-            # blacklist = ["", "PTA", "PUERTA", "CAMP", "DE"]
-
             # Remove non-alphanumeric characters
             raw_name = re.sub(r'[^a-zA-Z0-9 -]', '', aux[0].text)
 
@@ -262,8 +283,8 @@ def to_dataframe(s, d, url):
 
     dfs = pd.DataFrame(table, columns=['trip_id', 'train_type', 'stops', 'departure', 'duration', 'price'])
 
-    # Filter only AVE trains
-    dfs = dfs[dfs["train_type"].apply(lambda x: "AVE" in x)].reset_index(drop=True)
+    # Filter only AVE or AVLO trains
+    dfs = dfs[dfs["train_type"].apply(lambda x: "AVE" in x or "AVLO" in x)].reset_index(drop=True)
 
     # Get service id using data from "trip_id" and "departure" columns
     dfs['duration'] = dfs['duration'].apply(lambda x: format_time(x))
