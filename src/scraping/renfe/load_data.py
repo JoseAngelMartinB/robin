@@ -29,10 +29,10 @@ def load_scraping(file):
     file_name = "_".join(file_name.split("_")[1:])
 
     # 0.2 Import prices
-    prices = pd.read_csv(f'../../data/scraping/renfe/prices/prices_{file_name}.csv', delimiter=',')
+    prices = pd.read_csv(f'../../../data/scraping/renfe/prices/prices_{file_name}.csv', delimiter=',')
 
     # 0.3 Import stops
-    stop_times = pd.read_csv(f'../../data/scraping/renfe/stop_times/stopTimes_{file_name}.csv',
+    stop_times = pd.read_csv(f'../../../data/scraping/renfe/stop_times/stopTimes_{file_name}.csv',
                              delimiter=',',
                              dtype={'stop_id': str})
 
@@ -68,7 +68,7 @@ def load_scraping(file):
                 corridor.insert(corridor.index(trip[i + 1]), s)
 
     # 1.5 Parse stations. Use Adif stop_id retrieve station info (name, lat, lon)
-    renfe_stations = pd.read_csv(f'../../data/scraping/renfe/renfe_stations.csv', delimiter=',', dtype={'stop_id': str})
+    renfe_stations = pd.read_csv(f'../../../data/scraping/renfe/renfe_stations.csv', delimiter=',', dtype={'stop_id': str})
 
     # 1.6 Build dictionary of stations with stop_id as key and Station() object as value
     stations = {}
@@ -99,11 +99,11 @@ def load_scraping(file):
             with open(filename, 'w') as yaml_file:
                 yaml.safe_dump(yaml_file_mod, yaml_file, sort_keys=False, allow_unicode=True)
 
-    write_to_yaml('../../data/supply_data.yml',
+    write_to_yaml('../../../data/supply_data.yml',
                   {'stations': [station_to_dict(stn) for stn in stations.values()]},
                   'stations')
 
-    write_to_yaml('../../data/supply_data.yml',
+    write_to_yaml('../../../data/supply_data.yml',
                   {'seat': [seat_to_dict(s) for s in renfe_seats]},
                   'seat')
 
@@ -112,7 +112,7 @@ def load_scraping(file):
     corr_name = first_station.shortname + "-" + last_station.shortname
     corrMadBar = Corridor(1, corr_name, list(stations.keys()))
 
-    write_to_yaml('../../data/supply_data.yml',
+    write_to_yaml('../../../data/supply_data.yml',
                   {'corridor': [corridor_to_dict(corr) for corr in [corrMadBar]]},
                   'corridor')
 
@@ -123,21 +123,21 @@ def load_scraping(file):
 
     trips['lines'] = trips['service_id'].apply(lambda x: get_trip_line(x, set_lines))
 
-    write_to_yaml('../../data/supply_data.yml',
+    write_to_yaml('../../../data/supply_data.yml',
                   {'line': [line_to_dict(ln) for ln in trips['lines'].values.tolist()]},
                   'line')
 
     # 4. Build RollingStock for Renfe AVE
     renfe_rs = [RollingStock(1, "S-114", {1: 250, 2: 50})]
 
-    write_to_yaml('../../data/supply_data.yml',
+    write_to_yaml('../../../data/supply_data.yml',
                   {'rollingStock': [rolling_stock_to_dict(rs) for rs in renfe_rs]},
                   'rollingStock')
 
     # 5. Build TSP for Renfe
     renfe_tsp = TSP(1, "Renfe", [rs.id for rs in renfe_rs])
 
-    write_to_yaml('../../data/supply_data.yml',
+    write_to_yaml('../../../data/supply_data.yml',
                   {'trainServiceProvider': [tsp_to_dict(t) for t in [renfe_tsp]]},
                   'trainServiceProvider')
 
@@ -155,24 +155,24 @@ def load_scraping(file):
     my_services = trips['service'].values.tolist()
     time_slots = {s.timeSlot.id: s.timeSlot for s in my_services}
 
-    write_to_yaml('../../data/supply_data.yml',
+    write_to_yaml('../../../data/supply_data.yml',
                   {'timeSlot': [time_slot_to_dict(s) for s in time_slots.values()]},
                   'timeSlot')
 
-    write_to_yaml('../../data/supply_data.yml',
+    write_to_yaml('../../../data/supply_data.yml',
                   {'service': [service_to_dict(s) for s in trips['service'].values.tolist()]},
                   'service')
 
-    return trips['service'].values.tolist(), stations, renfe_seats, corrMadBar, renfe_tsp, renfe_rs
+    return trips['service'].values.tolist()
 
 
 if __name__ == '__main__':
-    path = '../../data/supply_data_example.yml'
+    path = '../../../data/supply_data_example.yml'
     with open(path, 'r') as file:
         yml_example = yaml.safe_load(file)
 
     print(yml_example)
 
-    file_path = '../../data/scraping/renfe/trips/trips_MADRI_BARCE_2023-02-01_2023-02-28.csv'
-    services, stations, seats, corridor, tsp, rolling_stock = load_scraping(file_path)
-    #print(services[0])
+    file_path = '../../../data/scraping/renfe/trips/trips_MADRI_BARCE_2023-03-01_2023-03-31.csv'
+    services = load_scraping(file_path)
+    print(services[0])
