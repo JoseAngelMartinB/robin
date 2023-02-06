@@ -1,8 +1,9 @@
 import datetime
 
 from src.robin.supply.entities import Station, TimeSlot, Corridor, Line, Seat, RollingStock, TSP, Service
-from src.robin.supply.utils import get_time, get_date
-from typing import Tuple, List, Dict
+from src.robin.supply.utils import get_time
+from typing import Tuple
+
 import pandas as pd
 import numpy as np
 
@@ -35,7 +36,7 @@ def line_to_dict(obj: Line):
 
     return {'id': obj.id,
             'name': obj.name,
-            'corridor': obj.corridor,
+            'corridor': obj.corridor.id,
             'stops': stops}
 
 
@@ -75,7 +76,7 @@ def service_to_dict(obj: Service):
             'type_of_capacity': obj.capacity}
 
 
-def get_trip_price(service_id: str, seats: Tuple[Seat], price_df: pd.DataFrame):
+def get_trip_price(service_id: str, seats: Tuple[Seat, ...], price_df: pd.DataFrame, tsp="Renfe"):
     """
     Get trip price from prices dataframe
 
@@ -88,12 +89,21 @@ def get_trip_price(service_id: str, seats: Tuple[Seat], price_df: pd.DataFrame):
         price: tuple of floats (three types of seats for Renfe AVE)
     """
     # Get price for service_id, If not found, return default price (Tuple of NaN values)
-    try:
-        prices = price_df[price_df['service_id'] == service_id][['0', '1', '2']].values[0]
-    except IndexError:
-        prices = tuple([float("NaN") for _ in range(3)])
+    if tsp == "Renfe":
+        try:
+            prices = price_df[price_df['service_id'] == service_id][['0', '1', '2']].values[0]
+        except IndexError:
+            prices = tuple([float("NaN") for _ in range(3)])
 
-    return {s.id: p for s, p in zip(seats, prices)}
+        return {s.id: p for s, p in zip(seats, prices)}
+
+    if tsp == "Ouigo":
+        try:
+            prices = price_df[price_df['service_id'] == service_id][['prices']].values[0]
+        except IndexError:
+            prices = [float("NaN")]
+
+        return {s.id: p for s, p in zip(seats, prices)}
 
 
 def get_line(stops: pd.DataFrame, corr: Corridor):
@@ -109,7 +119,7 @@ def get_line(stops: pd.DataFrame, corr: Corridor):
 
     idx = stops['service_id'].values[0].split("_")[0]
 
-    return Line(idx, f"Line {idx}", corr.id, line_data)
+    return Line(idx, f"Line {idx}", corr, line_data)
 
 
 def get_trip_line(service_id: str, lines: dict):
