@@ -130,12 +130,12 @@ class Line(object):
         id (int): Line ID
         name (str): Line name
         corridor (Corridor): Corridor ID where the Line belongs to
-        stops (List[Station]): List of Stations being served by the Line
+        stops (List[str]): List of Stations being served by the Line
         timetable (Mapping[Station, Tuple[float, float]]): {station ID: (arrival (float), departure (float)}
         pairs (List[Tuple[Station, Station]]): List with attended pairs of stations (origin, destination)
     """
 
-    def __init__(self, id_: int, name: str, corridor: Corridor, timetable: Mapping[Station, Tuple[float, float]]):
+    def __init__(self, id_: int, name: str, corridor: Corridor, timetable: Mapping[str, Tuple[float, float]]):
         self.id = id_
         self.name = name
         self.corridor = corridor
@@ -148,7 +148,7 @@ class Line(object):
         Private method to get each pair of stations of the line, using the stops list
 
         Returns:
-            List of tuple pairs (origin, destination)
+            List of tuple pairs (str, str): (origin, destination)
         """
         return [(a, b) for i, a in enumerate(self.stops) for b in self.stops[i + 1:]]
 
@@ -264,7 +264,7 @@ class Service(object):
         new_line = "\n\t\t"
         return f'Service id: {self.id} \n' \
                f'\tDate of service: {self.date} \n' \
-               f'\tStops: {[s.city for s in self.line.stops]} \n' \
+               f'\tStops: {self.line.stops} \n' \
                f'\tLine times: {list(self.line.timetable.values())} \n' \
                f'\tTrain Service Provider: {self.tsp} \n' \
                f'\tTime Slot: {self.timeSlot} \n' \
@@ -412,7 +412,7 @@ class Supply(object):
 
             assert all(s['station'] in corr.stations for s in ln['stops']), "Station not found in Corridor list"
 
-            timetable = {self.stations[s['station']]: (float(s['arrival_time']), float(s['departure_time']))
+            timetable = {s['station']: (float(s['arrival_time']), float(s['departure_time']))
                          for s in ln['stops']}
 
             lines[ln['id']] = Line(ln['id'], ln['name'], corr, timetable)
