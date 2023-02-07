@@ -89,8 +89,8 @@ class UserPattern:
         penalty_departure_time_kwargs (Mapping[str, Union[int, float]]): The penalty function named parameters.
         penalty_cost (Callable): The penalty function for the cost.
         penalty_cost_kwargs (Mapping[str, Union[int, float]]): The penalty function named parameters.
-        penalty_traveling_time (Callable): The penalty function for the travel time.
-        penalty_traveling_time_kwargs (Mapping[str, Union[int, float]]): The penalty function named parameters.
+        penalty_travel_time (Callable): The penalty function for the travel time.
+        penalty_travel_time_kwargs (Mapping[str, Union[int, float]]): The penalty function named parameters.
         error (Callable): The error distribution function.
         error_kwargs (Mapping[str, Union[int, float]]): The error distribution named parameters.
         arrival_time_maximum_iterations (int): The maximum number of iterations for the arrival time distribution.
@@ -119,8 +119,8 @@ class UserPattern:
             penalty_departure_time_kwargs: Mapping[str, Union[int, float]],
             penalty_cost: str,
             penalty_cost_kwargs: Mapping[str, Union[int, float]],
-            penalty_traveling_time: str,
-            penalty_traveling_time_kwargs: Mapping[str, Union[int, float]],
+            penalty_travel_time: str,
+            penalty_travel_time_kwargs: Mapping[str, Union[int, float]],
             error: str,
             error_kwargs: Mapping[str, Union[int, float]],
             arrival_time_maximum_iterations: int = 100,
@@ -143,8 +143,8 @@ class UserPattern:
             penalty_departure_time_kwargs (Mapping[str, Union[int, float]]): The penalty function named parameters.
             penalty_cost (str): The penalty function name for the cost.
             penalty_cost_kwargs (Mapping[str, Union[int, float]]): The penalty function named parameters.
-            penalty_traveling_time (str): The penalty function name for the travel time.
-            penalty_traveling_time_kwargs (Mapping[str, Union[int, float]]): The penalty function named parameters.
+            penalty_travel_time (str): The penalty function name for the travel time.
+            penalty_travel_time_kwargs (Mapping[str, Union[int, float]]): The penalty function named parameters.
             error (str): The error distribution name.
             error_kwargs (Mapping[str, Union[int, float]]): The error distribution named parameters.
             arrival_time_maximum_iterations (int): The maximum number of iterations for the arrival time distribution.
@@ -170,8 +170,8 @@ class UserPattern:
         self.penalty_departure_time_kwargs = penalty_departure_time_kwargs
         self._penalty_cost = get_function(function_name=penalty_cost)
         self.penalty_cost_kwargs = penalty_cost_kwargs
-        self._penalty_traveling_time = get_function(function_name=penalty_traveling_time)
-        self.penalty_traveling_time_kwargs = penalty_traveling_time_kwargs
+        self._penalty_travel_time = get_function(function_name=penalty_travel_time)
+        self.penalty_travel_time_kwargs = penalty_travel_time_kwargs
         self._error = get_scipy_distribution(distribution_name=error, is_discrete=False)
         self.error_kwargs = error_kwargs
         self.arrival_time_maximum_iterations = arrival_time_maximum_iterations
@@ -279,14 +279,14 @@ class UserPattern:
         return self._penalty_cost(**self.penalty_cost_kwargs)
     
     @property
-    def penalty_traveling_time(self) -> float:
+    def penalty_travel_time(self) -> float:
         """
-        Returns a random variable sample from the penalty function for the traveling time.
+        Returns a random variable sample from the penalty function for the travel time.
 
         Returns:
-            float: The penalty function for the traveling time.
+            float: The penalty function for the travel time.
         """
-        return self._penalty_traveling_time(**self.penalty_traveling_time_kwargs)
+        return self._penalty_travel_time(**self.penalty_travel_time_kwargs)
     
     @property
     def error(self) -> float:
@@ -329,8 +329,8 @@ class UserPattern:
             f'penalty_departure_time_kwargs={self.penalty_departure_time_kwargs}, '
             f'penalty_cost={self.penalty_cost}, '
             f'penalty_cost_kwargs={self.penalty_cost_kwargs}, '
-            f'penalty_traveling_time={self.penalty_traveling_time}, '
-            f'penalty_traveling_time_kwargs={self.penalty_traveling_time_kwargs}, '
+            f'penalty_travel_time={self.penalty_travel_time}, '
+            f'penalty_travel_time_kwargs={self.penalty_travel_time_kwargs}, '
             f'error={self.error}, '
             f'error_kwargs={self.error_kwargs})'
         )
@@ -533,6 +533,21 @@ class Passenger:
         self.arrival_day = arrival_day
         self.arrival_time = arrival_time
         self.purchase_day = purchase_day
+
+    def _get_utility_time_desplacement(self) -> float:
+        pass
+
+    def _get_utility_departure_time(self) -> float:
+        pass
+
+    def _get_utility_price(self) -> float:
+        pass
+
+    def _get_utility_travel_time(self) -> float:
+        pass
+
+    def get_utility(self) -> float:
+        pass
 
     def __str__(self) -> str:
         """

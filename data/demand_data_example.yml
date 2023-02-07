@@ -51,8 +51,8 @@ userPattern:
       m: 1
       x: 0.05
       b: 0
-    penalty_traveling_time: linear
-    penalty_traveling_time_kwargs:
+    penalty_travel_time: linear
+    penalty_travel_time_kwargs:
       m: 1
       x: 0.4
       b: 0
@@ -97,8 +97,8 @@ userPattern:
       m: 1
       x: 0.8
       b: 0
-    penalty_traveling_time: linear
-    penalty_traveling_time_kwargs:
+    penalty_travel_time: linear
+    penalty_travel_time_kwargs:
       m: 1
       x: 0.3
       b: 0
