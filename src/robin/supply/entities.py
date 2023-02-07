@@ -101,6 +101,23 @@ class Corridor(object):
         self.name = name
         self.stations = stations
 
+    def get_paths(self, corr, current_path=[], paths=[]):
+        """
+        NOT YET IMPLEMENTED - Get all root-leaf path from corridor as a tree structure
+
+        corr = [{'parent': "60000", 'chd': [{'parent': "04040", 'chd': [{'parent': "71801", 'chd': []}]},
+                                                                        {'parent': "50000", 'chd': []}]}]
+        """
+        if corr == []:
+            return paths.append(current_path)
+
+        for node in corr:
+            current_path.append(node['parent'])
+            self.get_paths(node['chd'], current_path[:], paths)
+
+        return paths
+
+
     def __str__(self):
         return f'[{self.id}, {self.name}, {self.stations}]'
 
