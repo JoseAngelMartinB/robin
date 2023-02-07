@@ -28,14 +28,10 @@ userPattern:
       start: 9
       end: 24
     seats:
-      - id: 1
-        utility: 0.1
-      - id: 2
-        utility: 0.2
-      - id: 3
-        utility: 0.5
-      - id: 4
-        utility: 0.8
+      1: 10
+      2: 20
+      3: 50
+      4: 80
     penalty_arrival_time: linear
     penalty_arrival_time_kwargs:
       m: 1
@@ -74,14 +70,10 @@ userPattern:
       start: 6
       end: 14
     seats:
-      - id: 1
-        utility: 0.1
-      - id: 2
-        utility: 0.9
-      - id: 3
-        utility: 0
-      - id: 4
-        utility: 0.6
+      1: 10
+      2: 90
+      3: 5
+      4: 60
     penalty_arrival_time: linear
     penalty_arrival_time_kwargs:
       m: 1

@@ -589,8 +589,26 @@ class Passenger:
         """
         return self.user_pattern.penalty_travel_time * (service_arrival_time - service_departure_time)
 
-    def get_utility(self, service_arrival_time: float, service_departure_time: float, price: float) -> float:
-        pass
+    def get_utility(self, seat: int, service_departure_time: float, service_arrival_time: float, price: float) -> float:
+        """
+        Returns the utility of the passenger given the seat, the arrival time, the departure time and the price.
+
+        Args:
+            seat (int): The seat of the service.
+            service_departure_time (float): The departure time of the service.
+            service_arrival_time (float): The arrival time of the service.
+            price (float): The price of the seat.
+        
+        Returns:
+            float: The utility of the passenger given the seat, the arrival time, the departure time and the price.
+        """
+        seat_utility = self.user_pattern.get_seat_utility(seat)
+        arrival_time_utility = self._get_utility_arrival_time(service_arrival_time)
+        departure_time_utility = self._get_utility_departure_time(service_departure_time)
+        price_utility = self._get_utility_price(price)
+        travel_time_utility = self._get_utility_travel_time(service_arrival_time, service_departure_time)
+        error_utility = self.user_pattern.error
+        return seat_utility + arrival_time_utility - departure_time_utility - price_utility - travel_time_utility + error_utility
 
     def __str__(self) -> str:
         """
