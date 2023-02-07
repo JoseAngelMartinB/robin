@@ -232,13 +232,7 @@ line:
     departure_time: 121
   - station: '71801'
     arrival_time: 190
-    departure_time: 200
-  - station: '79300'
-    arrival_time: 238
-    departure_time: 240
-  - station: '04307'
-    arrival_time: 255
-    departure_time: 255
+    departure_time: 190
 - id: '03131'
   name: Line 03131
   corridor: 1
@@ -414,13 +408,7 @@ line:
     departure_time: 0
   - station: '71801'
     arrival_time: 150
-    departure_time: 160
-  - station: '79300'
-    arrival_time: 198
-    departure_time: 200
-  - station: '04307'
-    arrival_time: 215
-    departure_time: 215
+    departure_time: 150
 - id: '03201'
   name: Line 03201
   corridor: 1
@@ -609,13 +597,7 @@ line:
     departure_time: 121
   - station: '71801'
     arrival_time: 190
-    departure_time: 200
-  - station: '79300'
-    arrival_time: 238
-    departure_time: 240
-  - station: '04307'
-    arrival_time: 255
-    departure_time: 255
+    departure_time: 190
 - id: '03131'
   name: Line 03131
   corridor: 1
@@ -791,13 +773,7 @@ line:
     departure_time: 0
   - station: '71801'
     arrival_time: 150
-    departure_time: 160
-  - station: '79300'
-    arrival_time: 198
-    departure_time: 200
-  - station: '04307'
-    arrival_time: 215
-    departure_time: 215
+    departure_time: 150
 - id: '03201'
   name: Line 03201
   corridor: 1
@@ -948,13 +924,7 @@ line:
     departure_time: 121
   - station: '71801'
     arrival_time: 190
-    departure_time: 200
-  - station: '79300'
-    arrival_time: 238
-    departure_time: 240
-  - station: '04307'
-    arrival_time: 255
-    departure_time: 255
+    departure_time: 190
 - id: '19725'
   name: Line 19725
   corridor: 1
@@ -1120,13 +1090,7 @@ line:
     departure_time: 0
   - station: '71801'
     arrival_time: 150
-    departure_time: 160
-  - station: '79300'
-    arrival_time: 198
-    departure_time: 200
-  - station: '04307'
-    arrival_time: 215
-    departure_time: 215
+    departure_time: 150
 - id: '03201'
   name: Line 03201
   corridor: 1
@@ -1279,13 +1243,7 @@ line:
     departure_time: 121
   - station: '71801'
     arrival_time: 190
-    departure_time: 200
-  - station: '79300'
-    arrival_time: 238
-    departure_time: 240
-  - station: '04307'
-    arrival_time: 255
-    departure_time: 255
+    departure_time: 190
 - id: '19725'
   name: Line 19725
   corridor: 1
@@ -1490,13 +1448,7 @@ line:
     departure_time: 121
   - station: '71801'
     arrival_time: 190
-    departure_time: 200
-  - station: '79300'
-    arrival_time: 238
-    departure_time: 240
-  - station: '04307'
-    arrival_time: 255
-    departure_time: 255
+    departure_time: 190
 - id: '03131'
   name: Line 03131
   corridor: 1
@@ -1640,13 +1592,7 @@ line:
     departure_time: 0
   - station: '71801'
     arrival_time: 150
-    departure_time: 160
-  - station: '79300'
-    arrival_time: 198
-    departure_time: 200
-  - station: '04307'
-    arrival_time: 215
-    departure_time: 215
+    departure_time: 150
 - id: '03201'
   name: Line 03201
   corridor: 1
@@ -1825,13 +1771,7 @@ line:
     departure_time: 121
   - station: '71801'
     arrival_time: 190
-    departure_time: 200
-  - station: '79300'
-    arrival_time: 238
-    departure_time: 240
-  - station: '04307'
-    arrival_time: 255
-    departure_time: 255
+    departure_time: 190
 - id: '03131'
   name: Line 03131
   corridor: 1
@@ -2007,13 +1947,7 @@ line:
     departure_time: 0
   - station: '71801'
     arrival_time: 150
-    departure_time: 160
-  - station: '79300'
-    arrival_time: 198
-    departure_time: 200
-  - station: '04307'
-    arrival_time: 215
-    departure_time: 215
+    departure_time: 150
 - id: '03201'
   name: Line 03201
   corridor: 1
@@ -2202,13 +2136,7 @@ line:
     departure_time: 121
   - station: '71801'
     arrival_time: 190
-    departure_time: 200
-  - station: '79300'
-    arrival_time: 238
-    departure_time: 240
-  - station: '04307'
-    arrival_time: 255
-    departure_time: 255
+    departure_time: 190
 - id: '03131'
   name: Line 03131
   corridor: 1
@@ -2384,13 +2312,7 @@ line:
     departure_time: 0
   - station: '71801'
     arrival_time: 150
-    departure_time: 160
-  - station: '79300'
-    arrival_time: 198
-    departure_time: 200
-  - station: '04307'
-    arrival_time: 215
-    departure_time: 215
+    departure_time: 150
 - id: '03201'
   name: Line 03201
   corridor: 1
@@ -2579,13 +2501,7 @@ line:
     departure_time: 121
   - station: '71801'
     arrival_time: 190
-    departure_time: 200
-  - station: '79300'
-    arrival_time: 238
-    departure_time: 240
-  - station: '04307'
-    arrival_time: 255
-    departure_time: 255
+    departure_time: 190
 - id: '03131'
   name: Line 03131
   corridor: 1
@@ -2761,13 +2677,7 @@ line:
     departure_time: 0
   - station: '71801'
     arrival_time: 150
-    departure_time: 160
-  - station: '79300'
-    arrival_time: 198
-    departure_time: 200
-  - station: '04307'
-    arrival_time: 215
-    departure_time: 215
+    departure_time: 150
 - id: '03201'
   name: Line 03201
   corridor: 1
@@ -2956,13 +2866,7 @@ line:
     departure_time: 121
   - station: '71801'
     arrival_time: 190
-    departure_time: 200
-  - station: '79300'
-    arrival_time: 238
-    departure_time: 240
-  - station: '04307'
-    arrival_time: 255
-    departure_time: 255
+    departure_time: 190
 - id: '03131'
   name: Line 03131
   corridor: 1
@@ -3138,13 +3042,7 @@ line:
     departure_time: 0
   - station: '71801'
     arrival_time: 150
-    departure_time: 160
-  - station: '79300'
-    arrival_time: 198
-    departure_time: 200
-  - station: '04307'
-    arrival_time: 215
-    departure_time: 215
+    departure_time: 150
 - id: '03201'
   name: Line 03201
   corridor: 1
@@ -3320,13 +3218,7 @@ line:
     departure_time: 121
   - station: '71801'
     arrival_time: 190
-    departure_time: 200
-  - station: '79300'
-    arrival_time: 238
-    departure_time: 240
-  - station: '04307'
-    arrival_time: 255
-    departure_time: 255
+    departure_time: 190
 - id: '19725'
   name: Line 19725
   corridor: 1
@@ -3492,13 +3384,7 @@ line:
     departure_time: 0
   - station: '71801'
     arrival_time: 150
-    departure_time: 160
-  - station: '79300'
-    arrival_time: 198
-    departure_time: 200
-  - station: '04307'
-    arrival_time: 215
-    departure_time: 215
+    departure_time: 150
 - id: '03201'
   name: Line 03201
   corridor: 1
@@ -3651,13 +3537,7 @@ line:
     departure_time: 121
   - station: '71801'
     arrival_time: 190
-    departure_time: 200
-  - station: '79300'
-    arrival_time: 238
-    departure_time: 240
-  - station: '04307'
-    arrival_time: 255
-    departure_time: 255
+    departure_time: 190
 - id: '19725'
   name: Line 19725
   corridor: 1
@@ -3884,13 +3764,7 @@ line:
     departure_time: 121
   - station: '71801'
     arrival_time: 190
-    departure_time: 200
-  - station: '79300'
-    arrival_time: 238
-    departure_time: 240
-  - station: '04307'
-    arrival_time: 255
-    departure_time: 255
+    departure_time: 190
 - id: '03131'
   name: Line 03131
   corridor: 1
@@ -4034,13 +3908,7 @@ line:
     departure_time: 0
   - station: '71801'
     arrival_time: 150
-    departure_time: 160
-  - station: '79300'
-    arrival_time: 198
-    departure_time: 200
-  - station: '04307'
-    arrival_time: 215
-    departure_time: 215
+    departure_time: 150
 - id: '03201'
   name: Line 03201
   corridor: 1
@@ -4219,13 +4087,7 @@ line:
     departure_time: 121
   - station: '71801'
     arrival_time: 190
-    departure_time: 200
-  - station: '79300'
-    arrival_time: 238
-    departure_time: 240
-  - station: '04307'
-    arrival_time: 255
-    departure_time: 255
+    departure_time: 190
 - id: '03131'
   name: Line 03131
   corridor: 1
@@ -4401,13 +4263,7 @@ line:
     departure_time: 0
   - station: '71801'
     arrival_time: 150
-    departure_time: 160
-  - station: '79300'
-    arrival_time: 198
-    departure_time: 200
-  - station: '04307'
-    arrival_time: 215
-    departure_time: 215
+    departure_time: 150
 - id: '03201'
   name: Line 03201
   corridor: 1
@@ -4596,13 +4452,7 @@ line:
     departure_time: 121
   - station: '71801'
     arrival_time: 190
-    departure_time: 200
-  - station: '79300'
-    arrival_time: 238
-    departure_time: 240
-  - station: '04307'
-    arrival_time: 255
-    departure_time: 255
+    departure_time: 190
 - id: '03131'
   name: Line 03131
   corridor: 1
@@ -4778,13 +4628,7 @@ line:
     departure_time: 0
   - station: '71801'
     arrival_time: 150
-    departure_time: 160
-  - station: '79300'
-    arrival_time: 198
-    departure_time: 200
-  - station: '04307'
-    arrival_time: 215
-    departure_time: 215
+    departure_time: 150
 - id: '03201'
   name: Line 03201
   corridor: 1
@@ -4973,13 +4817,7 @@ line:
     departure_time: 121
   - station: '71801'
     arrival_time: 190
-    departure_time: 200
-  - station: '79300'
-    arrival_time: 238
-    departure_time: 240
-  - station: '04307'
-    arrival_time: 255
-    departure_time: 255
+    departure_time: 190
 - id: '03131'
   name: Line 03131
   corridor: 1
@@ -5155,13 +4993,7 @@ line:
     departure_time: 0
   - station: '71801'
     arrival_time: 150
-    departure_time: 160
-  - station: '79300'
-    arrival_time: 198
-    departure_time: 200
-  - station: '04307'
-    arrival_time: 215
-    departure_time: 215
+    departure_time: 150
 - id: '03201'
   name: Line 03201
   corridor: 1
@@ -5350,13 +5182,7 @@ line:
     departure_time: 121
   - station: '71801'
     arrival_time: 190
-    departure_time: 200
-  - station: '79300'
-    arrival_time: 238
-    departure_time: 240
-  - station: '04307'
-    arrival_time: 255
-    departure_time: 255
+    departure_time: 190
 - id: '03131'
   name: Line 03131
   corridor: 1
@@ -5532,13 +5358,7 @@ line:
     departure_time: 0
   - station: '71801'
     arrival_time: 150
-    departure_time: 160
-  - station: '79300'
-    arrival_time: 198
-    departure_time: 200
-  - station: '04307'
-    arrival_time: 215
-    departure_time: 215
+    departure_time: 150
 - id: '03201'
   name: Line 03201
   corridor: 1
@@ -5714,13 +5534,7 @@ line:
     departure_time: 121
   - station: '71801'
     arrival_time: 190
-    departure_time: 200
-  - station: '79300'
-    arrival_time: 238
-    departure_time: 240
-  - station: '04307'
-    arrival_time: 255
-    departure_time: 255
+    departure_time: 190
 - id: '19725'
   name: Line 19725
   corridor: 1
@@ -5886,13 +5700,7 @@ line:
     departure_time: 0
   - station: '71801'
     arrival_time: 150
-    departure_time: 160
-  - station: '79300'
-    arrival_time: 198
-    departure_time: 200
-  - station: '04307'
-    arrival_time: 215
-    departure_time: 215
+    departure_time: 150
 - id: '03201'
   name: Line 03201
   corridor: 1
@@ -6045,13 +5853,7 @@ line:
     departure_time: 121
   - station: '71801'
     arrival_time: 190
-    departure_time: 200
-  - station: '79300'
-    arrival_time: 238
-    departure_time: 240
-  - station: '04307'
-    arrival_time: 255
-    departure_time: 255
+    departure_time: 190
 - id: '19725'
   name: Line 19725
   corridor: 1
@@ -6278,13 +6080,7 @@ line:
     departure_time: 121
   - station: '71801'
     arrival_time: 190
-    departure_time: 200
-  - station: '79300'
-    arrival_time: 238
-    departure_time: 240
-  - station: '04307'
-    arrival_time: 255
-    departure_time: 255
+    departure_time: 190
 - id: '19725'
   name: Line 19725
   corridor: 1
@@ -6430,13 +6226,7 @@ line:
     departure_time: 0
   - station: '71801'
     arrival_time: 150
-    departure_time: 160
-  - station: '79300'
-    arrival_time: 198
-    departure_time: 200
-  - station: '04307'
-    arrival_time: 215
-    departure_time: 215
+    departure_time: 150
 - id: '03201'
   name: Line 03201
   corridor: 1
@@ -6595,13 +6385,7 @@ line:
     departure_time: 121
   - station: '71801'
     arrival_time: 190
-    departure_time: 200
-  - station: '79300'
-    arrival_time: 238
-    departure_time: 240
-  - station: '04307'
-    arrival_time: 255
-    departure_time: 255
+    departure_time: 190
 - id: '03131'
   name: Line 03131
   corridor: 1
@@ -6757,13 +6541,7 @@ line:
     departure_time: 0
   - station: '71801'
     arrival_time: 150
-    departure_time: 160
-  - station: '79300'
-    arrival_time: 198
-    departure_time: 200
-  - station: '04307'
-    arrival_time: 215
-    departure_time: 215
+    departure_time: 150
 - id: '03201'
   name: Line 03201
   corridor: 1
@@ -6952,13 +6730,7 @@ line:
     departure_time: 121
   - station: '71801'
     arrival_time: 190
-    departure_time: 200
-  - station: '79300'
-    arrival_time: 238
-    departure_time: 240
-  - station: '04307'
-    arrival_time: 255
-    departure_time: 255
+    departure_time: 190
 - id: '03131'
   name: Line 03131
   corridor: 1
@@ -7134,13 +6906,7 @@ line:
     departure_time: 0
   - station: '71801'
     arrival_time: 150
-    departure_time: 160
-  - station: '79300'
-    arrival_time: 198
-    departure_time: 200
-  - station: '04307'
-    arrival_time: 215
-    departure_time: 215
+    departure_time: 150
 - id: '03201'
   name: Line 03201
   corridor: 1
@@ -7329,13 +7095,7 @@ line:
     departure_time: 121
   - station: '71801'
     arrival_time: 190
-    departure_time: 200
-  - station: '79300'
-    arrival_time: 238
-    departure_time: 240
-  - station: '04307'
-    arrival_time: 255
-    departure_time: 255
+    departure_time: 190
 - id: '03131'
   name: Line 03131
   corridor: 1
@@ -7511,13 +7271,7 @@ line:
     departure_time: 0
   - station: '71801'
     arrival_time: 150
-    departure_time: 160
-  - station: '79300'
-    arrival_time: 198
-    departure_time: 200
-  - station: '04307'
-    arrival_time: 215
-    departure_time: 215
+    departure_time: 150
 - id: '03201'
   name: Line 03201
   corridor: 1
@@ -7706,13 +7460,7 @@ line:
     departure_time: 121
   - station: '71801'
     arrival_time: 190
-    departure_time: 200
-  - station: '79300'
-    arrival_time: 238
-    departure_time: 240
-  - station: '04307'
-    arrival_time: 255
-    departure_time: 255
+    departure_time: 190
 - id: '03131'
   name: Line 03131
   corridor: 1
@@ -7888,13 +7636,7 @@ line:
     departure_time: 0
   - station: '71801'
     arrival_time: 150
-    departure_time: 160
-  - station: '79300'
-    arrival_time: 198
-    departure_time: 200
-  - station: '04307'
-    arrival_time: 215
-    departure_time: 215
+    departure_time: 150
 - id: '03201'
   name: Line 03201
   corridor: 1
@@ -8070,13 +7812,7 @@ line:
     departure_time: 121
   - station: '71801'
     arrival_time: 190
-    departure_time: 200
-  - station: '79300'
-    arrival_time: 238
-    departure_time: 240
-  - station: '04307'
-    arrival_time: 255
-    departure_time: 255
+    departure_time: 190
 - id: '19725'
   name: Line 19725
   corridor: 1
@@ -8242,13 +7978,7 @@ line:
     departure_time: 0
   - station: '71801'
     arrival_time: 150
-    departure_time: 160
-  - station: '79300'
-    arrival_time: 198
-    departure_time: 200
-  - station: '04307'
-    arrival_time: 215
-    departure_time: 215
+    departure_time: 150
 - id: '03201'
   name: Line 03201
   corridor: 1
@@ -8401,13 +8131,7 @@ line:
     departure_time: 121
   - station: '71801'
     arrival_time: 190
-    departure_time: 200
-  - station: '79300'
-    arrival_time: 238
-    departure_time: 240
-  - station: '04307'
-    arrival_time: 255
-    departure_time: 255
+    departure_time: 190
 - id: '19725'
   name: Line 19725
   corridor: 1
@@ -8634,13 +8358,7 @@ line:
     departure_time: 121
   - station: '71801'
     arrival_time: 190
-    departure_time: 200
-  - station: '79300'
-    arrival_time: 238
-    departure_time: 240
-  - station: '04307'
-    arrival_time: 255
-    departure_time: 255
+    departure_time: 190
 - id: '03131'
   name: Line 03131
   corridor: 1
@@ -8806,13 +8524,7 @@ line:
     departure_time: 0
   - station: '71801'
     arrival_time: 150
-    departure_time: 160
-  - station: '79300'
-    arrival_time: 198
-    departure_time: 200
-  - station: '04307'
-    arrival_time: 215
-    departure_time: 215
+    departure_time: 150
 - id: '03201'
   name: Line 03201
   corridor: 1
@@ -8991,13 +8703,7 @@ line:
     departure_time: 121
   - station: '71801'
     arrival_time: 190
-    departure_time: 200
-  - station: '79300'
-    arrival_time: 238
-    departure_time: 240
-  - station: '04307'
-    arrival_time: 255
-    departure_time: 255
+    departure_time: 190
 - id: '03131'
   name: Line 03131
   corridor: 1
@@ -9173,13 +8879,7 @@ line:
     departure_time: 0
   - station: '71801'
     arrival_time: 150
-    departure_time: 160
-  - station: '79300'
-    arrival_time: 198
-    departure_time: 200
-  - station: '04307'
-    arrival_time: 215
-    departure_time: 215
+    departure_time: 150
 - id: '03201'
   name: Line 03201
   corridor: 1
@@ -9343,13 +9043,7 @@ line:
     departure_time: 121
   - station: '71801'
     arrival_time: 190
-    departure_time: 200
-  - station: '79300'
-    arrival_time: 238
-    departure_time: 240
-  - station: '04307'
-    arrival_time: 255
-    departure_time: 255
+    departure_time: 190
 - id: '03131'
   name: Line 03131
   corridor: 1
@@ -9525,390 +9219,7 @@ line:
     departure_time: 0
   - station: '71801'
     arrival_time: 150
-    departure_time: 160
-  - station: '79300'
-    arrival_time: 198
-    departure_time: 200
-  - station: '04307'
-    arrival_time: 215
-    departure_time: 215
-- id: '03201'
-  name: Line 03201
-  corridor: 1
-  stops:
-  - station: '60000'
-    arrival_time: 0
-    departure_time: 0
-  - station: '71801'
-    arrival_time: 150
     departure_time: 150
-- id: '03203'
-  name: Line 03203
-  corridor: 1
-  stops:
-  - station: '60000'
-    arrival_time: 0
-    departure_time: 0
-  - station: '70200'
-    arrival_time: 23
-    departure_time: 24
-  - station: '70600'
-    arrival_time: 60
-    departure_time: 61
-  - station: '04040'
-    arrival_time: 85
-    departure_time: 86
-  - station: '78400'
-    arrival_time: 129
-    departure_time: 131
-  - station: '71500'
-    arrival_time: 158
-    departure_time: 160
-  - station: '71801'
-    arrival_time: 195
-    departure_time: 195
-- id: '03211'
-  name: Line 03211
-  corridor: 1
-  stops:
-  - station: '60000'
-    arrival_time: 0
-    departure_time: 0
-  - station: '71801'
-    arrival_time: 150
-    departure_time: 150
-- id: '03063'
-  name: Line 03063
-  corridor: 1
-  stops:
-  - station: '60000'
-    arrival_time: 0
-    departure_time: 0
-  - station: '70600'
-    arrival_time: 55
-    departure_time: 56
-  - station: '04040'
-    arrival_time: 81
-    departure_time: 82
-  - station: '71801'
-    arrival_time: 170
-    departure_time: 170
-- id: '03071'
-  name: Line 03071
-  corridor: 1
-  stops:
-  - station: '60000'
-    arrival_time: 0
-    departure_time: 0
-  - station: '71801'
-    arrival_time: 150
-    departure_time: 150
-- id: '03073'
-  name: Line 03073
-  corridor: 1
-  stops:
-  - station: '60000'
-    arrival_time: 0
-    departure_time: 0
-  - station: '70200'
-    arrival_time: 23
-    departure_time: 24
-  - station: '04040'
-    arrival_time: 81
-    departure_time: 82
-  - station: '78400'
-    arrival_time: 125
-    departure_time: 127
-  - station: '71500'
-    arrival_time: 154
-    departure_time: 156
-  - station: '71801'
-    arrival_time: 192
-    departure_time: 192
-- id: 03081
-  name: Line 03081
-  corridor: 1
-  stops:
-  - station: '60000'
-    arrival_time: 0
-    departure_time: 0
-  - station: '71801'
-    arrival_time: 150
-    departure_time: 150
-- id: 03083
-  name: Line 03083
-  corridor: 1
-  stops:
-  - station: '60000'
-    arrival_time: 0
-    departure_time: 0
-  - station: '04040'
-    arrival_time: 75
-    departure_time: 76
-  - station: '71801'
-    arrival_time: 165
-    departure_time: 165
-- id: 03091
-  name: Line 03091
-  corridor: 1
-  stops:
-  - station: '60000'
-    arrival_time: 0
-    departure_time: 0
-  - station: '71801'
-    arrival_time: 150
-    departure_time: 150
-- id: 03093
-  name: Line 03093
-  corridor: 1
-  stops:
-  - station: '60000'
-    arrival_time: 0
-    departure_time: 0
-  - station: '04040'
-    arrival_time: 75
-    departure_time: 76
-  - station: '78400'
-    arrival_time: 119
-    departure_time: 121
-  - station: '71500'
-    arrival_time: 148
-    departure_time: 150
-  - station: '71801'
-    arrival_time: 187
-    departure_time: 195
-  - station: '79300'
-    arrival_time: 233
-    departure_time: 235
-  - station: '04307'
-    arrival_time: 250
-    departure_time: 250
-- id: '03113'
-  name: Line 03113
-  corridor: 1
-  stops:
-  - station: '60000'
-    arrival_time: 0
-    departure_time: 0
-  - station: '70600'
-    arrival_time: 55
-    departure_time: 56
-  - station: '04040'
-    arrival_time: 81
-    departure_time: 82
-  - station: '78400'
-    arrival_time: 125
-    departure_time: 127
-  - station: '71500'
-    arrival_time: 154
-    departure_time: 156
-  - station: '71801'
-    arrival_time: 192
-    departure_time: 192
-- id: '03123'
-  name: Line 03123
-  corridor: 1
-  stops:
-  - station: '60000'
-    arrival_time: 0
-    departure_time: 0
-  - station: '04040'
-    arrival_time: 75
-    departure_time: 76
-  - station: '78400'
-    arrival_time: 119
-    departure_time: 121
-  - station: '71801'
-    arrival_time: 190
-    departure_time: 200
-  - station: '79300'
-    arrival_time: 238
-    departure_time: 240
-  - station: '04307'
-    arrival_time: 255
-    departure_time: 255
-- id: '03131'
-  name: Line 03131
-  corridor: 1
-  stops:
-  - station: '60000'
-    arrival_time: 0
-    departure_time: 0
-  - station: '71801'
-    arrival_time: 150
-    departure_time: 150
-- id: '19725'
-  name: Line 19725
-  corridor: 1
-  stops:
-  - station: '60000'
-    arrival_time: 0
-    departure_time: 0
-  - station: '70200'
-    arrival_time: 23
-    departure_time: 25
-  - station: '04040'
-    arrival_time: 82
-    departure_time: 85
-  - station: '71500'
-    arrival_time: 139
-    departure_time: 141
-  - station: '71801'
-    arrival_time: 177
-    departure_time: 189
-  - station: '79300'
-    arrival_time: 227
-    departure_time: 230
-  - station: '04307'
-    arrival_time: 244
-    departure_time: 244
-- id: '03143'
-  name: Line 03143
-  corridor: 1
-  stops:
-  - station: '60000'
-    arrival_time: 0
-    departure_time: 0
-  - station: '70600'
-    arrival_time: 55
-    departure_time: 56
-  - station: '04040'
-    arrival_time: 81
-    departure_time: 82
-  - station: '71801'
-    arrival_time: 170
-    departure_time: 180
-  - station: '79300'
-    arrival_time: 218
-    departure_time: 220
-  - station: '04307'
-    arrival_time: 235
-    departure_time: 235
-- id: '03151'
-  name: Line 03151
-  corridor: 1
-  stops:
-  - station: '60000'
-    arrival_time: 0
-    departure_time: 0
-  - station: '71801'
-    arrival_time: 149
-    departure_time: 149
-- id: '03153'
-  name: Line 03153
-  corridor: 1
-  stops:
-  - station: '60000'
-    arrival_time: 0
-    departure_time: 0
-  - station: '70600'
-    arrival_time: 55
-    departure_time: 56
-  - station: '04040'
-    arrival_time: 81
-    departure_time: 82
-  - station: '78400'
-    arrival_time: 125
-    departure_time: 127
-  - station: '71500'
-    arrival_time: 154
-    departure_time: 156
-  - station: '71801'
-    arrival_time: 192
-    departure_time: 192
-- id: '03161'
-  name: Line 03161
-  corridor: 1
-  stops:
-  - station: '60000'
-    arrival_time: 0
-    departure_time: 0
-  - station: '71801'
-    arrival_time: 150
-    departure_time: 150
-- id: '03163'
-  name: Line 03163
-  corridor: 1
-  stops:
-  - station: '60000'
-    arrival_time: 0
-    departure_time: 0
-  - station: '04040'
-    arrival_time: 75
-    departure_time: 76
-  - station: '71801'
-    arrival_time: 165
-    departure_time: 175
-  - station: '79300'
-    arrival_time: 221
-    departure_time: 223
-  - station: '04307'
-    arrival_time: 238
-    departure_time: 238
-- id: '03171'
-  name: Line 03171
-  corridor: 1
-  stops:
-  - station: '60000'
-    arrival_time: 0
-    departure_time: 0
-  - station: '71801'
-    arrival_time: 150
-    departure_time: 150
-- id: '03173'
-  name: Line 03173
-  corridor: 1
-  stops:
-  - station: '60000'
-    arrival_time: 0
-    departure_time: 0
-  - station: '70200'
-    arrival_time: 23
-    departure_time: 24
-  - station: '04040'
-    arrival_time: 81
-    departure_time: 82
-  - station: '78400'
-    arrival_time: 125
-    departure_time: 127
-  - station: '71500'
-    arrival_time: 154
-    departure_time: 156
-  - station: '71801'
-    arrival_time: 192
-    departure_time: 192
-- id: 03183
-  name: Line 03183
-  corridor: 1
-  stops:
-  - station: '60000'
-    arrival_time: 0
-    departure_time: 0
-  - station: '04040'
-    arrival_time: 75
-    departure_time: 76
-  - station: '71500'
-    arrival_time: 134
-    departure_time: 136
-  - station: '71801'
-    arrival_time: 170
-    departure_time: 170
-- id: 03191
-  name: Line 03191
-  corridor: 1
-  stops:
-  - station: '60000'
-    arrival_time: 0
-    departure_time: 0
-  - station: '71801'
-    arrival_time: 150
-    departure_time: 160
-  - station: '79300'
-    arrival_time: 198
-    departure_time: 200
-  - station: '04307'
-    arrival_time: 215
-    departure_time: 215
 - id: '03201'
   name: Line 03201
   corridor: 1
@@ -10097,13 +9408,7 @@ line:
     departure_time: 121
   - station: '71801'
     arrival_time: 190
-    departure_time: 200
-  - station: '79300'
-    arrival_time: 238
-    departure_time: 240
-  - station: '04307'
-    arrival_time: 255
-    departure_time: 255
+    departure_time: 190
 - id: '03131'
   name: Line 03131
   corridor: 1
@@ -10279,13 +9584,372 @@ line:
     departure_time: 0
   - station: '71801'
     arrival_time: 150
+    departure_time: 150
+- id: '03201'
+  name: Line 03201
+  corridor: 1
+  stops:
+  - station: '60000'
+    arrival_time: 0
+    departure_time: 0
+  - station: '71801'
+    arrival_time: 150
+    departure_time: 150
+- id: '03203'
+  name: Line 03203
+  corridor: 1
+  stops:
+  - station: '60000'
+    arrival_time: 0
+    departure_time: 0
+  - station: '70200'
+    arrival_time: 23
+    departure_time: 24
+  - station: '70600'
+    arrival_time: 60
+    departure_time: 61
+  - station: '04040'
+    arrival_time: 85
+    departure_time: 86
+  - station: '78400'
+    arrival_time: 129
+    departure_time: 131
+  - station: '71500'
+    arrival_time: 158
     departure_time: 160
+  - station: '71801'
+    arrival_time: 195
+    departure_time: 195
+- id: '03211'
+  name: Line 03211
+  corridor: 1
+  stops:
+  - station: '60000'
+    arrival_time: 0
+    departure_time: 0
+  - station: '71801'
+    arrival_time: 150
+    departure_time: 150
+- id: '03063'
+  name: Line 03063
+  corridor: 1
+  stops:
+  - station: '60000'
+    arrival_time: 0
+    departure_time: 0
+  - station: '70600'
+    arrival_time: 55
+    departure_time: 56
+  - station: '04040'
+    arrival_time: 81
+    departure_time: 82
+  - station: '71801'
+    arrival_time: 170
+    departure_time: 170
+- id: '03071'
+  name: Line 03071
+  corridor: 1
+  stops:
+  - station: '60000'
+    arrival_time: 0
+    departure_time: 0
+  - station: '71801'
+    arrival_time: 150
+    departure_time: 150
+- id: '03073'
+  name: Line 03073
+  corridor: 1
+  stops:
+  - station: '60000'
+    arrival_time: 0
+    departure_time: 0
+  - station: '70200'
+    arrival_time: 23
+    departure_time: 24
+  - station: '04040'
+    arrival_time: 81
+    departure_time: 82
+  - station: '78400'
+    arrival_time: 125
+    departure_time: 127
+  - station: '71500'
+    arrival_time: 154
+    departure_time: 156
+  - station: '71801'
+    arrival_time: 192
+    departure_time: 192
+- id: 03081
+  name: Line 03081
+  corridor: 1
+  stops:
+  - station: '60000'
+    arrival_time: 0
+    departure_time: 0
+  - station: '71801'
+    arrival_time: 150
+    departure_time: 150
+- id: 03083
+  name: Line 03083
+  corridor: 1
+  stops:
+  - station: '60000'
+    arrival_time: 0
+    departure_time: 0
+  - station: '04040'
+    arrival_time: 75
+    departure_time: 76
+  - station: '71801'
+    arrival_time: 165
+    departure_time: 165
+- id: 03091
+  name: Line 03091
+  corridor: 1
+  stops:
+  - station: '60000'
+    arrival_time: 0
+    departure_time: 0
+  - station: '71801'
+    arrival_time: 150
+    departure_time: 150
+- id: 03093
+  name: Line 03093
+  corridor: 1
+  stops:
+  - station: '60000'
+    arrival_time: 0
+    departure_time: 0
+  - station: '04040'
+    arrival_time: 75
+    departure_time: 76
+  - station: '78400'
+    arrival_time: 119
+    departure_time: 121
+  - station: '71500'
+    arrival_time: 148
+    departure_time: 150
+  - station: '71801'
+    arrival_time: 187
+    departure_time: 195
   - station: '79300'
-    arrival_time: 198
-    departure_time: 200
+    arrival_time: 233
+    departure_time: 235
   - station: '04307'
-    arrival_time: 215
-    departure_time: 215
+    arrival_time: 250
+    departure_time: 250
+- id: '03113'
+  name: Line 03113
+  corridor: 1
+  stops:
+  - station: '60000'
+    arrival_time: 0
+    departure_time: 0
+  - station: '70600'
+    arrival_time: 55
+    departure_time: 56
+  - station: '04040'
+    arrival_time: 81
+    departure_time: 82
+  - station: '78400'
+    arrival_time: 125
+    departure_time: 127
+  - station: '71500'
+    arrival_time: 154
+    departure_time: 156
+  - station: '71801'
+    arrival_time: 192
+    departure_time: 192
+- id: '03123'
+  name: Line 03123
+  corridor: 1
+  stops:
+  - station: '60000'
+    arrival_time: 0
+    departure_time: 0
+  - station: '04040'
+    arrival_time: 75
+    departure_time: 76
+  - station: '78400'
+    arrival_time: 119
+    departure_time: 121
+  - station: '71801'
+    arrival_time: 190
+    departure_time: 190
+- id: '03131'
+  name: Line 03131
+  corridor: 1
+  stops:
+  - station: '60000'
+    arrival_time: 0
+    departure_time: 0
+  - station: '71801'
+    arrival_time: 150
+    departure_time: 150
+- id: '19725'
+  name: Line 19725
+  corridor: 1
+  stops:
+  - station: '60000'
+    arrival_time: 0
+    departure_time: 0
+  - station: '70200'
+    arrival_time: 23
+    departure_time: 25
+  - station: '04040'
+    arrival_time: 82
+    departure_time: 85
+  - station: '71500'
+    arrival_time: 139
+    departure_time: 141
+  - station: '71801'
+    arrival_time: 177
+    departure_time: 189
+  - station: '79300'
+    arrival_time: 227
+    departure_time: 230
+  - station: '04307'
+    arrival_time: 244
+    departure_time: 244
+- id: '03143'
+  name: Line 03143
+  corridor: 1
+  stops:
+  - station: '60000'
+    arrival_time: 0
+    departure_time: 0
+  - station: '70600'
+    arrival_time: 55
+    departure_time: 56
+  - station: '04040'
+    arrival_time: 81
+    departure_time: 82
+  - station: '71801'
+    arrival_time: 170
+    departure_time: 180
+  - station: '79300'
+    arrival_time: 218
+    departure_time: 220
+  - station: '04307'
+    arrival_time: 235
+    departure_time: 235
+- id: '03151'
+  name: Line 03151
+  corridor: 1
+  stops:
+  - station: '60000'
+    arrival_time: 0
+    departure_time: 0
+  - station: '71801'
+    arrival_time: 149
+    departure_time: 149
+- id: '03153'
+  name: Line 03153
+  corridor: 1
+  stops:
+  - station: '60000'
+    arrival_time: 0
+    departure_time: 0
+  - station: '70600'
+    arrival_time: 55
+    departure_time: 56
+  - station: '04040'
+    arrival_time: 81
+    departure_time: 82
+  - station: '78400'
+    arrival_time: 125
+    departure_time: 127
+  - station: '71500'
+    arrival_time: 154
+    departure_time: 156
+  - station: '71801'
+    arrival_time: 192
+    departure_time: 192
+- id: '03161'
+  name: Line 03161
+  corridor: 1
+  stops:
+  - station: '60000'
+    arrival_time: 0
+    departure_time: 0
+  - station: '71801'
+    arrival_time: 150
+    departure_time: 150
+- id: '03163'
+  name: Line 03163
+  corridor: 1
+  stops:
+  - station: '60000'
+    arrival_time: 0
+    departure_time: 0
+  - station: '04040'
+    arrival_time: 75
+    departure_time: 76
+  - station: '71801'
+    arrival_time: 165
+    departure_time: 175
+  - station: '79300'
+    arrival_time: 221
+    departure_time: 223
+  - station: '04307'
+    arrival_time: 238
+    departure_time: 238
+- id: '03171'
+  name: Line 03171
+  corridor: 1
+  stops:
+  - station: '60000'
+    arrival_time: 0
+    departure_time: 0
+  - station: '71801'
+    arrival_time: 150
+    departure_time: 150
+- id: '03173'
+  name: Line 03173
+  corridor: 1
+  stops:
+  - station: '60000'
+    arrival_time: 0
+    departure_time: 0
+  - station: '70200'
+    arrival_time: 23
+    departure_time: 24
+  - station: '04040'
+    arrival_time: 81
+    departure_time: 82
+  - station: '78400'
+    arrival_time: 125
+    departure_time: 127
+  - station: '71500'
+    arrival_time: 154
+    departure_time: 156
+  - station: '71801'
+    arrival_time: 192
+    departure_time: 192
+- id: 03183
+  name: Line 03183
+  corridor: 1
+  stops:
+  - station: '60000'
+    arrival_time: 0
+    departure_time: 0
+  - station: '04040'
+    arrival_time: 75
+    departure_time: 76
+  - station: '71500'
+    arrival_time: 134
+    departure_time: 136
+  - station: '71801'
+    arrival_time: 170
+    departure_time: 170
+- id: 03191
+  name: Line 03191
+  corridor: 1
+  stops:
+  - station: '60000'
+    arrival_time: 0
+    departure_time: 0
+  - station: '71801'
+    arrival_time: 150
+    departure_time: 150
 - id: '03201'
   name: Line 03201
   corridor: 1
@@ -10461,13 +10125,7 @@ line:
     departure_time: 121
   - station: '71801'
     arrival_time: 190
-    departure_time: 200
-  - station: '79300'
-    arrival_time: 238
-    departure_time: 240
-  - station: '04307'
-    arrival_time: 255
-    departure_time: 255
+    departure_time: 190
 - id: '19725'
   name: Line 19725
   corridor: 1
@@ -10633,13 +10291,7 @@ line:
     departure_time: 0
   - station: '71801'
     arrival_time: 150
-    departure_time: 160
-  - station: '79300'
-    arrival_time: 198
-    departure_time: 200
-  - station: '04307'
-    arrival_time: 215
-    departure_time: 215
+    departure_time: 150
 - id: '03201'
   name: Line 03201
   corridor: 1
@@ -10700,74 +10352,74 @@ trainServiceProvider:
   - 1
 timeSlot:
 - id: 39010
-  start: '6:30'
-  end: '6:40'
+  start: '6:30:00'
+  end: '6:40:00'
 - id: 42010
-  start: '7:00'
-  end: '7:10'
+  start: '7:00:00'
+  end: '7:10:00'
 - id: 45010
-  start: '7:30'
-  end: '7:40'
+  start: '7:30:00'
+  end: '7:40:00'
 - id: 48010
-  start: '8:00'
-  end: '8:10'
+  start: '8:00:00'
+  end: '8:10:00'
 - id: 51010
-  start: '8:30'
-  end: '8:40'
+  start: '8:30:00'
+  end: '8:40:00'
 - id: 54010
-  start: '9:00'
-  end: '9:10'
+  start: '9:00:00'
+  end: '9:10:00'
 - id: 57010
-  start: '9:30'
-  end: '9:40'
+  start: '9:30:00'
+  end: '9:40:00'
 - id: 69010
-  start: '11:30'
-  end: '11:40'
+  start: '11:30:00'
+  end: '11:40:00'
 - id: 75010
-  start: '12:30'
-  end: '12:40'
+  start: '12:30:00'
+  end: '12:40:00'
 - id: 78010
-  start: '13:00'
-  end: '13:10'
+  start: '13:00:00'
+  end: '13:10:00'
 - id: 80510
-  start: '13:25'
-  end: '13:35'
+  start: '13:25:00'
+  end: '13:35:00'
 - id: 87010
-  start: '14:30'
-  end: '14:40'
+  start: '14:30:00'
+  end: '14:40:00'
 - id: 90010
-  start: '15:00'
-  end: '15:10'
+  start: '15:00:00'
+  end: '15:10:00'
 - id: 93010
-  start: '15:30'
-  end: '15:40'
+  start: '15:30:00'
+  end: '15:40:00'
 - id: 96010
-  start: '16:00'
-  end: '16:10'
+  start: '16:00:00'
+  end: '16:10:00'
 - id: 99010
-  start: '16:30'
-  end: '16:40'
+  start: '16:30:00'
+  end: '16:40:00'
 - id: 102010
-  start: '17:00'
-  end: '17:10'
+  start: '17:00:00'
+  end: '17:10:00'
 - id: 105010
-  start: '17:30'
-  end: '17:40'
+  start: '17:30:00'
+  end: '17:40:00'
 - id: 111010
-  start: '18:30'
-  end: '18:40'
+  start: '18:30:00'
+  end: '18:40:00'
 - id: 114010
-  start: '19:00'
-  end: '19:10'
+  start: '19:00:00'
+  end: '19:10:00'
 - id: 120010
-  start: '20:00'
-  end: '20:10'
+  start: '20:00:00'
+  end: '20:10:00'
 - id: 124010
-  start: '20:40'
-  end: '20:50'
+  start: '20:40:00'
+  end: '20:50:00'
 - id: 127010
-  start: '21:10'
-  end: '21:20'
+  start: '21:10:00'
+  end: '21:20:00'
 service:
 - id: 03063_01-03-2023-06.30
   date: '2023-03-01'
@@ -11434,24 +11086,6 @@ service:
       price: 48.73
     - seat: 3
       price: 68.14
-  - origin: '60000'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 42.25
-    - seat: 2
-      price: 52.79
-    - seat: 3
-      price: 73.82
-  - origin: '60000'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 45.5
-    - seat: 2
-      price: 56.85
-    - seat: 3
-      price: 79.5
   - origin: '04040'
     destination: '78400'
     seats:
@@ -11470,24 +11104,6 @@ service:
       price: 36.55
     - seat: 3
       price: 51.11
-  - origin: '04040'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 32.5
-    - seat: 2
-      price: 40.61
-    - seat: 3
-      price: 56.79
-  - origin: '04040'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 35.75
-    - seat: 2
-      price: 44.67
-    - seat: 3
-      price: 62.46
   - origin: '78400'
     destination: '71801'
     seats:
@@ -11497,51 +11113,6 @@ service:
       price: 32.49
     - seat: 3
       price: 45.43
-  - origin: '78400'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 29.25
-    - seat: 2
-      price: 36.55
-    - seat: 3
-      price: 51.11
-  - origin: '78400'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 32.5
-    - seat: 2
-      price: 40.61
-    - seat: 3
-      price: 56.79
-  - origin: '71801'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 22.75
-    - seat: 2
-      price: 28.42
-    - seat: 3
-      price: 39.75
-  - origin: '71801'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 26.0
-    - seat: 2
-      price: 32.49
-    - seat: 3
-      price: 45.43
-  - origin: '79300'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 22.75
-    - seat: 2
-      price: 28.42
-    - seat: 3
-      price: 39.75
   type_of_capacity: Train
 - id: 03131_01-03-2023-13.00
   date: '2023-03-01'
@@ -12413,51 +11984,6 @@ service:
       price: 91.8
     - seat: 3
       price: 108.09
-  - origin: '60000'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 87.24
-    - seat: 2
-      price: 99.45
-    - seat: 3
-      price: 117.09
-  - origin: '60000'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 93.95
-    - seat: 2
-      price: 107.1
-    - seat: 3
-      price: 126.1
-  - origin: '71801'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 46.98
-    - seat: 2
-      price: 53.55
-    - seat: 3
-      price: 63.05
-  - origin: '71801'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 53.69
-    - seat: 2
-      price: 61.2
-    - seat: 3
-      price: 72.06
-  - origin: '79300'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 46.98
-    - seat: 2
-      price: 53.55
-    - seat: 3
-      price: 63.05
   type_of_capacity: Train
 - id: 03201_01-03-2023-20.00
   date: '2023-03-01'
@@ -13355,24 +12881,6 @@ service:
       price: 58.33
     - seat: 3
       price: 74.61
-  - origin: '60000'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 52.79
-    - seat: 2
-      price: 63.19
-    - seat: 3
-      price: 80.83
-  - origin: '60000'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 56.85
-    - seat: 2
-      price: 68.05
-    - seat: 3
-      price: 87.05
   - origin: '04040'
     destination: '78400'
     seats:
@@ -13391,24 +12899,6 @@ service:
       price: 43.75
     - seat: 3
       price: 55.96
-  - origin: '04040'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 40.61
-    - seat: 2
-      price: 48.61
-    - seat: 3
-      price: 62.18
-  - origin: '04040'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 44.67
-    - seat: 2
-      price: 53.47
-    - seat: 3
-      price: 68.4
   - origin: '78400'
     destination: '71801'
     seats:
@@ -13418,51 +12908,6 @@ service:
       price: 38.89
     - seat: 3
       price: 49.74
-  - origin: '78400'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 36.55
-    - seat: 2
-      price: 43.75
-    - seat: 3
-      price: 55.96
-  - origin: '78400'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 40.61
-    - seat: 2
-      price: 48.61
-    - seat: 3
-      price: 62.18
-  - origin: '71801'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 28.42
-    - seat: 2
-      price: 34.02
-    - seat: 3
-      price: 43.52
-  - origin: '71801'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 32.49
-    - seat: 2
-      price: 38.89
-    - seat: 3
-      price: 49.74
-  - origin: '79300'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 28.42
-    - seat: 2
-      price: 34.02
-    - seat: 3
-      price: 43.52
   type_of_capacity: Train
 - id: 03131_02-03-2023-13.00
   date: '2023-03-02'
@@ -14334,51 +13779,6 @@ service:
       price: 92.01
     - seat: 3
       price: 123.39
-  - origin: '60000'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 87.24
-    - seat: 2
-      price: 99.68
-    - seat: 3
-      price: 133.67
-  - origin: '60000'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 93.95
-    - seat: 2
-      price: 107.35
-    - seat: 3
-      price: 143.95
-  - origin: '71801'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 46.98
-    - seat: 2
-      price: 53.68
-    - seat: 3
-      price: 71.97
-  - origin: '71801'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 53.69
-    - seat: 2
-      price: 61.34
-    - seat: 3
-      price: 82.26
-  - origin: '79300'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 46.98
-    - seat: 2
-      price: 53.68
-    - seat: 3
-      price: 71.97
   type_of_capacity: Train
 - id: 03201_02-03-2023-20.00
   date: '2023-03-02'
@@ -15044,24 +14444,6 @@ service:
       price: 68.23
     - seat: 3
       price: 94.07
-  - origin: '60000'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 63.33
-    - seat: 2
-      price: 73.91
-    - seat: 3
-      price: 101.91
-  - origin: '60000'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 68.2
-    - seat: 2
-      price: 79.6
-    - seat: 3
-      price: 109.75
   - origin: '04040'
     destination: '78400'
     seats:
@@ -15080,24 +14462,6 @@ service:
       price: 51.17
     - seat: 3
       price: 70.55
-  - origin: '04040'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 48.71
-    - seat: 2
-      price: 56.86
-    - seat: 3
-      price: 78.39
-  - origin: '04040'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 53.59
-    - seat: 2
-      price: 62.54
-    - seat: 3
-      price: 86.23
   - origin: '78400'
     destination: '71801'
     seats:
@@ -15107,51 +14471,6 @@ service:
       price: 45.49
     - seat: 3
       price: 62.71
-  - origin: '78400'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 43.84
-    - seat: 2
-      price: 51.17
-    - seat: 3
-      price: 70.55
-  - origin: '78400'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 48.71
-    - seat: 2
-      price: 56.86
-    - seat: 3
-      price: 78.39
-  - origin: '71801'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 34.1
-    - seat: 2
-      price: 39.8
-    - seat: 3
-      price: 54.88
-  - origin: '71801'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 38.97
-    - seat: 2
-      price: 45.49
-    - seat: 3
-      price: 62.71
-  - origin: '79300'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 34.1
-    - seat: 2
-      price: 39.8
-    - seat: 3
-      price: 54.88
   type_of_capacity: Train
 - id: 19725_03-03-2023-13.25
   date: '2023-03-03'
@@ -16006,51 +15325,6 @@ service:
       price: 40.24
     - seat: 3
       price: 138.69
-  - origin: '60000'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 31.15
-    - seat: 2
-      price: 43.6
-    - seat: 3
-      price: 150.24
-  - origin: '60000'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 33.55
-    - seat: 2
-      price: 46.95
-    - seat: 3
-      price: 161.8
-  - origin: '71801'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 16.77
-    - seat: 2
-      price: 23.48
-    - seat: 3
-      price: 80.9
-  - origin: '71801'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 19.17
-    - seat: 2
-      price: 26.83
-    - seat: 3
-      price: 92.46
-  - origin: '79300'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 16.77
-    - seat: 2
-      price: 23.48
-    - seat: 3
-      price: 80.9
   type_of_capacity: Train
 - id: 03201_03-03-2023-20.00
   date: '2023-03-03'
@@ -16852,24 +16126,6 @@ service:
       price: 48.73
     - seat: 3
       price: 81.09
-  - origin: '60000'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 42.25
-    - seat: 2
-      price: 52.79
-    - seat: 3
-      price: 87.84
-  - origin: '60000'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 45.5
-    - seat: 2
-      price: 56.85
-    - seat: 3
-      price: 94.6
   - origin: '04040'
     destination: '78400'
     seats:
@@ -16888,24 +16144,6 @@ service:
       price: 36.55
     - seat: 3
       price: 60.81
-  - origin: '04040'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 32.5
-    - seat: 2
-      price: 40.61
-    - seat: 3
-      price: 67.57
-  - origin: '04040'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 35.75
-    - seat: 2
-      price: 44.67
-    - seat: 3
-      price: 74.33
   - origin: '78400'
     destination: '71801'
     seats:
@@ -16915,51 +16153,6 @@ service:
       price: 32.49
     - seat: 3
       price: 54.06
-  - origin: '78400'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 29.25
-    - seat: 2
-      price: 36.55
-    - seat: 3
-      price: 60.81
-  - origin: '78400'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 32.5
-    - seat: 2
-      price: 40.61
-    - seat: 3
-      price: 67.57
-  - origin: '71801'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 22.75
-    - seat: 2
-      price: 28.42
-    - seat: 3
-      price: 47.3
-  - origin: '71801'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 26.0
-    - seat: 2
-      price: 32.49
-    - seat: 3
-      price: 54.06
-  - origin: '79300'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 22.75
-    - seat: 2
-      price: 28.42
-    - seat: 3
-      price: 47.3
   type_of_capacity: Train
 - id: 19725_04-03-2023-13.25
   date: '2023-03-04'
@@ -18210,24 +17403,6 @@ service:
       price: 87.73
     - seat: 3
       price: 120.0
-  - origin: '60000'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 84.45
-    - seat: 2
-      price: 95.04
-    - seat: 3
-      price: 130.0
-  - origin: '60000'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 90.95
-    - seat: 2
-      price: 102.35
-    - seat: 3
-      price: 140.0
   - origin: '04040'
     destination: '78400'
     seats:
@@ -18246,24 +17421,6 @@ service:
       price: 65.8
     - seat: 3
       price: 90.0
-  - origin: '04040'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 64.96
-    - seat: 2
-      price: 73.11
-    - seat: 3
-      price: 100.0
-  - origin: '04040'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 71.46
-    - seat: 2
-      price: 80.42
-    - seat: 3
-      price: 110.0
   - origin: '78400'
     destination: '71801'
     seats:
@@ -18273,51 +17430,6 @@ service:
       price: 58.49
     - seat: 3
       price: 80.0
-  - origin: '78400'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 58.47
-    - seat: 2
-      price: 65.8
-    - seat: 3
-      price: 90.0
-  - origin: '78400'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 64.96
-    - seat: 2
-      price: 73.11
-    - seat: 3
-      price: 100.0
-  - origin: '71801'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 45.48
-    - seat: 2
-      price: 51.18
-    - seat: 3
-      price: 70.0
-  - origin: '71801'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 51.97
-    - seat: 2
-      price: 58.49
-    - seat: 3
-      price: 80.0
-  - origin: '79300'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 45.48
-    - seat: 2
-      price: 51.18
-    - seat: 3
-      price: 70.0
   type_of_capacity: Train
 - id: 03131_05-03-2023-13.00
   date: '2023-03-05'
@@ -19029,51 +18141,6 @@ service:
       price: 103.54
     - seat: 3
       price: 153.99
-  - origin: '60000'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 99.68
-    - seat: 2
-      price: 112.17
-    - seat: 3
-      price: 166.82
-  - origin: '60000'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 107.35
-    - seat: 2
-      price: 120.8
-    - seat: 3
-      price: 179.65
-  - origin: '71801'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 53.68
-    - seat: 2
-      price: 60.4
-    - seat: 3
-      price: 89.82
-  - origin: '71801'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 61.34
-    - seat: 2
-      price: 69.03
-    - seat: 3
-      price: 102.66
-  - origin: '79300'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 53.68
-    - seat: 2
-      price: 60.4
-    - seat: 3
-      price: 89.82
   type_of_capacity: Train
 - id: 03201_05-03-2023-20.00
   date: '2023-03-05'
@@ -19954,24 +19021,6 @@ service:
       price: 68.23
     - seat: 3
       price: 94.07
-  - origin: '60000'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 63.33
-    - seat: 2
-      price: 73.91
-    - seat: 3
-      price: 101.91
-  - origin: '60000'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 68.2
-    - seat: 2
-      price: 79.6
-    - seat: 3
-      price: 109.75
   - origin: '04040'
     destination: '78400'
     seats:
@@ -19990,24 +19039,6 @@ service:
       price: 51.17
     - seat: 3
       price: 70.55
-  - origin: '04040'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 48.71
-    - seat: 2
-      price: 56.86
-    - seat: 3
-      price: 78.39
-  - origin: '04040'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 53.59
-    - seat: 2
-      price: 62.54
-    - seat: 3
-      price: 86.23
   - origin: '78400'
     destination: '71801'
     seats:
@@ -20017,51 +19048,6 @@ service:
       price: 45.49
     - seat: 3
       price: 62.71
-  - origin: '78400'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 43.84
-    - seat: 2
-      price: 51.17
-    - seat: 3
-      price: 70.55
-  - origin: '78400'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 48.71
-    - seat: 2
-      price: 56.86
-    - seat: 3
-      price: 78.39
-  - origin: '71801'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 34.1
-    - seat: 2
-      price: 39.8
-    - seat: 3
-      price: 54.88
-  - origin: '71801'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 38.97
-    - seat: 2
-      price: 45.49
-    - seat: 3
-      price: 62.71
-  - origin: '79300'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 34.1
-    - seat: 2
-      price: 39.8
-    - seat: 3
-      price: 54.88
   type_of_capacity: Train
 - id: 03131_06-03-2023-13.00
   date: '2023-03-06'
@@ -20933,51 +19919,6 @@ service:
       price: 57.51
     - seat: 3
       price: 77.49
-  - origin: '60000'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 49.86
-    - seat: 2
-      price: 62.31
-    - seat: 3
-      price: 83.94
-  - origin: '60000'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 53.7
-    - seat: 2
-      price: 67.1
-    - seat: 3
-      price: 90.4
-  - origin: '71801'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 26.85
-    - seat: 2
-      price: 33.55
-    - seat: 3
-      price: 45.2
-  - origin: '71801'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 30.69
-    - seat: 2
-      price: 38.34
-    - seat: 3
-      price: 51.66
-  - origin: '79300'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 26.85
-    - seat: 2
-      price: 33.55
-    - seat: 3
-      price: 45.2
   type_of_capacity: Train
 - id: 03201_06-03-2023-20.00
   date: '2023-03-06'
@@ -21875,24 +20816,6 @@ service:
       price: 39.0
     - seat: 3
       price: 74.61
-  - origin: '60000'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 31.66
-    - seat: 2
-      price: 42.25
-    - seat: 3
-      price: 80.83
-  - origin: '60000'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 34.1
-    - seat: 2
-      price: 45.5
-    - seat: 3
-      price: 87.05
   - origin: '04040'
     destination: '78400'
     seats:
@@ -21911,24 +20834,6 @@ service:
       price: 29.25
     - seat: 3
       price: 55.96
-  - origin: '04040'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 24.36
-    - seat: 2
-      price: 32.5
-    - seat: 3
-      price: 62.18
-  - origin: '04040'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 26.79
-    - seat: 2
-      price: 35.75
-    - seat: 3
-      price: 68.4
   - origin: '78400'
     destination: '71801'
     seats:
@@ -21938,51 +20843,6 @@ service:
       price: 26.0
     - seat: 3
       price: 49.74
-  - origin: '78400'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 21.92
-    - seat: 2
-      price: 29.25
-    - seat: 3
-      price: 55.96
-  - origin: '78400'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 24.36
-    - seat: 2
-      price: 32.5
-    - seat: 3
-      price: 62.18
-  - origin: '71801'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 17.05
-    - seat: 2
-      price: 22.75
-    - seat: 3
-      price: 43.52
-  - origin: '71801'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 19.49
-    - seat: 2
-      price: 26.0
-    - seat: 3
-      price: 49.74
-  - origin: '79300'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 17.05
-    - seat: 2
-      price: 22.75
-    - seat: 3
-      price: 43.52
   type_of_capacity: Train
 - id: 03131_07-03-2023-13.00
   date: '2023-03-07'
@@ -22854,51 +21714,6 @@ service:
       price: 68.83
     - seat: 3
       price: 85.11
-  - origin: '60000'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 62.31
-    - seat: 2
-      price: 74.56
-    - seat: 3
-      price: 92.21
-  - origin: '60000'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 67.1
-    - seat: 2
-      price: 80.3
-    - seat: 3
-      price: 99.3
-  - origin: '71801'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 33.55
-    - seat: 2
-      price: 40.15
-    - seat: 3
-      price: 49.65
-  - origin: '71801'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 38.34
-    - seat: 2
-      price: 45.89
-    - seat: 3
-      price: 56.74
-  - origin: '79300'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 33.55
-    - seat: 2
-      price: 40.15
-    - seat: 3
-      price: 49.65
   type_of_capacity: Train
 - id: 03201_07-03-2023-20.00
   date: '2023-03-07'
@@ -23796,24 +22611,6 @@ service:
       price: 48.73
     - seat: 3
       price: 68.14
-  - origin: '60000'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 42.25
-    - seat: 2
-      price: 52.79
-    - seat: 3
-      price: 73.82
-  - origin: '60000'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 45.5
-    - seat: 2
-      price: 56.85
-    - seat: 3
-      price: 79.5
   - origin: '04040'
     destination: '78400'
     seats:
@@ -23832,24 +22629,6 @@ service:
       price: 36.55
     - seat: 3
       price: 51.11
-  - origin: '04040'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 32.5
-    - seat: 2
-      price: 40.61
-    - seat: 3
-      price: 56.79
-  - origin: '04040'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 35.75
-    - seat: 2
-      price: 44.67
-    - seat: 3
-      price: 62.46
   - origin: '78400'
     destination: '71801'
     seats:
@@ -23859,51 +22638,6 @@ service:
       price: 32.49
     - seat: 3
       price: 45.43
-  - origin: '78400'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 29.25
-    - seat: 2
-      price: 36.55
-    - seat: 3
-      price: 51.11
-  - origin: '78400'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 32.5
-    - seat: 2
-      price: 40.61
-    - seat: 3
-      price: 56.79
-  - origin: '71801'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 22.75
-    - seat: 2
-      price: 28.42
-    - seat: 3
-      price: 39.75
-  - origin: '71801'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 26.0
-    - seat: 2
-      price: 32.49
-    - seat: 3
-      price: 45.43
-  - origin: '79300'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 22.75
-    - seat: 2
-      price: 28.42
-    - seat: 3
-      price: 39.75
   type_of_capacity: Train
 - id: 03131_08-03-2023-13.00
   date: '2023-03-08'
@@ -24775,51 +23509,6 @@ service:
       price: 80.53
     - seat: 3
       price: 108.09
-  - origin: '60000'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 74.75
-    - seat: 2
-      price: 87.24
-    - seat: 3
-      price: 117.09
-  - origin: '60000'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 80.5
-    - seat: 2
-      price: 93.95
-    - seat: 3
-      price: 126.1
-  - origin: '71801'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 40.25
-    - seat: 2
-      price: 46.98
-    - seat: 3
-      price: 63.05
-  - origin: '71801'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 46.0
-    - seat: 2
-      price: 53.69
-    - seat: 3
-      price: 72.06
-  - origin: '79300'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 40.25
-    - seat: 2
-      price: 46.98
-    - seat: 3
-      price: 63.05
   type_of_capacity: Train
 - id: 03201_08-03-2023-20.00
   date: '2023-03-08'
@@ -25717,24 +24406,6 @@ service:
       price: 51.86
     - seat: 3
       price: 68.14
-  - origin: '60000'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 52.79
-    - seat: 2
-      price: 56.18
-    - seat: 3
-      price: 73.82
-  - origin: '60000'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 56.85
-    - seat: 2
-      price: 60.5
-    - seat: 3
-      price: 79.5
   - origin: '04040'
     destination: '78400'
     seats:
@@ -25753,24 +24424,6 @@ service:
       price: 38.89
     - seat: 3
       price: 51.11
-  - origin: '04040'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 40.61
-    - seat: 2
-      price: 43.21
-    - seat: 3
-      price: 56.79
-  - origin: '04040'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 44.67
-    - seat: 2
-      price: 47.54
-    - seat: 3
-      price: 62.46
   - origin: '78400'
     destination: '71801'
     seats:
@@ -25780,51 +24433,6 @@ service:
       price: 34.57
     - seat: 3
       price: 45.43
-  - origin: '78400'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 36.55
-    - seat: 2
-      price: 38.89
-    - seat: 3
-      price: 51.11
-  - origin: '78400'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 40.61
-    - seat: 2
-      price: 43.21
-    - seat: 3
-      price: 56.79
-  - origin: '71801'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 28.42
-    - seat: 2
-      price: 30.25
-    - seat: 3
-      price: 39.75
-  - origin: '71801'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 32.49
-    - seat: 2
-      price: 34.57
-    - seat: 3
-      price: 45.43
-  - origin: '79300'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 28.42
-    - seat: 2
-      price: 30.25
-    - seat: 3
-      price: 39.75
   type_of_capacity: Train
 - id: 03131_09-03-2023-13.00
   date: '2023-03-09'
@@ -26696,51 +25304,6 @@ service:
       price: 92.01
     - seat: 3
       price: 123.39
-  - origin: '60000'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 87.24
-    - seat: 2
-      price: 99.68
-    - seat: 3
-      price: 133.67
-  - origin: '60000'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 93.95
-    - seat: 2
-      price: 107.35
-    - seat: 3
-      price: 143.95
-  - origin: '71801'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 46.98
-    - seat: 2
-      price: 53.68
-    - seat: 3
-      price: 71.97
-  - origin: '71801'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 53.69
-    - seat: 2
-      price: 61.34
-    - seat: 3
-      price: 82.26
-  - origin: '79300'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 46.98
-    - seat: 2
-      price: 53.68
-    - seat: 3
-      price: 71.97
   type_of_capacity: Train
 - id: 03201_09-03-2023-20.00
   date: '2023-03-09'
@@ -27603,24 +26166,6 @@ service:
       price: 68.23
     - seat: 3
       price: 94.07
-  - origin: '60000'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 63.33
-    - seat: 2
-      price: 73.91
-    - seat: 3
-      price: 101.91
-  - origin: '60000'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 68.2
-    - seat: 2
-      price: 79.6
-    - seat: 3
-      price: 109.75
   - origin: '04040'
     destination: '78400'
     seats:
@@ -27639,24 +26184,6 @@ service:
       price: 51.17
     - seat: 3
       price: 70.55
-  - origin: '04040'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 48.71
-    - seat: 2
-      price: 56.86
-    - seat: 3
-      price: 78.39
-  - origin: '04040'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 53.59
-    - seat: 2
-      price: 62.54
-    - seat: 3
-      price: 86.23
   - origin: '78400'
     destination: '71801'
     seats:
@@ -27666,51 +26193,6 @@ service:
       price: 45.49
     - seat: 3
       price: 62.71
-  - origin: '78400'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 43.84
-    - seat: 2
-      price: 51.17
-    - seat: 3
-      price: 70.55
-  - origin: '78400'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 48.71
-    - seat: 2
-      price: 56.86
-    - seat: 3
-      price: 78.39
-  - origin: '71801'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 34.1
-    - seat: 2
-      price: 39.8
-    - seat: 3
-      price: 54.88
-  - origin: '71801'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 38.97
-    - seat: 2
-      price: 45.49
-    - seat: 3
-      price: 62.71
-  - origin: '79300'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 34.1
-    - seat: 2
-      price: 39.8
-    - seat: 3
-      price: 54.88
   type_of_capacity: Train
 - id: 19725_10-03-2023-13.25
   date: '2023-03-10'
@@ -28565,51 +27047,6 @@ service:
       price: 28.76
     - seat: 3
       price: 123.39
-  - origin: '60000'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 18.71
-    - seat: 2
-      price: 31.15
-    - seat: 3
-      price: 133.67
-  - origin: '60000'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 20.15
-    - seat: 2
-      price: 33.55
-    - seat: 3
-      price: 143.95
-  - origin: '71801'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 10.07
-    - seat: 2
-      price: 16.77
-    - seat: 3
-      price: 71.97
-  - origin: '71801'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 11.51
-    - seat: 2
-      price: 19.17
-    - seat: 3
-      price: 82.26
-  - origin: '79300'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 10.07
-    - seat: 2
-      price: 16.77
-    - seat: 3
-      price: 71.97
   type_of_capacity: Train
 - id: 03201_10-03-2023-20.00
   date: '2023-03-10'
@@ -29411,24 +27848,6 @@ service:
       price: 48.73
     - seat: 3
       price: 74.61
-  - origin: '60000'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 42.25
-    - seat: 2
-      price: 52.79
-    - seat: 3
-      price: 80.83
-  - origin: '60000'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 45.5
-    - seat: 2
-      price: 56.85
-    - seat: 3
-      price: 87.05
   - origin: '04040'
     destination: '78400'
     seats:
@@ -29447,24 +27866,6 @@ service:
       price: 36.55
     - seat: 3
       price: 55.96
-  - origin: '04040'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 32.5
-    - seat: 2
-      price: 40.61
-    - seat: 3
-      price: 62.18
-  - origin: '04040'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 35.75
-    - seat: 2
-      price: 44.67
-    - seat: 3
-      price: 68.4
   - origin: '78400'
     destination: '71801'
     seats:
@@ -29474,51 +27875,6 @@ service:
       price: 32.49
     - seat: 3
       price: 49.74
-  - origin: '78400'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 29.25
-    - seat: 2
-      price: 36.55
-    - seat: 3
-      price: 55.96
-  - origin: '78400'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 32.5
-    - seat: 2
-      price: 40.61
-    - seat: 3
-      price: 62.18
-  - origin: '71801'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 22.75
-    - seat: 2
-      price: 28.42
-    - seat: 3
-      price: 43.52
-  - origin: '71801'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 26.0
-    - seat: 2
-      price: 32.49
-    - seat: 3
-      price: 49.74
-  - origin: '79300'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 22.75
-    - seat: 2
-      price: 28.42
-    - seat: 3
-      price: 43.52
   type_of_capacity: Train
 - id: 19725_11-03-2023-13.25
   date: '2023-03-11'
@@ -30912,24 +29268,6 @@ service:
       price: 77.96
     - seat: 3
       price: 107.01
-  - origin: '60000'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 73.91
-    - seat: 2
-      price: 84.45
-    - seat: 3
-      price: 115.93
-  - origin: '60000'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 79.6
-    - seat: 2
-      price: 90.95
-    - seat: 3
-      price: 124.85
   - origin: '04040'
     destination: '78400'
     seats:
@@ -30948,24 +29286,6 @@ service:
       price: 58.47
     - seat: 3
       price: 80.26
-  - origin: '04040'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 56.86
-    - seat: 2
-      price: 64.96
-    - seat: 3
-      price: 89.18
-  - origin: '04040'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 62.54
-    - seat: 2
-      price: 71.46
-    - seat: 3
-      price: 98.1
   - origin: '78400'
     destination: '71801'
     seats:
@@ -30975,51 +29295,6 @@ service:
       price: 51.97
     - seat: 3
       price: 71.34
-  - origin: '78400'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 51.17
-    - seat: 2
-      price: 58.47
-    - seat: 3
-      price: 80.26
-  - origin: '78400'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 56.86
-    - seat: 2
-      price: 64.96
-    - seat: 3
-      price: 89.18
-  - origin: '71801'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 39.8
-    - seat: 2
-      price: 45.48
-    - seat: 3
-      price: 62.42
-  - origin: '71801'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 45.49
-    - seat: 2
-      price: 51.97
-    - seat: 3
-      price: 71.34
-  - origin: '79300'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 39.8
-    - seat: 2
-      price: 45.48
-    - seat: 3
-      price: 62.42
   type_of_capacity: Train
 - id: 03131_12-03-2023-13.00
   date: '2023-03-12'
@@ -31731,51 +30006,6 @@ service:
       price: 103.54
     - seat: 3
       price: 138.69
-  - origin: '60000'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 99.68
-    - seat: 2
-      price: 112.17
-    - seat: 3
-      price: 150.24
-  - origin: '60000'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 107.35
-    - seat: 2
-      price: 120.8
-    - seat: 3
-      price: 161.8
-  - origin: '71801'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 53.68
-    - seat: 2
-      price: 60.4
-    - seat: 3
-      price: 80.9
-  - origin: '71801'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 61.34
-    - seat: 2
-      price: 69.03
-    - seat: 3
-      price: 92.46
-  - origin: '79300'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 53.68
-    - seat: 2
-      price: 60.4
-    - seat: 3
-      price: 80.9
   type_of_capacity: Train
 - id: 03201_12-03-2023-20.00
   date: '2023-03-12'
@@ -32656,24 +30886,6 @@ service:
       price: 58.46
     - seat: 3
       price: 81.09
-  - origin: '60000'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 52.79
-    - seat: 2
-      price: 63.33
-    - seat: 3
-      price: 87.84
-  - origin: '60000'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 56.85
-    - seat: 2
-      price: 68.2
-    - seat: 3
-      price: 94.6
   - origin: '04040'
     destination: '78400'
     seats:
@@ -32692,24 +30904,6 @@ service:
       price: 43.84
     - seat: 3
       price: 60.81
-  - origin: '04040'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 40.61
-    - seat: 2
-      price: 48.71
-    - seat: 3
-      price: 67.57
-  - origin: '04040'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 44.67
-    - seat: 2
-      price: 53.59
-    - seat: 3
-      price: 74.33
   - origin: '78400'
     destination: '71801'
     seats:
@@ -32719,51 +30913,6 @@ service:
       price: 38.97
     - seat: 3
       price: 54.06
-  - origin: '78400'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 36.55
-    - seat: 2
-      price: 43.84
-    - seat: 3
-      price: 60.81
-  - origin: '78400'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 40.61
-    - seat: 2
-      price: 48.71
-    - seat: 3
-      price: 67.57
-  - origin: '71801'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 28.42
-    - seat: 2
-      price: 34.1
-    - seat: 3
-      price: 47.3
-  - origin: '71801'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 32.49
-    - seat: 2
-      price: 38.97
-    - seat: 3
-      price: 54.06
-  - origin: '79300'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 28.42
-    - seat: 2
-      price: 34.1
-    - seat: 3
-      price: 47.3
   type_of_capacity: Train
 - id: 03131_13-03-2023-13.00
   date: '2023-03-13'
@@ -33635,51 +31784,6 @@ service:
       price: 57.51
     - seat: 3
       price: 77.49
-  - origin: '60000'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 49.86
-    - seat: 2
-      price: 62.31
-    - seat: 3
-      price: 83.94
-  - origin: '60000'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 53.7
-    - seat: 2
-      price: 67.1
-    - seat: 3
-      price: 90.4
-  - origin: '71801'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 26.85
-    - seat: 2
-      price: 33.55
-    - seat: 3
-      price: 45.2
-  - origin: '71801'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 30.69
-    - seat: 2
-      price: 38.34
-    - seat: 3
-      price: 51.66
-  - origin: '79300'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 26.85
-    - seat: 2
-      price: 33.55
-    - seat: 3
-      price: 45.2
   type_of_capacity: Train
 - id: 03201_13-03-2023-20.00
   date: '2023-03-13'
@@ -34577,24 +32681,6 @@ service:
       price: 43.84
     - seat: 3
       price: 61.67
-  - origin: '60000'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 36.96
-    - seat: 2
-      price: 47.5
-    - seat: 3
-      price: 66.81
-  - origin: '60000'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 39.8
-    - seat: 2
-      price: 51.15
-    - seat: 3
-      price: 71.95
   - origin: '04040'
     destination: '78400'
     seats:
@@ -34613,24 +32699,6 @@ service:
       price: 32.88
     - seat: 3
       price: 46.25
-  - origin: '04040'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 28.43
-    - seat: 2
-      price: 36.54
-    - seat: 3
-      price: 51.39
-  - origin: '04040'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 31.27
-    - seat: 2
-      price: 40.19
-    - seat: 3
-      price: 56.53
   - origin: '78400'
     destination: '71801'
     seats:
@@ -34640,51 +32708,6 @@ service:
       price: 29.23
     - seat: 3
       price: 41.11
-  - origin: '78400'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 25.59
-    - seat: 2
-      price: 32.88
-    - seat: 3
-      price: 46.25
-  - origin: '78400'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 28.43
-    - seat: 2
-      price: 36.54
-    - seat: 3
-      price: 51.39
-  - origin: '71801'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 19.9
-    - seat: 2
-      price: 25.58
-    - seat: 3
-      price: 35.98
-  - origin: '71801'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 22.74
-    - seat: 2
-      price: 29.23
-    - seat: 3
-      price: 41.11
-  - origin: '79300'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 19.9
-    - seat: 2
-      price: 25.58
-    - seat: 3
-      price: 35.98
   type_of_capacity: Train
 - id: 03131_14-03-2023-13.00
   date: '2023-03-14'
@@ -35556,51 +33579,6 @@ service:
       price: 68.83
     - seat: 3
       price: 85.11
-  - origin: '60000'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 62.31
-    - seat: 2
-      price: 74.56
-    - seat: 3
-      price: 92.21
-  - origin: '60000'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 67.1
-    - seat: 2
-      price: 80.3
-    - seat: 3
-      price: 99.3
-  - origin: '71801'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 33.55
-    - seat: 2
-      price: 40.15
-    - seat: 3
-      price: 49.65
-  - origin: '71801'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 38.34
-    - seat: 2
-      price: 45.89
-    - seat: 3
-      price: 56.74
-  - origin: '79300'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 33.55
-    - seat: 2
-      price: 40.15
-    - seat: 3
-      price: 49.65
   type_of_capacity: Train
 - id: 03201_14-03-2023-20.00
   date: '2023-03-14'
@@ -36498,24 +34476,6 @@ service:
       price: 43.84
     - seat: 3
       price: 61.67
-  - origin: '60000'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 36.96
-    - seat: 2
-      price: 47.5
-    - seat: 3
-      price: 66.81
-  - origin: '60000'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 39.8
-    - seat: 2
-      price: 51.15
-    - seat: 3
-      price: 71.95
   - origin: '04040'
     destination: '78400'
     seats:
@@ -36534,24 +34494,6 @@ service:
       price: 32.88
     - seat: 3
       price: 46.25
-  - origin: '04040'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 28.43
-    - seat: 2
-      price: 36.54
-    - seat: 3
-      price: 51.39
-  - origin: '04040'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 31.27
-    - seat: 2
-      price: 40.19
-    - seat: 3
-      price: 56.53
   - origin: '78400'
     destination: '71801'
     seats:
@@ -36561,51 +34503,6 @@ service:
       price: 29.23
     - seat: 3
       price: 41.11
-  - origin: '78400'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 25.59
-    - seat: 2
-      price: 32.88
-    - seat: 3
-      price: 46.25
-  - origin: '78400'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 28.43
-    - seat: 2
-      price: 36.54
-    - seat: 3
-      price: 51.39
-  - origin: '71801'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 19.9
-    - seat: 2
-      price: 25.58
-    - seat: 3
-      price: 35.98
-  - origin: '71801'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 22.74
-    - seat: 2
-      price: 29.23
-    - seat: 3
-      price: 41.11
-  - origin: '79300'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 19.9
-    - seat: 2
-      price: 25.58
-    - seat: 3
-      price: 35.98
   type_of_capacity: Train
 - id: 03131_15-03-2023-13.00
   date: '2023-03-15'
@@ -37477,51 +35374,6 @@ service:
       price: 80.53
     - seat: 3
       price: 108.09
-  - origin: '60000'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 74.75
-    - seat: 2
-      price: 87.24
-    - seat: 3
-      price: 117.09
-  - origin: '60000'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 80.5
-    - seat: 2
-      price: 93.95
-    - seat: 3
-      price: 126.1
-  - origin: '71801'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 40.25
-    - seat: 2
-      price: 46.98
-    - seat: 3
-      price: 63.05
-  - origin: '71801'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 46.0
-    - seat: 2
-      price: 53.69
-    - seat: 3
-      price: 72.06
-  - origin: '79300'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 40.25
-    - seat: 2
-      price: 46.98
-    - seat: 3
-      price: 63.05
   type_of_capacity: Train
 - id: 03201_15-03-2023-20.00
   date: '2023-03-15'
@@ -38419,24 +36271,6 @@ service:
       price: 48.73
     - seat: 3
       price: 68.14
-  - origin: '60000'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 42.25
-    - seat: 2
-      price: 52.79
-    - seat: 3
-      price: 73.82
-  - origin: '60000'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 45.5
-    - seat: 2
-      price: 56.85
-    - seat: 3
-      price: 79.5
   - origin: '04040'
     destination: '78400'
     seats:
@@ -38455,24 +36289,6 @@ service:
       price: 36.55
     - seat: 3
       price: 51.11
-  - origin: '04040'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 32.5
-    - seat: 2
-      price: 40.61
-    - seat: 3
-      price: 56.79
-  - origin: '04040'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 35.75
-    - seat: 2
-      price: 44.67
-    - seat: 3
-      price: 62.46
   - origin: '78400'
     destination: '71801'
     seats:
@@ -38482,51 +36298,6 @@ service:
       price: 32.49
     - seat: 3
       price: 45.43
-  - origin: '78400'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 29.25
-    - seat: 2
-      price: 36.55
-    - seat: 3
-      price: 51.11
-  - origin: '78400'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 32.5
-    - seat: 2
-      price: 40.61
-    - seat: 3
-      price: 56.79
-  - origin: '71801'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 22.75
-    - seat: 2
-      price: 28.42
-    - seat: 3
-      price: 39.75
-  - origin: '71801'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 26.0
-    - seat: 2
-      price: 32.49
-    - seat: 3
-      price: 45.43
-  - origin: '79300'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 22.75
-    - seat: 2
-      price: 28.42
-    - seat: 3
-      price: 39.75
   type_of_capacity: Train
 - id: 03131_16-03-2023-13.00
   date: '2023-03-16'
@@ -39398,51 +37169,6 @@ service:
       price: 92.01
     - seat: 3
       price: 138.69
-  - origin: '60000'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 87.24
-    - seat: 2
-      price: 99.68
-    - seat: 3
-      price: 150.24
-  - origin: '60000'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 93.95
-    - seat: 2
-      price: 107.35
-    - seat: 3
-      price: 161.8
-  - origin: '71801'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 46.98
-    - seat: 2
-      price: 53.68
-    - seat: 3
-      price: 80.9
-  - origin: '71801'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 53.69
-    - seat: 2
-      price: 61.34
-    - seat: 3
-      price: 92.46
-  - origin: '79300'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 46.98
-    - seat: 2
-      price: 53.68
-    - seat: 3
-      price: 80.9
   type_of_capacity: Train
 - id: 03201_16-03-2023-20.00
   date: '2023-03-16'
@@ -40305,24 +38031,6 @@ service:
       price: 68.23
     - seat: 3
       price: 94.07
-  - origin: '60000'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 63.33
-    - seat: 2
-      price: 73.91
-    - seat: 3
-      price: 101.91
-  - origin: '60000'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 68.2
-    - seat: 2
-      price: 79.6
-    - seat: 3
-      price: 109.75
   - origin: '04040'
     destination: '78400'
     seats:
@@ -40341,24 +38049,6 @@ service:
       price: 51.17
     - seat: 3
       price: 70.55
-  - origin: '04040'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 48.71
-    - seat: 2
-      price: 56.86
-    - seat: 3
-      price: 78.39
-  - origin: '04040'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 53.59
-    - seat: 2
-      price: 62.54
-    - seat: 3
-      price: 86.23
   - origin: '78400'
     destination: '71801'
     seats:
@@ -40368,51 +38058,6 @@ service:
       price: 45.49
     - seat: 3
       price: 62.71
-  - origin: '78400'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 43.84
-    - seat: 2
-      price: 51.17
-    - seat: 3
-      price: 70.55
-  - origin: '78400'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 48.71
-    - seat: 2
-      price: 56.86
-    - seat: 3
-      price: 78.39
-  - origin: '71801'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 34.1
-    - seat: 2
-      price: 39.8
-    - seat: 3
-      price: 54.88
-  - origin: '71801'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 38.97
-    - seat: 2
-      price: 45.49
-    - seat: 3
-      price: 62.71
-  - origin: '79300'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 34.1
-    - seat: 2
-      price: 39.8
-    - seat: 3
-      price: 54.88
   type_of_capacity: Train
 - id: 19725_17-03-2023-13.25
   date: '2023-03-17'
@@ -41267,51 +38912,6 @@ service:
       price: 103.54
     - seat: 3
       price: 138.69
-  - origin: '60000'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 99.68
-    - seat: 2
-      price: 112.17
-    - seat: 3
-      price: 150.24
-  - origin: '60000'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 107.35
-    - seat: 2
-      price: 120.8
-    - seat: 3
-      price: 161.8
-  - origin: '71801'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 53.68
-    - seat: 2
-      price: 60.4
-    - seat: 3
-      price: 80.9
-  - origin: '71801'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 61.34
-    - seat: 2
-      price: 69.03
-    - seat: 3
-      price: 92.46
-  - origin: '79300'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 53.68
-    - seat: 2
-      price: 60.4
-    - seat: 3
-      price: 80.9
   type_of_capacity: Train
 - id: 03201_17-03-2023-20.00
   date: '2023-03-17'
@@ -42113,24 +39713,6 @@ service:
       price: 68.23
     - seat: 3
       price: 94.07
-  - origin: '60000'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 63.33
-    - seat: 2
-      price: 73.91
-    - seat: 3
-      price: 101.91
-  - origin: '60000'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 68.2
-    - seat: 2
-      price: 79.6
-    - seat: 3
-      price: 109.75
   - origin: '04040'
     destination: '78400'
     seats:
@@ -42149,24 +39731,6 @@ service:
       price: 51.17
     - seat: 3
       price: 70.55
-  - origin: '04040'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 48.71
-    - seat: 2
-      price: 56.86
-    - seat: 3
-      price: 78.39
-  - origin: '04040'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 53.59
-    - seat: 2
-      price: 62.54
-    - seat: 3
-      price: 86.23
   - origin: '78400'
     destination: '71801'
     seats:
@@ -42176,51 +39740,6 @@ service:
       price: 45.49
     - seat: 3
       price: 62.71
-  - origin: '78400'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 43.84
-    - seat: 2
-      price: 51.17
-    - seat: 3
-      price: 70.55
-  - origin: '78400'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 48.71
-    - seat: 2
-      price: 56.86
-    - seat: 3
-      price: 78.39
-  - origin: '71801'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 34.1
-    - seat: 2
-      price: 39.8
-    - seat: 3
-      price: 54.88
-  - origin: '71801'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 38.97
-    - seat: 2
-      price: 45.49
-    - seat: 3
-      price: 62.71
-  - origin: '79300'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 34.1
-    - seat: 2
-      price: 39.8
-    - seat: 3
-      price: 54.88
   type_of_capacity: Train
 - id: 19725_18-03-2023-13.25
   date: '2023-03-18'
@@ -43614,24 +41133,6 @@ service:
       price: 68.23
     - seat: 3
       price: 94.07
-  - origin: '60000'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 63.33
-    - seat: 2
-      price: 73.91
-    - seat: 3
-      price: 101.91
-  - origin: '60000'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 68.2
-    - seat: 2
-      price: 79.6
-    - seat: 3
-      price: 109.75
   - origin: '04040'
     destination: '78400'
     seats:
@@ -43650,24 +41151,6 @@ service:
       price: 51.17
     - seat: 3
       price: 70.55
-  - origin: '04040'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 48.71
-    - seat: 2
-      price: 56.86
-    - seat: 3
-      price: 78.39
-  - origin: '04040'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 53.59
-    - seat: 2
-      price: 62.54
-    - seat: 3
-      price: 86.23
   - origin: '78400'
     destination: '71801'
     seats:
@@ -43677,51 +41160,6 @@ service:
       price: 45.49
     - seat: 3
       price: 62.71
-  - origin: '78400'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 43.84
-    - seat: 2
-      price: 51.17
-    - seat: 3
-      price: 70.55
-  - origin: '78400'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 48.71
-    - seat: 2
-      price: 56.86
-    - seat: 3
-      price: 78.39
-  - origin: '71801'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 34.1
-    - seat: 2
-      price: 39.8
-    - seat: 3
-      price: 54.88
-  - origin: '71801'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 38.97
-    - seat: 2
-      price: 45.49
-    - seat: 3
-      price: 62.71
-  - origin: '79300'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 34.1
-    - seat: 2
-      price: 39.8
-    - seat: 3
-      price: 54.88
   type_of_capacity: Train
 - id: 19725_19-03-2023-13.25
   date: '2023-03-19'
@@ -44542,51 +41980,6 @@ service:
       price: 103.54
     - seat: 3
       price: 138.69
-  - origin: '60000'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 99.68
-    - seat: 2
-      price: 112.17
-    - seat: 3
-      price: 150.24
-  - origin: '60000'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 107.35
-    - seat: 2
-      price: 120.8
-    - seat: 3
-      price: 161.8
-  - origin: '71801'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 53.68
-    - seat: 2
-      price: 60.4
-    - seat: 3
-      price: 80.9
-  - origin: '71801'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 61.34
-    - seat: 2
-      price: 69.03
-    - seat: 3
-      price: 92.46
-  - origin: '79300'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 53.68
-    - seat: 2
-      price: 60.4
-    - seat: 3
-      price: 80.9
   type_of_capacity: Train
 - id: 03201_19-03-2023-20.00
   date: '2023-03-19'
@@ -45433,24 +42826,6 @@ service:
       price: 58.33
     - seat: 3
       price: 74.61
-  - origin: '60000'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 52.79
-    - seat: 2
-      price: 63.19
-    - seat: 3
-      price: 80.83
-  - origin: '60000'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 56.85
-    - seat: 2
-      price: 68.05
-    - seat: 3
-      price: 87.05
   - origin: '04040'
     destination: '78400'
     seats:
@@ -45469,24 +42844,6 @@ service:
       price: 43.75
     - seat: 3
       price: 55.96
-  - origin: '04040'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 40.61
-    - seat: 2
-      price: 48.61
-    - seat: 3
-      price: 62.18
-  - origin: '04040'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 44.67
-    - seat: 2
-      price: 53.47
-    - seat: 3
-      price: 68.4
   - origin: '78400'
     destination: '71801'
     seats:
@@ -45496,51 +42853,6 @@ service:
       price: 38.89
     - seat: 3
       price: 49.74
-  - origin: '78400'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 36.55
-    - seat: 2
-      price: 43.75
-    - seat: 3
-      price: 55.96
-  - origin: '78400'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 40.61
-    - seat: 2
-      price: 48.61
-    - seat: 3
-      price: 62.18
-  - origin: '71801'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 28.42
-    - seat: 2
-      price: 34.02
-    - seat: 3
-      price: 43.52
-  - origin: '71801'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 32.49
-    - seat: 2
-      price: 38.89
-    - seat: 3
-      price: 49.74
-  - origin: '79300'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 28.42
-    - seat: 2
-      price: 34.02
-    - seat: 3
-      price: 43.52
   type_of_capacity: Train
 - id: 03131_20-03-2023-13.00
   date: '2023-03-20'
@@ -46378,51 +43690,6 @@ service:
       price: 57.51
     - seat: 3
       price: 77.49
-  - origin: '60000'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 49.86
-    - seat: 2
-      price: 62.31
-    - seat: 3
-      price: 83.94
-  - origin: '60000'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 53.7
-    - seat: 2
-      price: 67.1
-    - seat: 3
-      price: 90.4
-  - origin: '71801'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 26.85
-    - seat: 2
-      price: 33.55
-    - seat: 3
-      price: 45.2
-  - origin: '71801'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 30.69
-    - seat: 2
-      price: 38.34
-    - seat: 3
-      price: 51.66
-  - origin: '79300'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 26.85
-    - seat: 2
-      price: 33.55
-    - seat: 3
-      price: 45.2
   type_of_capacity: Train
 - id: 03201_20-03-2023-20.00
   date: '2023-03-20'
@@ -47320,24 +44587,6 @@ service:
       price: 43.84
     - seat: 3
       price: 68.14
-  - origin: '60000'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 36.96
-    - seat: 2
-      price: 47.5
-    - seat: 3
-      price: 73.82
-  - origin: '60000'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 39.8
-    - seat: 2
-      price: 51.15
-    - seat: 3
-      price: 79.5
   - origin: '04040'
     destination: '78400'
     seats:
@@ -47356,24 +44605,6 @@ service:
       price: 32.88
     - seat: 3
       price: 51.11
-  - origin: '04040'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 28.43
-    - seat: 2
-      price: 36.54
-    - seat: 3
-      price: 56.79
-  - origin: '04040'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 31.27
-    - seat: 2
-      price: 40.19
-    - seat: 3
-      price: 62.46
   - origin: '78400'
     destination: '71801'
     seats:
@@ -47383,51 +44614,6 @@ service:
       price: 29.23
     - seat: 3
       price: 45.43
-  - origin: '78400'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 25.59
-    - seat: 2
-      price: 32.88
-    - seat: 3
-      price: 51.11
-  - origin: '78400'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 28.43
-    - seat: 2
-      price: 36.54
-    - seat: 3
-      price: 56.79
-  - origin: '71801'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 19.9
-    - seat: 2
-      price: 25.58
-    - seat: 3
-      price: 39.75
-  - origin: '71801'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 22.74
-    - seat: 2
-      price: 29.23
-    - seat: 3
-      price: 45.43
-  - origin: '79300'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 19.9
-    - seat: 2
-      price: 25.58
-    - seat: 3
-      price: 39.75
   type_of_capacity: Train
 - id: 03131_21-03-2023-13.00
   date: '2023-03-21'
@@ -48299,51 +45485,6 @@ service:
       price: 68.83
     - seat: 3
       price: 85.11
-  - origin: '60000'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 62.31
-    - seat: 2
-      price: 74.56
-    - seat: 3
-      price: 92.21
-  - origin: '60000'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 67.1
-    - seat: 2
-      price: 80.3
-    - seat: 3
-      price: 99.3
-  - origin: '71801'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 33.55
-    - seat: 2
-      price: 40.15
-    - seat: 3
-      price: 49.65
-  - origin: '71801'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 38.34
-    - seat: 2
-      price: 45.89
-    - seat: 3
-      price: 56.74
-  - origin: '79300'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 33.55
-    - seat: 2
-      price: 40.15
-    - seat: 3
-      price: 49.65
   type_of_capacity: Train
 - id: 03201_21-03-2023-20.00
   date: '2023-03-21'
@@ -49241,24 +46382,6 @@ service:
       price: 43.84
     - seat: 3
       price: 61.67
-  - origin: '60000'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 36.96
-    - seat: 2
-      price: 47.5
-    - seat: 3
-      price: 66.81
-  - origin: '60000'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 39.8
-    - seat: 2
-      price: 51.15
-    - seat: 3
-      price: 71.95
   - origin: '04040'
     destination: '78400'
     seats:
@@ -49277,24 +46400,6 @@ service:
       price: 32.88
     - seat: 3
       price: 46.25
-  - origin: '04040'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 28.43
-    - seat: 2
-      price: 36.54
-    - seat: 3
-      price: 51.39
-  - origin: '04040'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 31.27
-    - seat: 2
-      price: 40.19
-    - seat: 3
-      price: 56.53
   - origin: '78400'
     destination: '71801'
     seats:
@@ -49304,51 +46409,6 @@ service:
       price: 29.23
     - seat: 3
       price: 41.11
-  - origin: '78400'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 25.59
-    - seat: 2
-      price: 32.88
-    - seat: 3
-      price: 46.25
-  - origin: '78400'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 28.43
-    - seat: 2
-      price: 36.54
-    - seat: 3
-      price: 51.39
-  - origin: '71801'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 19.9
-    - seat: 2
-      price: 25.58
-    - seat: 3
-      price: 35.98
-  - origin: '71801'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 22.74
-    - seat: 2
-      price: 29.23
-    - seat: 3
-      price: 41.11
-  - origin: '79300'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 19.9
-    - seat: 2
-      price: 25.58
-    - seat: 3
-      price: 35.98
   type_of_capacity: Train
 - id: 03131_22-03-2023-13.00
   date: '2023-03-22'
@@ -50220,51 +47280,6 @@ service:
       price: 80.53
     - seat: 3
       price: 108.09
-  - origin: '60000'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 74.75
-    - seat: 2
-      price: 87.24
-    - seat: 3
-      price: 117.09
-  - origin: '60000'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 80.5
-    - seat: 2
-      price: 93.95
-    - seat: 3
-      price: 126.1
-  - origin: '71801'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 40.25
-    - seat: 2
-      price: 46.98
-    - seat: 3
-      price: 63.05
-  - origin: '71801'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 46.0
-    - seat: 2
-      price: 53.69
-    - seat: 3
-      price: 72.06
-  - origin: '79300'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 40.25
-    - seat: 2
-      price: 46.98
-    - seat: 3
-      price: 63.05
   type_of_capacity: Train
 - id: 03201_22-03-2023-20.00
   date: '2023-03-22'
@@ -51162,24 +48177,6 @@ service:
       price: 48.73
     - seat: 3
       price: 68.14
-  - origin: '60000'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 42.25
-    - seat: 2
-      price: 52.79
-    - seat: 3
-      price: 73.82
-  - origin: '60000'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 45.5
-    - seat: 2
-      price: 56.85
-    - seat: 3
-      price: 79.5
   - origin: '04040'
     destination: '78400'
     seats:
@@ -51198,24 +48195,6 @@ service:
       price: 36.55
     - seat: 3
       price: 51.11
-  - origin: '04040'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 32.5
-    - seat: 2
-      price: 40.61
-    - seat: 3
-      price: 56.79
-  - origin: '04040'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 35.75
-    - seat: 2
-      price: 44.67
-    - seat: 3
-      price: 62.46
   - origin: '78400'
     destination: '71801'
     seats:
@@ -51225,51 +48204,6 @@ service:
       price: 32.49
     - seat: 3
       price: 45.43
-  - origin: '78400'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 29.25
-    - seat: 2
-      price: 36.55
-    - seat: 3
-      price: 51.11
-  - origin: '78400'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 32.5
-    - seat: 2
-      price: 40.61
-    - seat: 3
-      price: 56.79
-  - origin: '71801'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 22.75
-    - seat: 2
-      price: 28.42
-    - seat: 3
-      price: 39.75
-  - origin: '71801'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 26.0
-    - seat: 2
-      price: 32.49
-    - seat: 3
-      price: 45.43
-  - origin: '79300'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 22.75
-    - seat: 2
-      price: 28.42
-    - seat: 3
-      price: 39.75
   type_of_capacity: Train
 - id: 03131_23-03-2023-13.00
   date: '2023-03-23'
@@ -52141,51 +49075,6 @@ service:
       price: 92.01
     - seat: 3
       price: 123.39
-  - origin: '60000'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 87.24
-    - seat: 2
-      price: 99.68
-    - seat: 3
-      price: 133.67
-  - origin: '60000'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 93.95
-    - seat: 2
-      price: 107.35
-    - seat: 3
-      price: 143.95
-  - origin: '71801'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 46.98
-    - seat: 2
-      price: 53.68
-    - seat: 3
-      price: 71.97
-  - origin: '71801'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 53.69
-    - seat: 2
-      price: 61.34
-    - seat: 3
-      price: 82.26
-  - origin: '79300'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 46.98
-    - seat: 2
-      price: 53.68
-    - seat: 3
-      price: 71.97
   type_of_capacity: Train
 - id: 03201_23-03-2023-20.00
   date: '2023-03-23'
@@ -53048,24 +49937,6 @@ service:
       price: 77.96
     - seat: 3
       price: 107.01
-  - origin: '60000'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 73.91
-    - seat: 2
-      price: 84.45
-    - seat: 3
-      price: 115.93
-  - origin: '60000'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 79.6
-    - seat: 2
-      price: 90.95
-    - seat: 3
-      price: 124.85
   - origin: '04040'
     destination: '78400'
     seats:
@@ -53084,24 +49955,6 @@ service:
       price: 58.47
     - seat: 3
       price: 80.26
-  - origin: '04040'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 56.86
-    - seat: 2
-      price: 64.96
-    - seat: 3
-      price: 89.18
-  - origin: '04040'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 62.54
-    - seat: 2
-      price: 71.46
-    - seat: 3
-      price: 98.1
   - origin: '78400'
     destination: '71801'
     seats:
@@ -53111,51 +49964,6 @@ service:
       price: 51.97
     - seat: 3
       price: 71.34
-  - origin: '78400'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 51.17
-    - seat: 2
-      price: 58.47
-    - seat: 3
-      price: 80.26
-  - origin: '78400'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 56.86
-    - seat: 2
-      price: 64.96
-    - seat: 3
-      price: 89.18
-  - origin: '71801'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 39.8
-    - seat: 2
-      price: 45.48
-    - seat: 3
-      price: 62.42
-  - origin: '71801'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 45.49
-    - seat: 2
-      price: 51.97
-    - seat: 3
-      price: 71.34
-  - origin: '79300'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 39.8
-    - seat: 2
-      price: 45.48
-    - seat: 3
-      price: 62.42
   type_of_capacity: Train
 - id: 19725_24-03-2023-13.25
   date: '2023-03-24'
@@ -54010,51 +50818,6 @@ service:
       price: 68.83
     - seat: 3
       price: 85.11
-  - origin: '60000'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 62.31
-    - seat: 2
-      price: 74.56
-    - seat: 3
-      price: 92.21
-  - origin: '60000'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 67.1
-    - seat: 2
-      price: 80.3
-    - seat: 3
-      price: 99.3
-  - origin: '71801'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 33.55
-    - seat: 2
-      price: 40.15
-    - seat: 3
-      price: 49.65
-  - origin: '71801'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 38.34
-    - seat: 2
-      price: 45.89
-    - seat: 3
-      price: 56.74
-  - origin: '79300'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 33.55
-    - seat: 2
-      price: 40.15
-    - seat: 3
-      price: 49.65
   type_of_capacity: Train
 - id: 03201_24-03-2023-20.00
   date: '2023-03-24'
@@ -54856,24 +51619,6 @@ service:
       price: 48.73
     - seat: 3
       price: 68.14
-  - origin: '60000'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 42.25
-    - seat: 2
-      price: 52.79
-    - seat: 3
-      price: 73.82
-  - origin: '60000'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 45.5
-    - seat: 2
-      price: 56.85
-    - seat: 3
-      price: 79.5
   - origin: '04040'
     destination: '78400'
     seats:
@@ -54892,24 +51637,6 @@ service:
       price: 36.55
     - seat: 3
       price: 51.11
-  - origin: '04040'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 32.5
-    - seat: 2
-      price: 40.61
-    - seat: 3
-      price: 56.79
-  - origin: '04040'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 35.75
-    - seat: 2
-      price: 44.67
-    - seat: 3
-      price: 62.46
   - origin: '78400'
     destination: '71801'
     seats:
@@ -54919,51 +51646,6 @@ service:
       price: 32.49
     - seat: 3
       price: 45.43
-  - origin: '78400'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 29.25
-    - seat: 2
-      price: 36.55
-    - seat: 3
-      price: 51.11
-  - origin: '78400'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 32.5
-    - seat: 2
-      price: 40.61
-    - seat: 3
-      price: 56.79
-  - origin: '71801'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 22.75
-    - seat: 2
-      price: 28.42
-    - seat: 3
-      price: 39.75
-  - origin: '71801'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 26.0
-    - seat: 2
-      price: 32.49
-    - seat: 3
-      price: 45.43
-  - origin: '79300'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 22.75
-    - seat: 2
-      price: 28.42
-    - seat: 3
-      price: 39.75
   type_of_capacity: Train
 - id: 19725_25-03-2023-13.25
   date: '2023-03-25'
@@ -56357,24 +53039,6 @@ service:
       price: 68.23
     - seat: 3
       price: 94.07
-  - origin: '60000'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 63.33
-    - seat: 2
-      price: 73.91
-    - seat: 3
-      price: 101.91
-  - origin: '60000'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 68.2
-    - seat: 2
-      price: 79.6
-    - seat: 3
-      price: 109.75
   - origin: '04040'
     destination: '78400'
     seats:
@@ -56393,24 +53057,6 @@ service:
       price: 51.17
     - seat: 3
       price: 70.55
-  - origin: '04040'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 48.71
-    - seat: 2
-      price: 56.86
-    - seat: 3
-      price: 78.39
-  - origin: '04040'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 53.59
-    - seat: 2
-      price: 62.54
-    - seat: 3
-      price: 86.23
   - origin: '78400'
     destination: '71801'
     seats:
@@ -56420,51 +53066,6 @@ service:
       price: 45.49
     - seat: 3
       price: 62.71
-  - origin: '78400'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 43.84
-    - seat: 2
-      price: 51.17
-    - seat: 3
-      price: 70.55
-  - origin: '78400'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 48.71
-    - seat: 2
-      price: 56.86
-    - seat: 3
-      price: 78.39
-  - origin: '71801'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 34.1
-    - seat: 2
-      price: 39.8
-    - seat: 3
-      price: 54.88
-  - origin: '71801'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 38.97
-    - seat: 2
-      price: 45.49
-    - seat: 3
-      price: 62.71
-  - origin: '79300'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 34.1
-    - seat: 2
-      price: 39.8
-    - seat: 3
-      price: 54.88
   type_of_capacity: Train
 - id: 03131_26-03-2023-13.00
   date: '2023-03-26'
@@ -57319,51 +53920,6 @@ service:
       price: 115.03
     - seat: 3
       price: 138.69
-  - origin: '60000'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 112.17
-    - seat: 2
-      price: 124.61
-    - seat: 3
-      price: 150.24
-  - origin: '60000'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 120.8
-    - seat: 2
-      price: 134.2
-    - seat: 3
-      price: 161.8
-  - origin: '71801'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 60.4
-    - seat: 2
-      price: 67.1
-    - seat: 3
-      price: 80.9
-  - origin: '71801'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 69.03
-    - seat: 2
-      price: 76.69
-    - seat: 3
-      price: 92.46
-  - origin: '79300'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 60.4
-    - seat: 2
-      price: 67.1
-    - seat: 3
-      price: 80.9
   type_of_capacity: Train
 - id: 03201_26-03-2023-20.00
   date: '2023-03-26'
@@ -58244,24 +54800,6 @@ service:
       price: 58.33
     - seat: 3
       price: 74.61
-  - origin: '60000'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 52.79
-    - seat: 2
-      price: 63.19
-    - seat: 3
-      price: 80.83
-  - origin: '60000'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 56.85
-    - seat: 2
-      price: 68.05
-    - seat: 3
-      price: 87.05
   - origin: '04040'
     destination: '78400'
     seats:
@@ -58280,24 +54818,6 @@ service:
       price: 43.75
     - seat: 3
       price: 55.96
-  - origin: '04040'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 40.61
-    - seat: 2
-      price: 48.61
-    - seat: 3
-      price: 62.18
-  - origin: '04040'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 44.67
-    - seat: 2
-      price: 53.47
-    - seat: 3
-      price: 68.4
   - origin: '78400'
     destination: '71801'
     seats:
@@ -58307,51 +54827,6 @@ service:
       price: 38.89
     - seat: 3
       price: 49.74
-  - origin: '78400'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 36.55
-    - seat: 2
-      price: 43.75
-    - seat: 3
-      price: 55.96
-  - origin: '78400'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 40.61
-    - seat: 2
-      price: 48.61
-    - seat: 3
-      price: 62.18
-  - origin: '71801'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 28.42
-    - seat: 2
-      price: 34.02
-    - seat: 3
-      price: 43.52
-  - origin: '71801'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 32.49
-    - seat: 2
-      price: 38.89
-    - seat: 3
-      price: 49.74
-  - origin: '79300'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 28.42
-    - seat: 2
-      price: 34.02
-    - seat: 3
-      price: 43.52
   type_of_capacity: Train
 - id: 03131_27-03-2023-13.00
   date: '2023-03-27'
@@ -59223,51 +55698,6 @@ service:
       price: 68.83
     - seat: 3
       price: 85.11
-  - origin: '60000'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 62.31
-    - seat: 2
-      price: 74.56
-    - seat: 3
-      price: 92.21
-  - origin: '60000'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 67.1
-    - seat: 2
-      price: 80.3
-    - seat: 3
-      price: 99.3
-  - origin: '71801'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 33.55
-    - seat: 2
-      price: 40.15
-    - seat: 3
-      price: 49.65
-  - origin: '71801'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 38.34
-    - seat: 2
-      price: 45.89
-    - seat: 3
-      price: 56.74
-  - origin: '79300'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 33.55
-    - seat: 2
-      price: 40.15
-    - seat: 3
-      price: 49.65
   type_of_capacity: Train
 - id: 03201_27-03-2023-20.00
   date: '2023-03-27'
@@ -59968,24 +56398,6 @@ service:
       price: 39.0
     - seat: 3
       price: 61.67
-  - origin: '60000'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 31.66
-    - seat: 2
-      price: 42.25
-    - seat: 3
-      price: 66.81
-  - origin: '60000'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 34.1
-    - seat: 2
-      price: 45.5
-    - seat: 3
-      price: 71.95
   - origin: '04040'
     destination: '78400'
     seats:
@@ -60004,24 +56416,6 @@ service:
       price: 29.25
     - seat: 3
       price: 46.25
-  - origin: '04040'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 24.36
-    - seat: 2
-      price: 32.5
-    - seat: 3
-      price: 51.39
-  - origin: '04040'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 26.79
-    - seat: 2
-      price: 35.75
-    - seat: 3
-      price: 56.53
   - origin: '78400'
     destination: '71801'
     seats:
@@ -60031,51 +56425,6 @@ service:
       price: 26.0
     - seat: 3
       price: 41.11
-  - origin: '78400'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 21.92
-    - seat: 2
-      price: 29.25
-    - seat: 3
-      price: 46.25
-  - origin: '78400'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 24.36
-    - seat: 2
-      price: 32.5
-    - seat: 3
-      price: 51.39
-  - origin: '71801'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 17.05
-    - seat: 2
-      price: 22.75
-    - seat: 3
-      price: 35.98
-  - origin: '71801'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 19.49
-    - seat: 2
-      price: 26.0
-    - seat: 3
-      price: 41.11
-  - origin: '79300'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 17.05
-    - seat: 2
-      price: 22.75
-    - seat: 3
-      price: 35.98
   type_of_capacity: Train
 - id: 03131_28-03-2023-13.00
   date: '2023-03-28'
@@ -60947,51 +57296,6 @@ service:
       price: 68.83
     - seat: 3
       price: 85.11
-  - origin: '60000'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 62.31
-    - seat: 2
-      price: 74.56
-    - seat: 3
-      price: 92.21
-  - origin: '60000'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 67.1
-    - seat: 2
-      price: 80.3
-    - seat: 3
-      price: 99.3
-  - origin: '71801'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 33.55
-    - seat: 2
-      price: 40.15
-    - seat: 3
-      price: 49.65
-  - origin: '71801'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 38.34
-    - seat: 2
-      price: 45.89
-    - seat: 3
-      price: 56.74
-  - origin: '79300'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 33.55
-    - seat: 2
-      price: 40.15
-    - seat: 3
-      price: 49.65
   type_of_capacity: Train
 - id: 03201_28-03-2023-20.00
   date: '2023-03-28'
@@ -61889,24 +58193,6 @@ service:
       price: 48.73
     - seat: 3
       price: 68.14
-  - origin: '60000'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 42.25
-    - seat: 2
-      price: 52.79
-    - seat: 3
-      price: 73.82
-  - origin: '60000'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 45.5
-    - seat: 2
-      price: 56.85
-    - seat: 3
-      price: 79.5
   - origin: '04040'
     destination: '78400'
     seats:
@@ -61925,24 +58211,6 @@ service:
       price: 36.55
     - seat: 3
       price: 51.11
-  - origin: '04040'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 32.5
-    - seat: 2
-      price: 40.61
-    - seat: 3
-      price: 56.79
-  - origin: '04040'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 35.75
-    - seat: 2
-      price: 44.67
-    - seat: 3
-      price: 62.46
   - origin: '78400'
     destination: '71801'
     seats:
@@ -61952,51 +58220,6 @@ service:
       price: 32.49
     - seat: 3
       price: 45.43
-  - origin: '78400'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 29.25
-    - seat: 2
-      price: 36.55
-    - seat: 3
-      price: 51.11
-  - origin: '78400'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 32.5
-    - seat: 2
-      price: 40.61
-    - seat: 3
-      price: 56.79
-  - origin: '71801'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 22.75
-    - seat: 2
-      price: 28.42
-    - seat: 3
-      price: 39.75
-  - origin: '71801'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 26.0
-    - seat: 2
-      price: 32.49
-    - seat: 3
-      price: 45.43
-  - origin: '79300'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 22.75
-    - seat: 2
-      price: 28.42
-    - seat: 3
-      price: 39.75
   type_of_capacity: Train
 - id: 03131_29-03-2023-13.00
   date: '2023-03-29'
@@ -62868,51 +59091,6 @@ service:
       price: 92.01
     - seat: 3
       price: 123.39
-  - origin: '60000'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 87.24
-    - seat: 2
-      price: 99.68
-    - seat: 3
-      price: 133.67
-  - origin: '60000'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 93.95
-    - seat: 2
-      price: 107.35
-    - seat: 3
-      price: 143.95
-  - origin: '71801'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 46.98
-    - seat: 2
-      price: 53.68
-    - seat: 3
-      price: 71.97
-  - origin: '71801'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 53.69
-    - seat: 2
-      price: 61.34
-    - seat: 3
-      price: 82.26
-  - origin: '79300'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 46.98
-    - seat: 2
-      price: 53.68
-    - seat: 3
-      price: 71.97
   type_of_capacity: Train
 - id: 03201_29-03-2023-20.00
   date: '2023-03-29'
@@ -63810,24 +59988,6 @@ service:
       price: 58.33
     - seat: 3
       price: 74.61
-  - origin: '60000'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 52.79
-    - seat: 2
-      price: 63.19
-    - seat: 3
-      price: 80.83
-  - origin: '60000'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 56.85
-    - seat: 2
-      price: 68.05
-    - seat: 3
-      price: 87.05
   - origin: '04040'
     destination: '78400'
     seats:
@@ -63846,24 +60006,6 @@ service:
       price: 43.75
     - seat: 3
       price: 55.96
-  - origin: '04040'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 40.61
-    - seat: 2
-      price: 48.61
-    - seat: 3
-      price: 62.18
-  - origin: '04040'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 44.67
-    - seat: 2
-      price: 53.47
-    - seat: 3
-      price: 68.4
   - origin: '78400'
     destination: '71801'
     seats:
@@ -63873,51 +60015,6 @@ service:
       price: 38.89
     - seat: 3
       price: 49.74
-  - origin: '78400'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 36.55
-    - seat: 2
-      price: 43.75
-    - seat: 3
-      price: 55.96
-  - origin: '78400'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 40.61
-    - seat: 2
-      price: 48.61
-    - seat: 3
-      price: 62.18
-  - origin: '71801'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 28.42
-    - seat: 2
-      price: 34.02
-    - seat: 3
-      price: 43.52
-  - origin: '71801'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 32.49
-    - seat: 2
-      price: 38.89
-    - seat: 3
-      price: 49.74
-  - origin: '79300'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 28.42
-    - seat: 2
-      price: 34.02
-    - seat: 3
-      price: 43.52
   type_of_capacity: Train
 - id: 03131_30-03-2023-13.00
   date: '2023-03-30'
@@ -64789,51 +60886,6 @@ service:
       price: 92.01
     - seat: 3
       price: 138.69
-  - origin: '60000'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 87.24
-    - seat: 2
-      price: 99.68
-    - seat: 3
-      price: 150.24
-  - origin: '60000'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 93.95
-    - seat: 2
-      price: 107.35
-    - seat: 3
-      price: 161.8
-  - origin: '71801'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 46.98
-    - seat: 2
-      price: 53.68
-    - seat: 3
-      price: 80.9
-  - origin: '71801'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 53.69
-    - seat: 2
-      price: 61.34
-    - seat: 3
-      price: 92.46
-  - origin: '79300'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 46.98
-    - seat: 2
-      price: 53.68
-    - seat: 3
-      price: 80.9
   type_of_capacity: Train
 - id: 03201_30-03-2023-20.00
   date: '2023-03-30'
@@ -65696,24 +61748,6 @@ service:
       price: 77.96
     - seat: 3
       price: 107.01
-  - origin: '60000'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 73.91
-    - seat: 2
-      price: 84.45
-    - seat: 3
-      price: 115.93
-  - origin: '60000'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 79.6
-    - seat: 2
-      price: 90.95
-    - seat: 3
-      price: 124.85
   - origin: '04040'
     destination: '78400'
     seats:
@@ -65732,24 +61766,6 @@ service:
       price: 58.47
     - seat: 3
       price: 80.26
-  - origin: '04040'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 56.86
-    - seat: 2
-      price: 64.96
-    - seat: 3
-      price: 89.18
-  - origin: '04040'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 62.54
-    - seat: 2
-      price: 71.46
-    - seat: 3
-      price: 98.1
   - origin: '78400'
     destination: '71801'
     seats:
@@ -65759,51 +61775,6 @@ service:
       price: 51.97
     - seat: 3
       price: 71.34
-  - origin: '78400'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 51.17
-    - seat: 2
-      price: 58.47
-    - seat: 3
-      price: 80.26
-  - origin: '78400'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 56.86
-    - seat: 2
-      price: 64.96
-    - seat: 3
-      price: 89.18
-  - origin: '71801'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 39.8
-    - seat: 2
-      price: 45.48
-    - seat: 3
-      price: 62.42
-  - origin: '71801'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 45.49
-    - seat: 2
-      price: 51.97
-    - seat: 3
-      price: 71.34
-  - origin: '79300'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 39.8
-    - seat: 2
-      price: 45.48
-    - seat: 3
-      price: 62.42
   type_of_capacity: Train
 - id: 19725_31-03-2023-13.25
   date: '2023-03-31'
@@ -66658,51 +62629,6 @@ service:
       price: 103.54
     - seat: 3
       price: 138.69
-  - origin: '60000'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 99.68
-    - seat: 2
-      price: 112.17
-    - seat: 3
-      price: 150.24
-  - origin: '60000'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 107.35
-    - seat: 2
-      price: 120.8
-    - seat: 3
-      price: 161.8
-  - origin: '71801'
-    destination: '79300'
-    seats:
-    - seat: 1
-      price: 53.68
-    - seat: 2
-      price: 60.4
-    - seat: 3
-      price: 80.9
-  - origin: '71801'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 61.34
-    - seat: 2
-      price: 69.03
-    - seat: 3
-      price: 92.46
-  - origin: '79300'
-    destination: '04307'
-    seats:
-    - seat: 1
-      price: 53.68
-    - seat: 2
-      price: 60.4
-    - seat: 3
-      price: 80.9
   type_of_capacity: Train
 - id: 03201_31-03-2023-20.00
   date: '2023-03-31'
