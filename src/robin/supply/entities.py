@@ -113,12 +113,12 @@ class Line(object):
         id (int): Line ID
         name (str): Line name
         corridor (Corridor): Corridor ID where the Line belongs to
-        stops (List[str]): List of Station IDs being served by the Line
-        timetable (Mapping[str, Tuple[float, float]]): {station ID: (arrival (float), departure (float)}
-        pairs (List[Tuple[str, str]]): List of pairs of station ID's (origin, destination)
+        stops (List[Station]): List of Stations being served by the Line
+        timetable (Mapping[Station, Tuple[float, float]]): {station ID: (arrival (float), departure (float)}
+        pairs (List[Tuple[Station, Station]]): List with attended pairs of stations (origin, destination)
     """
 
-    def __init__(self, id_: int, name: str, corridor: Corridor, timetable: Mapping[str, Tuple[float, float]]):
+    def __init__(self, id_: int, name: str, corridor: Corridor, timetable: Mapping[Station, Tuple[float, float]]):
         self.id = id_
         self.name = name
         self.corridor = corridor
@@ -186,25 +186,25 @@ class TSP(object):
     Attributes:
         id (int): Train Service Provider ID
         name (name): Name of the Train Service Provider
-        rolling_stock List[int]: List of RollingStock's ID's
+        rolling_stock List[RollingStock]: List of RollingStock's ID's
     """
 
-    def __init__(self, id_: int, name: str, rolling_stock: List[int] = None):
+    def __init__(self, id_: int, name: str, rolling_stock: List[RollingStock] = None):
         self.id = id_
         self.name = name
         self.rolling_stock = rolling_stock if rolling_stock is not None else []
 
-    def add_rolling_stock(self, rs_id: int):
+    def add_rolling_stock(self, rs: RollingStock):
         """
         Method to add new Rolling stock ID to a TSP object
 
         Args:
-            rs_id (int): New Rolling Stock ID
+            rs (RollingStock): New Rolling Stock
         """
-        self.rolling_stock.append(rs_id)
+        self.rolling_stock.append(rs)
 
     def __str__(self):
-        return f'[{self.id}, {self.name}, {self.rolling_stock}]'
+        return f'[{self.id}, {self.name}, {[rs.id for rs in self.rolling_stock]}]'
 
 
 class Service(object):
@@ -231,7 +231,7 @@ class Service(object):
                  tsp: TSP,
                  time_slot: TimeSlot,
                  rolling_stock: RollingStock,
-                 prices: Mapping[Tuple[Station, Station], Mapping[Seat, float]],
+                 prices: Mapping[Tuple[str, str], Mapping[Seat, float]],
                  capacity: str):  # TODO: Check capacity in docs
 
         self.id = id_
@@ -247,7 +247,7 @@ class Service(object):
         new_line = "\n\t\t"
         return f'Service id: {self.id} \n' \
                f'\tDate of service: {self.date} \n' \
-               f'\tStops: {self.line.stops} \n' \
+               f'\tStops: {[s.city for s in self.line.stops]} \n' \
                f'\tLine times: {list(self.line.timetable.values())} \n' \
                f'\tTrain Service Provider: {self.tsp} \n' \
                f'\tTime Slot: {self.timeSlot} \n' \
@@ -267,7 +267,7 @@ class Supply(object):
         structure from supply_data_example.yml file
     """
 
-    def __init__(self, data: Mapping[str, Mapping]):  # TODO: Check data type annotation
+    def __init__(self, data: Mapping[str, Mapping]):
         self.data = data if data is not None else {}
         self.stations = {} if 'stations' not in self.data else self._get_stations(key='stations')
         self.timeSlots = {} if 'timeSlot' not in self.data else self._get_time_slots(key='timeSlot')
@@ -308,7 +308,8 @@ class Supply(object):
         filtered_services = []
 
         for s in self.services.values():
-            if s.date == date and (origin, destination) in s.line.pairs:
+            pairs_ids = [(p[0].id, p[1].id) for p in s.line.pairs]
+            if s.date == date and (origin, destination) in pairs_ids:
                 new_s = deepcopy(s)
                 new_s.prices = {p: new_s.prices[p] for p in new_s.prices if p == (origin, destination)}
                 filtered_services.append(new_s)
@@ -394,7 +395,9 @@ class Supply(object):
 
             assert all(s['station'] in corr.stations for s in ln['stops']), "Station not found in Corridor list"
 
-            timetable = {s['station']: (float(s['arrival_time']), float(s['departure_time'])) for s in ln['stops']}
+            timetable = {self.stations[s['station']]: (float(s['arrival_time']), float(s['departure_time']))
+                         for s in ln['stops']}
+
             lines[ln['id']] = Line(ln['id'], ln['name'], corr, timetable)
 
         return lines
@@ -434,6 +437,9 @@ class Supply(object):
             for st in rs['seats']:
                 assert all(k in st for k in ('hard_type', 'quantity')), "Incomplete seats data for RS"
 
+            assert all(s['hard_type'] in [s.hard_type for s in self.seats.values()] for s in rs['seats']), \
+                "Invalid hard_type for RS"
+
             rs_seats = {s['hard_type']: s['quantity'] for s in rs['seats']}
 
             rolling_stock[rs['id']] = RollingStock(rs['id'],
@@ -455,8 +461,9 @@ class Supply(object):
         tsp = {}
         for op in self.data[key]:
             assert all(k in op.keys() for k in ('id', 'name', 'rolling_stock')), "Incomplete TSP data"
+            assert all(i in self.rollingStock.keys() for i in op['rolling_stock']), "Unknown RollingStock ID"
 
-            tsp[op['id']] = TSP(op['id'], op['name'], op['rolling_stock'])
+            tsp[op['id']] = TSP(op['id'], op['name'], [self.rollingStock[i] for i in op['rolling_stock']])
 
         return tsp
 
@@ -474,13 +481,22 @@ class Supply(object):
         for s in self.data[key]:
             service_keys = ('id', 'date', 'line', 'train_service_provider', 'time_slot', 'rolling_stock',
                             'origin_destination_tuples', 'type_of_capacity')
+
             assert all(k in s.keys() for k in service_keys), "Incomplete Service data"
 
             service_id = s['id']
             service_date = s['date']
+
+            assert s['line'] in self.lines.keys(), "Line not found"
             service_line = self.lines[s['line']]
+
+            assert s['train_service_provider'] in self.tsps.keys(), "TSP not found"
             service_tsp = self.tsps[s['train_service_provider']]
+
+            assert s['time_slot'] in self.timeSlots.keys(), "TimeSlot not found"
             service_time_slot = self.timeSlots[s['time_slot']]
+
+            assert s['rolling_stock'] in self.rollingStock.keys(), "RollingStock not found"
             service_rs = self.rollingStock[s['rolling_stock']]
 
             service_prices = {}
