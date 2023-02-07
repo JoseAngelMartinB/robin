@@ -325,8 +325,7 @@ class Supply(object):
         filtered_services = []
 
         for s in self.services.values():
-            pairs_ids = [(p[0].id, p[1].id) for p in s.line.pairs]
-            if s.date == date and (origin, destination) in pairs_ids:
+            if s.date == date and (origin, destination) in s.line.pairs:
                 new_s = deepcopy(s)
                 new_s.prices = {p: new_s.prices[p] for p in new_s.prices if p == (origin, destination)}
                 filtered_services.append(new_s)
