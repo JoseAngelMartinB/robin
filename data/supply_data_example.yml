@@ -18,25 +18,25 @@ stations:
 # Time slots (surcos)
 timeSlot:
   - id: 1
-    start: "8:00"
-    end: "8:10"
-    mark: "8:05"
+    start: "8:00:00"
+    end: "8:10:00"
+    mark: "8:05:00"
   - id: 2
-    start: "12:15"
-    end: "12:25"
-    mark: "12:20"
+    start: "12:15:00"
+    end: "12:25:00"
+    mark: "12:20:00"
   - id: 3
-    start: "16:30"
-    end: "16:40"
-    mark: "16:35"
+    start: "16:30:00"
+    end: "16:40:00"
+    mark: "16:35:00"
   - id: 4
-    start: "20:45"
-    end: "20:55"
-    mark: "20:50"
+    start: "20:45:00"
+    end: "20:55:00"
+    mark: "20:50:00"
   - id: 5
-    start: "23:45"
-    end: "00:45"
-    mark: "00:15"
+    start: "23:45:00"
+    end: "00:45:00"
+    mark: "00:15:00"
 
 # Corridor
 corridor:
@@ -243,8 +243,8 @@ service:
     time_slot: 2
     rolling_stock: 3
     origin_destination_tuples:
-      - origin: "MAD"
-        destination: "BCN"
+      - origin: "BCN"
+        destination: "MAD"
         seats:
           - seat: 1
             price: 130
