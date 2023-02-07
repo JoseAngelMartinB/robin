@@ -18,8 +18,8 @@ def station_to_dict(obj: Station):
 
 def time_slot_to_dict(obj: TimeSlot):
     return {'id': obj.id,
-            'start': str(obj.start)[:-3],
-            'end': str(obj.end)[:-3]}
+            'start': str(obj.start),
+            'end': str(obj.end)}
 
 
 def corridor_to_dict(obj: Corridor):
@@ -56,7 +56,7 @@ def rolling_stock_to_dict(obj: RollingStock):
 def tsp_to_dict(obj: TSP):
     return {'id': obj.id,
             'name': obj.name,
-            'rolling_stock': obj.rolling_stock}
+            'rolling_stock': [rs.id for rs in obj.rolling_stock]}
 
 
 def service_to_dict(obj: Service):
@@ -168,12 +168,12 @@ def get_service(service_id: str,
     id_ = service_id
     date = departure.split(" ")[0]
 
-    departure = departure.split(" ")[1][:-3]
+    departure = departure.split(" ")[1]
     # arrival = arrival.split(" ")[1][:-3]
 
     line = line
     ts_init = departure
-    ts_end = str(get_time(departure) + datetime.timedelta(minutes=10))[:-3]
+    ts_end = str(get_time(departure) + datetime.timedelta(minutes=10))
     delta = datetime.timedelta(minutes=10)
     ts_id = int(str(get_time(departure).seconds // 60) + str(delta.seconds // 60))
     time_slot = TimeSlot(ts_id,
