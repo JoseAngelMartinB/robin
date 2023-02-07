@@ -534,19 +534,62 @@ class Passenger:
         self.arrival_time = arrival_time
         self.purchase_day = purchase_day
 
-    def _get_utility_time_desplacement(self) -> float:
-        pass
+    def _get_utility_arrival_time(self, service_arrival_time: float) -> float:
+        """
+        Returns the utility of the passenger given the arrival time.
 
-    def _get_utility_departure_time(self) -> float:
-        pass
+        Args:
+            service_arrival_time (float): The arrival time of the service.
 
-    def _get_utility_price(self) -> float:
-        pass
+        Returns:
+            float: The utility of the passenger given the arrival time.
+        """
+        earlier_displacement = max(self.arrival_time - service_arrival_time, 0)
+        later_displacement = max(service_arrival_time - self.arrival_time, 0)
+        penalty = self.user_pattern.penalty_arrival_time
+        return penalty * np.exp(-penalty * (earlier_displacement + later_displacement))
 
-    def _get_utility_travel_time(self) -> float:
-        pass
+    def _get_utility_departure_time(self, service_departure_time: float) -> float:
+        """
+        Returns the utility of the passenger given the departure time.
 
-    def get_utility(self) -> float:
+        Args:
+            service_departure_time (float): The departure time of the service.
+
+        Returns:
+            float: The utility of the passenger given the departure time.
+        """
+        dt_begin = self.user_pattern.forbidden_departure_hours[0]
+        dt_end = self.user_pattern.forbidden_departure_hours[1]
+        departure_time = min(max(dt_end - service_departure_time, 0), dt_end - dt_begin)
+        return self.user_pattern.penalty_departure_time * departure_time
+
+    def _get_utility_price(self, price: float) -> float:
+        """
+        Returns the utility of the passenger given the price.
+
+        Args:
+            price (float): The price of the service.
+
+        Returns:
+            float: The utility of the passenger given the price.
+        """
+        return self.user_pattern.penalty_cost * price
+
+    def _get_utility_travel_time(self, service_arrival_time: float, service_departure_time: float) -> float:
+        """
+        Returns the utility of the passenger given the travel time.
+
+        Args:
+            service_arrival_time (float): The arrival time of the service.
+            service_departure_time (float): The departure time of the service.
+
+        Returns:
+            float: The utility of the passenger given the travel time.
+        """
+        return self.user_pattern.penalty_travel_time * (service_arrival_time - service_departure_time)
+
+    def get_utility(self, service_arrival_time: float, service_departure_time: float, price: float) -> float:
         pass
 
     def __str__(self) -> str:
