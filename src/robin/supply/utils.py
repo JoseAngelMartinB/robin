@@ -8,24 +8,24 @@ import re
 
 def get_time(time):
     """
-    Function which returns a datetime.timedelta object from a string time in format HH:MM
+    Function which returns a datetime.timedelta object from a string time in format HH:MM:SS
 
     Args:
-        time: string time in format HH:MM
+        time: string time in format HH:MM:SS
 
     Returns:
         datetime.timedelta object
     """
-    r = re.compile('.*:.*')
+    r = re.compile('.*:.*:.*')
 
-    if not all([r.match(time), len(time.split(":")) == 2, all(t.isdigit() for t in time.split(":"))]):
+    if not all([r.match(time), len(time.split(":")) == 3, all(t.isdigit() for t in time.split(":"))]):
         raise InvalidTimeStringFormat(time)
 
-    h, m = (int(t) for t in time.split(":"))
-    if h not in range(0, 24) and m not in range(0, 60):
+    (h, m, s) = (int(t) for t in time.split(":"))
+    if h not in range(0, 24) and m not in range(0, 60) and s not in range(0, 60):
         raise InvalidTimeStringFormat(time)
 
-    return datetime.timedelta(hours=int(h), minutes=int(m))
+    return datetime.timedelta(hours=int(h), minutes=int(m), seconds=int(s))
 
 
 def get_date(date):
