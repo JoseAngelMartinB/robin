@@ -135,7 +135,7 @@ def load_scraping(file):
                   'rollingStock')
 
     # 5. Build TSP for Renfe
-    renfe_tsp = TSP(1, "Renfe", [rs.id for rs in renfe_rs])
+    renfe_tsp = TSP(1, "Renfe", [rs for rs in renfe_rs])
 
     write_to_yaml('../../../data/supply_data.yml',
                   {'trainServiceProvider': [tsp_to_dict(t) for t in [renfe_tsp]]},
