@@ -689,7 +689,16 @@ class Demand:
                 for userPattern in value:
                     forbidden_departure_hours = tuple(userPattern['forbidden_departure_hours'].values())
                     userPattern.pop('forbidden_departure_hours', None)
-                    user_patterns[userPattern['id']] = UserPattern(forbidden_departure_hours=forbidden_departure_hours, **userPattern)
+
+                    ids = []
+                    utilities = []
+                    for seat in userPattern['seats']:
+                        ids.append(seat['id'])
+                        utilities.append(seat['utility'])
+                    seats = dict(zip(ids, utilities))
+                    userPattern.pop('seats', None)
+
+                    user_patterns[userPattern['id']] = UserPattern(forbidden_departure_hours=forbidden_departure_hours, seats=seats, **userPattern)
             elif key == 'demandPattern':
                 for demandPattern in value:
                     user_pattern_distribution = {}
