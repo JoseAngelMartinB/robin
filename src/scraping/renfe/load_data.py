@@ -110,6 +110,16 @@ def load_scraping(file):
     # 1.7 Build Corridor
     first_station, last_station = tuple(stations.values())[::len(stations) - 1]
     corr_name = first_station.shortname + "-" + last_station.shortname
+
+    def corridor_tree(sta):
+        """
+        TODO: Not implemented yet
+        """
+        if len(sta) == 1:
+            return {'org': sta[0], 'des': []}
+
+        return [{'org': sta[0], 'des': corridor_tree(sta[1:])}]
+
     corrMadBar = Corridor(1, corr_name, list(stations.keys()))
 
     write_to_yaml('../../../data/supply_data.yml',
