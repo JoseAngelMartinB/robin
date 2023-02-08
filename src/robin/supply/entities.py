@@ -1,6 +1,6 @@
 """Entities for the supply module."""
 
-from src.robin.supply.utils import get_time, get_date
+from src.robin.supply.utils import get_time, get_date, format_td
 from copy import deepcopy
 
 from typing import List, Tuple, Mapping
@@ -92,7 +92,9 @@ class Corridor(object):
     Attributes:
         id (int): Corridor ID
         name (str): Corridor name
-        tree (List[Mapping]): Tree of stations
+        tree (List[Mapping]): Tree of stations (with Station objects)
+        paths (List[List[Station]]): List of paths (list of stations)
+        stations (Dict[str, Station]): Dictionary of stations (with Station IDs as keys)
     """
 
     def __init__(self, id_: int, name: str, tree: List[Mapping]):
@@ -100,7 +102,7 @@ class Corridor(object):
         self.name = name
         self.tree = tree
         self.paths = self._get_paths(self.tree)
-        self.stations = self._set_stations(self.tree)
+        self.stations = self._dict_stations(self.tree)
 
     def _get_paths(self, tree, path=None, paths=None):
         if path is None:
@@ -118,16 +120,16 @@ class Corridor(object):
 
         return paths
 
-    def _set_stations(self, tree, sta=None):
+    def _dict_stations(self, tree, sta=None):
         if sta is None:
-            sta = set()
+            sta = {}
 
         if not tree:
             return
         else:
             for node in tree:
-                sta.add(node['org'])
-                self._set_stations(node['des'], sta)
+                sta[node['org'].id] = node['org']
+                self._dict_stations(node['des'], sta)
 
         return sta
 
@@ -143,7 +145,7 @@ class Line(object):
         id (int): Line ID
         name (str): Line name
         corridor (Corridor): Corridor ID where the Line belongs to
-        stops (List[str]): List of Stations being served by the Line
+        stops (List[Station]): List of Stations being served by the Line
         timetable (Mapping[Station, Tuple[float, float]]): {station ID: (arrival (float), departure (float)}
         pairs (List[Tuple[Station, Station]]): List with attended pairs of stations (origin, destination)
     """
@@ -152,18 +154,18 @@ class Line(object):
         self.id = id_
         self.name = name
         self.corridor = corridor
-        self.stops = list(timetable.keys())
         self.timetable = timetable
-        self.pairs = self._getpairs()
+        self.stations = list(map(lambda sid: self.corridor.stations[sid], list(self.timetable.keys())))
+        self.pairs = self._get_pairs()
 
-    def _getpairs(self):
+    def _get_pairs(self):
         """
-        Private method to get each pair of stations of the line, using the stops list
+        Private method to get each pair of stations of the Line, using the station list
 
         Returns:
-            List of tuple pairs (str, str): (origin, destination)
+            List of tuple pairs (Station, Station): (origin, destination)
         """
-        return [(a, b) for i, a in enumerate(self.stops) for b in self.stops[i + 1:]]
+        return {(a.id, b.id): (a, b) for i, a in enumerate(self.stations) for b in self.stations[i + 1:]}
 
     def __str__(self):
         return f'[{self.id}, {self.name}, Corridor id: {self.corridor}, {self.timetable}]'
@@ -262,23 +264,47 @@ class Service(object):
                  time_slot: TimeSlot,
                  rolling_stock: RollingStock,
                  prices: Mapping[Tuple[str, str], Mapping[Seat, float]],
-                 capacity: str):  # TODO: Check capacity in docs
+                 capacity_type: str):  # TODO: Check capacity in docs
 
         self.id = id_
         self.date = get_date(date)
         self.line = line
         self.tsp = tsp
         self.timeSlot = time_slot
+        self.schedule = self._get_absolute_schedule()
         self.rollingStock = rolling_stock
+        self.capacityType = capacity_type
+
+        if self.capacityType == 'Train':
+            self.capacity = deepcopy(self.rollingStock.seats)  # Mapping[int, int]: {hard_type: quantity}
+        else:
+            raise NotImplementedError('Not implemented yet')
+
         self.prices = prices
-        self.capacity = capacity
+
+    def _get_absolute_schedule(self):
+        absolute_schedule = []
+        for dt, at in list(self.line.timetable.values()):
+            abs_dt = datetime.timedelta(seconds=dt*60) + self.timeSlot.start
+            abs_at = datetime.timedelta(seconds=at*60) + self.timeSlot.start
+            absolute_schedule.append((abs_dt, abs_at))
+
+        return absolute_schedule
+
+    def buy_ticket(self, origin: str, destination: str, seat_type: Seat):
+        if self.capacityType == 'Train':
+            if self.capacity[seat_type.hard_type] > 0:
+                self.capacity[seat_type.hard_type] -= 1
+        else:
+            raise NotImplementedError('Not implemented yet')
 
     def __str__(self):
         new_line = "\n\t\t"
         return f'Service id: {self.id} \n' \
                f'\tDate of service: {self.date} \n' \
-               f'\tStops: {self.line.stops} \n' \
-               f'\tLine times: {list(self.line.timetable.values())} \n' \
+               f'\tStops: {[sta.id for sta in self.line.stations]} \n' \
+               f'\tLine times (relative): {list(self.line.timetable.values())} \n' \
+               f'\tLine times (absolute): {[(format_td(at), format_td(dt)) for at, dt in self.schedule]} \n' \
                f'\tTrain Service Provider: {self.tsp} \n' \
                f'\tTime Slot: {self.timeSlot} \n' \
                f'\tRolling Stock: {self.rollingStock} \n' \
@@ -298,15 +324,16 @@ class Supply(object):
     """
 
     def __init__(self, data: Mapping[str, Mapping]):
-        self.data = data if data is not None else {}
-        self.stations = {} if 'stations' not in self.data else self._get_stations(key='stations')
-        self.timeSlots = {} if 'timeSlot' not in self.data else self._get_time_slots(key='timeSlot')
-        self.corridors = {} if 'corridor' not in self.data else self._get_corridors(key='corridor')
-        self.lines = {} if 'line' not in self.data else self._get_lines(key='line')
-        self.seats = {} if 'seat' not in self.data else self._get_seats(key='seat')
-        self.rollingStock = {} if 'rollingStock' not in self.data else self._get_rolling_stock(key='rollingStock')
-        self.tsps = {} if 'trainServiceProvider' not in self.data else self._get_tsps(key='trainServiceProvider')
-        self.services = {} if 'service' not in self.data else self._get_services(key='service')
+        self._data = data if data is not None else {}
+        self._stations = {} if 'stations' not in self._data else self._get_stations(key='stations')
+        self._timeSlots = {} if 'timeSlot' not in self._data else self._get_time_slots(key='timeSlot')
+        self._corridors = {} if 'corridor' not in self._data else self._get_corridors(key='corridor')
+        self._lines = {} if 'line' not in self._data else self._get_lines(key='line')
+        self._seats = {} if 'seat' not in self._data else self._get_seats(key='seat')
+        self._rollingStock = {} if 'rollingStock' not in self._data else self._get_rolling_stock(key='rollingStock')
+        self._tsps = {} if 'trainServiceProvider' not in self._data else self._get_tsps(key='trainServiceProvider')
+
+        self.services = {} if 'service' not in self._data else self._get_services(key='service')
 
     @classmethod
     def from_yaml(cls, path: str):
@@ -338,7 +365,8 @@ class Supply(object):
         filtered_services = []
 
         for s in self.services.values():
-            if s.date == date and (origin, destination) in s.line.pairs:
+
+            if s.date == date and (origin, destination) in s.line.pairs.keys():
                 new_s = deepcopy(s)
                 new_s.prices = {p: new_s.prices[p] for p in new_s.prices if p == (origin, destination)}
                 filtered_services.append(new_s)
@@ -356,7 +384,7 @@ class Supply(object):
             Mapping[str, Station]: Dict of Station objects {station_id: Station object}
         """
         stations = {}
-        for s in self.data[key]:
+        for s in self._data[key]:
             assert all(k in s.keys() for k in ('id', 'name', 'short_name', 'city')), "Incomplete Station data"
 
             coords = tuple(s.get('coordinates', {'lat': None, 'lon': None}).values())
@@ -375,7 +403,7 @@ class Supply(object):
             Mapping[str, TimeSlot]: Dict of TimeSlot objects {time_slot_id: TimeSlot object}
         """
         time_slots = {}
-        for ts in self.data[key]:
+        for ts in self._data[key]:
             assert all(k in ts.keys() for k in ('id', 'start', 'end')), "Incomplete TimeSlot data"
 
             time_slots[ts['id']] = TimeSlot(ts['id'], ts['start'], ts['end'])
@@ -427,14 +455,14 @@ class Supply(object):
             return sta
 
         corridors = {}
-        for c in self.data[key]:
+        for c in self._data[key]:
             assert all(k in c.keys() for k in ('id', 'name', 'stations')), "Incomplete Corridor data"
 
             corr_stations_ids = set_stations_ids(c['stations'])
 
-            assert all(s in self.stations.keys() for s in corr_stations_ids), "Station not found in Station list"
+            assert all(s in self._stations.keys() for s in corr_stations_ids), "Station not found in Station list"
 
-            stations_tree = to_station(deepcopy(c['stations']), self.stations)
+            stations_tree = to_station(deepcopy(c['stations']), self._stations)
 
             corridors[c['id']] = Corridor(c['id'], c['name'], stations_tree)
 
@@ -451,16 +479,16 @@ class Supply(object):
             Mapping[str, Line]: Dict of Line objects {line_id: Line object}
         """
         lines = {}
-        for ln in self.data[key]:
+        for ln in self._data[key]:
             assert all(k in ln.keys() for k in ('id', 'name', 'corridor', 'stops')), "Incomplete Line data"
 
-            assert ln['corridor'] in self.corridors.keys(), "Corridor not found in Corridor list"
-            corr = self.corridors[ln['corridor']]
+            assert ln['corridor'] in self._corridors.keys(), "Corridor not found in Corridor list"
+            corr = self._corridors[ln['corridor']]
 
             for stn in ln['stops']:
                 assert all(k in stn for k in ('station', 'arrival_time', 'departure_time')), "Incomplete Stops data"
 
-            corr_stations_ids = [s.id for s in corr.stations]
+            corr_stations_ids = [s.id for s in corr.stations.values()]
             assert all(s['station'] in corr_stations_ids for s in ln['stops']), "Station not found in Corridor list"
 
             timetable = {s['station']: (float(s['arrival_time']), float(s['departure_time']))
@@ -481,7 +509,7 @@ class Supply(object):
             Mapping[str, Seat]: Dict of Seat objects {seat_id: Seat object}
         """
         seats = {}
-        for s in self.data[key]:
+        for s in self._data[key]:
             assert all(k in s.keys() for k in ('id', 'name', 'hard_type', 'soft_type')), "Incomplete Seat data"
 
             seats[s['id']] = Seat(s['id'], s['name'], s['hard_type'], s['soft_type'])
@@ -499,13 +527,13 @@ class Supply(object):
             Mapping[str, RollingStock]: Dict of RollingStock objects {rolling_stock_id: RollingStock object}
         """
         rolling_stock = {}
-        for rs in self.data[key]:
+        for rs in self._data[key]:
             assert all(k in rs.keys() for k in ('id', 'name', 'seats')), "Incomplete RollingStock data"
 
             for st in rs['seats']:
                 assert all(k in st for k in ('hard_type', 'quantity')), "Incomplete seats data for RS"
 
-            assert all(s['hard_type'] in [s.hard_type for s in self.seats.values()] for s in rs['seats']), \
+            assert all(s['hard_type'] in [s.hard_type for s in self._seats.values()] for s in rs['seats']), \
                 "Invalid hard_type for RS"
 
             rs_seats = {s['hard_type']: s['quantity'] for s in rs['seats']}
@@ -527,11 +555,11 @@ class Supply(object):
             Mapping[str, TSP]: Dict of TSP objects {tsp_id: TSP object}
         """
         tsp = {}
-        for op in self.data[key]:
+        for op in self._data[key]:
             assert all(k in op.keys() for k in ('id', 'name', 'rolling_stock')), "Incomplete TSP data"
-            assert all(i in self.rollingStock.keys() for i in op['rolling_stock']), "Unknown RollingStock ID"
+            assert all(i in self._rollingStock.keys() for i in op['rolling_stock']), "Unknown RollingStock ID"
 
-            tsp[op['id']] = TSP(op['id'], op['name'], [self.rollingStock[i] for i in op['rolling_stock']])
+            tsp[op['id']] = TSP(op['id'], op['name'], [self._rollingStock[i] for i in op['rolling_stock']])
 
         return tsp
 
@@ -546,7 +574,7 @@ class Supply(object):
             Mapping[str, Service]: Dict of Service objects {service_id: Service object}
         """
         services = {}
-        for s in self.data[key]:
+        for s in self._data[key]:
             service_keys = ('id', 'date', 'line', 'train_service_provider', 'time_slot', 'rolling_stock',
                             'origin_destination_tuples', 'type_of_capacity')
 
@@ -555,17 +583,17 @@ class Supply(object):
             service_id = s['id']
             service_date = s['date']
 
-            assert s['line'] in self.lines.keys(), "Line not found"
-            service_line = self.lines[s['line']]
+            assert s['line'] in self._lines.keys(), "Line not found"
+            service_line = self._lines[s['line']]
 
-            assert s['train_service_provider'] in self.tsps.keys(), "TSP not found"
-            service_tsp = self.tsps[s['train_service_provider']]
+            assert s['train_service_provider'] in self._tsps.keys(), "TSP not found"
+            service_tsp = self._tsps[s['train_service_provider']]
 
-            assert s['time_slot'] in self.timeSlots.keys(), "TimeSlot not found"
-            service_time_slot = self.timeSlots[s['time_slot']]
+            assert s['time_slot'] in self._timeSlots.keys(), "TimeSlot not found"
+            service_time_slot = self._timeSlots[s['time_slot']]
 
-            assert s['rolling_stock'] in self.rollingStock.keys(), "RollingStock not found"
-            service_rs = self.rollingStock[s['rolling_stock']]
+            assert s['rolling_stock'] in self._rollingStock.keys(), "RollingStock not found"
+            service_rs = self._rollingStock[s['rolling_stock']]
 
             service_prices = {}
             for od in s['origin_destination_tuples']:
