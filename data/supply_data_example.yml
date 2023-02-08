@@ -42,9 +42,17 @@ timeSlot:
 corridor:
   - id: 1
     name: "Madrid-Barcelona"
-    stations: ["MAD", "ZAZ", "BCN"]
-    
-# Line
+    stations:
+      - org: "MAD"
+        des:
+          - org: "ZAZ"
+            des:
+              - org: "BCN"
+                des: []
+
+    # stations: ["MAD", "ZAZ", "BCN"]
+
+# Lines
 line:
   - id: 1
     name: "L1"
