@@ -28,10 +28,10 @@ userPattern:
       start: 9
       end: 24
     seats:
-      1: 10
-      2: 20
-      3: 50
-      4: 80
+      1: 5
+      2: 10
+      3: 20
+      4: 30
     penalty_arrival_time: linear
     penalty_arrival_time_kwargs:
       m: 1
@@ -71,9 +71,9 @@ userPattern:
       end: 14
     seats:
       1: 10
-      2: 90
+      2: 30
       3: 5
-      4: 60
+      4: 20
     penalty_arrival_time: linear
     penalty_arrival_time_kwargs:
       m: 1
@@ -87,7 +87,7 @@ userPattern:
     penalty_cost: linear
     penalty_cost_kwargs:
       m: 1
-      x: 0.8
+      x: 0.4
       b: 0
     penalty_travel_time: linear
     penalty_travel_time_kwargs:
