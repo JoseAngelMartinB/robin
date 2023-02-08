@@ -58,8 +58,8 @@ userPattern:
       b: 0
     error: norm
     error_kwargs:
-      loc: 0.2
-      scale: 0.1
+      loc: 2
+      scale: 1
   - id: 2
     name: Student
     arrival_time: norm
@@ -104,8 +104,8 @@ userPattern:
       b: 0
     error: norm
     error_kwargs:
-      loc: 0.1
-      scale: 0.05
+      loc: 1
+      scale: 0.5
 
 # Demand Pattern
 demandPattern:
