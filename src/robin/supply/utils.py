@@ -49,3 +49,25 @@ def get_date(date):
 
     # Day could be out of range for month - if so, datetime will raise a ValueError Exception
     return datetime.datetime.strptime(date, "%Y-%m-%d").date()
+
+
+def format_td(td):
+    """
+    Format a timedelta object to a string in format HH:MM
+
+    Args:
+        td: timedelta object
+
+    Returns:
+        string in format HH:MM
+    """
+    seconds = td.seconds
+    hours = str(seconds // 3600)
+    minutes = str((seconds % 3600) // 60)
+
+    if len(hours) == 1:
+        hours = '0' + hours
+    if len(minutes) == 1:
+        minutes = '0' + minutes
+
+    return f'{hours}:{minutes}'
