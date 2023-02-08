@@ -6,8 +6,10 @@ from src.robin.supply.utils import get_date
 my_supply = Supply.from_yaml("../../../data/supply_data_example.yml")
 
 print("Available stations: ")
-for sid in my_supply.stations:
-    print(f'Station ID: {sid} - Station name: {my_supply.stations[sid].name}')
+stations = {sta.id: sta for serv in my_supply.services.values() for sta in serv.line.stations}
+
+for sid in stations:
+    print(f'Station ID: {sid} - Station name: {stations[sid].name}')
 print()
 
 print("Available dates: ")
