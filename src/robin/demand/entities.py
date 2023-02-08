@@ -224,6 +224,9 @@ class UserPattern:
         if iteration_count >= self.arrival_time_maximum_iterations:
             raise InvalidArrivalTimeException(self.name, self.forbidden_departure_hours, self.arrival_time_maximum_iterations)
         
+        # In case the arrival time is greater than 24, it is reduced to the range [0, 24)
+        arrival_time %= 24
+
         return arrival_time
     
     @property
