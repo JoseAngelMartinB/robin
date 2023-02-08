@@ -87,36 +87,49 @@ class TimeSlot(object):
 
 class Corridor(object):
     """
-    Corridor: Sequence of stations.
+    Corridor: Tree of stations.
 
     Attributes:
         id (int): Corridor ID
         name (str): Corridor name
-        stations (List[Station]): List of Station's of which the Corridor is composed
+        tree (List[Mapping]): Tree of stations
     """
 
-    # TODO: Corridor as a tree structure (parent-child relationship between stations - List[Tuple[str, str]]??)
-    def __init__(self, id_: int, name: str, stations: List[Station]):
+    def __init__(self, id_: int, name: str, tree: List[Mapping]):
         self.id = id_
         self.name = name
-        self.stations = stations
+        self.tree = tree
+        self.paths = self._get_paths(self.tree)
+        self.stations = self._set_stations(self.tree)
 
-    def get_paths(self, corr, current_path=[], paths=[]):
-        """
-        NOT YET IMPLEMENTED - Get all root-leaf path from corridor as a tree structure
+    def _get_paths(self, tree, path=None, paths=None):
+        if path is None:
+            path = []
 
-        corr = [{'parent': "60000", 'chd': [{'parent': "04040", 'chd': [{'parent': "71801", 'chd': []}]},
-                                                                        {'parent': "50000", 'chd': []}]}]
-        """
-        if corr == []:
-            return paths.append(current_path)
+        if paths is None:
+            paths = []
 
-        for node in corr:
-            current_path.append(node['parent'])
-            self.get_paths(node['chd'], current_path[:], paths)
+        if not tree:
+            paths.append(path)
+            return
+
+        for node in tree:
+            self._get_paths(node['des'], path + [node['org']], paths)
 
         return paths
 
+    def _set_stations(self, tree, sta=None):
+        if sta is None:
+            sta = set()
+
+        if not tree:
+            return
+        else:
+            for node in tree:
+                sta.add(node['org'])
+                self._set_stations(node['des'], sta)
+
+        return sta
 
     def __str__(self):
         return f'[{self.id}, {self.name}, {self.stations}]'
@@ -378,14 +391,52 @@ class Supply(object):
         Returns:
             Mapping[str, Corridor]: Dict of Corridor objects {corridor_id: Corridor object}
         """
+
+        def to_station(tree: Mapping, stations: Mapping[str, Station]):
+            """
+            Recursive function to build a tree of Station objects from a tree of station IDs
+
+            Args:
+                tree (Mapping): Tree of station IDs
+                stations (Mapping[str, Station]): Dict of Station objects {station_id: Station object}
+
+            Returns:
+                List[Mapping]: Tree of Station objects
+            """
+            if not tree:
+                return
+
+            for node in tree:
+                node['org'] = stations[node['org']]
+                to_station(node['des'], stations)
+
+            return tree
+
+        def set_stations_ids(tree, sta=None):
+            if sta is None:
+                sta = set()
+
+            if not tree:
+                return
+
+            else:
+                for node in tree:
+                    sta.add(node['org'])
+                    set_stations_ids(node['des'], sta)
+
+            return sta
+
         corridors = {}
         for c in self.data[key]:
             assert all(k in c.keys() for k in ('id', 'name', 'stations')), "Incomplete Corridor data"
-            assert all(s in self.stations.keys() for s in c['stations']), "Station not found in Station list"
 
-            corr_stations = [s for s in c['stations']]
+            corr_stations_ids = set_stations_ids(c['stations'])
 
-            corridors[c['id']] = Corridor(c['id'], c['name'], corr_stations)
+            assert all(s in self.stations.keys() for s in corr_stations_ids), "Station not found in Station list"
+
+            stations_tree = to_station(deepcopy(c['stations']), self.stations)
+
+            corridors[c['id']] = Corridor(c['id'], c['name'], stations_tree)
 
         return corridors
 
@@ -409,7 +460,8 @@ class Supply(object):
             for stn in ln['stops']:
                 assert all(k in stn for k in ('station', 'arrival_time', 'departure_time')), "Incomplete Stops data"
 
-            assert all(s['station'] in corr.stations for s in ln['stops']), "Station not found in Corridor list"
+            corr_stations_ids = [s.id for s in corr.stations]
+            assert all(s['station'] in corr_stations_ids for s in ln['stops']), "Station not found in Corridor list"
 
             timetable = {s['station']: (float(s['arrival_time']), float(s['departure_time']))
                          for s in ln['stops']}
