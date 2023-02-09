@@ -206,6 +206,8 @@ class UserPattern:
         
         It takes into account the forbidden departure hours.
 
+        TODO: Check if this method is correct.
+
         Returns:
             float: A random variable sample from the distribution.
 
@@ -537,6 +539,19 @@ class Passenger:
         self.arrival_time = arrival_time
         self.purchase_day = purchase_day
 
+    def _is_valid_departure_time(self, service_departure_time: float) -> bool:
+        """
+        Checks if the departure time is valid.
+
+        Args:
+            service_departure_time (float): The departure time of the service.
+
+        Returns:
+            bool: True if the departure time is valid, False otherwise.
+        """
+        forbidden_departure_hours = self.user_pattern.forbidden_departure_hours
+        return not (service_departure_time >= forbidden_departure_hours[0] and service_departure_time <= forbidden_departure_hours[1])
+
     def _get_utility_arrival_time(self, service_arrival_time: float) -> float:
         """
         Returns the utility of the passenger given the arrival time.
@@ -605,6 +620,8 @@ class Passenger:
         Returns:
             float: The utility of the passenger given the seat, the arrival time, the departure time and the price.
         """
+        if not self._is_valid_departure_time(service_departure_time):
+            return -1
         seat_utility = self.user_pattern.get_seat_utility(seat)
         arrival_time_utility = self._get_utility_arrival_time(service_arrival_time)
         departure_time_utility = self._get_utility_departure_time(service_departure_time)
