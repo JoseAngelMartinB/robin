@@ -145,7 +145,7 @@ class Line(object):
         id (int): Line ID
         name (str): Line name
         corridor (Corridor): Corridor ID where the Line belongs to
-        stops (List[Station]): List of Stations being served by the Line
+        stations (List[Station]): List of Stations being served by the Line
         timetable (Mapping[Station, Tuple[float, float]]): {station ID: (arrival (float), departure (float)}
         pairs (List[Tuple[Station, Station]]): List with attended pairs of stations (origin, destination)
     """
@@ -264,7 +264,11 @@ class Service(object):
                  time_slot: TimeSlot,
                  rolling_stock: RollingStock,
                  prices: Mapping[Tuple[str, str], Mapping[Seat, float]],
-                 capacity_type: str):  # TODO: Check capacity in docs
+                 capacity_type: str):
+
+        # {0: {}} # Train capacity
+        # Constrained capacity (limit seats available between some pairs of stations)
+        # {1: {('MAD', 'ZAR'): {hard_type 1: 20, hard_type 2: 50}, {('ZAR', 'CAL'): {1: 10, 2: 30}}}
 
         self.id = id_
         self.date = get_date(date)
@@ -278,7 +282,7 @@ class Service(object):
         if self.capacityType == 'Train':
             self.capacity = deepcopy(self.rollingStock.seats)  # Mapping[int, int]: {hard_type: quantity}
         else:
-            raise NotImplementedError('Not implemented yet')
+            raise NotImplementedError('Not implemented yet - capacityType != Train')
 
         self.prices = prices
 
@@ -296,7 +300,13 @@ class Service(object):
             if self.capacity[seat_type.hard_type] > 0:
                 self.capacity[seat_type.hard_type] -= 1
         else:
-            raise NotImplementedError('Not implemented yet')
+            raise NotImplementedError('Not implemented yet - capacityType != Train')
+
+    def availability(self, origin: str, destination: str, seat_type: Seat):
+        if self.capacityType == 'Train':
+            return self.capacity[seat_type.hard_type]
+        else:
+            raise NotImplementedError('Not implemented yet - capacityType != Train')
 
     def __str__(self):
         new_line = "\n\t\t"
@@ -310,7 +320,8 @@ class Service(object):
                f'\tRolling Stock: {self.rollingStock} \n' \
                f'\tPrices: \n' \
                f'\t\t{new_line.join(f"{key}: {value}" for key, value in self.prices.items())} \n' \
-               f'\tCapacity type: {self.capacity}'
+               f'\tCapacity: {self.capacity} \n' \
+               f'\tCapacity type: {self.capacityType} \n'
 
 
 class Supply(object):
