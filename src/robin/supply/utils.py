@@ -30,7 +30,7 @@ def get_time(time):
 
 def get_date(date):
     """
-    Function which returns a datetime.date object from a string date in format DD-MM-YYYY
+    Function which returns a datetime.date object from a string date in format YYYYY-mm-dd
 
     Args:
         date: string date in format YYYY-mm-dd
@@ -53,7 +53,7 @@ def get_date(date):
 
 def format_td(td):
     """
-    Format a timedelta object to a string in format HH:MM
+    Format a datetime.timedelta object to a string in format HH:MM
 
     Args:
         td: timedelta object
