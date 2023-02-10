@@ -23,9 +23,21 @@ def time_slot_to_dict(obj: TimeSlot):
 
 
 def corridor_to_dict(obj: Corridor):
+    def corridor_tree_ids(tree):
+        if not tree:
+            return
+
+        for node in tree:
+            node['org'] = node['org'].id
+            corridor_tree_ids(node['des'])
+
+        return tree
+
+    tree_ids = corridor_tree_ids(obj.tree)
+
     return {'id': obj.id,
             'name': obj.name,
-            'stations': obj.stations}
+            'stations': tree_ids}
 
 
 def line_to_dict(obj: Line):
@@ -73,7 +85,7 @@ def service_to_dict(obj: Service):
             'time_slot': obj.timeSlot.id,
             'rolling_stock': obj.rollingStock.id,
             'origin_destination_tuples': prices,
-            'type_of_capacity': obj.capacity}
+            'type_of_capacity': obj.capacityType}
 
 
 def get_trip_price(service_id: str, seats: Tuple[Seat, ...], price_df: pd.DataFrame, tsp="Renfe"):
@@ -181,7 +193,7 @@ def get_service(service_id: str,
                          ts_end)
 
     total_prices = {}
-    stations = corridor.stations
+    stations = [sta.id for sta in line.stations]
     dict_prices = {p: np.round(np.linspace(price[p] / 2, price[p], len(stations) - 1), 2) for p in price}
 
     for p in line.pairs:
