@@ -135,14 +135,14 @@ demandPattern:
 # Day
 day:
   - id: 1
-    date: "2023-01-10"
+    date: "2023-01-20"
     demandPattern: 1
     market: 3
   - id: 2
-    date: "2023-01-10"
+    date: "2023-01-20"
     demandPattern: 2
     market: 3
   - id: 3
-    date: "2023-01-13"
+    date: "2023-01-20"
     demandPattern: 1
     market: 2
