@@ -326,12 +326,10 @@ class Service(object):
 
 class Supply(object):
     """
-    Supply: Services available in the system that meet the users requirements:
-    From origin station ID (str), to destination station ID (str), on date D as datetime.date object (YYYY-MM-DD)
+    Supply: List of Service's available in the system
 
     Attributes:
-        data (Mapping[Mapping, Mapping]): Nested dictionary with the required data for the supply module following the
-        structure from supply_data_example.yml file
+        services List[Service]: List of services available in the system
     """
 
     def __init__(self, services: List[Service]):
@@ -340,13 +338,13 @@ class Supply(object):
     @classmethod
     def from_yaml(cls, path: str):
         """
-        Class method to create a Supply object from a yaml file
+        Class method to create a Supply object (List[Service]) from a yaml file
 
         Args:
             path (str): Path to the yaml file
 
         Returns:
-            Supply object
+            Supply object List[Service]
         """
         with open(path, 'r') as file:
             data = yaml.safe_load(file)
@@ -415,7 +413,7 @@ class Supply(object):
         Private method to build a dict of Station objects from YAML data
 
         Args:
-            data: YAML data
+            data: YAML data as nested dict
             key (str): Key to access the data in the YAML file. Default: 'stations'.
 
         Returns:
@@ -436,6 +434,7 @@ class Supply(object):
         Private method to build a dict of TimeSlot objects from YAML data
 
         Args:
+            data: YAML data as nested dict
             key (str): Key to access the data in the YAML file. Default: 'timeSlot'.
 
         Returns:
@@ -454,7 +453,7 @@ class Supply(object):
         Private method to build a dict of Corridor objects from YAML data
 
         Args:
-            data: YAML data
+            data: YAML data as nested dict
             stations (Mapping[str, Station]): Dict of Station objects {station_id: Station object}
             key (str): Key to access the data in the YAML file. Default: 'corridor'.
 
@@ -462,13 +461,13 @@ class Supply(object):
             Mapping[str, Corridor]: Dict of Corridor objects {corridor_id: Corridor object}
         """
 
-        def to_station(tree: Mapping, stations: Mapping[str, Station]):
+        def to_station(tree: Mapping, sta_dict: Mapping[str, Station]):
             """
             Recursive function to build a tree of Station objects from a tree of station IDs
 
             Args:
                 tree (Mapping): Tree of station IDs
-                stations (Mapping[str, Station]): Dict of Station objects {station_id: Station object}
+                sta_dict (Mapping[str, Station]): Dict of Station objects {station_id: Station object}
 
             Returns:
                 List[Mapping]: Tree of Station objects
@@ -477,24 +476,34 @@ class Supply(object):
                 return
 
             for node in tree:
-                node['org'] = stations[node['org']]
-                to_station(node['des'], stations)
+                node['org'] = sta_dict[node['org']]
+                to_station(node['des'], sta_dict)
 
             return tree
 
-        def set_stations_ids(tree, sta=None):
-            if sta is None:
-                sta = set()
+        def set_stations_ids(tree, sta_set=None):
+            """
+            Recursive function to build a set of station IDs from a tree of station IDs
+
+            Args:
+                tree (Mapping): Tree of station IDs
+                sta_set (set): Set of station IDs. Default: None
+
+            Returns:
+                Set of station IDs
+            """
+            if sta_set is None:
+                sta_set = set()
 
             if not tree:
                 return
 
             else:
                 for node in tree:
-                    sta.add(node['org'])
-                    set_stations_ids(node['des'], sta)
+                    sta_set.add(node['org'])
+                    set_stations_ids(node['des'], sta_set)
 
-            return sta
+            return sta_set
 
         corridors = {}
         for c in data[key]:
