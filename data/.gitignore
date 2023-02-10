@@ -1,5 +1,7 @@
 # Ignore everything in this directory
 *
-# Except this file
+# Except these files
 !.gitignore
+!supply_data_example.yml
+!supply_data.yml
 !demand_data_example.yml
