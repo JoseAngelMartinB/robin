@@ -250,8 +250,8 @@ class Service(object):
         date (datetime.date): Day of service (day, month, year, without time)
         line (Line): Line
         tsp (TSP): TSP
-        timeSlot (TimeSlot): Time Slot
-        rollingStock (RollingStock): Rolling Stock
+        time_slot (TimeSlot): Time Slot
+        rolling_stock (RollingStock): Rolling Stock
         prices Mapping[Tuple[str, str], Mapping[str, float]]: {(org station ID, dest station ID): {seat_type ID: price}}
         capacity (str): String with capacity type
     """
@@ -274,13 +274,13 @@ class Service(object):
         self.date = get_date(date)
         self.line = line
         self.tsp = tsp
-        self.timeSlot = time_slot
+        self.time_slot = time_slot
         self.schedule = self._get_absolute_schedule()
-        self.rollingStock = rolling_stock
-        self.capacityType = capacity_type
+        self.rolling_stock = rolling_stock
+        self.capacity_type = capacity_type
 
-        if self.capacityType == 'Train':
-            self.capacity = deepcopy(self.rollingStock.seats)  # Mapping[int, int]: {hard_type: quantity}
+        if self.capacity_type == 'Train':
+            self.capacity = deepcopy(self.rolling_stock.seats)  # Mapping[int, int]: {hard_type: quantity}
         else:
             raise NotImplementedError('Not implemented yet - capacityType != Train')
 
@@ -289,21 +289,21 @@ class Service(object):
     def _get_absolute_schedule(self):
         absolute_schedule = []
         for dt, at in list(self.line.timetable.values()):
-            abs_dt = datetime.timedelta(seconds=dt*60) + self.timeSlot.start
-            abs_at = datetime.timedelta(seconds=at*60) + self.timeSlot.start
+            abs_dt = datetime.timedelta(seconds=dt*60) + self.time_slot.start
+            abs_at = datetime.timedelta(seconds=at*60) + self.time_slot.start
             absolute_schedule.append((abs_dt, abs_at))
 
         return absolute_schedule
 
     def buy_ticket(self, origin: str, destination: str, seat_type: Seat):
-        if self.capacityType == 'Train':
+        if self.capacity_type == 'Train':
             if self.capacity[seat_type.hard_type] > 0:
                 self.capacity[seat_type.hard_type] -= 1
         else:
             raise NotImplementedError('Not implemented yet - capacityType != Train')
 
     def availability(self, origin: str, destination: str, seat_type: Seat):
-        if self.capacityType == 'Train':
+        if self.capacity_type == 'Train':
             return self.capacity[seat_type.hard_type]
         else:
             raise NotImplementedError('Not implemented yet - capacityType != Train')
@@ -316,12 +316,12 @@ class Service(object):
                f'\tLine times (relative): {list(self.line.timetable.values())} \n' \
                f'\tLine times (absolute): {[(format_td(at), format_td(dt)) for at, dt in self.schedule]} \n' \
                f'\tTrain Service Provider: {self.tsp} \n' \
-               f'\tTime Slot: {self.timeSlot} \n' \
-               f'\tRolling Stock: {self.rollingStock} \n' \
+               f'\tTime Slot: {self.time_slot} \n' \
+               f'\tRolling Stock: {self.rolling_stock} \n' \
                f'\tPrices: \n' \
                f'\t\t{new_line.join(f"{key}: {value}" for key, value in self.prices.items())} \n' \
                f'\tCapacity: {self.capacity} \n' \
-               f'\tCapacity type: {self.capacityType} \n'
+               f'\tCapacity type: {self.capacity_type} \n'
 
 
 class Supply(object):
@@ -334,7 +334,7 @@ class Supply(object):
         structure from supply_data_example.yml file
     """
 
-    def __init__(self, data: Mapping[str, Mapping]):
+    def __init__(self, data: Mapping[str, Mapping]):  # services: List[Service]
         self._data = data if data is not None else {}
         self._stations = {} if 'stations' not in self._data else self._get_stations(key='stations')
         self._timeSlots = {} if 'timeSlot' not in self._data else self._get_time_slots(key='timeSlot')
