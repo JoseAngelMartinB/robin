@@ -3,7 +3,7 @@
 from .exceptions import InvalidForbiddenDepartureHoursException
 from .utils import get_function, get_scipy_distribution
 
-from typing import List, Mapping, Union, Tuple
+from typing import Any, Dict, List, Mapping, Union, Tuple
 
 import datetime
 import numpy as np
@@ -654,11 +654,121 @@ class Demand:
         self.days = days
 
     @classmethod
+    def _get_markets(cls, data: List[Mapping[str, Any]]) -> Mapping[int, Market]:
+        """
+        Returns the markets.
+
+        Args:
+            data (str): The data of the YAML file.
+
+        Returns:
+            Mapping[int, Market]: The markets.
+        """
+        markets = {}
+        for market in data:
+            markets[market['id']] = Market(**market)
+        return markets
+
+    @classmethod
+    def _get_user_patterns(cls, data: List[Dict[str, Any]]) -> Mapping[int, UserPattern]:
+        """
+        Returns the user patterns.
+
+        Args:
+            data (str): The data of the YAML file.
+
+        Returns:
+            Mapping[int, UserPattern]: The user patterns.
+        """
+        user_patterns = {}
+        for user_pattern in data:
+            # Convert the forbidden departure hours into a tuple (begin, end)
+            forbidden_departure_hours = tuple(user_pattern['forbidden_departure_hours'].values())
+            user_pattern.pop('forbidden_departure_hours', None)
+
+            # Convert the list of seats into a dictionary {id: utility}
+            ids = []
+            utilities = []
+            for seat in user_pattern['seats']:
+                ids.append(seat['id'])
+                utilities.append(seat['utility'])
+            seats = dict(zip(ids, utilities))
+            user_pattern.pop('seats', None)
+
+            user_patterns[user_pattern['id']] = UserPattern(
+                forbidden_departure_hours=forbidden_departure_hours,
+                seats=seats,
+                **user_pattern
+            )
+        return user_patterns
+
+    @classmethod
+    def _get_demand_patterns(
+            cls,
+            data: List[Dict[str, Any]],
+            user_patterns: Mapping[int, UserPattern]
+        ) -> Mapping[int, DemandPattern]:
+        """
+        Returns the demand patterns.
+
+        Args:
+            data (str): The data of the YAML file.
+            user_patterns (Mapping[int, UserPattern]): The user patterns.
+
+        Returns:
+            Mapping[int, DemandPattern]: The demand patterns.
+        """
+        demand_patterns = {}
+        for demand_pattern in data:
+            # Convert the list of user pattern distributions into a dictionary {user_pattern: percentage}
+            user_pattern_distribution = {}
+            for demand_upd in demand_pattern['user_pattern_distribution']:
+                user_pattern_distribution[user_patterns[demand_upd['id']]] = demand_upd['percentage']
+            demand_pattern.pop('user_pattern_distribution', None)
+
+            demand_patterns[demand_pattern['id']] = DemandPattern(
+                user_pattern_distribution=user_pattern_distribution,
+                **demand_pattern
+            )
+        return demand_patterns
+
+    @classmethod
+    def _get_days(
+            cls,
+            data: List[Dict[str, Any]],
+            markets: Mapping[int, Market],
+            demand_patterns: Mapping[int, DemandPattern]
+        ) -> Mapping[int, Day]:
+        """
+        Returns the days.
+
+        Args:
+            data (str): The data of the YAML file.
+            markets (Mapping[int, Market]): The markets.
+            demand_patterns (Mapping[int, DemandPattern]): The demand patterns.
+
+        Returns:
+            Mapping[int, Day]: The days.
+        """
+        days = {}
+        for day in data:
+            id_ = day['id']
+            date = datetime.datetime.strptime(day['date'], '%Y-%m-%d').date()
+            demand_pattern = demand_patterns[day['demandPattern']]
+            market = markets[day['market']]
+            days[day['id']] = Day(id=id_, date=date, demand_pattern=demand_pattern, market=market)
+        return days
+
+    @classmethod
     def from_yaml(cls, path: str) -> 'Demand':
         """
         Creates a demand from a YAML file.
 
-        TODO: This method is too long. Refactor it.
+        NOTE: The YAML file must have the following structure:
+            - market
+            - userPattern
+            - demandPattern
+            - day
 
         Args:
             path (str): The path to the YAML file.
@@ -668,48 +778,20 @@ class Demand:
         """
         with open(path, 'r') as f:
             demand_yaml = f.read()
-
+            
         data = yaml.safe_load(demand_yaml)
-
-        markets = {}
-        user_patterns = {}
-        demand_patterns = {}
-        days = {}
 
         for key, value in data.items():
             if key == 'market':
-                for market in value:
-                    markets[market['id']] = Market(**market)
+                markets = Demand._get_markets(value)
             elif key == 'userPattern':
-                for userPattern in value:
-                    forbidden_departure_hours = tuple(userPattern['forbidden_departure_hours'].values())
-                    userPattern.pop('forbidden_departure_hours', None)
-
-                    ids = []
-                    utilities = []
-                    for seat in userPattern['seats']:
-                        ids.append(seat['id'])
-                        utilities.append(seat['utility'])
-                    seats = dict(zip(ids, utilities))
-                    userPattern.pop('seats', None)
-
-                    user_patterns[userPattern['id']] = UserPattern(forbidden_departure_hours=forbidden_departure_hours, seats=seats, **userPattern)
+                user_patterns = Demand._get_user_patterns(value)
             elif key == 'demandPattern':
-                for demandPattern in value:
-                    user_pattern_distribution = {}
-                    for demand_upd in demandPattern['user_pattern_distribution']:
-                        user_pattern_distribution[user_patterns[demand_upd['id']]] = demand_upd['percentage']
-                    demandPattern.pop('user_pattern_distribution', None)
-                    demand_patterns[demandPattern['id']] = DemandPattern(user_pattern_distribution=user_pattern_distribution, **demandPattern)
+                demand_patterns = Demand._get_demand_patterns(value, user_patterns) # type: ignore
             elif key == 'day':
-                for day in value:
-                    id_ = day['id']
-                    date = datetime.datetime.strptime(day['date'], '%Y-%m-%d').date()
-                    demand_pattern = demand_patterns[day['demandPattern']]
-                    market = markets[day['market']]
-                    days[day['id']] = Day(id=id_, date=date, demand_pattern=demand_pattern, market=market)
+                days = Demand._get_days(value, markets, demand_patterns) # type: ignore
 
-        return cls(list(days.values()))
+        return cls(list(days.values())) # type: ignore
     
     def generate_passengers(self) -> List[Passenger]:
         """
