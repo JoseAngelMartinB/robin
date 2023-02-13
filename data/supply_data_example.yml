@@ -202,7 +202,7 @@ service:
             price: 100
           - seat: 4
             price: 70
-    type_of_capacity: "Train"
+    capacity_constraints:
   - id: 2
     date: "2023-01-22"
     line: 1
@@ -243,7 +243,7 @@ service:
             price: 100
           - seat: 4
             price: 70
-    type_of_capacity: "Train"
+    capacity_constraints:
   - id: 3
     date: "2023-01-22"
     line: 4
@@ -262,4 +262,31 @@ service:
             price: 100
           - seat: 4
             price: 75
-    type_of_capacity: "Train"
+    capacity_constraints:
+  - id: 4
+    date: "2023-01-22"
+    line: 1
+    train_service_provider: 1
+    time_slot: 2
+    rolling_stock: 2
+    origin_destination_tuples:
+      - origin: "MAD"
+        destination: "BCN"
+        seats:
+          - seat: 1
+            price: 130
+          - seat: 2
+            price: 95
+          - seat: 3
+            price: 100
+          - seat: 4
+            price: 75
+    capacity_constraints:
+      - origin: "MAD"
+        destination: "ZAZ"
+        seats:
+          - hard_type: 1
+            quantity: 10
+          - hard_type: 2
+            quantity: 20
+

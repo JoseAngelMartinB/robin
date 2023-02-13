@@ -95,6 +95,9 @@ class Corridor(object):
         tree (List[Mapping]): Tree of stations (with Station objects)
         paths (List[List[Station]]): List of paths (list of stations)
         stations (Dict[str, Station]): Dictionary of stations (with Station IDs as keys)
+
+    tree dummy example*: ['org': 'MAD', 'des': [{'org': 'BAR', 'des': []}, {'org': 'BIL', 'des': []}]]
+    *In the real tree, the Station objects are used instead of the Station IDs
     """
 
     def __init__(self, id_: int, name: str, tree: List[Mapping]):
@@ -104,7 +107,16 @@ class Corridor(object):
         self.paths = self._get_paths(self.tree)
         self.stations = self._dict_stations(self.tree)
 
-    def _get_paths(self, tree, path=None, paths=None):
+    def _get_paths(self, tree: List[Mapping], path=None, paths=None):
+        """
+        Get all paths from a tree of stations
+
+        Args:
+            tree: Tree of stations
+
+        Returns:
+            paths (List[List[Station]]): List of paths (list of stations)
+        """
         if path is None:
             path = []
 
@@ -120,7 +132,16 @@ class Corridor(object):
 
         return paths
 
-    def _dict_stations(self, tree, sta=None):
+    def _dict_stations(self, tree: List[Mapping], sta=None):
+        """
+        Get dictionary of stations (with Station IDs as keys)
+
+        Args:
+            tree (List[Mapping]): Tree of stations
+
+        Returns:
+            sta (Dict[str, Station]): Dictionary of stations (with Station IDs as keys)
+        """
         if sta is None:
             sta = {}
 
@@ -264,9 +285,9 @@ class Service(object):
                  time_slot: TimeSlot,
                  rolling_stock: RollingStock,
                  prices: Mapping[Tuple[str, str], Mapping[Seat, float]],
-                 capacity_type: str):
+                 capacity_constraints: Mapping[Tuple[str, str], Mapping[int, int]] = None):
 
-        # {0: {}} # Train capacity
+        # None # Train capacity
         # Constrained capacity (limit seats available between some pairs of stations)
         # {1: {('MAD', 'ZAR'): {hard_type 1: 20, hard_type 2: 50}, {('ZAR', 'CAL'): {1: 10, 2: 30}}}
 
@@ -277,16 +298,32 @@ class Service(object):
         self.time_slot = time_slot
         self.schedule = self._get_absolute_schedule()
         self.rolling_stock = rolling_stock
-        self.capacity_type = capacity_type
+        self.capacity_constraints = capacity_constraints
 
-        if self.capacity_type == 'Train':
+        if not self.capacity_constraints:
             self.capacity = deepcopy(self.rolling_stock.seats)  # Mapping[int, int]: {hard_type: quantity}
         else:
-            raise NotImplementedError('Not implemented yet - capacityType != Train')
+            rs_capacity = deepcopy(self.rolling_stock.seats)
+
+            for constraint in self.capacity_constraints.values():
+                for ht in constraint:
+                    rs_capacity[ht] -= constraint[ht]
+
+            self.capacity = rs_capacity
 
         self.prices = prices
 
     def _get_absolute_schedule(self):
+        """
+        Private method to get the absolute schedule of the service, using the relative schedule and the time slot
+        start time
+
+        Args:
+            self (Service): Service object
+
+        Returns:
+            List of tuples (datetime.timedelta, datetime.timedelta): [(departure time, arrival time)]
+        """
         absolute_schedule = []
         for dt, at in list(self.line.timetable.values()):
             abs_dt = datetime.timedelta(seconds=dt*60) + self.time_slot.start
@@ -296,17 +333,60 @@ class Service(object):
         return absolute_schedule
 
     def buy_ticket(self, origin: str, destination: str, seat_type: Seat):
-        if self.capacity_type == 'Train':
-            if self.capacity[seat_type.hard_type] > 0:
+        """
+        Method to buy a ticket for a service
+
+        Args:
+            self (Service): Service object
+            origin (str): Origin station ID
+            destination (str): Destination station ID
+            seat_type (Seat): Seat type
+
+        Returns:
+            None
+        """
+        if not self.capacity_constraints:
+            if self.tickets_available(origin, destination, seat_type):
                 self.capacity[seat_type.hard_type] -= 1
         else:
-            raise NotImplementedError('Not implemented yet - capacityType != Train')
+            if self.tickets_available(origin, destination, seat_type):
+                if (origin, destination) in self.capacity_constraints:
+                    self.capacity_constraints[(origin, destination)][seat_type.hard_type] -= 1
+                else:
+                    self.capacity[seat_type.hard_type] -= 1
 
-    def availability(self, origin: str, destination: str, seat_type: Seat):
-        if self.capacity_type == 'Train':
-            return self.capacity[seat_type.hard_type]
+    def tickets_available(self, origin: str, destination: str, seat_type: Seat):
+        """
+        Method to check the availability of a service
+
+        Args:
+            self (Service): Service object
+            origin (str): Origin station ID
+            destination (str): Destination station ID
+            seat_type (Seat): Seat type
+
+        Returns:
+            bool: True if available, 1 if not available
+        """
+
+        """
+        if not self.capacity_type:
+            if self.capacity[seat_type.hard_type] > 0:
+                return True
         else:
-            raise NotImplementedError('Not implemented yet - capacityType != Train')
+            if (origin, destination) in self.capacity_type:
+                if self.capacity_type[(origin, destination)][seat_type.hard_type] > 0:
+                    return True
+        """
+
+        if not self.capacity_constraints or (origin, destination) not in self.capacity_constraints:
+            if self.capacity[seat_type.hard_type] > 0:
+                return True
+            return False
+
+        if self.capacity_constraints[(origin, destination)][seat_type.hard_type] > 0:
+            return True
+        return False
 
     def __str__(self):
         new_line = "\n\t\t"
@@ -321,7 +401,7 @@ class Service(object):
                f'\tPrices: \n' \
                f'\t\t{new_line.join(f"{key}: {value}" for key, value in self.prices.items())} \n' \
                f'\tCapacity: {self.capacity} \n' \
-               f'\tCapacity type: {self.capacity_type} \n'
+               f'\tCapacity constraints: {self.capacity_constraints} \n'
 
 
 class Supply(object):
@@ -644,7 +724,7 @@ class Supply(object):
         services = {}
         for s in data[key]:
             service_keys = ('id', 'date', 'line', 'train_service_provider', 'time_slot', 'rolling_stock',
-                            'origin_destination_tuples', 'type_of_capacity')
+                            'origin_destination_tuples', 'capacity_constraints')
 
             assert all(k in s.keys() for k in service_keys), "Incomplete Service data"
 
@@ -676,7 +756,21 @@ class Supply(object):
 
                 service_prices[(org, des)] = prices
 
-            service_capacity = s['type_of_capacity']
+            capacity_constraints = s['capacity_constraints']
+
+            if capacity_constraints:
+                cc_constraints = {}
+                for cc in capacity_constraints:
+                    assert all(k in cc for k in ('origin', 'destination', 'seats')), \
+                        "Incomplete capacity constraints data for Service"
+
+                    for st in cc['seats']:
+                        assert all(k in st for k in ('hard_type', 'quantity')), "Incomplete seats data for Service"
+
+                    cc_constraints[(cc['origin'], cc['destination'])] = {st['hard_type']: st['quantity']
+                                                                         for st in cc['seats']}
+            else:
+                cc_constraints = None
 
             services[service_id] = Service(service_id,
                                            service_date,
@@ -685,6 +779,6 @@ class Supply(object):
                                            service_time_slot,
                                            service_rs,
                                            service_prices,
-                                           service_capacity)
+                                           cc_constraints)
 
         return services
