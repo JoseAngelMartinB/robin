@@ -21,7 +21,7 @@ destination = input("Arrival station ID: ")
 
 date = get_date(input("Date (YYYY-MM-DD): "))
 
-services = my_supply.generate(origin, destination, date)
+services = my_supply.filter_services(origin, destination, date)
 
 print(f'Travel options - Travel from {origin} to {destination} on {date}:')
 for s in services:
