@@ -463,9 +463,9 @@ class Supply(object):
 
         return cls(list(services.values()))
 
-    def generate(self, origin: str, destination: str, date: datetime.date) -> List[Service]:
+    def filter_services(self, origin: str, destination: str, date: datetime.date) -> List[Service]:
         """
-        Generate a List of Services available in the system that meet the users requirements:
+        Filters a List of Services available in the system that meet the users requirements:
         From origin station ID, to destination station ID, on date D
 
         Args:
@@ -474,16 +474,14 @@ class Supply(object):
             date (datetime.date): Date of service (day, month, year, without time)
 
         Returns:
-            List[Service]: List of deep copies of Service objects that meet the user requests
+            List[Service]: List of Service objects that meet the user requests
         """
         filtered_services = []
 
         for s in self.services:
 
             if s.date == date and (origin, destination) in s.line.pairs.keys():
-                new_s = deepcopy(s)
-                new_s.prices = {p: new_s.prices[p] for p in new_s.prices if p == (origin, destination)}
-                filtered_services.append(new_s)
+                filtered_services.append(s)
 
         return filtered_services
 
