@@ -1,13 +1,14 @@
 """Entities for the demand module."""
 
-from .exceptions import InvalidForbiddenDepartureHoursException
-from .utils import get_function, get_scipy_distribution
-
-from typing import Any, Dict, List, Mapping, Union, Tuple
-
 import datetime
 import numpy as np
 import yaml
+
+from .exceptions import InvalidForbiddenDepartureHoursException
+from .utils import get_function, get_scipy_distribution
+
+from copy import deepcopy
+from typing import Any, Dict, List, Mapping, Union, Tuple
 
 
 class Station:
@@ -443,20 +444,31 @@ class Day:
         """
         Generates passengers according to the demand pattern.
 
+        The arrival day is calculated as the simulation date plus the purchase day.
+
+        Args:
+            id_offset (int): The id offset for the generated passengers.
+
         Returns:
             List[Passenger]: The generated passengers.
         """
         passengers = []
         for i in range(self.demand_pattern.potential_demand):
             user_pattern = self.demand_pattern.get_user_pattern()
+
+            # Arrival day is the simulation date plus the purchase day
+            arrival_day = deepcopy(self)
+            purchase_day = user_pattern.purchase_day
+            arrival_day.date += datetime.timedelta(days=purchase_day)
+
             passengers.append(
                 Passenger(
                     id=i + id_offset,
                     user_pattern=user_pattern,
                     market=self.market,
-                    arrival_day=self,
+                    arrival_day=arrival_day,
                     arrival_time=user_pattern.arrival_time,
-                    purchase_day=user_pattern.purchase_day,
+                    purchase_day=purchase_day,
                 )
             )
         return passengers
@@ -803,8 +815,9 @@ class Demand:
         passengers = []
         id_offset = 1
         for day in self.days:
-            passengers += day.generate_passengers(id_offset)
-            id_offset += len(passengers)
+            passengers_day = day.generate_passengers(id_offset)
+            passengers += passengers_day
+            id_offset += len(passengers_day)
         return passengers
 
     def __str__(self) -> str:
