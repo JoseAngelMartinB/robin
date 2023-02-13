@@ -378,7 +378,6 @@ class Service(object):
                 if self.capacity_type[(origin, destination)][seat_type.hard_type] > 0:
                     return True
         """
-
         if not self.capacity_constraints or (origin, destination) not in self.capacity_constraints:
             if self.capacity[seat_type.hard_type] > 0:
                 return True
@@ -429,37 +428,14 @@ class Supply(object):
         with open(path, 'r') as file:
             data = yaml.safe_load(file)
 
-        stations = {} if 'stations' not in data else Supply._get_stations(data,
-                                                                          key='stations')
-
-        time_slots = {} if 'timeSlot' not in data else Supply._get_time_slots(data,
-                                                                              key='timeSlot')
-
-        corridors = {} if 'corridor' not in data else Supply._get_corridors(data,
-                                                                            stations,
-                                                                            key='corridor')
-
-        lines = {} if 'line' not in data else Supply._get_lines(data,
-                                                                corridors,
-                                                                key='line')
-
-        seats = {} if 'seat' not in data else Supply._get_seats(data,
-                                                                key='seat')
-
-        rolling_stock = {} if 'rollingStock' not in data else Supply._get_rolling_stock(data,
-                                                                                        seats,
-                                                                                        key='rollingStock')
-
-        tsps = {} if 'trainServiceProvider' not in data else Supply._get_tsps(data,
-                                                                              rolling_stock,
-                                                                              key='trainServiceProvider')
-
-        services = {} if 'service' not in data else Supply._get_services(data,
-                                                                         lines,
-                                                                         tsps,
-                                                                         time_slots,
-                                                                         rolling_stock,
-                                                                         key='service')
+        stations = Supply._get_stations(data, key='stations')
+        time_slots = Supply._get_time_slots(data, key='timeSlot')
+        corridors = Supply._get_corridors(data, stations, key='corridor')
+        lines = Supply._get_lines(data, corridors, key='line')
+        seats = Supply._get_seats(data, key='seat')
+        rolling_stock = Supply._get_rolling_stock(data, seats, key='rollingStock')
+        tsps = Supply._get_tsps(data, rolling_stock, key='trainServiceProvider')
+        services = Supply._get_services(data, lines, tsps, time_slots, rolling_stock, key='service')
 
         return cls(list(services.values()))
 
@@ -576,10 +552,9 @@ class Supply(object):
             if not tree:
                 return
 
-            else:
-                for node in tree:
-                    sta_set.add(node['org'])
-                    set_stations_ids(node['des'], sta_set)
+            for node in tree:
+                sta_set.add(node['org'])
+                set_stations_ids(node['des'], sta_set)
 
             return sta_set
 
@@ -762,8 +737,12 @@ class Supply(object):
                     assert all(k in cc for k in ('origin', 'destination', 'seats')), \
                         "Incomplete capacity constraints data for Service"
 
+                    assert all(s in service_line.corridor.stations.keys() for s in (cc['origin'], cc['destination'])), \
+                        "Invalid station in capacity constraints"
+
                     for st in cc['seats']:
                         assert all(k in st for k in ('hard_type', 'quantity')), "Incomplete seats data for Service"
+                        assert st['hard_type'] in service_rs.seats.keys(), "Invalid hard type in capacity constraints"
 
                     cc_constraints[(cc['origin'], cc['destination'])] = {st['hard_type']: st['quantity']
                                                                          for st in cc['seats']}
