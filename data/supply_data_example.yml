@@ -273,14 +273,24 @@ service:
       - origin: "MAD"
         destination: "BCN"
         seats:
-          - seat: 1
-            price: 130
           - seat: 2
             price: 95
-          - seat: 3
-            price: 100
           - seat: 4
             price: 75
+      - origin: "MAD"
+        destination: "ZAZ"
+        seats:
+          - seat: 2
+            price: 45
+          - seat: 4
+            price: 55
+      - origin: "ZAZ"
+        destination: "BCN"
+        seats:
+          - seat: 2
+            price: 55
+          - seat: 4
+            price: 65
     capacity_constraints:
       - origin: "MAD"
         destination: "ZAZ"
