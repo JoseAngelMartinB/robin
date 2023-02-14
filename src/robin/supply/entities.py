@@ -288,7 +288,7 @@ class Service(object):
                  tsp: TSP,
                  time_slot: TimeSlot,
                  rolling_stock: RollingStock,
-                 prices: Mapping[Tuple[str, str], Mapping[Seat, float]],
+                 prices: Mapping[Tuple[str, str], Mapping[int, float]],
                  capacity_constraints: Mapping[Tuple[str, str], Mapping[int, int]] = None):
 
         # None # Train capacity
