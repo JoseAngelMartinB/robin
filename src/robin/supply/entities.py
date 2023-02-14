@@ -3,7 +3,7 @@
 from src.robin.supply.utils import get_time, get_date, format_td
 from copy import deepcopy
 
-from typing import List, Tuple, Mapping
+from typing import Dict, List, Tuple, Mapping
 import datetime
 import yaml
 
@@ -220,10 +220,10 @@ class RollingStock(object):
     Attributes:
         id (int): Rolling Stock ID
         name (str): Rolling Stock name
-        seats (Mapping[int, int]): Number of seats for each hard_type {hard_type1: quantity1, hard_type2: quantity2}
+        seats (Dict[int, int]): Number of seats for each hard_type {hard_type1: quantity1, hard_type2: quantity2}
     """
 
-    def __init__(self, id_: int, name: str, seats: Mapping[int, int]):
+    def __init__(self, id_: int, name: str, seats: Dict[int, int]):
         self.id = id_
         self.name = name
         self.seats = seats
@@ -289,7 +289,7 @@ class Service(object):
                  time_slot: TimeSlot,
                  rolling_stock: RollingStock,
                  prices: Mapping[Tuple[str, str], Mapping[int, float]],
-                 capacity_constraints: Mapping[Tuple[str, str], Mapping[int, int]] = None):
+                 capacity_constraints: Dict[Tuple[str, str], Dict[int, int]] = None):
 
         # None # Train capacity
         # Constrained capacity (limit seats available between some pairs of stations)
@@ -338,7 +338,7 @@ class Service(object):
 
         return absolute_schedule
 
-    def buy_ticket(self, origin: str, destination: str, seat_type: Seat) -> bool:
+    def buy_ticket(self, origin: str, destination: str, seat: Seat) -> bool:
         """
         Method to buy a ticket for a service
 
@@ -346,25 +346,25 @@ class Service(object):
             self (Service): Service object
             origin (str): Origin station ID
             destination (str): Destination station ID
-            seat_type (Seat): Seat type
+            seat (Seat): Seat type
 
         Returns:
             True if the ticket was bought, False if not
         """
 
-        if self.tickets_available(origin, destination, seat_type):
+        if self.tickets_available(origin, destination, seat):
             return False
 
         if not self.capacity_constraints:
-            self.capacity[seat_type.hard_type] -= 1
+            self.capacity[seat.hard_type] -= 1
         elif (origin, destination) in self.capacity_constraints:
-            self.capacity_constraints[(origin, destination)][seat_type.hard_type] -= 1
+            self.capacity_constraints[(origin, destination)][seat.hard_type] -= 1
         else:
-            self.capacity[seat_type.hard_type] -= 1
+            self.capacity[seat.hard_type] -= 1
 
         return True
 
-    def tickets_available(self, origin: str, destination: str, seat_type: Seat) -> bool:
+    def tickets_available(self, origin: str, destination: str, seat: Seat) -> bool:
         """
         Method to check the availability of a service
 
@@ -372,18 +372,18 @@ class Service(object):
             self (Service): Service object
             origin (str): Origin station ID
             destination (str): Destination station ID
-            seat_type (Seat): Seat type
+            seat (Seat): Seat type
 
         Returns:
             bool: True if available, False if not available
         """
 
         if not self.capacity_constraints or (origin, destination) not in self.capacity_constraints:
-            if self.capacity[seat_type.hard_type] > 0:
+            if self.capacity[seat.hard_type] > 0:
                 return True
             return False
 
-        if self.capacity_constraints[(origin, destination)][seat_type.hard_type] > 0:
+        if self.capacity_constraints[(origin, destination)][seat.hard_type] > 0:
             return True
         return False
 
