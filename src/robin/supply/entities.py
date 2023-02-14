@@ -272,9 +272,13 @@ class Service(object):
         line (Line): Line
         tsp (TSP): TSP
         time_slot (TimeSlot): Time Slot
+        schedule (List[Tuple[datetime.timedelta, datetime.timedelta]]): List of tuples (arrival, departure)
+        service_departure_time (float): Service departure time in hours
+        service_arrival_time (float): Service arrival time in hours
         rolling_stock (RollingStock): Rolling Stock
-        prices Mapping[Tuple[str, str], Mapping[str, float]]: {(org station ID, dest station ID): {seat_type ID: price}}
-        capacity (str): String with capacity type
+        prices (Mapping[Tuple[str, str], Mapping[str, float]]): Prices for each pair of stations and seat type
+        capacity_constrains (Mapping[Tuple[str, str], Mapping[int, int]]): Constrained capacity (limit seats available
+        between some pairs of stations)
     """
 
     def __init__(self,
@@ -297,6 +301,8 @@ class Service(object):
         self.tsp = tsp
         self.time_slot = time_slot
         self.schedule = self._get_absolute_schedule()
+        self.service_departure_time = self.schedule[0][0].seconds / 3600 # Service departure time in hours
+        self.service_arrival_time = self.schedule[-1][0].seconds / 3600  # Service arrival time in hours
         self.rolling_stock = rolling_stock
         self.capacity_constraints = capacity_constraints
 
