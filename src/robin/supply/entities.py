@@ -350,8 +350,7 @@ class Service(object):
         Returns:
             True if the ticket was bought, False if not
         """
-
-        if self.tickets_available(origin, destination, seat):
+        if not self.tickets_available(origin, destination, seat):
             return False
 
         if not self.capacity_constraints:
