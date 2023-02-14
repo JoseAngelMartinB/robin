@@ -36,7 +36,7 @@ class Kernel:
         """
         Simulate the demand-supply interaction.
 
-        The passegers will maximize the utility for each service and seat, 
+        The passengers will maximize the utility for each service and seat, 
         according to its origin-destination and date, buying a ticket
         only if the utility is positive.
 
