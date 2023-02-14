@@ -1,14 +1,19 @@
 """Entities for the kernel module."""
 
+import numpy as np
+import os
+import random
+
 from src.robin.demand.entities import Demand
 from src.robin.supply.entities import Service, Supply
-from typing import List
+from typing import List, Union
 
 
 class Kernel:
     
-    def __init__(self, path_config_supply: str, path_config_demand: str, seed: int = 0):
-        self.set_seed(seed)
+    def __init__(self, path_config_supply: str, path_config_demand: str, seed: Union[int, None] = None):
+        if seed is not None:
+            self.set_seed(seed)
         self.supply = Supply.from_yaml(path_config_supply)
         self.demand = Demand.from_yaml(path_config_demand)
 
@@ -59,4 +64,6 @@ class Kernel:
         return self.supply.services
     
     def set_seed(self, seed: int):
-        pass
+        random.seed(seed)
+        np.random.seed(seed)
+        os.environ['PYTHONHASHSEED'] = str(seed)
