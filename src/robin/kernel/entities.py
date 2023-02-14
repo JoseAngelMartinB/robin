@@ -10,14 +10,39 @@ from typing import List, Union
 
 
 class Kernel:
+    """
+    The kernel class integrates the supply and demand modules.
+
+    Attributes:
+        supply (Supply): Supply object.
+        demand (Demand): Demand object.
+    """
     
     def __init__(self, path_config_supply: str, path_config_demand: str, seed: Union[int, None] = None):
+        """
+        Initialize the kernel object.
+
+        Args:
+            path_config_supply (str): Path to the supply configuration file.
+            path_config_demand (str): Path to the demand configuration file.
+            seed (int, optional): Seed for the random number generator. Defaults to None.
+        """
         if seed is not None:
             self.set_seed(seed)
         self.supply = Supply.from_yaml(path_config_supply)
         self.demand = Demand.from_yaml(path_config_demand)
 
     def simulate(self) -> List[Service]:
+        """
+        Simulate the demand-supply interaction.
+
+        The passegers will maximize the utility for each service and seat, 
+        according to its origin-destination and date, buying a ticket
+        only if the utility is positive.
+
+        Returns:
+            List[Service]: List of services with updated tickets.
+        """
         # Generate passengers demand
         passengers = self.demand.generate_passengers()
         
@@ -63,7 +88,13 @@ class Kernel:
 
         return self.supply.services
     
-    def set_seed(self, seed: int):
+    def set_seed(self, seed: int) -> None:
+        """
+        Set seed for the random number generator.
+
+        Args:
+            seed (int): Seed for the random number generator.
+        """
         random.seed(seed)
         np.random.seed(seed)
         os.environ['PYTHONHASHSEED'] = str(seed)
