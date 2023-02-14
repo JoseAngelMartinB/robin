@@ -132,25 +132,23 @@ class Corridor(object):
 
         return paths
 
-    def _dict_stations(self, tree: List[Mapping], sta=None) -> Mapping[str, Station]:
+    def _dict_stations(self, tree: List[Dict], sta=None) -> Dict[str, Station]:
         """
         Get dictionary of stations (with Station IDs as keys)
 
         Args:
-            tree (List[Mapping]): Tree of stations
+            tree (List[Dict]): Tree of stations
 
         Returns:
-            sta (Dict[str, Station]): Dictionary of stations (with Station IDs as keys)
+            sta (Dict[str, Station]): Dictionary of stations, with Station IDs as keys, and Station objects as values
         """
         if sta is None:
             sta = {}
 
-        if not tree:
-            return
-        else:
-            for node in tree:
-                sta[node['org'].id] = node['org']
-                self._dict_stations(node['des'], sta)
+        for node in tree:
+            org = node['org']
+            sta[org.id] = org
+            self._dict_stations(node['des'], sta)
 
         return sta
 
