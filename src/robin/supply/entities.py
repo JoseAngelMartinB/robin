@@ -26,7 +26,7 @@ class Station(object):
         self.shortname = shortname
         self.coords = coords
 
-    def add_coords(self, coords: Tuple[float, float]):
+    def add_coords(self, coords: Tuple[float, float]) -> None:
         """
         Add coordinates to a Station object
 
@@ -107,7 +107,7 @@ class Corridor(object):
         self.paths = self._get_paths(self.tree)
         self.stations = self._dict_stations(self.tree)
 
-    def _get_paths(self, tree: List[Mapping], path=None, paths=None):
+    def _get_paths(self, tree: List[Mapping], path=None, paths=None) -> List[List[Station]]:
         """
         Get all paths from a tree of stations
 
@@ -132,7 +132,7 @@ class Corridor(object):
 
         return paths
 
-    def _dict_stations(self, tree: List[Mapping], sta=None):
+    def _dict_stations(self, tree: List[Mapping], sta=None) -> Mapping[str, Station]:
         """
         Get dictionary of stations (with Station IDs as keys)
 
@@ -209,6 +209,9 @@ class Seat(object):
         self.hard_type = hard_type
         self.soft_type = soft_type
 
+    def __repr__(self):
+        return f'{self.name}'
+
     def __str__(self):
         return f'[{self.id}, {self.name}, {self.hard_type}, {self.soft_type}]'
 
@@ -276,8 +279,8 @@ class Service(object):
         service_departure_time (float): Service departure time in hours
         service_arrival_time (float): Service arrival time in hours
         rolling_stock (RollingStock): Rolling Stock
-        prices (Mapping[Tuple[str, str], Mapping[str, float]]): Prices for each pair of stations and seat type
-        capacity_constrains (Mapping[Tuple[str, str], Mapping[int, int]]): Constrained capacity (limit seats available
+        prices (Mapping[Tuple[str, str], Mapping[Seat, float]]): Prices for each pair of stations and Seat type
+        capacity_constraints (Mapping[Tuple[str, str], Mapping[int, int]]): Constrained capacity (limit seats available
         between some pairs of stations)
     """
 
@@ -288,12 +291,8 @@ class Service(object):
                  tsp: TSP,
                  time_slot: TimeSlot,
                  rolling_stock: RollingStock,
-                 prices: Mapping[Tuple[str, str], Mapping[int, float]],
+                 prices: Mapping[Tuple[str, str], Mapping[Seat, float]],
                  capacity_constraints: Dict[Tuple[str, str], Dict[int, int]] = None):
-
-        # None # Train capacity
-        # Constrained capacity (limit seats available between some pairs of stations)
-        # {1: {('MAD', 'ZAR'): {hard_type 1: 20, hard_type 2: 50}, {('ZAR', 'CAL'): {1: 10, 2: 30}}}
 
         self.id = id_
         self.date = get_date(date)
@@ -435,7 +434,7 @@ class Supply(object):
         seats = Supply._get_seats(data, key='seat')
         rolling_stock = Supply._get_rolling_stock(data, seats, key='rollingStock')
         tsps = Supply._get_tsps(data, rolling_stock, key='trainServiceProvider')
-        services = Supply._get_services(data, lines, tsps, time_slots, rolling_stock, key='service')
+        services = Supply._get_services(data, lines, tsps, time_slots, seats, rolling_stock, key='service')
 
         return cls(list(services.values()))
 
@@ -679,7 +678,7 @@ class Supply(object):
         return tsp
 
     @classmethod
-    def _get_services(cls, data, lines, tsps, time_slots, rolling_stock, key='service'):
+    def _get_services(cls, data, lines, tsps, time_slots, seats, rolling_stock, key='service'):
         """
         Private method to build a dict of Service objects from YAML data
 
@@ -724,8 +723,9 @@ class Supply(object):
                 des = od['destination']
                 for st in od['seats']:
                     assert all(k in st for k in ('seat', 'price')), "Incomplete seats data for Service"
+                    assert st['seat'] in seats, "Invalid seat in Service prices"
 
-                prices = {st['seat']: st['price'] for st in od['seats']}
+                prices = {seats[st['seat']]: st['price'] for st in od['seats']}
 
                 service_prices[(org, des)] = prices
 
