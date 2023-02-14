@@ -3,14 +3,14 @@
 # Market
 market:
   - id: 1
-    departure_station: "MAD"
-    arrival_station: "ZAZ"
+    departure_station: MAD
+    arrival_station: ZAZ
   - id: 2
-    departure_station: "ZAZ"
-    arrival_station: "BCN"
+    departure_station: ZAZ
+    arrival_station: BCN
   - id: 3
-    departure_station: "MAD"
-    arrival_station: "BCN"
+    departure_station: MAD
+    arrival_station: BCN
 
 # User Pattern
 userPattern:
@@ -135,14 +135,14 @@ demandPattern:
 # Day
 day:
   - id: 1
-    date: "2023-01-20"
+    date: 2023-01-20
     demandPattern: 1
     market: 3
   - id: 2
-    date: "2023-01-20"
+    date: 2023-01-20
     demandPattern: 2
     market: 2
   - id: 3
-    date: "2023-01-20"
+    date: 2023-01-20
     demandPattern: 1
     market: 1

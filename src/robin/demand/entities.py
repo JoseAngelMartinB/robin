@@ -754,7 +754,7 @@ class Demand:
         days = {}
         for day in data:
             id_ = day['id']
-            date = datetime.datetime.strptime(day['date'], '%Y-%m-%d').date()
+            date = day['date']
             demand_pattern = demand_patterns[day['demandPattern']]
             market = markets[day['market']]
             days[day['id']] = Day(id=id_, date=date, demand_pattern=demand_pattern, market=market)
