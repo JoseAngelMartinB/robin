@@ -11,35 +11,17 @@ from copy import deepcopy
 from typing import Any, Dict, List, Mapping, Union, Tuple
 
 
-class Station:
-    """
-    Dummy class for a station.
-    
-    NOTE: This class is not yet implemented. It is just a placeholder.
-    """
-    pass
-
-
-class TimeSlot:
-    """
-    Dummy class for a time slot.
-    
-    NOTE: This class is not yet implemented. It is just a placeholder.
-    """
-    pass
-
-
 class Market:
     """
     A market is composed by the departure and arrival stations.
 
     Attributes:
         id (int): The market id.
-        departure_station (Station): The departure station.
-        arrival_station (Station): The arrival station.
+        departure_station (str): The departure station id.
+        arrival_station (str): The arrival station id.
     """
 
-    def __init__(self, id: int, departure_station: Station, arrival_station: Station) -> None:
+    def __init__(self, id: int, departure_station: str, arrival_station: str) -> None:
         """
         Initialize a market.
 
