@@ -92,7 +92,7 @@ class Corridor(object):
     Attributes:
         id (int): Corridor ID
         name (str): Corridor name
-        tree (List[Mapping]): Tree of stations (with Station objects)
+        tree (List[Dict]): Tree of stations (with Station objects)
         paths (List[List[Station]]): List of paths (list of stations)
         stations (Dict[str, Station]): Dictionary of stations (with Station IDs as keys)
 
@@ -100,19 +100,24 @@ class Corridor(object):
     *In the real tree, the Station objects are used instead of the Station IDs
     """
 
-    def __init__(self, id_: int, name: str, tree: List[Mapping]):
+    def __init__(self, id_: int, name: str, tree: List[Dict]):
         self.id = id_
         self.name = name
         self.tree = tree
         self.paths = self._get_paths(self.tree)
         self.stations = self._dict_stations(self.tree)
 
-    def _get_paths(self, tree: List[Mapping], path=None, paths=None) -> List[List[Station]]:
+    def _get_paths(self,
+                   tree: List[Mapping],
+                   path: List[Station] = None,
+                   paths: List[List[Station]] = None) -> List[List[Station]]:
         """
         Get all paths from a tree of stations
 
         Args:
             tree: Tree of stations
+            path (List[Station]): Current path (list of stations)
+            paths (List[List[Station]]): List of paths (list of stations)
 
         Returns:
             paths (List[List[Station]]): List of paths (list of stations)
@@ -124,11 +129,13 @@ class Corridor(object):
             paths = []
 
         if not tree:
-            paths.append(path)
-            return
+            paths.append(path.copy())
+            return paths
 
         for node in tree:
-            self._get_paths(node['des'], path + [node['org']], paths)
+            org = node['org']
+            new_path = path + [org]
+            self._get_paths(node['des'], new_path, paths)
 
         return paths
 
