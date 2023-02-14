@@ -313,7 +313,7 @@ class Service(object):
 
         self.prices = prices
 
-    def _get_absolute_schedule(self):
+    def _get_absolute_schedule(self) -> List[Tuple[datetime.timedelta, datetime.timedelta]]:
         """
         Private method to get the absolute schedule of the service, using the relative schedule and the time slot
         start time
@@ -332,7 +332,7 @@ class Service(object):
 
         return absolute_schedule
 
-    def buy_ticket(self, origin: str, destination: str, seat_type: Seat):
+    def buy_ticket(self, origin: str, destination: str, seat_type: Seat) -> bool:
         """
         Method to buy a ticket for a service
 
@@ -343,19 +343,22 @@ class Service(object):
             seat_type (Seat): Seat type
 
         Returns:
-            None
+            True if the ticket was bought, False if not
         """
-        if not self.capacity_constraints:
-            if self.tickets_available(origin, destination, seat_type):
-                self.capacity[seat_type.hard_type] -= 1
-        else:
-            if self.tickets_available(origin, destination, seat_type):
-                if (origin, destination) in self.capacity_constraints:
-                    self.capacity_constraints[(origin, destination)][seat_type.hard_type] -= 1
-                else:
-                    self.capacity[seat_type.hard_type] -= 1
 
-    def tickets_available(self, origin: str, destination: str, seat_type: Seat):
+        if self.tickets_available(origin, destination, seat_type):
+            return False
+
+        if not self.capacity_constraints:
+            self.capacity[seat_type.hard_type] -= 1
+        elif (origin, destination) in self.capacity_constraints:
+            self.capacity_constraints[(origin, destination)][seat_type.hard_type] -= 1
+        else:
+            self.capacity[seat_type.hard_type] -= 1
+
+        return True
+
+    def tickets_available(self, origin: str, destination: str, seat_type: Seat) -> bool:
         """
         Method to check the availability of a service
 
@@ -366,18 +369,9 @@ class Service(object):
             seat_type (Seat): Seat type
 
         Returns:
-            bool: True if available, 1 if not available
+            bool: True if available, False if not available
         """
 
-        """
-        if not self.capacity_type:
-            if self.capacity[seat_type.hard_type] > 0:
-                return True
-        else:
-            if (origin, destination) in self.capacity_type:
-                if self.capacity_type[(origin, destination)][seat_type.hard_type] > 0:
-                    return True
-        """
         if not self.capacity_constraints or (origin, destination) not in self.capacity_constraints:
             if self.capacity[seat_type.hard_type] > 0:
                 return True
