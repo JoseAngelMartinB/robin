@@ -13,13 +13,13 @@ class Station(object):
     Station: Railway facility where trains stop to load or unload passengers, freight or both.
 
     Attributes:
-        id (int): Station ID
+        id (str): Station ID
         name (str): Station name
         shortname (str): Station short name
         coords (Tuple[float, float]): Station coordinates (latitude, longitude)
     """
 
-    def __init__(self, id_: int, name: str, city: str, shortname: str, coords: Tuple[float, float] = None):
+    def __init__(self, id_: str, name: str, city: str, shortname: str, coords: Tuple[float, float] = None):
         self.id = id_
         self.name = name
         self.city = city
