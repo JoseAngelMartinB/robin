@@ -96,7 +96,7 @@ class Corridor(object):
         paths (List[List[Station]]): List of paths (list of stations)
         stations (Dict[str, Station]): Dictionary of stations (with Station IDs as keys)
 
-    tree dummy example*: ['org': 'MAD', 'des': [{'org': 'BAR', 'des': []}, {'org': 'BIL', 'des': []}]]
+    tree dummy example*: [{'org': 'MAD', 'des': [{'org': 'BAR', 'des': []}, {'org': 'BIL', 'des': []}]}]
     *In the real tree, the Station objects are used instead of the Station IDs
     """
 
@@ -309,6 +309,16 @@ class Service(object):
         self.service_arrival_time = self.schedule[-1][0].seconds / 3600  # Service arrival time in hours
         self.rolling_stock = rolling_stock
         self.capacity_constraints = capacity_constraints
+        self.prices = prices
+
+        _seats = set([s for d in self.prices.values() for s in d.keys()])
+
+        # Initialize capacity and seats log to zero:
+        # For each pair of stations, for each hard type, save number of seats sold
+        self.capacity_log = {p: {ht: 0 for ht in self.rolling_stock.seats.keys()} for p in self.line.pairs}
+
+        # For each pair of stations, for each seat, save number of seats sold
+        self.seats_log = {p: {s: 0 for s in _seats} for p in self.line.pairs}
 
         if not self.capacity_constraints:
             self.capacity = deepcopy(self.rolling_stock.seats)  # Dict[int, int]: {hard_type: quantity}
@@ -320,8 +330,6 @@ class Service(object):
                     rs_capacity[ht] -= constraint[ht]
 
             self.capacity = rs_capacity
-
-        self.prices = prices
 
     def _get_absolute_schedule(self) -> List[Tuple[datetime.timedelta, datetime.timedelta]]:
         """
