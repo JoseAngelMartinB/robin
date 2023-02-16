@@ -412,7 +412,6 @@ class Service(object):
                f'\tTickets sold per each pair (seats): {self.seats_log} \n' \
                f'\tTickets sold (absolute seats): {self.seats_reduce_log} \n' \
                f'\tTickets sold (absolute hard type): {self.rs_reduce_log} \n' \
-               f'\tOccupation - Percentage (hard type): {self.occupancy} \n' \
                f'\tCapacity constraints: {self.capacity_constraints} \n'
 
 
