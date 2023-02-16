@@ -383,17 +383,18 @@ class Service(object):
         Returns:
             bool: True if available, False if not available
         """
-
         tickets_sold = self.capacity_log[(origin, destination)][seat.hard_type]
-        max_capacity = self.rolling_stock.seats[seat.hard_type]
-        if not self.capacity_constraints or (origin, destination) not in self.capacity_constraints:
+
+        if self.capacity_constraints:
+            if (origin, destination) in self.capacity_constraints:
+                constrained_capacity = self.capacity_constraints[(origin, destination)][seat.hard_type]
+                if tickets_sold < constrained_capacity:
+                    return True
+        else:
+            max_capacity = self.rolling_stock.seats[seat.hard_type]
             if tickets_sold < max_capacity:
                 return True
-            return False
 
-        constrained_capacity = self.capacity_constraints[(origin, destination)][seat.hard_type]
-        if tickets_sold < constrained_capacity:
-            return True
         return False
 
     def __str__(self):
@@ -410,8 +411,8 @@ class Service(object):
                f'\t\t{new_line.join(f"{key}: {value}" for key, value in self.prices.items())} \n' \
                f'\tTickets sold per each pair (hard type): {self.capacity_log} \n' \
                f'\tTickets sold per each pair (seats): {self.seats_log} \n' \
-               f'\tTickets sold (absolute seats): {self.seats_reduce_log} \n' \
-               f'\tTickets sold (absolute hard type): {self.rs_reduce_log} \n' \
+               f'\tTickets sold (count, seats): {self.seats_reduce_log} \n' \
+               f'\tTickets sold (count, hard type): {self.rs_reduce_log} \n' \
                f'\tCapacity constraints: {self.capacity_constraints} \n'
 
 
