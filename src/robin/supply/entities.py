@@ -134,8 +134,9 @@ class Corridor(object):
 
         for node in tree:
             org = node['org']
-            new_path = path + [org]
-            self._get_paths(node['des'], new_path, paths)
+            path.append(org)
+            self._get_paths(node['des'], path, paths)
+            path.pop()
 
         return paths
 
