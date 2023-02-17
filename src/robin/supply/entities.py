@@ -92,7 +92,7 @@ class Corridor(object):
     Attributes:
         id (int): Corridor ID
         name (str): Corridor name
-        tree (List[Dict]): Tree of stations (with Station objects)
+        tree (Dict[Station, Dict]): Tree of stations (with Station objects)
         paths (List[List[Station]]): List of paths (list of stations)
         stations (Dict[str, Station]): Dictionary of stations (with Station IDs as keys)
 
@@ -100,7 +100,7 @@ class Corridor(object):
     *In the real tree, the Station objects are used instead of the Station IDs
     """
 
-    def __init__(self, id_: int, name: str, tree: List[Dict]):
+    def __init__(self, id_: int, name: str, tree: Dict[Station, Dict]):
         self.id = id_
         self.name = name
         self.tree = tree
@@ -108,7 +108,7 @@ class Corridor(object):
         self.stations = self._dict_stations(self.tree)
 
     def _get_paths(self,
-                   tree: List[Dict],
+                   tree: Dict[Station, Dict],
                    path: List[Station] = None,
                    paths: List[List[Station]] = None) -> List[List[Station]]:
         """
@@ -133,14 +133,14 @@ class Corridor(object):
             return paths
 
         for node in tree:
-            org = node['org']
+            org = node
             path.append(org)
-            self._get_paths(node['des'], path, paths)
+            self._get_paths(tree[node], path, paths)
             path.pop()
 
         return paths
 
-    def _dict_stations(self, tree: List[Dict], sta=None) -> Dict[str, Station]:
+    def _dict_stations(self, tree: Dict[Station, Dict], sta=None) -> Dict[str, Station]:
         """
         Get dictionary of stations (with Station IDs as keys)
 
@@ -154,9 +154,9 @@ class Corridor(object):
             sta = {}
 
         for node in tree:
-            org = node['org']
+            org = node
             sta[org.id] = org
-            self._dict_stations(node['des'], sta)
+            self._dict_stations(tree[node], sta)
 
         return sta
 
@@ -174,7 +174,7 @@ class Line(object):
         corridor (Corridor): Corridor ID where the Line belongs to
         timetable (Dict[str, Tuple[float, float]]): {station ID: (arrival (float), departure (float)}
         stations (List[Station]): List of Stations being served by the Line
-        pairs (Dict[Tuple[str, str], Tuple[Station, Station]]): Dict with pairs of stations (origin, destination)
+        pairs (Dict[Tuple[str, str], Tuple[Station, Station]]): Dict with pairs of stations (origin, destination) \
         with (origin ID, destination ID) as keys, and (origin Station, destination Station) as values
     """
 
@@ -528,7 +528,7 @@ class Supply(object):
             Dict[str, Corridor]: Dict of Corridor objects {corridor_id: Corridor object}
         """
 
-        def to_station(tree: Dict, sta_dict: Dict[str, Station]) -> List[Dict]:
+        def to_station(tree: Dict, sta_dict: Dict[str, Station]) -> Dict:
             """
             Recursive function to build a tree of Station objects from a tree of station IDs
 
@@ -537,19 +537,19 @@ class Supply(object):
                 sta_dict (Dict[str, Station]): Dict of Station objects {station_id: Station object}
 
             Returns:
-                List[Dict]: Tree of Station objects
+                Dict: Tree of Station objects
             """
             if not tree:
-                return []
+                return {}
 
-            return [{'org': sta_dict[node['org']], 'des': to_station(node['des'], sta_dict)} for node in tree]
+            return {sta_dict[node]: to_station(tree[node], sta_dict) for node in tree}
 
-        def set_stations_ids(tree, sta_set: Set[str] = None) -> Set[str]:
+        def set_stations_ids(tree, sta_set=None):
             """
             Recursive function to build a set of station IDs from a tree of station IDs
 
             Args:
-                tree (Dict): Tree of station IDs
+                tree (Mapping): Tree of station IDs
                 sta_set (set): Set of station IDs. Default: None
 
             Returns:
@@ -559,23 +559,32 @@ class Supply(object):
                 sta_set = set()
 
             if not tree:
-                return set()
+                return
 
             for node in tree:
-                sta_set.update({node['org']})
-                set_stations_ids(node['des'], sta_set)
+                sta_set.add(node)
+                set_stations_ids(tree[node], sta_set)
 
             return sta_set
+
+        def convert_tree_to_dict(tree):
+            if len(tree) == 1:
+                node = tree[0]
+                return {node['org']: convert_tree_to_dict(node['des'])}
+            else:
+                return {node['org']: convert_tree_to_dict(node['des']) for node in tree}
 
         corridors = {}
         for c in data[key]:
             assert all(k in c.keys() for k in ('id', 'name', 'stations')), "Incomplete Corridor data"
 
-            corr_stations_ids = set_stations_ids(c['stations'])
+            tree_dictionary = convert_tree_to_dict(c['stations'])
+
+            corr_stations_ids = set_stations_ids(tree_dictionary)
 
             assert all(s in stations.keys() for s in corr_stations_ids), "Station not found in Station list"
 
-            stations_tree = to_station(deepcopy(c['stations']), stations)
+            stations_tree = to_station(deepcopy(tree_dictionary), stations)
 
             corridors[c['id']] = Corridor(c['id'], c['name'], stations_tree)
 
