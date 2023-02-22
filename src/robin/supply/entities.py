@@ -3,7 +3,7 @@
 from src.robin.supply.utils import get_time, get_date, format_td
 from copy import deepcopy
 
-from typing import List, Tuple, Set, Dict
+from typing import List, Tuple, Dict, Union
 import datetime
 import yaml
 
@@ -51,7 +51,7 @@ class TimeSlot(object):
         size (datetime.timedelta): Time slot size
     """
 
-    def __init__(self, id_: int, start: datetime.timedelta, end: datetime.timedelta):
+    def __init__(self, id_: Union[int, str], start: datetime.timedelta, end: datetime.timedelta):
         self.id = id_
         self.start = start
         self.end = end
