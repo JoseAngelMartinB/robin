@@ -63,6 +63,7 @@ class Kernel:
 
             for service in services:
                 for seat in service.prices[(origin, destination)].keys():
+                    # Check if seat is available
                     if not service.tickets_available(origin, destination, seat):
                         continue
                     utility = passenger.get_utility(
