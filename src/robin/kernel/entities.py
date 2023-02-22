@@ -4,7 +4,7 @@ import numpy as np
 import os
 import random
 
-from src.robin.demand.entities import Demand
+from src.robin.demand.entities import Demand, Passenger
 from src.robin.supply.entities import Service, Supply
 from typing import List, Union
 
@@ -32,13 +32,35 @@ class Kernel:
         self.supply = Supply.from_yaml(path_config_supply)
         self.demand = Demand.from_yaml(path_config_demand)
 
-    def simulate(self) -> List[Service]:
+    def _to_csv(self, passengers: List[Passenger], output_path: str = 'output.csv') -> None:
+        """
+        Save passengers data to csv file.
+
+        Args:
+            passengers (List[Passenger]): List of passengers.
+            output_path (str, optional): Path to the output csv file. Defaults to 'output.csv'.
+        """
+        header = [
+            'id', 'user_pattern', 'departure_station', 'arrival_station',
+            'arrival_day', 'arrival_time', 'purchase_day', 'service', 'service_departure_time',
+            'service_arrival_time', 'seat', 'price', 'utility'
+        ]
+        csv = ','.join(header) + '\n'
+        for passenger in passengers:
+            csv += str(passenger) + '\n'
+        with open(output_path, 'w') as f:
+            f.write(csv)
+
+    def simulate(self, output_path: Union[str, None] = None) -> List[Service]:
         """
         Simulate the demand-supply interaction.
 
         The passengers will maximize the utility for each service and seat, 
         according to its origin-destination and date, buying a ticket
         only if the utility is positive.
+
+        Args:
+            output_path (str, optional): Path to the output csv file. Defaults to None.
 
         Returns:
             List[Service]: List of services with updated tickets.
@@ -60,12 +82,14 @@ class Kernel:
             service_arg_max = None
             seat_arg_max = None
             seat_utility = 0
+            ticket_price = 0
 
             for service in services:
                 for seat in service.prices[(origin, destination)].keys():
                     # Check if seat is available
                     if not service.tickets_available(origin, destination, seat):
                         continue
+                    # Calculate utility
                     utility = passenger.get_utility(
                         seat=seat.id,
                         service_departure_time=service.service_departure_time,
@@ -78,16 +102,28 @@ class Kernel:
                         service_arg_max = service
                         seat_arg_max = seat
                         seat_utility = utility
+                        ticket_price = service.prices[(origin, destination)][seat]
 
             # Buy ticket if utility is positive
             if seat_utility > 0:
                 assert service_arg_max is not None
                 assert seat_arg_max is not None
-                service_arg_max.buy_ticket(
+                ticket_bought = service_arg_max.buy_ticket(
                     origin=passenger.market.departure_station,
                     destination=passenger.market.arrival_station,
                     seat=seat_arg_max
                 )
+                if ticket_bought:
+                    passenger.service = service_arg_max.id
+                    passenger.service_departure_time = service_arg_max.service_departure_time
+                    passenger.service_arrival_time = service_arg_max.service_arrival_time
+                    passenger.seat = seat_arg_max.name
+                    passenger.ticket_price = ticket_price
+                    passenger.utility = seat_utility
+
+        # Save passengers data to csv file
+        if output_path is not None:
+            self._to_csv(passengers, output_path)
 
         return self.supply.services
     
