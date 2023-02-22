@@ -1,0 +1,31 @@
+# Corridors config
+corridors:
+  set_corridor:   # Set corridor ID (e.g. 1 to work only with corridor 1)
+
+# Lines config
+lines:
+  sample: True  # If False, any stations would be removed
+  max_stops: 5  # Set max number of stops in the line
+  white_list: ['60000', '71801'] # Set list of stations to be included in the line
+
+# Prices config
+prices:
+  base: 10  # Base price
+  max: 150  # Max price
+  distance_factor: 0.05  # Increase price with a factor of f * min_price per station in corridor
+  tsp_factor:  # Defines how the TSP affects the price (multiplies each price by the factor)
+      1: 1.5  # Renfe AVE
+      2: 1.1  # Renfe AVLO
+      3: 1  # Ouigo
+      4: 0.9  # Iryo
+  seat_type_factor:  # Defines how the seat type affects the price (multiplies each price by the factor)
+      1: 1  # Tourist Class
+      2: 1.2 # Tourist Plus Class
+      3: 1.6  # Business Class
+
+# Service config
+services:
+  dates: # Set range for random dates
+    min: 2023-01-01
+    max: 2023-12-31
+  allow_collisions: True  # If True, multiple services may have the same departure time and rolling stock assigned
