@@ -45,7 +45,6 @@ class Kernel:
         """
         # Generate passengers demand
         passengers = self.demand.generate_passengers()
-        passengers.sort(key=lambda x: x.purchase_day, reverse=True)
         
         for passenger in passengers:
             # Filter services by passenger's origin-destination and date

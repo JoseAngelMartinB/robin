@@ -798,10 +798,10 @@ class Demand:
     
     def generate_passengers(self) -> List[Passenger]:
         """
-        Generates the passengers for all days.
+        Generates the passengers for all days sorted by purchase day (descending).
 
         Returns:
-            List[Passenger]: The generated passengers.
+            List[Passenger]: The generated passengers sorted by purchase day (descending).
         """
         passengers = []
         id_offset = 1
@@ -809,6 +809,7 @@ class Demand:
             passengers_day = day.generate_passengers(id_offset)
             passengers += passengers_day
             id_offset += len(passengers_day)
+        passengers.sort(key=lambda x: x.purchase_day, reverse=True)
         return passengers
 
     def __str__(self) -> str:
