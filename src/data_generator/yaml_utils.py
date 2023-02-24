@@ -23,21 +23,20 @@ def time_slot_to_dict(obj: TimeSlot):
 
 
 def corridor_to_dict(obj: Corridor):
-    def corridor_tree_ids(tree):
-        if not tree:
-            return
+    def convert_structure(data):
+        result = []
+        for org, des in data.items():
+            subtree = {'org': org.id, 'des': []}
+            if des:
+                subtree['des'] = convert_structure(des)
+            result.append(subtree)
+        return result
 
-        for node in tree:
-            node['org'] = node['org'].id
-            corridor_tree_ids(node['des'])
-
-        return tree
-
-    tree_ids = corridor_tree_ids(obj.tree)
+    yaml_structure = convert_structure(obj.tree)
 
     return {'id': obj.id,
             'name': obj.name,
-            'stations': tree_ids}
+            'stations': yaml_structure}
 
 
 def line_to_dict(obj: Line):
@@ -76,14 +75,14 @@ def service_to_dict(obj: Service):
     for k, v in obj.prices.items():
         prices.append({'origin': k[0],
                        'destination': k[1],
-                       'seats': [{'seat': ks, 'price': float(ps)} for ks, ps in v.items()]})
+                       'seats': [{'seat': ks.id, 'price': float(ps)} for ks, ps in v.items()]})
 
-    return {'id': obj.id,
+    return {'id': str(obj.id),
             'date': str(obj.date),
-            'line': obj.line.id,
-            'train_service_provider': obj.tsp.id,
-            'time_slot': obj.time_slot.id,
-            'rolling_stock': obj.rolling_stock.id,
+            'line': str(obj.line.id),
+            'train_service_provider': str(obj.tsp.id),
+            'time_slot': str(obj.time_slot.id),
+            'rolling_stock': str(obj.rolling_stock.id),
             'origin_destination_tuples': prices,
             'capacity_constraints': obj.capacity_constraints}
 
