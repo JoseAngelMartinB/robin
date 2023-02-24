@@ -1,4 +1,5 @@
 from src.robin.supply.entities import Station, Corridor, Seat, TimeSlot, TSP, Line, RollingStock, Service
+from src.data_generator.yaml_utils import *
 from math import sin, cos, acos, radians
 from typing import Tuple, List, Dict
 import pandas as pd
@@ -27,6 +28,7 @@ class ServiceGenerator:
     Methods:
         generate_service() -> Service: Generate a random service
     """
+
     def __init__(self):
         self.stations = self._get_stations()  # Dict[str, Station]
         self.corridors = self._get_corridors()
@@ -35,6 +37,7 @@ class ServiceGenerator:
         self.tsps = self._get_tsps()
         self.lines = {}  # Dict[str, Line]
         self.time_slots = {}  # Dict[str, TimeSlot]
+        self.services = []
 
     def _set_config(self, path_config: str):
         """
@@ -55,6 +58,9 @@ class ServiceGenerator:
         services = []
         for _ in range(n_services):
             services.append(self._generate_service())
+
+        self.services += services
+        self.save_to_yaml(services)
         return services
 
     # Remove seed from config file
@@ -73,17 +79,20 @@ class ServiceGenerator:
         date = self._get_random_date()
         prices = self._get_random_prices(line, rs, tsp)  # prices: Dict[Tuple[str, str], Dict[Seat, float]]
         service = self._create_service(date, line, time_slot, tsp, rs, prices)
+
         return service
 
     def _create_service(self, date, line, time_slot, tsp, rs, prices):
         allow_collisions = self.config['services']['allow_collisions']
 
         if not allow_collisions:
+            # TODO: Feature implementation
             # Check if any previously generated service intersects with the new one:
             # - Check TimeSlot intersection
             # - Check if rolling stock is available
             raise NotImplementedError
         else:
+            # TODO: Fix Service ID
             service = Service(id_=f'{line.id}_{time_slot.id}',
                               date=str(date),
                               line=line,
@@ -165,7 +174,7 @@ class ServiceGenerator:
         for pair in line.pairs:
             origin_sta, destination_sta = line.pairs[pair]
             distance = self._get_distance(line, origin_sta, destination_sta)
-            #print(f'Distance between {origin_sta.name} and {destination_sta.name}: {distance} km')
+            # print(f'Distance between {origin_sta.name} and {destination_sta.name}: {distance} km')
 
             prices[pair] = {}
             for seat in seats:
@@ -394,15 +403,39 @@ class ServiceGenerator:
 
         return seats
 
+    def save_to_yaml(self, services) -> None:
+        """
+        Save the data to a yaml file
+
+        Args:
+            filename (str): Name of the file
+            services (List[Service]): List of Service objects
+
+        Returns:
+            None
+        """
+        rolling_stocks = list(set([rs for tsp in self.tsps.values() for rs in tsp.rolling_stock]))
+
+        yaml_dict = {'stations': [station_to_dict(stn) for stn in self.stations.values()],
+                     'seat': [seat_to_dict(s) for s in self.seats.values()],
+                     'corridor': [corridor_to_dict(corr) for corr in self.corridors.values()],
+                     'line': [line_to_dict(ln) for ln in self.lines.values()],
+                     'rollingStock': [rolling_stock_to_dict(rs) for rs in rolling_stocks],
+                     'trainServiceProvider': [tsp_to_dict(tsp) for tsp in self.tsps.values()],
+                     'timeSlot': [time_slot_to_dict(s) for s in self.time_slots.values()],
+                     'service': [service_to_dict(serv) for serv in services]}
+
+        self._write_to_yaml("test.yml", yaml_dict)
+
+
     @staticmethod
-    def _write_to_yaml(filename, objects, key):
+    def _write_to_yaml(filename, objects):
         """
         Write objects to yaml file
 
         Args:
             filename (str): Name of the file
             objects (Dict): Dict of objects to write
-            key (str): Key of the dict to write
 
         Returns:
             None
@@ -435,7 +468,7 @@ if __name__ == '__main__':
 
     r = ServiceGenerator()
 
-    services = r.generate_services(path_config=config_path, n_services=10000, seed=42)
+    services = r.generate_services(path_config=config_path, n_services=1, seed=1)
 
     print(services[0])
 
