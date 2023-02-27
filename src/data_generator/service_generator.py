@@ -50,7 +50,7 @@ class ServiceGenerator:
             config = yaml.safe_load(f)
         self.config = config
 
-    def generate_services(self, path_config: str, n_services: int = 1, seed: int = None) -> List[Service]:
+    def generate(self, file_name: str, path_config: str, n_services: int = 1, seed: int = None) -> List[Service]:
         if seed is not None:
             self.set_seed(seed)
         self._set_config(path_config)
@@ -60,7 +60,7 @@ class ServiceGenerator:
             services.append(self._generate_service())
 
         self.services += services
-        self.save_to_yaml(services)
+        self.save_to_yaml(services, file_name)
         return services
 
     # Remove seed from config file
@@ -189,6 +189,11 @@ class ServiceGenerator:
         td_size = datetime.timedelta(minutes=size)
         end_time = start_time + td_size
 
+        if end_time > datetime.timedelta(hours=23, minutes=59):
+            hours = float(end_time.seconds // 3600)
+            minutes = float((end_time.seconds // 60) % 60)
+            end_time = datetime.timedelta(hours=hours, minutes=minutes)
+
         hours = str(start_time.seconds // 3600)
         minutes = str((start_time.seconds // 60) % 60)
         td_minutes = str(td_size.seconds // 60)
@@ -259,6 +264,7 @@ class ServiceGenerator:
             # Generate random timetable
             line = Line(id_=new_id, name=name, corridor=corridor, timetable=line_times)
 
+        self.lines[line.id] = line
         return line
 
     def _get_tsps(self) -> Dict[int, TSP]:
@@ -269,24 +275,24 @@ class ServiceGenerator:
             Dict[int, TSP]: Dictionary of TSPs
         """
         tsps = {}
-        ave_rs = [RollingStock(id_=11, name='AVE RollingStock 1', seats={1: 200, 2: 50}),
-                  RollingStock(id_=12, name='AVE RollingStock 1', seats={1: 250, 2: 50}),
-                  RollingStock(id_=13, name='AVE RollingStock 1', seats={1: 300, 2: 50})]
+        ave_rs = [RollingStock(id_="11", name='AVE RollingStock 1', seats={1: 200, 2: 50}),
+                  RollingStock(id_="12", name='AVE RollingStock 1', seats={1: 250, 2: 50}),
+                  RollingStock(id_="13", name='AVE RollingStock 1', seats={1: 300, 2: 50})]
 
         tsps[1] = TSP(id_=1, name='Renfe AVE', rolling_stock=ave_rs)
 
-        avlo_rs = [RollingStock(id_=21, name='AVLO RollingStock 1', seats={1: 300}),
-                   RollingStock(id_=22, name='AVLO RollingStock 1', seats={1: 350})]
+        avlo_rs = [RollingStock(id_="21", name='AVLO RollingStock 1', seats={1: 300}),
+                   RollingStock(id_="22", name='AVLO RollingStock 1', seats={1: 350})]
 
         tsps[2] = TSP(id_=2, name='Renfe AVLO', rolling_stock=avlo_rs)
 
-        ouigo_rs = [RollingStock(id_=31, name='OUIGO RollingStock 1', seats={1: 300, 2: 50}),
-                    RollingStock(id_=32, name='OUIGO RollingStock 1', seats={2: 450})]
+        ouigo_rs = [RollingStock(id_="31", name='OUIGO RollingStock 1', seats={1: 300, 2: 50}),
+                    RollingStock(id_="32", name='OUIGO RollingStock 1', seats={2: 450})]
 
         tsps[3] = TSP(id_=3, name='OUIGO', rolling_stock=ouigo_rs)
 
-        iryo_rs = [RollingStock(id_=41, name='OUIGO RollingStock 1', seats={1: 300, 2: 50}),
-                   RollingStock(id_=42, name='OUIGO RollingStock 1', seats={1: 350, 2: 50})]
+        iryo_rs = [RollingStock(id_="41", name='OUIGO RollingStock 1', seats={1: 300, 2: 50}),
+                   RollingStock(id_="42", name='OUIGO RollingStock 1', seats={1: 350, 2: 50})]
 
         tsps[5] = TSP(id_=4, name='IRYO', rolling_stock=iryo_rs)
 
@@ -299,7 +305,8 @@ class ServiceGenerator:
         Returns:
             Dict[Tuple[str, str], float]: Dict of travel times {(origin_id, destination_id): time}
         """
-        df = pd.read_csv(f'timetable.csv', delimiter=',', dtype={'origin': str, 'destination': str, 'time': float})
+        timetable_file = os.path.join(os.path.dirname(__file__), "timetable.csv")
+        df = pd.read_csv(timetable_file, delimiter=',', dtype={'origin': str, 'destination': str, 'time': float})
 
         timetable = {}
         for index, pair_time in df.iterrows():
@@ -318,7 +325,8 @@ class ServiceGenerator:
         Returns:
             Dict[str, Station]: Dict of Station objects {station_id: Station object}
         """
-        df = pd.read_csv(f'stations.csv', delimiter=',', dtype={'stop_id': str})
+        stations_file = os.path.join(os.path.dirname(__file__), "stations.csv")
+        df = pd.read_csv(stations_file, delimiter=',', dtype={'stop_id': str})
 
         stations = {}
         for index, station in df.iterrows():
@@ -342,7 +350,8 @@ class ServiceGenerator:
         Returns:
             Dict[int, Corridor]: Dict of Corridor objects {corridor_id: Corridor object}
         """
-        df = pd.read_csv(f'corridors.csv', delimiter=',', dtype={'corridor_id': int})
+        corridors_file = os.path.join(os.path.dirname(__file__), "corridors.csv")
+        df = pd.read_csv(corridors_file, delimiter=',', dtype={'corridor_id': int})
 
         corridors = {}
         for index, corr in df.iterrows():
@@ -393,7 +402,8 @@ class ServiceGenerator:
         Returns:
             Dict[int, Seat]: Dict of Seat objects {seat_id: Seat object}
         """
-        df = pd.read_csv(f'seats.csv', delimiter=',', dtype={'id': int, 'hard_type': int, 'soft_type': int})
+        seats_file = os.path.join(os.path.dirname(__file__), "seats.csv")
+        df = pd.read_csv(seats_file, delimiter=',', dtype={'id': int, 'hard_type': int, 'soft_type': int})
 
         seats = {}
         for index, s in df.iterrows():
@@ -403,7 +413,7 @@ class ServiceGenerator:
 
         return seats
 
-    def save_to_yaml(self, services) -> None:
+    def save_to_yaml(self, services: List[Service], file_name: str) -> None:
         """
         Save the data to a yaml file
 
@@ -425,7 +435,7 @@ class ServiceGenerator:
                      'timeSlot': [time_slot_to_dict(s) for s in self.time_slots.values()],
                      'service': [service_to_dict(serv) for serv in services]}
 
-        self._write_to_yaml("test.yml", yaml_dict)
+        self._write_to_yaml(file_name, yaml_dict)
 
 
     @staticmethod
@@ -468,7 +478,7 @@ if __name__ == '__main__':
 
     r = ServiceGenerator()
 
-    services = r.generate_services(path_config=config_path, n_services=1, seed=1)
+    services = r.generate(file_name="../../data/test.yml", path_config=config_path, n_services=100, seed=1)
 
     print(services[0])
 
