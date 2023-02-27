@@ -65,7 +65,7 @@ def rolling_stock_to_dict(obj: RollingStock):
 
 
 def tsp_to_dict(obj: TSP):
-    return {'id': obj.id,
+    return {'id': str(obj.id),
             'name': obj.name,
             'rolling_stock': [rs.id for rs in obj.rolling_stock]}
 
