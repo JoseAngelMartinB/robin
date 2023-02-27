@@ -7,6 +7,7 @@ import random
 from src.robin.demand.entities import Demand, Passenger
 from src.robin.supply.entities import Service, Supply
 from typing import List, Union
+import pandas as pd
 
 
 class Kernel:
@@ -32,6 +33,45 @@ class Kernel:
         self.supply = Supply.from_yaml(path_config_supply)
         self.demand = Demand.from_yaml(path_config_demand)
 
+    def _buildDF(self, passengers: List[Passenger]) -> pd.DataFrame:
+        """
+        Build a DataFrame with the passengers' data.
+
+        Args:
+            passengers (List[Passenger]): List of passengers.
+
+        Returns:
+            pd.DataFrame: DataFrame with the passengers' data.
+        """
+        # Dictionary to map passenger attributes to DF columns
+        atrib_dict = {'id': 'id',
+                      'user_pattern': 'user_pattern',
+                      'departure_station': 'departure_station',
+                      'arrival_station': 'arrival_station',
+                      'arrival_day': 'arrival_day',
+                      'arrival_time': 'arrival_time',
+                      'purchase_day': 'purchase_day',
+                      'service': 'service',
+                      'service_departure_time': 'service_departure_time',
+                      'service_arrival_time': 'service_arrival_time',
+                      'seat': 'seat',
+                      'price': 'ticket_price',
+                      'utility': 'utility'}
+
+        # Dictionary to hold passengers data according to desired DF format
+        data_dict = {k: [] for k in atrib_dict.values()}
+
+        # Get passenger attributes and append to data_dict
+        atrib_keys = atrib_dict.keys()
+        for p in passengers:
+            for atrib in atrib_keys:
+                try:
+                    val = getattr(p, atrib)
+                except:
+                    val = np.nan
+                data_dict[atrib_dict[atrib]].append(val)
+        return pd.DataFrame(data_dict)
+
     def _to_csv(self, passengers: List[Passenger], output_path: str = 'output.csv') -> None:
         """
         Save passengers data to csv file.
@@ -48,8 +88,9 @@ class Kernel:
         csv = ','.join(header) + '\n'
         for passenger in passengers:
             csv += str(passenger) + '\n'
-        with open(output_path, 'w') as f:
-            f.write(csv)
+
+        df = self._buildDF(passengers)
+        df.to_csv(output_path, index=False)
 
     def simulate(self, output_path: Union[str, None] = None) -> List[Service]:
         """
@@ -72,6 +113,10 @@ class Kernel:
             # Filter services by passenger's origin-destination and date
             origin = passenger.market.departure_station
             destination = passenger.market.arrival_station
+
+            passenger.departure_station = origin
+            passenger.arrival_station = destination
+
             services = self.supply.filter_services(
                 origin=passenger.market.departure_station,
                 destination=passenger.market.arrival_station,
