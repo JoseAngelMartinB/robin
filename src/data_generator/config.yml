@@ -28,4 +28,4 @@ services:
   dates: # Set range for random dates
     min: 2023-03-19
     max: 2023-03-27
-  allow_collisions: True  # If True, multiple services may have the same departure time and rolling stock assigned
+  allow_collisions: False  # If True, multiple services may have the same departure time and rolling stock assigned
