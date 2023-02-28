@@ -71,37 +71,73 @@ class ServiceGenerator:
         Returns:
             Service: Service object
         """
-        corridor = self._get_random_corridor()
-        line = self._get_random_line(corridor)
-        time_slot = self._get_random_time_slot()
-        tsp = self._get_random_tsp()
-        rs = self._get_random_rs(tsp)
-        date = self._get_random_date()
-        prices = self._get_random_prices(line, rs, tsp)  # prices: Dict[Tuple[str, str], Dict[Seat, float]]
-        service = self._create_service(date, line, time_slot, tsp, rs, prices)
-
-        return service
-
-    def _create_service(self, date, line, time_slot, tsp, rs, prices):
         allow_collisions = self.config['services']['allow_collisions']
 
-        if not allow_collisions:
-            # TODO: Feature implementation
-            # Check if any previously generated service intersects with the new one:
-            # - Check TimeSlot intersection
-            # - Check if rolling stock is available
-            raise NotImplementedError
-        else:
-            # TODO: Fix Service ID
-            service = Service(id_=f'{line.id}_{time_slot.id}',
-                              date=str(date),
-                              line=line,
-                              time_slot=time_slot,
-                              tsp=tsp,
-                              rolling_stock=rs,
-                              prices=prices)
+        def _get_start_time(s):
+            return datetime.datetime.combine(s.date, datetime.datetime.min.time()) + s.time_slot.start
 
+        def _get_end_time(s):
+            end_td = s.schedule[-1][-1]
+            return datetime.datetime.combine(s.date, datetime.datetime.min.time()) + s.time_slot.start + end_td
+
+        def _check_collisions(ns, sl):
+            if ns.rolling_stock == sl.rolling_stock:
+
+                start_dt_sl = _get_start_time(sl)
+                end_dt_sl = _get_end_time(sl)
+                start_dt_ns = _get_start_time(ns)
+                end_dt_ns = _get_end_time(ns)
+
+                if start_dt_ns <= end_dt_sl or end_dt_ns >= start_dt_sl:
+                    return True
+
+                last_stop_ns = ns.stops[-1].id
+                first_stop_sl = sl.stops[0].id
+
+                if (last_stop_ns, first_stop_sl) in self.timetable.keys():
+                    ref_time = self.timetable[(last_stop_ns, first_stop_sl)]
+                elif (first_stop_sl, last_stop_ns) in self.timetable.keys():
+                    ref_time = self.timetable[(first_stop_sl, last_stop_ns)]
+                else:
+                    raise ValueError(f'No timetable entry for {(last_stop_ns, first_stop_sl)} or '
+                                     f'{(first_stop_sl, last_stop_ns)}')
+
+                hours = int(ref_time / 60)
+                minutes = int(ref_time % 60)
+                seconds = int((ref_time - int(ref_time)) * 60)
+                ref_time = datetime.timedelta(hours=hours, minutes=minutes, seconds=seconds)
+
+                if end_dt_ns + ref_time >= start_dt_sl or start_dt_ns <= end_dt_sl + ref_time:
+                    return True
+            return False
+
+        while True:
+            corridor = self._get_random_corridor()
+            line = self._get_random_line(corridor)
+            time_slot = self._get_random_time_slot()
+            tsp = self._get_random_tsp()
+            rs = self._get_random_rs(tsp)
+            date = self._get_random_date()
+            prices = self._get_random_prices(line, rs, tsp)  # prices: Dict[Tuple[str, str], Dict[Seat, float]]
+            service = self._create_service(date, line, time_slot, tsp, rs, prices)
+
+            if allow_collisions:
+                self.services.append(service)
+                return service
+
+            if any(list(filter(lambda s: _check_collisions(service, s), self.services))):
+                continue
+            self.services.append(service)
             return service
+
+    def _create_service(self, date, line, time_slot, tsp, rs, prices):
+        return Service(id_=f'{line.id}_{time_slot.id}',
+                       date=str(date),
+                       line=line,
+                       time_slot=time_slot,
+                       tsp=tsp,
+                       rolling_stock=rs,
+                       prices=prices)
 
     def _get_random_rs(self, tsp):
         return random.choice(tsp.rolling_stock)
@@ -437,7 +473,6 @@ class ServiceGenerator:
 
         self._write_to_yaml(file_name, yaml_dict)
 
-
     @staticmethod
     def _write_to_yaml(filename, objects):
         """
@@ -478,7 +513,7 @@ if __name__ == '__main__':
 
     r = ServiceGenerator()
 
-    services = r.generate(file_name="../../data/test.yml", path_config=config_path, n_services=100, seed=1)
+    services = r.generate(file_name="../../data/test.yml", path_config=config_path, n_services=8, seed=1)
 
     print(services[0])
 
