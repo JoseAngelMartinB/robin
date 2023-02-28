@@ -489,6 +489,12 @@ class Passenger:
         arrival_day (Day): The desired day of arrival.
         arrival_time (float): The desired time of arrival.
         purchase_day (int): The day of purchase of the train ticket.
+        service (Service): The service that this passenger is assigned to.
+        service_departure_time (float): The departure time of the service.
+        service_arrival_time (float): The arrival time of the service.
+        seat (Seat): The seat that this passenger is assigned to.
+        seat_price (float): The price of the seat.
+        utility (float): The utility of the seat.
     """
     
     def __init__(self, id: int, user_pattern: UserPattern, market: Market, arrival_day: Day, arrival_time: float, purchase_day: int) -> None:
@@ -509,6 +515,12 @@ class Passenger:
         self.arrival_day = arrival_day
         self.arrival_time = arrival_time
         self.purchase_day = purchase_day
+        self.service = None
+        self.service_departure_time = None
+        self.service_arrival_time = None
+        self.seat = None
+        self.ticket_price = None
+        self.utility = None
 
     def _is_valid_departure_time(self, service_departure_time: float) -> bool:
         """
@@ -615,7 +627,11 @@ class Passenger:
         Returns:
             str: A human readable string representation of the passenger.
         """  
-        return f'{self.id}, {self.market}, {self.user_pattern}, {self.arrival_day}, {self.arrival_time}, {self.purchase_day}'
+        return (
+            f'{self.id},{self.user_pattern},{self.market.departure_station},{self.market.arrival_station},'
+            f'{self.arrival_day},{self.arrival_time},{self.purchase_day},{self.service},{self.service_departure_time},'
+            f'{self.service_arrival_time},{self.seat},{self.ticket_price},{self.utility}'
+        )
 
     def __repr__(self) -> str:
         """
@@ -631,7 +647,13 @@ class Passenger:
             f'market={self.market}, '
             f'arrival_day={self.arrival_day}, '
             f'arrival_time={self.arrival_time}, '
-            f'purchase_day={self.purchase_day})'
+            f'purchase_day={self.purchase_day}, '
+            f'service={self.service}, '
+            f'service_departure_time={self.service_departure_time}, '
+            f'service_arrival_time={self.service_arrival_time}, '
+            f'seat={self.seat}, '
+            f'ticket_price={self.ticket_price}, '
+            f'utility={self.utility}'
         )
 
 
