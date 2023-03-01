@@ -21,16 +21,18 @@ class ServiceGenerator:
         corridors (Dict[str, Corridor]): Dict of corridors
         seats (Dict[str, Seat]): Dict of seats
         timetable (pd.DataFrame): Timetable
+        rolling_stocks (Dict[str, RollingStock]): Dict of rolling stocks
         tsps (Dict[str, TSP]): Dict of TSPs
         lines (Dict[str, Line]): Dict of lines
         time_slots (Dict[str, TimeSlot]): Dict of time slots
+        services (List[Service]): List of services generated in the current session
 
     Methods:
-        generate_service() -> Service: Generate a random service
+        generate() (List[Service])
     """
 
     def __init__(self):
-        self.stations = self._get_stations()  # Dict[str, Station]
+        self.stations = self._get_stations()
         self.corridors = self._get_corridors()
         self.seats = self._get_seats()
         self.timetable = self._get_timetable()
@@ -52,6 +54,18 @@ class ServiceGenerator:
         self.config = config
 
     def generate(self, file_name: str, path_config: str, n_services: int = 1, seed: int = None) -> List[Service]:
+        """
+        Generate a list of services
+
+        Args:
+            file_name (str): Name of the output file
+            path_config (str): Path to the config file
+            n_services (int, optional): Number of services to generate. Defaults to 1.
+            seed (int, optional): Seed for the random number generator. Defaults to None.
+
+        Returns:
+            List[Service]: List of services
+        """
         if seed is not None:
             self.set_seed(seed)
         self._set_config(path_config)
@@ -75,41 +89,82 @@ class ServiceGenerator:
         allow_collisions = self.config['services']['allow_collisions']
 
         def _get_start_time(s):
+            """
+            Get start time of a service by adding the date and time slot
+
+            Args:
+                s (Service): Service object
+
+            Returns:
+                datetime.datetime: Start time
+            """
             return datetime.datetime.combine(s.date, datetime.datetime.min.time()) + s.time_slot.start
 
         def _get_end_time(s):
-            end_td = s.schedule[-1][-1]
+            """
+            Get end time of a service by adding the date, time slot and duration. Duration is retrieved from the last
+            schedule entry.
+
+            Args:
+                s (Service): Service object
+
+            Returns:
+                datetime.datetime: End time
+            """
+            end_td = datetime.timedelta(seconds=int(list(s.line.timetable.values())[-1][-1] * 60))
             return datetime.datetime.combine(s.date, datetime.datetime.min.time()) + s.time_slot.start + end_td
 
-        def _check_collisions(ns, sl):
-            if ns.rolling_stock == sl.rolling_stock:
+        def _get_ref_time(s1, s2):
+            last_stop_ns = s1.line.stations[-1].id
+            first_stop_sl = s2.line.stations[0].id
 
+            if last_stop_ns == first_stop_sl:
+                return datetime.timedelta(0)
+
+            if (last_stop_ns, first_stop_sl) in self.timetable.keys():
+                ref_time = self.timetable[(last_stop_ns, first_stop_sl)]
+            elif (first_stop_sl, last_stop_ns) in self.timetable.keys():
+                ref_time = self.timetable[(first_stop_sl, last_stop_ns)]
+            else:
+                raise ValueError(f'No timetable entry for {(last_stop_ns, first_stop_sl)} or '
+                                 f'{(first_stop_sl, last_stop_ns)}')
+
+            hours = int(ref_time / 60)
+            minutes = int(ref_time % 60)
+            seconds = int((ref_time - int(ref_time)) * 60)
+            return datetime.timedelta(hours=hours, minutes=minutes, seconds=seconds)
+
+        def _check_collisions(ns, sl):
+            """
+            Check if two services collide
+
+            Args:
+                ns (Service): New service
+                sl (Service): Service in the list of services
+
+            Returns:
+                bool: True if collision, False otherwise
+            """
+
+            # TODO: Check other types of collisions
+            if ns.rolling_stock == sl.rolling_stock:
                 start_dt_sl = _get_start_time(sl)
                 end_dt_sl = _get_end_time(sl)
                 start_dt_ns = _get_start_time(ns)
                 end_dt_ns = _get_end_time(ns)
 
-                if start_dt_ns <= end_dt_sl or end_dt_ns >= start_dt_sl:
+                if start_dt_ns <= end_dt_sl and end_dt_ns >= start_dt_sl:
                     return True
 
-                last_stop_ns = ns.stops[-1].id
-                first_stop_sl = sl.stops[0].id
+                ref_time_left = _get_ref_time(ns, sl)
+                ref_time_right = _get_ref_time(sl, ns)
 
-                if (last_stop_ns, first_stop_sl) in self.timetable.keys():
-                    ref_time = self.timetable[(last_stop_ns, first_stop_sl)]
-                elif (first_stop_sl, last_stop_ns) in self.timetable.keys():
-                    ref_time = self.timetable[(first_stop_sl, last_stop_ns)]
+                if end_dt_ns > start_dt_sl:
+                    if end_dt_sl + ref_time_right > start_dt_ns:
+                        return True
                 else:
-                    raise ValueError(f'No timetable entry for {(last_stop_ns, first_stop_sl)} or '
-                                     f'{(first_stop_sl, last_stop_ns)}')
-
-                hours = int(ref_time / 60)
-                minutes = int(ref_time % 60)
-                seconds = int((ref_time - int(ref_time)) * 60)
-                ref_time = datetime.timedelta(hours=hours, minutes=minutes, seconds=seconds)
-
-                if end_dt_ns + ref_time >= start_dt_sl or start_dt_ns <= end_dt_sl + ref_time:
-                    return True
+                    if end_dt_ns + ref_time_left > start_dt_sl:
+                        return True
             return False
 
         while True:
@@ -126,10 +181,9 @@ class ServiceGenerator:
                 self.services.append(service)
                 return service
 
-            if any(list(filter(lambda s: _check_collisions(service, s), self.services))):
-                continue
-            self.services.append(service)
-            return service
+            if not any(_check_collisions(service, s) for s in self.services):
+                self.services.append(service)
+                return service
 
     def _create_service(self, date, line, time_slot, tsp, rs, prices):
         return Service(id_=f'{line.id}_{time_slot.id}',
@@ -539,7 +593,7 @@ if __name__ == '__main__':
 
     r = ServiceGenerator()
 
-    services = r.generate(file_name="../../data/test.yml", path_config=config_path, n_services=1, seed=1)
+    services = r.generate(file_name="../../data/test.yml", path_config=config_path, n_services=200, seed=1)
 
     print(services[0])
 
