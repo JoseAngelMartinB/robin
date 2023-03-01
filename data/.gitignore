@@ -6,3 +6,6 @@
 !supply_data.yml
 !demand_data_example.yml
 !demand_data.yml
+
+!datagen/
+!datagen/**
