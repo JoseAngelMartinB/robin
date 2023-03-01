@@ -34,9 +34,10 @@ class ServiceGenerator:
         self.corridors = self._get_corridors()
         self.seats = self._get_seats()
         self.timetable = self._get_timetable()
+        self.rolling_stocks = self._get_rolling_stocks()
         self.tsps = self._get_tsps()
-        self.lines = {}  # Dict[str, Line]
-        self.time_slots = {}  # Dict[str, TimeSlot]
+        self.lines = {}
+        self.time_slots = {}
         self.services = []
 
     def _set_config(self, path_config: str):
@@ -310,29 +311,54 @@ class ServiceGenerator:
         Returns:
             Dict[int, TSP]: Dictionary of TSPs
         """
-        tsps = {}
-        ave_rs = [RollingStock(id_="11", name='AVE RollingStock 1', seats={1: 200, 2: 50}),
-                  RollingStock(id_="12", name='AVE RollingStock 1', seats={1: 250, 2: 50}),
-                  RollingStock(id_="13", name='AVE RollingStock 1', seats={1: 300, 2: 50})]
+        tsps_file = os.path.join(os.path.dirname(__file__), "../../data/datagen/tsps.csv")
+        df = pd.read_csv(tsps_file, delimiter=',', dtype={'id': int, 'name': str, 'rolling_stock': str})
 
-        tsps[1] = TSP(id_=1, name='Renfe AVE', rolling_stock=ave_rs)
+        def parse_rolling_stock(rolling_stock_str):
+            if rolling_stock_str:
+                rolling_stock_list = rolling_stock_str.split('_')
+                rolling_stock = [self.rolling_stocks[int(rs_id)] for rs_id in rolling_stock_list]
+                return rolling_stock
+            else:
+                return []
 
-        avlo_rs = [RollingStock(id_="21", name='AVLO RollingStock 1', seats={1: 300}),
-                   RollingStock(id_="22", name='AVLO RollingStock 1', seats={1: 350})]
+        df['rolling_stock'] = df['rolling_stock'].apply(parse_rolling_stock)
 
-        tsps[2] = TSP(id_=2, name='Renfe AVLO', rolling_stock=avlo_rs)
+        tsp_dict = {}
+        for index, row in df.iterrows():
+            tsp = TSP(row['id'], row['name'], row['rolling_stock'])
+            tsp_dict[row['id']] = tsp
 
-        ouigo_rs = [RollingStock(id_="31", name='OUIGO RollingStock 1', seats={1: 300, 2: 50}),
-                    RollingStock(id_="32", name='OUIGO RollingStock 1', seats={2: 450})]
+        return tsp_dict
 
-        tsps[3] = TSP(id_=3, name='OUIGO', rolling_stock=ouigo_rs)
+    def _get_rolling_stocks(self) -> Dict[int, RollingStock]:
+        """
+        Load timetable with reference travel times (in minutes) between each pair of stations from csv file
 
-        iryo_rs = [RollingStock(id_="41", name='OUIGO RollingStock 1', seats={1: 300, 2: 50}),
-                   RollingStock(id_="42", name='OUIGO RollingStock 1', seats={1: 350, 2: 50})]
+        Returns:
+            Dict[Tuple[str, str], float]: Dict of travel times {(origin_id, destination_id): time}
+        """
+        rolling_stocks_file = os.path.join(os.path.dirname(__file__), "../../data/datagen/rollingstocks.csv")
+        df = pd.read_csv(rolling_stocks_file, delimiter=',', dtype={'id': int, 'name': str, 'seats': str})
 
-        tsps[5] = TSP(id_=4, name='IRYO', rolling_stock=iryo_rs)
+        def parse_seats(seats_str):
+            if seats_str:
+                seats_dict = {}
+                for pair in seats_str.split('_'):
+                    key, value = pair.split(':')
+                    seats_dict[int(key)] = int(value)
+                return seats_dict
+            else:
+                return {}
 
-        return tsps
+        df['seats'] = df['seats'].apply(parse_seats)
+
+        rolling_stock_dict = {}
+        for index, row in df.iterrows():
+            rolling_stock = RollingStock(row['id'], row['name'], row['seats'])
+            rolling_stock_dict[row['id']] = rolling_stock
+
+        return rolling_stock_dict
 
     def _get_timetable(self) -> Dict[Tuple[str, str], float]:
         """
@@ -341,7 +367,7 @@ class ServiceGenerator:
         Returns:
             Dict[Tuple[str, str], float]: Dict of travel times {(origin_id, destination_id): time}
         """
-        timetable_file = os.path.join(os.path.dirname(__file__), "timetable.csv")
+        timetable_file = os.path.join(os.path.dirname(__file__), "../../data/datagen/timetable.csv")
         df = pd.read_csv(timetable_file, delimiter=',', dtype={'origin': str, 'destination': str, 'time': float})
 
         timetable = {}
@@ -361,7 +387,7 @@ class ServiceGenerator:
         Returns:
             Dict[str, Station]: Dict of Station objects {station_id: Station object}
         """
-        stations_file = os.path.join(os.path.dirname(__file__), "stations.csv")
+        stations_file = os.path.join(os.path.dirname(__file__), "../../data/datagen/stations.csv")
         df = pd.read_csv(stations_file, delimiter=',', dtype={'stop_id': str})
 
         stations = {}
@@ -386,7 +412,7 @@ class ServiceGenerator:
         Returns:
             Dict[int, Corridor]: Dict of Corridor objects {corridor_id: Corridor object}
         """
-        corridors_file = os.path.join(os.path.dirname(__file__), "corridors.csv")
+        corridors_file = os.path.join(os.path.dirname(__file__), "../../data/datagen/corridors.csv")
         df = pd.read_csv(corridors_file, delimiter=',', dtype={'corridor_id': int})
 
         corridors = {}
@@ -438,7 +464,7 @@ class ServiceGenerator:
         Returns:
             Dict[int, Seat]: Dict of Seat objects {seat_id: Seat object}
         """
-        seats_file = os.path.join(os.path.dirname(__file__), "seats.csv")
+        seats_file = os.path.join(os.path.dirname(__file__), "../../data/datagen/seats.csv")
         df = pd.read_csv(seats_file, delimiter=',', dtype={'id': int, 'hard_type': int, 'soft_type': int})
 
         seats = {}
@@ -513,7 +539,7 @@ if __name__ == '__main__':
 
     r = ServiceGenerator()
 
-    services = r.generate(file_name="../../data/test.yml", path_config=config_path, n_services=8, seed=1)
+    services = r.generate(file_name="../../data/test.yml", path_config=config_path, n_services=1, seed=1)
 
     print(services[0])
 
