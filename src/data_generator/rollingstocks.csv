@@ -1,0 +1,10 @@
+id,name,seats
+11,'AVE RollingStock 1',11:200_2:50
+12,AVE RollingStock 2,1:250_2:50
+13,AVE RollingStock 3,1:300_2:50
+21,AVLO RollingStock 1,1:300
+22,AVLO RollingStock 2,1:350
+31,OUIGO RollingStock 1,1:300_2:50
+32,OUIGO RollingStock 2,2:450
+41,IRYO RollingStock 1,1:300_2:50
+42,IRYO RollingStock 2',1:350_2:50
