@@ -100,7 +100,7 @@ class Corridor(object):
     *In the real tree, the Station objects are used instead of the Station IDs
     """
 
-    def __init__(self, id_: int, name: str, tree: Dict[Station, Dict]):
+    def __init__(self, id_: Union[int, str], name: str, tree: Dict[Station, Dict]):
         self.id = id_
         self.name = name
         self.tree = tree
@@ -178,7 +178,7 @@ class Line(object):
         with (origin ID, destination ID) as keys, and (origin Station, destination Station) as values
     """
 
-    def __init__(self, id_: int, name: str, corridor: Corridor, timetable: Dict[str, Tuple[float, float]]):
+    def __init__(self, id_: Union[int, str], name: str, corridor: Corridor, timetable: Dict[str, Tuple[float, float]]):
         self.id = id_
         self.name = name
         self.corridor = corridor
@@ -210,7 +210,7 @@ class Seat(object):
         soft_type (int): Soft seat type
     """
 
-    def __init__(self, id_: int, name: str, hard_type: int, soft_type: int):
+    def __init__(self, id_: Union[int, str], name: str, hard_type: int, soft_type: int):
         self.id = id_
         self.name = name
         self.hard_type = hard_type
@@ -233,7 +233,7 @@ class RollingStock(object):
         seats (Dict[int, int]): Number of seats for each hard_type {hard_type1: quantity1, hard_type2: quantity2}
     """
 
-    def __init__(self, id_: int, name: str, seats: Dict[int, int]):
+    def __init__(self, id_: Union[int, str], name: str, seats: Dict[int, int]):
         self.id = id_
         self.name = name
         self.seats = seats
@@ -252,7 +252,7 @@ class TSP(object):
         rolling_stock List[RollingStock]: List of RollingStock objects
     """
 
-    def __init__(self, id_: int, name: str, rolling_stock: List[RollingStock] = None):
+    def __init__(self, id_: Union[int, str], name: str, rolling_stock: List[RollingStock] = None):
         self.id = id_
         self.name = name
         self.rolling_stock = rolling_stock if rolling_stock is not None else []
@@ -292,8 +292,8 @@ class Service(object):
     """
 
     def __init__(self,
-                 id_: str,
-                 date: str,
+                 id_: Union[int, str],
+                 date: datetime.date,
                  line: Line,
                  tsp: TSP,
                  time_slot: TimeSlot,
@@ -302,7 +302,7 @@ class Service(object):
                  capacity_constraints: Dict[Tuple[str, str], Dict[int, int]] = None):
 
         self.id = id_
-        self.date = get_date(date)
+        self.date = date
         self.line = line
         self.tsp = tsp
         self.time_slot = time_slot
@@ -720,7 +720,7 @@ class Supply(object):
             assert all(k in s.keys() for k in service_keys), "Incomplete Service data"
 
             service_id = s['id']
-            service_date = s['date']
+            service_date = get_date(s['date'])
 
             assert s['line'] in lines.keys(), "Line not found"
             service_line = lines[s['line']]
