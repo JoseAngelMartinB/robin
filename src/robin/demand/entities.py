@@ -633,11 +633,12 @@ class Passenger:
 
         Returns:
             str: A human readable string representation of the passenger.
-        """  
+        """
         return (
-            f'{self.id},{self.user_pattern},{self.market.departure_station},{self.market.arrival_station},'
-            f'{self.arrival_day},{self.arrival_time},{self.purchase_day},{self.service},{self.service_departure_time},'
-            f'{self.service_arrival_time},{self.seat},{self.ticket_price},{self.utility}'
+            f'Passenger {self.id} from {self.market.departure_station} to {self.market.arrival_station} '
+            f'desired to arrive at {self.arrival_day} {self.arrival_time} '
+            f'purchasing with {self.purchase_day} antelation days '
+            f'with utility {self.utility}'
         )
 
     def __repr__(self) -> str:
