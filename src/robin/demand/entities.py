@@ -215,45 +215,53 @@ class UserPattern:
         """
         return self.seats.get(seat, 0)
     
-    @property
-    def penalty_arrival_time(self) -> float:
+    def penalty_arrival_time(self, x: float) -> float:
         """
-        Returns a random variable sample from the arrival time penalty function.
+        Returns the value of the penalty function for the arrival time.
+
+        Args:
+            x (float): The arrival time.
 
         Returns:
-            float: The arrival time penalty function.
+            float: The penalty function value for the arrival time.
         """
-        return self._penalty_arrival_time(**self.penalty_arrival_time_kwargs)
+        return self._penalty_arrival_time(x=x, **self.penalty_arrival_time_kwargs)
     
-    @property
-    def penalty_departure_time(self) -> float:
+    def penalty_departure_time(self, x: float) -> float:
         """
-        Returns a random variable sample from the penalty function for the departure time.
+        Returns the value of the penalty function for the departure time.
+
+        Args:
+            x (float): The departure time.
 
         Returns:
-            float: The penalty function for the departure time.
+            float: The penalty function value for the departure time.
         """
-        return self._penalty_departure_time(**self.penalty_departure_time_kwargs)
+        return self._penalty_departure_time(x=x, **self.penalty_departure_time_kwargs)
     
-    @property
-    def penalty_cost(self) -> float:
+    def penalty_cost(self, x: float) -> float:
         """
-        Returns a random variable sample from the penalty function for the cost.
+        Returns the value of the penalty function for the cost.
+
+        Args:
+            x (float): The cost.
 
         Returns:
-            float: The penalty function for the cost.
+            float: The penalty function value for the cost.
         """
-        return self._penalty_cost(**self.penalty_cost_kwargs)
+        return self._penalty_cost(x=x, **self.penalty_cost_kwargs)
     
-    @property
-    def penalty_travel_time(self) -> float:
+    def penalty_travel_time(self, x: float) -> float:
         """
-        Returns a random variable sample from the penalty function for the travel time.
+        Returns the value of the penalty function for the travel time.
+
+        Args:
+            x (float): The travel time.
 
         Returns:
-            float: The penalty function for the travel time.
+            float: The penalty function value for the travel time.
         """
-        return self._penalty_travel_time(**self.penalty_travel_time_kwargs)
+        return self._penalty_travel_time(x=x, **self.penalty_travel_time_kwargs)
     
     @property
     def error(self) -> float:
@@ -547,8 +555,7 @@ class Passenger:
         """
         earlier_displacement = max(self.arrival_time - service_arrival_time, 0)
         later_displacement = max(service_arrival_time - self.arrival_time, 0)
-        penalty = self.user_pattern.penalty_arrival_time
-        return penalty * np.exp(-penalty * (earlier_displacement + later_displacement)) # type: ignore
+        return self.user_pattern.penalty_arrival_time(earlier_displacement + later_displacement)
 
     def _get_utility_departure_time(self, service_departure_time: float) -> float:
         """
@@ -563,7 +570,7 @@ class Passenger:
         dt_begin = self.user_pattern.forbidden_departure_hours[0]
         dt_end = self.user_pattern.forbidden_departure_hours[1]
         departure_time = min(max(dt_end - service_departure_time, 0), dt_end - dt_begin)
-        return self.user_pattern.penalty_departure_time * departure_time
+        return self.user_pattern.penalty_departure_time(departure_time)
 
     def _get_utility_price(self, price: float) -> float:
         """
@@ -575,7 +582,7 @@ class Passenger:
         Returns:
             float: The utility of the passenger given the price.
         """
-        return self.user_pattern.penalty_cost * price
+        return self.user_pattern.penalty_cost(price)
 
     def _get_utility_travel_time(self, service_arrival_time: float, service_departure_time: float) -> float:
         """
@@ -588,7 +595,7 @@ class Passenger:
         Returns:
             float: The utility of the passenger given the travel time.
         """
-        return self.user_pattern.penalty_travel_time * (service_arrival_time - service_departure_time)
+        return self.user_pattern.penalty_travel_time(service_arrival_time - service_departure_time)
 
     def get_utility(
             self,

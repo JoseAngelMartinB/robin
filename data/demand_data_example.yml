@@ -29,32 +29,28 @@ userPattern:
       end: 24
     seats:
       - id: 1
-        utility: 40
+        utility: 20
       - id: 2
-        utility: 30
+        utility: 10
       - id: 3
-        utility: 35
+        utility: 15
       - id: 4
-        utility: 25
+        utility: 5
     penalty_arrival_time: linear
     penalty_arrival_time_kwargs:
       m: 1
-      x: 1
       b: 0
     penalty_departure_time: linear
     penalty_departure_time_kwargs:
-      m: 1
-      x: 0.7
+      m: 0.7
       b: 0
     penalty_cost: linear
     penalty_cost_kwargs:
-      m: 1
-      x: 0.05
+      m: 0.05
       b: 0
     penalty_travel_time: linear
     penalty_travel_time_kwargs:
-      m: 1
-      x: 0.4
+      m: 0.4
       b: 0
     error: norm
     error_kwargs:
@@ -75,32 +71,28 @@ userPattern:
       end: 14
     seats:
       - id: 1
-        utility: 32
-      - id: 2
-        utility: 30
-      - id: 3
         utility: 15
+      - id: 2
+        utility: 12
+      - id: 3
+        utility: 10
       - id: 4
-        utility: 14
+        utility: 8
     penalty_arrival_time: linear
     penalty_arrival_time_kwargs:
-      m: 1
-      x: 0.1
+      m: 0.1
       b: 0
     penalty_departure_time: linear
     penalty_departure_time_kwargs:
-      m: 1
-      x: 0.2
+      m: 0.2
       b: 0
     penalty_cost: linear
     penalty_cost_kwargs:
-      m: 1
-      x: 0.4
+      m: 0.4
       b: 0
     penalty_travel_time: linear
     penalty_travel_time_kwargs:
-      m: 1
-      x: 0.3
+      m: 0.3
       b: 0
     error: norm
     error_kwargs:
