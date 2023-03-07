@@ -618,7 +618,7 @@ class Passenger:
             float: The utility of the passenger given the seat, the arrival time, the departure time and the price.
         """
         if departure_time_hard_restriction and not self._is_valid_departure_time(service_departure_time):
-            return -1
+            return -np.inf # Minimum utility
         seat_utility = self.user_pattern.get_seat_utility(seat)
         arrival_time_utility = self._get_utility_arrival_time(service_arrival_time)
         departure_time_utility = self._get_utility_departure_time(service_departure_time)
