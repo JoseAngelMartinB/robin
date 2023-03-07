@@ -64,6 +64,7 @@ class Kernel:
                 passenger.utility
             ])
         df = pd.DataFrame(data=data, columns=column_names)
+        df.service = df.service.astype('Int64')
         df.to_csv(output_path, index=False)
 
     def simulate(self, output_path: Union[str, None] = None) -> List[Service]:

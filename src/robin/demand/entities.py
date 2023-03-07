@@ -434,8 +434,6 @@ class Day:
         """
         Generates passengers according to the demand pattern.
 
-        The arrival day is calculated as the simulation date plus the purchase day.
-
         Args:
             id_offset (int): The id offset for the generated passengers.
 
@@ -444,19 +442,15 @@ class Day:
         """
         passengers = []
         for i in range(self.demand_pattern.potential_demand):
-            # Arrival day is the simulation date plus the purchase day
             user_pattern = self.demand_pattern.get_user_pattern()
-            arrival_day = deepcopy(self)
-            purchase_day = user_pattern.purchase_day
-            arrival_day.date += datetime.timedelta(days=purchase_day)
             passengers.append(
                 Passenger(
                     id=i + id_offset,
                     user_pattern=user_pattern,
                     market=self.market,
-                    arrival_day=arrival_day,
+                    arrival_day=self,
                     arrival_time=user_pattern.arrival_time,
-                    purchase_day=purchase_day,
+                    purchase_day=user_pattern.purchase_day,
                 )
             )
         return passengers
