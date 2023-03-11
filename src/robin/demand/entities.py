@@ -4,6 +4,7 @@ import datetime
 import numpy as np
 import yaml
 
+from .constants import DEFAULT_SEAT_UTILITY
 from .exceptions import InvalidForbiddenDepartureHoursException
 from .utils import get_function, get_scipy_distribution
 
@@ -75,6 +76,7 @@ class UserPattern:
         penalty_travel_time_kwargs (Mapping[str, Union[int, float]]): The penalty function named parameters.
         error (Callable): The error distribution function.
         error_kwargs (Mapping[str, Union[int, float]]): The error distribution named parameters.
+        default_seat_utility (float): The default utility of the seats.
 
     Raises:
         InvalidDistributionException: Raised when the given distribution is not contained in SciPy.
@@ -103,7 +105,8 @@ class UserPattern:
             penalty_travel_time: str,
             penalty_travel_time_kwargs: Mapping[str, Union[int, float]],
             error: str,
-            error_kwargs: Mapping[str, Union[int, float]]
+            error_kwargs: Mapping[str, Union[int, float]],
+            default_seat_utility: float = DEFAULT_SEAT_UTILITY
         ) -> None:
         """
         Initialize a user pattern.
@@ -127,6 +130,7 @@ class UserPattern:
             penalty_travel_time_kwargs (Mapping[str, Union[int, float]]): The penalty function named parameters.
             error (str): The error distribution name.
             error_kwargs (Mapping[str, Union[int, float]]): The error distribution named parameters.
+            default_seat_utility (float, optional): The default utility of the seats.
         
         Raises:
             InvalidDistributionException: Raised when the given distribution is not contained in SciPy.
@@ -153,6 +157,7 @@ class UserPattern:
         self.penalty_travel_time_kwargs = penalty_travel_time_kwargs
         self._error = get_scipy_distribution(distribution_name=error, is_discrete=False)
         self.error_kwargs = error_kwargs
+        self.default_seat_utility = default_seat_utility
 
     def _check_forbidden_departure_hours(self, forbidden_departure_hours: Tuple[int, int]) -> Tuple[int, int]:
         """
@@ -210,7 +215,7 @@ class UserPattern:
         Returns:
             float: The utility of the given seat.
         """
-        return self.seats.get(seat, 0)
+        return self.seats.get(seat, self.default_seat_utility)
     
     def penalty_arrival_time(self, x: float) -> float:
         """
