@@ -1,24 +1,30 @@
 """Functions for demand module."""
 
+import numpy as np
+
+from typing import Mapping
+
+
 class Function:
     """
     Functions for demand module.
 
     Attributes:
-        linear (staticmethod): Linear function.
+        polynomial (staticmethod): Polynomial function.
     """
 
     @staticmethod
-    def linear(x: float, b_0: float, b_1: float) -> float:
+    def polynomial(x: float, **kwargs: Mapping[str, float]) -> float:
         """
-        Linear function.
+        Polynomial function.
 
         Args:
             x (float): The x value.
-            b_0 (float): The y-intercept.
-            b_1 (float): The slope.
+            **kwargs (Mapping[str, float]): The coefficients of the polynomial.
 
         Returns:
             float: The y value.
         """
-        return b_0 + b_1 * x
+        reverse_sorted = dict(sorted(kwargs.items(), key=lambda item: item[1], reverse=True))
+        coeff = list(reverse_sorted.values())
+        return np.polyval(x=x, p=coeff)

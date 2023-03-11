@@ -1,5 +1,7 @@
 """Exceptions for the demand module."""
 
+from .functions import Function
+
 
 class InvalidDistributionException(Exception):
     """Raised when the given distribution is not contained in SciPy."""
@@ -41,5 +43,7 @@ class InvalidFunctionException(Exception):
     """Raised when the given function is not contained in the ROBIN module."""
     
     def __init__(self, function_name: str, *args, **kwargs):
-        msg = f"The function '{function_name}' is not contained in the ROBIN module."
+        functions = [member for member in dir(Function) if member[0] != '_']
+        msg = (f"The function '{function_name}' is not contained in the ROBIN module. "
+               f'Available functions are: {functions}.')
         super().__init__(msg, *args, **kwargs)
