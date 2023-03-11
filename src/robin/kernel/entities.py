@@ -67,7 +67,11 @@ class Kernel:
         df.service = df.service.astype('Int64')
         df.to_csv(output_path, index=False)
 
-    def simulate(self, output_path: Union[str, None] = None) -> List[Service]:
+    def simulate(
+            self,
+            output_path: Union[str, None] = None,
+            departure_time_hard_restriction: bool = False
+        ) -> List[Service]:
         """
         Simulate the demand-supply interaction.
 
@@ -77,6 +81,7 @@ class Kernel:
 
         Args:
             output_path (str, optional): Path to the output csv file. Defaults to None.
+            departure_time_hard_restriction (bool, optional): If True, the passenger will not be assigned to a service with a departure time that is not valid. Defaults to False.
 
         Returns:
             List[Service]: List of services with updated tickets.
@@ -111,7 +116,7 @@ class Kernel:
                         service_departure_time=service.service_departure_time,
                         service_arrival_time=service.service_arrival_time,
                         price=service.prices[(origin, destination)][seat],
-                        departure_time_hard_restriction=False
+                        departure_time_hard_restriction=departure_time_hard_restriction
                     )
                     # Update service with max utility
                     if utility > seat_utility:

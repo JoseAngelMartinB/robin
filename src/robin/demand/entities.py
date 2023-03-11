@@ -7,7 +7,6 @@ import yaml
 from .exceptions import InvalidForbiddenDepartureHoursException
 from .utils import get_function, get_scipy_distribution
 
-from copy import deepcopy
 from typing import Any, List, Mapping, Union, Tuple
 
 
@@ -605,6 +604,7 @@ class Passenger:
             service_departure_time (float): The departure time of the service.
             service_arrival_time (float): The arrival time of the service.
             price (float): The price of the seat.
+            departure_time_hard_restriction (bool, optional): If True, the passenger will not be assigned to a service with a departure time that is not valid. Defaults to False.
         
         Returns:
             float: The utility of the passenger given the seat, the arrival time, the departure time and the price.
