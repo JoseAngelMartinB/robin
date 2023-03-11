@@ -38,20 +38,20 @@ userPattern:
         utility: 5
     penalty_arrival_time: linear
     penalty_arrival_time_kwargs:
-      m: 1
-      b: 0
+      b_0: 0
+      b_1: 1
     penalty_departure_time: linear
     penalty_departure_time_kwargs:
-      m: 0.7
-      b: 0
+      b_0: 0
+      b_1: 0.7
     penalty_cost: linear
     penalty_cost_kwargs:
-      m: 0.05
-      b: 0
+      b_0: 0
+      b_1: 0.05
     penalty_travel_time: linear
     penalty_travel_time_kwargs:
-      m: 0.4
-      b: 0
+      b_0: 0
+      b_1: 0.4
     error: norm
     error_kwargs:
       loc: 2
@@ -80,20 +80,20 @@ userPattern:
         utility: 8
     penalty_arrival_time: linear
     penalty_arrival_time_kwargs:
-      m: 0.1
-      b: 0
+      b_0: 0
+      b_1: 0.1
     penalty_departure_time: linear
     penalty_departure_time_kwargs:
-      m: 0.2
-      b: 0
+      b_0: 0
+      b_1: 0.2
     penalty_cost: linear
     penalty_cost_kwargs:
-      m: 0.4
-      b: 0
+      b_0: 0
+      b_1: 0.4
     penalty_travel_time: linear
     penalty_travel_time_kwargs:
-      m: 0.3
-      b: 0
+      b_0: 0
+      b_1: 0.3
     error: norm
     error_kwargs:
       loc: 1
