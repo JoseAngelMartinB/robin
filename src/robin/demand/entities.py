@@ -27,8 +27,8 @@ class Market:
 
         Args:
             id (int): The market id.
-            departure_station (Station): The departure station.
-            arrival_station (Station): The arrival station.
+            departure_station (Station): The departure station id.
+            arrival_station (Station): The arrival station id.
         """
         self.id = id
         self.departure_station = departure_station
@@ -76,7 +76,6 @@ class UserPattern:
         penalty_travel_time_kwargs (Mapping[str, Union[int, float]]): The penalty function named parameters.
         error (Callable): The error distribution function.
         error_kwargs (Mapping[str, Union[int, float]]): The error distribution named parameters.
-        arrival_time_maximum_iterations (int): The maximum number of iterations for the arrival time distribution.
 
     Raises:
         InvalidDistributionException: Raised when the given distribution is not contained in SciPy.
@@ -129,7 +128,6 @@ class UserPattern:
             penalty_travel_time_kwargs (Mapping[str, Union[int, float]]): The penalty function named parameters.
             error (str): The error distribution name.
             error_kwargs (Mapping[str, Union[int, float]]): The error distribution named parameters.
-            arrival_time_maximum_iterations (int): The maximum number of iterations for the arrival time distribution.
         
         Raises:
             InvalidDistributionException: Raised when the given distribution is not contained in SciPy.
