@@ -50,7 +50,12 @@ class Market:
         Returns:
             str: The debuggable string representation of the market.
         """
-        return f'{self.__class__.__name__}(id={self.id}, departure_station={self.departure_station}, arrival_station={self.arrival_station})'
+        return (
+            f'{self.__class__.__name__}('
+            f'id={self.id}, '
+            f'departure_station={self.departure_station}, '
+            f'arrival_station={self.arrival_station})'
+        )
 
 
 class UserPattern:
@@ -294,35 +299,37 @@ class UserPattern:
         return (
             f'{self.__class__.__name__}('
             f'id={self.id}, '
-            f'arrival_time={self.arrival_time}, '
+            f'name={self.name}, '
+            f'arrival_time={self._arrival_time}, '
             f'arrival_time_kwargs={self.arrival_time_kwargs}, '
-            f'purchase_day={self.purchase_day}, '
+            f'purchase_day={self._purchase_day}, '
             f'purchase_day_kwargs={self.purchase_day_kwargs}, '
             f'forbidden_departure_hours={self.forbidden_departure_hours}, '
             f'seats={self.seats}, '
-            f'penalty_arrival_time={self.penalty_arrival_time}, '
+            f'penalty_arrival_time={self._penalty_arrival_time}, '
             f'penalty_arrival_time_kwargs={self.penalty_arrival_time_kwargs}, '
-            f'penalty_departure_time={self.penalty_departure_time}, '
+            f'penalty_departure_time={self._penalty_departure_time}, '
             f'penalty_departure_time_kwargs={self.penalty_departure_time_kwargs}, '
-            f'penalty_cost={self.penalty_cost}, '
+            f'penalty_cost={self._penalty_cost}, '
             f'penalty_cost_kwargs={self.penalty_cost_kwargs}, '
-            f'penalty_travel_time={self.penalty_travel_time}, '
+            f'penalty_travel_time={self._penalty_travel_time}, '
             f'penalty_travel_time_kwargs={self.penalty_travel_time_kwargs}, '
-            f'error={self.error}, '
+            f'error={self._error}, '
             f'error_kwargs={self.error_kwargs})'
         )
 
 
 class DemandPattern:
     """
-    A demand pattern is determined by the potential demand and the distribution of user patterns.
+    A demand pattern is determined by the potential demand and the distribution of user patterns in a set of markets.
 
     Attributes:
         id (int): The demand pattern id.
         name(str): The demand pattern name.
-        potential_demand(Callable): The potential demand distribution function.
-        potential_demand_kwargs (Mapping[str, Union[int, float]]): The potential demand distribution named parameters.
-        user_pattern_distribution (Mapping[UserPattern, float]): The user pattern distribution.
+        markets (List[Market]): The list of markets.
+        potential_demands(Mapping[Market, Callable]): The potential demand distribution for each market.
+        potential_demands_kwargs (Mapping[Market, Mapping[str, Union[int, float]]]): The keyword arguments for the potential demand distribution for each market.
+        user_patterns_distribution (Mapping[Market, Mapping[UserPattern, float]]): The distribution of user patterns for each market.
 
     Raises:
         InvalidDistributionException: Raised when the given distribution is not contained in SciPy.
@@ -335,9 +342,10 @@ class DemandPattern:
             self,
             id: int,
             name: str,
-            potential_demand: str,
-            potential_demand_kwargs: Mapping[str, Union[int, float]],
-            user_pattern_distribution: Mapping[UserPattern, float]
+            markets: List[Market],
+            potential_demands: List[str],
+            potential_demands_kwargs: List[Mapping[str, Union[int, float]]],
+            user_patterns_distribution: List[Mapping[UserPattern, float]]
         ) -> None:
         """
         Initializes a demand pattern.
@@ -345,34 +353,51 @@ class DemandPattern:
         Args:
             id (int): The demand pattern id.
             name(str): The demand pattern name.
-            potential_demand (str): The potential demand distribution name.
-            potential_demand_kwargs (Mapping[str, Union[int, float]]): The potential demand distribution named parameters.
-            user_pattern_distribution (Mapping[UserPattern, float]): The user pattern distribution.
+            markets (List[Market]): The list of markets.
+            potential_demands(List[Callable]): The list of potential demand distributions.
+            potential_demands_kwargs (List[Mapping[str, Union[int, float]]]): The list of potential demand distribution named parameters.
+            user_patterns_distribution (List[Mapping[UserPattern, float]]): The list of user pattern distributions.
 
         Raises:
             InvalidDistributionException: Raised when the given distribution is not contained in SciPy.
             InvalidContinuousDistributionException: Raised when the given distribution is not a continuous distribution.
             InvalidDiscreteDistributionException: Raised when the given distribution is not a discrete distribution.
         """
+        assert len(markets) == len(potential_demands) == len(potential_demands_kwargs) == len(user_patterns_distribution), \
+            'The number of markets must be equal to the number of potential demand distributions and the number of user pattern distributions.'
         self.id = id
         self.name = name
-        self._potential_demand = get_scipy_distribution(distribution_name=potential_demand, is_discrete=True)
-        self.potential_demand_kwargs = potential_demand_kwargs
-        self.user_pattern_distribution = user_pattern_distribution
+        self.markets = markets
+        self._potential_demands = {}
+        self.potential_demands_kwargs = {}
+        self.user_patterns_distribution = {}
+        for i in range(len(markets)):
+            market = markets[i]
+            potential_demand = potential_demands[i]
+            potential_demand_kwargs = potential_demands_kwargs[i]
+            user_pattern_distribution = user_patterns_distribution[i]
+            self._potential_demands[market] = get_scipy_distribution(distribution_name=potential_demand, is_discrete=True)
+            self.potential_demands_kwargs[market] = potential_demand_kwargs
+            self.user_patterns_distribution[market] = user_pattern_distribution
 
-    @property
-    def potential_demand(self) -> int:
+    def potential_demand(self, market: Market) -> int:
         """
-        Returns a random variable sample from the potential demand distribution.
+        Returns a random variable sample from the potential demand distribution of the given market.
+
+        Args:
+            market (Market): The market.
 
         Returns:
             int: A random variable sample from the distribution.
         """
-        return self._potential_demand.rvs(**self.potential_demand_kwargs)
+        return self._potential_demands[market].rvs(**self.potential_demands_kwargs[market])
     
-    def get_user_pattern(self) -> UserPattern:
+    def get_user_pattern(self, market: Market) -> UserPattern:
         """
-        Samples a user pattern according to the user pattern distribution.
+        Samples a user pattern according to the user pattern distribution of the given market.
+
+        Args:
+            market (Market): The market.
 
         Returns:
             UserPattern: The user pattern.
@@ -380,7 +405,7 @@ class DemandPattern:
         Raises:
             ValueError: Raised when the user pattern distribution does not sum up to 1.
         """
-        return np.random.choice(list(self.user_pattern_distribution.keys()), p=list(self.user_pattern_distribution.values()))
+        return np.random.choice(list(self.user_patterns_distribution[market].keys()), p=list(self.user_patterns_distribution[market].values()))
 
     def __str__(self) -> str:
         """
@@ -399,26 +424,26 @@ class DemandPattern:
             str: The debuggable string representation of the demand pattern.
         """
         return (
-            f'{self.__class__.__name__}('
-            f'id={self.id}, '
-            f'potential_demand={self.potential_demand}, '
-            f'potential_demand_kwargs={self.potential_demand_kwargs}, '
-            f'user_pattern_distribution={self.user_pattern_distribution})'
+            f'DemandPattern(id={self.id}, '
+            f'name={self.name}, '
+            f'markets={self.markets}, '
+            f'potential_demands={self._potential_demands}, '
+            f'potential_demands_kwargs={self.potential_demands_kwargs}, '
+            f'user_patterns_distribution={self.user_patterns_distribution})'
         )
 
 
 class Day:
     """
-    A day is described as a date with and associated demand pattern in a market.
+    A day is described as a date with and associated demand pattern.
     
     Attributes:
         id (int): The day id.
         date (datetime.date): The actual date.
         demand_pattern (DemandPattern): The associated demand pattern.
-        market (Market): The associated market.
     """
     
-    def __init__(self, id: int, date: datetime.date, demand_pattern: DemandPattern, market: Market) -> None:
+    def __init__(self, id: int, date: datetime.date, demand_pattern: DemandPattern) -> None:
         """
         Initializes a day.
 
@@ -430,7 +455,6 @@ class Day:
         self.id = id
         self.date = date
         self.demand_pattern = demand_pattern
-        self.market = market
 
     def generate_passengers(self, id_offset: int = 1) -> List['Passenger']:
         """
@@ -443,18 +467,21 @@ class Day:
             List[Passenger]: The generated passengers.
         """
         passengers = []
-        for i in range(self.demand_pattern.potential_demand):
-            user_pattern = self.demand_pattern.get_user_pattern()
-            passengers.append(
-                Passenger(
-                    id=i + id_offset,
-                    user_pattern=user_pattern,
-                    market=self.market,
-                    arrival_day=self,
-                    arrival_time=user_pattern.arrival_time,
-                    purchase_day=user_pattern.purchase_day,
+        for market in self.demand_pattern.markets:
+            potential_demand = self.demand_pattern.potential_demand(market)
+            for i in range(potential_demand):
+                user_pattern = self.demand_pattern.get_user_pattern(market)
+                passengers.append(
+                    Passenger(
+                        id=i + id_offset,
+                        user_pattern=user_pattern,
+                        market=market,
+                        arrival_day=self,
+                        arrival_time=user_pattern.arrival_time,
+                        purchase_day=user_pattern.purchase_day,
+                    )
                 )
-            )
+            id_offset += potential_demand
         return passengers
 
     def __str__(self) -> str:
@@ -473,13 +500,7 @@ class Day:
         Returns:
             str: The debuggable string representation of the day.
         """
-        return (
-            f'{self.__class__.__name__}('
-            f'id={self.id}, '
-            f'date={self.date}, '
-            f'demand_pattern={self.demand_pattern}), '
-            f'market={self.market})'
-        )
+        return f'Day(id={self.id}, date={self.date}, demand_pattern={self.demand_pattern})'
 
 
 class Passenger:
@@ -736,6 +757,7 @@ class Demand:
     def _get_demand_patterns(
             cls,
             data: Mapping[str, Any],
+            markets: Mapping[int, Market],
             user_patterns: Mapping[int, UserPattern]
         ) -> Mapping[int, DemandPattern]:
         """
@@ -743,6 +765,7 @@ class Demand:
 
         Args:
             data (Mapping[str, Any]): The data of the YAML file.
+            markets (Mapping[int, Market]): The markets.
             user_patterns (Mapping[int, UserPattern]): The user patterns.
 
         Returns:
@@ -752,15 +775,29 @@ class Demand:
         for key, value in data.items():
             if key == 'demandPattern':
                 for demand_pattern in value:
-                    # Convert the list of user pattern distributions into a dictionary {user_pattern: percentage}
-                    user_pattern_distribution = {}
-                    for demand_upd in demand_pattern['user_pattern_distribution']:
-                        user_pattern_distribution[user_patterns[demand_upd['id']]] = demand_upd['percentage']
-                    demand_pattern.pop('user_pattern_distribution', None)
+                    # Get the markets, the potential demands and the user patterns distribution
+                    markets_objects = []
+                    potential_demands = []
+                    potential_demands_kwargs = []
+                    user_patterns_distribution = []
+                    for market in demand_pattern['markets']:
+                        markets_objects.append(markets[market['market']])
+                        potential_demands.append(market['potential_demand'])
+                        potential_demands_kwargs.append(market['potential_demand_kwargs'])
 
+                        # Convert the list of user patterns distributions into a dictionary {user_pattern: percentage}
+                        user_pattern_distribution = {}
+                        for demand_upd in market['user_pattern_distribution']:
+                            user_pattern_distribution[user_patterns[demand_upd['id']]] = demand_upd['percentage']
+                        user_patterns_distribution.append(user_pattern_distribution)
+                    
                     demand_patterns[demand_pattern['id']] = DemandPattern(
-                        user_pattern_distribution=user_pattern_distribution,
-                        **demand_pattern
+                        id=demand_pattern['id'],
+                        name=demand_pattern['name'],
+                        markets=markets_objects,
+                        potential_demands=potential_demands,
+                        potential_demands_kwargs=potential_demands_kwargs,
+                        user_patterns_distribution=user_patterns_distribution
                     )
         return demand_patterns
 
@@ -786,11 +823,9 @@ class Demand:
         for key, value in data.items():
             if key == 'day':
                 for day in value:
-                    id_ = day['id']
-                    date = day['date']
                     demand_pattern = demand_patterns[day['demandPattern']]
-                    market = markets[day['market']]
-                    days[day['id']] = Day(id=id_, date=date, demand_pattern=demand_pattern, market=market)
+                    day.pop('demandPattern', None)
+                    days[day['id']] = Day(demand_pattern=demand_pattern, **day)
         return days
 
     @classmethod
@@ -818,7 +853,7 @@ class Demand:
         data = yaml.safe_load(demand_yaml)
         markets = Demand._get_markets(data)
         user_patterns = Demand._get_user_patterns(data)
-        demand_patterns = Demand._get_demand_patterns(data, user_patterns)
+        demand_patterns = Demand._get_demand_patterns(data, markets, user_patterns)
         days = Demand._get_days(data, markets, demand_patterns)
 
         return cls(list(days.values()))

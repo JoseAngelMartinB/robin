@@ -103,38 +103,46 @@ userPattern:
 demandPattern:
   - id: 1
     name: Monday-Thursday
-    potential_demand: randint
-    potential_demand_kwargs:
-      low: 600
-      high: 1000
-    user_pattern_distribution:
-      - id: 1
-        percentage: 0.7
-      - id: 2
-        percentage: 0.3
+    markets:
+      - market: 3
+        potential_demand: randint
+        potential_demand_kwargs:
+          low: 600
+          high: 1000
+        user_pattern_distribution:
+          - id: 1
+            percentage: 0.7
+          - id: 2
+            percentage: 0.3
   - id: 2
     name: Sunday
-    potential_demand: randint
-    potential_demand_kwargs:
-      low: 1400
-      high: 2200
-    user_pattern_distribution:
-      - id: 1
-        percentage: 0.2
-      - id: 2
-        percentage: 0.8
+    markets:
+      - market: 1
+        potential_demand: randint
+        potential_demand_kwargs:
+          low: 140
+          high: 220
+        user_pattern_distribution:
+          - id: 1
+            percentage: 0.2
+          - id: 2
+            percentage: 0.8
+      - market: 3
+        potential_demand: randint
+        potential_demand_kwargs:
+          low: 700
+          high: 900
+        user_pattern_distribution:
+          - id: 1
+            percentage: 0.2
+          - id: 2
+            percentage: 0.8
 
 # Day
 day:
   - id: 1
-    date: 2023-01-22
+    date: 2023-01-18
     demandPattern: 1
-    market: 3
   - id: 2
     date: 2023-01-22
     demandPattern: 2
-    market: 2
-  - id: 3
-    date: 2023-01-22
-    demandPattern: 1
-    market: 1
