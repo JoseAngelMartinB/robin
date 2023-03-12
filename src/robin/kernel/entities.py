@@ -1,8 +1,9 @@
 """Entities for the kernel module."""
 
 import numpy as np
-import os
+import pandas as pd
 import random
+import os
 
 from src.robin.demand.entities import Demand, Passenger
 from src.robin.supply.entities import Service, Supply
@@ -40,18 +41,41 @@ class Kernel:
             passengers (List[Passenger]): List of passengers.
             output_path (str, optional): Path to the output csv file. Defaults to 'output.csv'.
         """
-        header = [
+        column_names = [
             'id', 'user_pattern', 'departure_station', 'arrival_station',
             'arrival_day', 'arrival_time', 'purchase_day', 'service', 'service_departure_time',
             'service_arrival_time', 'seat', 'price', 'utility'
         ]
-        csv = ','.join(header) + '\n'
+        data = []
         for passenger in passengers:
-            csv += str(passenger) + '\n'
-        with open(output_path, 'w') as f:
-            f.write(csv)
+            data.append([
+                passenger.id,
+                passenger.user_pattern,
+                passenger.market.departure_station,
+                passenger.market.arrival_station,
+                passenger.arrival_day,
+                passenger.arrival_time,
+                passenger.purchase_day,
+                passenger.service,
+                passenger.service_departure_time,
+                passenger.service_arrival_time,
+                passenger.seat,
+                passenger.ticket_price,
+                passenger.utility
+            ])
+        df = pd.DataFrame(data=data, columns=column_names)
+        # Try to convert service column to int
+        try:
+            df.service = df.service.astype('Int64')
+        except TypeError:
+            pass
+        df.to_csv(output_path, index=False)
 
-    def simulate(self, output_path: Union[str, None] = None) -> List[Service]:
+    def simulate(
+            self,
+            output_path: Union[str, None] = None,
+            departure_time_hard_restriction: bool = False
+        ) -> List[Service]:
         """
         Simulate the demand-supply interaction.
 
@@ -61,6 +85,7 @@ class Kernel:
 
         Args:
             output_path (str, optional): Path to the output csv file. Defaults to None.
+            departure_time_hard_restriction (bool, optional): If True, the passenger will not be assigned to a service with a departure time that is not valid. Defaults to False.
 
         Returns:
             List[Service]: List of services with updated tickets.
@@ -95,7 +120,7 @@ class Kernel:
                         service_departure_time=service.service_departure_time,
                         service_arrival_time=service.service_arrival_time,
                         price=service.prices[(origin, destination)][seat],
-                        departure_time_hard_restriction=False
+                        departure_time_hard_restriction=departure_time_hard_restriction
                     )
                     # Update service with max utility
                     if utility > seat_utility:
