@@ -50,7 +50,7 @@ def plot_data(data: Dict[datetime.date, Dict[str, Dict[str, int]]]):
 
 
 if __name__ == "__main__":
-    df = pd.read_csv("../kernel/output_renfe.csv")
+    df = pd.read_csv("../kernel/output_new.csv")
 
     def get_purchase_day(anticipation, arrival_day):
         anticipation = datetime.timedelta(days=anticipation)
@@ -58,18 +58,18 @@ if __name__ == "__main__":
         purchase_day = arrival_day - anticipation
         return purchase_day.date()
 
-    # df["purchase_day"] = df.apply(lambda row: get_purchase_day(row["purchase_day"], row["arrival_day"]), axis=1)
+    df["purchase_day"] = df.apply(lambda row: get_purchase_day(row["purchase_day"], row["arrival_day"]), axis=1)
 
     data = {}
     for row in df.iterrows():
-        day, user, seat = tuple(row[1][["arrival_day", "user_pattern", "seat"]])
+        day, user, seat = tuple(row[1][["purchase_day", "user_pattern", "seat"]])
 
         if day not in data:
             data[day] = {}
         if user not in data[day]:
             data[day][user] = {}
 
-        if seat == "None":
+        if seat is np.nan:
             continue
 
         if seat not in data[day][user]:
