@@ -66,7 +66,7 @@ class Kernel:
         df = pd.DataFrame(data=data, columns=column_names)
         # Try to convert service column to int
         try:
-            df.service = df.service.astype('Int64')
+            df.service = df.service.astype('str')
         except TypeError:
             pass
         df.to_csv(output_path, index=False)
