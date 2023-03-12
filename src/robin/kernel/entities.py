@@ -64,7 +64,11 @@ class Kernel:
                 passenger.utility
             ])
         df = pd.DataFrame(data=data, columns=column_names)
-        df.service = df.service.astype('Int64')
+        # Try to convert service column to int
+        try:
+            df.service = df.service.astype('Int64')
+        except TypeError:
+            pass
         df.to_csv(output_path, index=False)
 
     def simulate(
