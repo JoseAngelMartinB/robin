@@ -1,3 +1,4 @@
+from src.robin.supply.entities import Supply
 import matplotlib.pyplot as plt
 from typing import Dict
 import pandas as pd
@@ -6,8 +7,20 @@ import datetime
 
 
 class KernelPlotter:
-    def __init__(self, path: str):
+    """
+    The kernel plotter class plots the results of the kernel.
+
+    Attributes:
+        df (pd.DataFrame): Dataframe with the results of the kernel.
+
+    Methods:
+        plot_tickets_sold: Plot the total number of tickets sold per day.
+        plot_tickets_sold_by_seat_type: Plot the total number of tickets sold per day and seat type.
+    """
+    def __init__(self, path: str, supply_path: str):
         self.df = pd.read_csv(path)
+
+        self.supply = Supply.from_yaml(supply_path)
 
         self.df["purchase_day"] = self.df.apply(
             lambda row: self._get_purchase_day(row["purchase_day"], row["arrival_day"]), axis=1
@@ -19,6 +32,16 @@ class KernelPlotter:
         self.colors_dict = {c: dc for c, dc in zip(colors, dark_colors)}
 
     def _get_purchase_day(self, anticipation, arrival_day):
+        """
+        Get purchase date using the anticipation and arrival day of the passenger.
+
+        Args:
+            anticipation (int): Anticipation of the passenger.
+            arrival_day (str): Arrival day of the passenger.
+
+        Returns:
+            datetime.date: Purchase day of the passenger.
+        """
         anticipation = datetime.timedelta(days=anticipation)
         arrival_day = datetime.datetime.strptime(arrival_day, "%Y-%m-%d")
         purchase_day = arrival_day - anticipation
@@ -31,10 +54,8 @@ class KernelPlotter:
 
             if day not in data:
                 data[day] = {}
-
             if seat is np.nan:
                 continue
-
             if seat not in data[day]:
                 data[day][seat] = 0
 
@@ -42,6 +63,29 @@ class KernelPlotter:
 
         sorted_data = dict(sorted(data.items(), key=lambda x: x[0]))
         return sorted_data
+
+    def _get_train_capacities(self):
+        services = self.supply.services
+        train_capacities_per_day = {}
+        for service in services:
+            for day in service.days:
+                if day not in train_capacities_per_day:
+                    train_capacities_per_day[day] = {}
+
+                for seat in service.rolling_stock.seats:
+                    if seat not in train_capacities_per_day[day]:
+                        train_capacities_per_day[day][seat] = 0
+                    train_capacities_per_day[day][seat] += service.rolling_stock.seats[seat]
+
+        return train_capacities_per_day
+
+    def plot_capacity(self, ):
+        tickets_sold = self._get_total_tickets_sold()
+
+        services = self.supply.services
+        train_capacities_per_day = self._get_train_capacities()
+
+        # Get percentage of tickets sold per day: Divide the number of tickets sold by the capacity of the train
 
     def plot_tickets_sold(self, save_path: str = None):
         data = self._get_total_tickets_sold()
@@ -88,7 +132,6 @@ class KernelPlotter:
                 data[day] = {}
             if user not in data[day]:
                 data[day][user] = {}
-
             if seat is np.nan:
                 continue
 
@@ -141,6 +184,8 @@ class KernelPlotter:
 
 
 if __name__ == "__main__":
-    kernel_plotter = KernelPlotter(path="../kernel/output_renfe_new.csv")
+    kernel_plotter = KernelPlotter(path="../kernel/output_renfe_new.csv", supply_path="../data/supply_data.csv")
 
     kernel_plotter.plot_tickets_sold(save_path="total_tickets_sold.png")
+    kernel_plotter.plot_tickets_by_user(save_path="tickets_sold_per_usertype.png")
+
