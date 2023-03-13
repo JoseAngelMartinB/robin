@@ -46,7 +46,7 @@ def plot_data(data: Dict[datetime.date, Dict[str, Dict[str, int]]]):
         ax.legend()
     plt.show()
 
-    fig.savefig('output.png', dpi=300, format='png')
+    fig.savefig('output_new.png', dpi=300, format='png')
 
 
 if __name__ == "__main__":
