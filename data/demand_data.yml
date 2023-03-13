@@ -29,11 +29,11 @@ userPattern:
       end: 24
     seats:
       - id: 1
-        utility: 20
-      - id: 2
         utility: 10
-      - id: 3
+      - id: 2
         utility: 15
+      - id: 3
+        utility: 20
       - id: 4
         utility: 5
     penalty_arrival_time: polynomial
@@ -71,11 +71,11 @@ userPattern:
       end: 14
     seats:
       - id: 1
-        utility: 15
+        utility: 10
       - id: 2
         utility: 12
       - id: 3
-        utility: 10
+        utility: 15
       - id: 4
         utility: 8
     penalty_arrival_time: polynomial
