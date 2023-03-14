@@ -416,7 +416,7 @@ class Service(object):
         """
         occupied_seats = self._capacity_log[(origin, destination)][seat.hard_type]
 
-        if self.capacity_constraints and anticipation <= self.lift_constraints:
+        if self.capacity_constraints and anticipation > self.lift_constraints:
             if (origin, destination) in self.capacity_constraints:
                 constrained_capacity = self.capacity_constraints[(origin, destination)][seat.hard_type]
                 if occupied_seats < constrained_capacity:
