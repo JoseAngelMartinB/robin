@@ -18,7 +18,7 @@ class KernelPlotter:
         plot_tickets_sold_by_seat_type: Plot the total number of tickets sold per day and seat type.
     """
     def __init__(self, path: str, supply_path: str):
-        self.df = pd.read_csv(path)
+        self.df = pd.read_csv(path, dtype={"departure_station": str, "arrival_station": str})
 
         self.supply = Supply.from_yaml(supply_path)
 
@@ -116,6 +116,54 @@ class KernelPlotter:
 
         sorted_data = dict(sorted(train_capacities_per_day.items(), key=lambda x: x[0]))
         return sorted_data
+
+    def _get_pairs_sold(self):
+        stations_dict = {str(sta.id): sta.name for s in self.supply.services for sta in s.line.stations}
+
+        pairs_sold = {}
+        for row in self.df.iterrows():
+            departure, arrival = tuple(row[1][["departure_station", "arrival_station"]])
+
+            pair = f'{stations_dict[departure]} - {stations_dict[arrival]}'
+            if pair not in pairs_sold:
+                pairs_sold[pair] = 0
+
+            pairs_sold[pair] += 1
+
+        sorted_data = dict(sorted(pairs_sold.items(), key=lambda x: x[1], reverse=True))
+        return sorted_data
+
+    def plot_pairs(self, save_path: str = None):
+        pairs_sold = self._get_pairs_sold()
+        print("Tickets sold: ", pairs_sold)
+
+        fig, ax = plt.subplots(1, 1, figsize=(7, 4))
+        fig.subplots_adjust(hspace=0.75, bottom=0.2, top=0.9)
+
+        ax.set_facecolor('#F5F5F5')
+        ax.set_title(f'Tickets vendidos por pares de estaciones', fontweight='bold')
+        ax.set_ylabel('Nº de tickets vendidos')
+        ax.set_xlabel('Par origen-destino', labelpad=10)
+        ax.set_xticks(np.arange(len(pairs_sold)))
+        ax.set_xticklabels(pairs_sold.keys(), rotation=60, fontsize=8)
+        ax.set_xlim([-0.5, len(pairs_sold)])
+        ax.set_ylim([0, max(pairs_sold.values())*1.1])
+
+        for i, pair in enumerate(pairs_sold):
+            color = list(self.colors_dict.keys())[i % len(self.colors_dict.keys())]
+            ax.bar(i, pairs_sold[pair],
+                   bottom=0,
+                   color=color,
+                   alpha=0.5,
+                   label=pair,
+                   edgecolor=self.colors_dict[color])
+
+        ax.grid(axis='y', color='#A9A9A9', alpha=0.3, zorder=1)
+        ax.legend()
+        plt.show()
+
+        if save_path is not None:
+            fig.savefig(save_path, dpi=300, bbox_inches='tight')
 
     def plot_capacity(self, save_path: str = None):
         tickets_sold = self._get_sold_by_hardtype()  # Dict[datetime.date, Dict["Turista", 254]]
@@ -303,5 +351,6 @@ if __name__ == "__main__":
 
     #kernel_plotter.plot_tickets_sold(save_path="total_tickets_sold.png")
     #kernel_plotter.plot_tickets_by_user(save_path="tickets_sold_per_usertype.png")
-    kernel_plotter.plot_capacity(save_path="capacity.png")
+    #kernel_plotter.plot_capacity(save_path="capacity.png")
+    kernel_plotter.plot_pairs(save_path="pairs.png")
 
