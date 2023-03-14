@@ -1,10 +1,11 @@
 from src.robin.supply.entities import Supply
+import matplotlib.colors as mc
 import matplotlib.pyplot as plt
 from typing import Dict, Union
 import pandas as pd
 import numpy as np
 import datetime
-
+import colorsys
 
 class KernelPlotter:
     """
@@ -19,12 +20,10 @@ class KernelPlotter:
     """
     def __init__(self, path: str, supply_path: str):
         self.df = pd.read_csv(path, dtype={"departure_station": str, "arrival_station": str})
-
         self.supply = Supply.from_yaml(supply_path)
-
-        self.df["purchase_date"] = self.df.apply(
-            lambda row: self._get_purchase_day(row["purchase_day"], row["arrival_day"]), axis=1
-        )
+        self.df["purchase_date"] = self.df.apply(lambda row: self._get_purchase_date(row["purchase_day"],
+                                                                                     row["arrival_day"]),
+                                                 axis=1)
 
         plt.style.use('seaborn-pastel')
         colors = ['lemonchiffon', 'lightsteelblue', 'palegreen', 'lightsalmon', 'lavender', 'lightgray']
@@ -41,16 +40,14 @@ class KernelPlotter:
         >> lighten_color('#F034A3', 0.6)
         >> lighten_color((.3,.55,.1), 0.5)
         """
-        import matplotlib.colors as mc
-        import colorsys
         try:
             c = mc.cnames[color]
-        except:
+        except ValueError:
             c = color
         c = colorsys.rgb_to_hls(*mc.to_rgb(c))
         return colorsys.hls_to_rgb(c[0], 1 - amount * (1 - c[1]), c[2])
 
-    def _get_purchase_day(self, anticipation, arrival_day):
+    def _get_purchase_date(self, anticipation, arrival_day):
         """
         Get purchase date using the anticipation and arrival day of the passenger.
 
@@ -67,25 +64,36 @@ class KernelPlotter:
         return purchase_day.date()
 
     def _get_total_tickets_sold(self):
-        data = {}
-        for row in self.df.iterrows():
-            day, seat = tuple(row[1][["purchase_date", "seat"]])
+        """
+        Get the total number of tickets sold per day and seat type.
 
-            if day not in data:
-                data[day] = {}
-            if seat is np.nan:
-                continue
-            if seat not in data[day]:
-                data[day][seat] = 0
+        Returns:
+            Dict[str, Dict[str, int]]: Dictionary with the total number of tickets sold per day and seat type.
+            Primary Keys are the days as datetime.date and secondary keys are the seat types as str.
+        """
+        grouped_data = self.df.groupby(by=['purchase_date', 'seat'])
+        result_dict = {}
 
-            data[day][seat] += 1
+        for group_key, group in grouped_data:
+            purchase_date, seat = group_key
+            if purchase_date not in result_dict:
+                result_dict[purchase_date] = {}
+            result_dict[purchase_date][seat] = group.size
+        sorted_data = dict(sorted(result_dict.items(), key=lambda x: x[0]))
 
-        sorted_data = dict(sorted(data.items(), key=lambda x: x[0]))
         return sorted_data
 
     def _get_sold_by_hardtype(self):
+        """
+        UNUSED - Get the total number of tickets sold per day and seat hard type.
+
+        Returns:
+            Dict[str, Dict[str, int]]: Dictionary with the total number of tickets sold per day and seat hard type.
+        """
         data = {}
-        dict_hardtypes = {"Turista": 1, "Turista Plus": 1, "Preferente": 2}
+        seat_types = {seat for s in self.supply.services for pair in s.prices.values() for seat in pair.keys()}
+        dict_hardtypes = {seat.name: seat.hard_type for seat in seat_types}
+
         for row in self.df.iterrows():
             day, seat = tuple(row[1][["arrival_day", "seat"]])
 
@@ -102,6 +110,12 @@ class KernelPlotter:
         return sorted_data
 
     def _get_train_capacities(self):
+        """
+        UNUSED - Get the total number of seats per day and seat type.
+
+        Returns:
+            Dict[str, Dict[str, int]]: Dictionary with the total number of seats per day and seat type.
+        """
         services = self.supply.services
         train_capacities_per_day = {}
         for service in services:
@@ -118,19 +132,22 @@ class KernelPlotter:
         return sorted_data
 
     def _get_pairs_sold(self):
+        """
+        Get the total number of tickets sold per day and a pair of stations.
+
+        Returns:
+            Dict[str, Dict[str, int]]: Dictionary with the total number of tickets sold per day and pair of stations.
+        """
         stations_dict = {str(sta.id): sta.name for s in self.supply.services for sta in s.line.stations}
+        df = self.df.copy(deep=True)
 
-        pairs_sold = {}
-        for row in self.df.iterrows():
-            departure, arrival = tuple(row[1][["departure_station", "arrival_station"]])
+        def _get_pair_name(row):
+            departure, arrival = tuple(row[["departure_station", "arrival_station"]])
+            return f'{stations_dict[departure]}\n{stations_dict[arrival]}'
 
-            pair = f'{stations_dict[departure]}\n{stations_dict[arrival]}'
-            if pair not in pairs_sold:
-                pairs_sold[pair] = 0
-
-            pairs_sold[pair] += 1
-
-        sorted_data = dict(sorted(pairs_sold.items(), key=lambda x: x[1], reverse=True))
+        df['pair'] = df.apply(_get_pair_name, axis=1)
+        data_dict = df.groupby(by=['pair']).size().to_dict()
+        sorted_data = dict(sorted(data_dict.items(), key=lambda x: x[1], reverse=True))
         return sorted_data
 
     def _get_pie_data(self):
@@ -357,5 +374,5 @@ if __name__ == "__main__":
     #kernel_plotter.plot_tickets_sold(save_path="total_tickets_sold.png")
     #kernel_plotter.plot_tickets_by_user(save_path="tickets_sold_per_usertype.png")
     #kernel_plotter.plot_capacity(service_id="03211_16-03-2023-21.10", save_path="capacity.png")
-    #kernel_plotter.plot_pairs(save_path="pairs.png")
-    kernel_plotter.pie_plot(save_path="pie.png")
+    kernel_plotter.plot_pairs(save_path="pairs.png")
+    #kernel_plotter.pie_plot(save_path="pie.png")
