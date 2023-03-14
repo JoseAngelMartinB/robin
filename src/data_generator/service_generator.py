@@ -146,7 +146,7 @@ class ServiceGenerator:
                 bool: True if collision, False otherwise
             """
 
-            # TODO: Check other types of collisions
+            # TODO: Check other types of collisions (different train but same line, etc.)
             if ns.rolling_stock == sl.rolling_stock:
                 start_dt_sl = _get_start_time(sl)
                 end_dt_sl = _get_end_time(sl)
