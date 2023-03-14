@@ -289,7 +289,7 @@ class KernelPlotter:
                 ax.bar(np.arange(len(data)), values,
                        width=0.5,
                        bottom=bottom,
-                       color=self.colors[i % len(self.colors)],
+                       color=self.colors[j % len(self.colors)],
                        label=seat_type,
                        edgecolor='black',
                        linewidth=0.5,
@@ -342,7 +342,7 @@ class KernelPlotter:
         data = self._get_tickets_sold_pie_chart()
 
         fig, ax = plt.subplots(1, 1, figsize=(7, 4))
-        colors = [list(self.colors_dict.keys())[i % len(self.colors_dict)] for i, _ in enumerate(data.keys())]
+        colors = [self.colors[i % len(self.colors)] for i, _ in enumerate(data.keys())]
 
         ax.set_title('Distribución de pasajeros', fontweight='bold')
         ax.pie(data.values(), labels=data.keys(), colors=colors, autopct='%1.1f%%')
