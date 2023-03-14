@@ -237,6 +237,7 @@ class RollingStock(object):
         self.id = id_
         self.name = name
         self.seats = seats
+        self.total_capacity = sum(seats.values())
 
     def __str__(self):
         return f'[{self.id},{self.name},{self.seats}]'
@@ -476,6 +477,20 @@ class Supply(object):
         services = Supply._get_services(data, lines, tsps, time_slots, seats, rolling_stock, key='service')
 
         return cls(list(services.values()))
+
+    def filter_service_by_id(self, service_id: str) -> Service:
+        """
+        Filters a Service by ID
+
+        Args:
+            service_id (str): Service ID
+
+        Returns:
+            Service: Service object
+        """
+        for s in self.services:
+            if s.id == service_id:
+                return s
 
     def filter_services(self, origin: str, destination: str, date: datetime.date) -> List[Service]:
         """
