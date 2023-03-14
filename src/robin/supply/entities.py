@@ -290,6 +290,7 @@ class Service(object):
         prices (Dict[Tuple[str, str], Dict[Seat, float]]): Prices for each pair of stations and each Seat type
         capacity_constraints (Dict[Tuple[str, str], Dict[int, int]]): Constrained capacity (limit seats available
         between a specific pair of stations)
+        lift_constraints (int): Minimum anticipation (days) to lift capacity constraints
     """
 
     def __init__(self,
@@ -300,7 +301,8 @@ class Service(object):
                  time_slot: TimeSlot,
                  rolling_stock: RollingStock,
                  prices: Dict[Tuple[str, str], Dict[Seat, float]],
-                 capacity_constraints: Dict[Tuple[str, str], Dict[int, int]] = None):
+                 capacity_constraints: Dict[Tuple[str, str], Dict[int, int]] = None,
+                 lift_constraints: int = 1):
 
         self.id = id_
         self.date = date
@@ -312,6 +314,7 @@ class Service(object):
         self.service_arrival_time = self.schedule[-1][0].seconds / 3600  # Service arrival time in hours
         self.rolling_stock = rolling_stock
         self.capacity_constraints = capacity_constraints
+        self.lift_constraints = lift_constraints
         self.prices = prices
 
         _seats = set([s for d in self.prices.values() for s in d.keys()])
@@ -363,7 +366,7 @@ class Service(object):
 
         return absolute_schedule
 
-    def buy_ticket(self, origin: str, destination: str, seat: Seat) -> bool:
+    def buy_ticket(self, origin: str, destination: str, seat: Seat, anticipation: int) -> bool:
         """
         Method to buy a ticket for a service
 
@@ -372,6 +375,7 @@ class Service(object):
             origin (str): Origin station ID
             destination (str): Destination station ID
             seat (Seat): Seat type
+            anticipation (int): Days of anticipation in the purchase of the ticket
 
         Returns:
             True if the ticket was bought, False if not
@@ -380,7 +384,7 @@ class Service(object):
 
         service_route = set(range(stations_ids.index(origin), stations_ids.index(destination)))
 
-        if not self.tickets_available(origin, destination, seat):
+        if not self.tickets_available(origin, destination, seat, anticipation):
             return False
 
         for pair in self.line.pairs:  # pairs attribute is a dictionary with all the pairs of stations
@@ -396,7 +400,7 @@ class Service(object):
 
         return True
 
-    def tickets_available(self, origin: str, destination: str, seat: Seat) -> bool:
+    def tickets_available(self, origin: str, destination: str, seat: Seat, anticipation: int) -> bool:
         """
         Method to check the availability of seats in a service
 
@@ -405,13 +409,14 @@ class Service(object):
             origin (str): Origin station ID
             destination (str): Destination station ID
             seat (Seat): Seat type
+            anticipation (int): Days of anticipation in the purchase of the ticket
 
         Returns:
             bool: True if available, False if not available
         """
         occupied_seats = self._capacity_log[(origin, destination)][seat.hard_type]
 
-        if self.capacity_constraints:
+        if self.capacity_constraints and anticipation <= self.lift_constraints:
             if (origin, destination) in self.capacity_constraints:
                 constrained_capacity = self.capacity_constraints[(origin, destination)][seat.hard_type]
                 if occupied_seats < constrained_capacity:

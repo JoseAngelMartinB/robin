@@ -112,7 +112,8 @@ class Kernel:
             for service in services:
                 for seat in service.prices[(origin, destination)].keys():
                     # Check if seat is available
-                    if not service.tickets_available(origin, destination, seat):
+                    anticipation = passenger.purchase_day
+                    if not service.tickets_available(origin, destination, seat, anticipation):
                         continue
                     # Calculate utility
                     utility = passenger.get_utility(
@@ -136,7 +137,8 @@ class Kernel:
                 ticket_bought = service_arg_max.buy_ticket(
                     origin=passenger.market.departure_station,
                     destination=passenger.market.arrival_station,
-                    seat=seat_arg_max
+                    seat=seat_arg_max,
+                    anticipation=passenger.purchase_day
                 )
                 if ticket_bought:
                     passenger.service = service_arg_max.id
