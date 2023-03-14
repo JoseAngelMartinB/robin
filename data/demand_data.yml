@@ -107,8 +107,8 @@ demandPattern:
       - market: 3
         potential_demand: randint
         potential_demand_kwargs:
-          low: 6000
-          high: 10000
+          low: 600
+          high: 1000
         user_pattern_distribution:
           - id: 1
             percentage: 0.7
@@ -120,8 +120,8 @@ demandPattern:
       - market: 1
         potential_demand: randint
         potential_demand_kwargs:
-          low: 1400
-          high: 2200
+          low: 140
+          high: 220
         user_pattern_distribution:
           - id: 1
             percentage: 0.2
@@ -130,8 +130,8 @@ demandPattern:
       - market: 3
         potential_demand: randint
         potential_demand_kwargs:
-          low: 7000
-          high: 9000
+          low: 700
+          high: 900
         user_pattern_distribution:
           - id: 1
             percentage: 0.2
