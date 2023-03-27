@@ -1,15 +1,14 @@
+import ast
+import datetime
+import os
+import pandas as pd
+import random
 from src.robin.supply.entities import Station, Corridor, Seat, TimeSlot, TSP, Line, RollingStock, Service
 from src.data_generator.yaml_utils import *
-from math import sin, cos, acos, radians
-from typing import Tuple, List, Dict
-import pandas as pd
-import numpy as np
-import datetime
-import random
+from src.data_generator.utils import _get_end_time, _get_start_time, _to_station, _build_service
 import time
+from typing import Tuple, List, Dict
 import yaml
-import ast
-import os
 
 
 class ServiceGenerator:
@@ -42,17 +41,6 @@ class ServiceGenerator:
         self.time_slots = {}
         self.services = []
 
-    def _set_config(self, path_config: str):
-        """
-        Set config file
-
-        Args:
-            path_config (str): Path to config file
-        """
-        with open(path_config, 'r') as f:
-            config = yaml.safe_load(f)
-        self.config = config
-
     def generate(self, file_name: str, path_config: str, n_services: int = 1, seed: int = None) -> List[Service]:
         """
         Generate a list of services
@@ -78,6 +66,63 @@ class ServiceGenerator:
         self.save_to_yaml(services, file_name)
         return services
 
+    def save_to_yaml(self, services: List[Service], file_name: str) -> None:
+        """
+        Save the data to a yaml file
+
+        Args:
+            filename (str): Name of the file
+            services (List[Service]): List of Service objects
+
+        Returns:
+            None
+        """
+        rolling_stocks = list(set([rs for tsp in self.tsps.values() for rs in tsp.rolling_stock]))
+
+        yaml_dict = {'stations': [station_to_dict(stn) for stn in self.stations.values()],
+                     'seat': [seat_to_dict(s) for s in self.seats.values()],
+                     'corridor': [corridor_to_dict(corr) for corr in self.corridors.values()],
+                     'line': [line_to_dict(ln) for ln in self.lines.values()],
+                     'rollingStock': [rolling_stock_to_dict(rs) for rs in rolling_stocks],
+                     'trainServiceProvider': [tsp_to_dict(tsp) for tsp in self.tsps.values()],
+                     'timeSlot': [time_slot_to_dict(s) for s in self.time_slots.values()],
+                     'service': [service_to_dict(serv) for serv in services]}
+
+        self._write_to_yaml(file_name, yaml_dict)
+
+    def _check_collisions(self, new_service, listed_service):
+        """
+        Check if two services collide
+
+        Args:
+            new_service (Service): New service
+            listed_service (Service): Service in the list of services
+
+        Returns:
+            bool: True if collision, False otherwise
+        """
+
+        # TODO: Check other types of collisions (different train but same line, etc.)
+        if new_service.rolling_stock == listed_service.rolling_stock:
+            start_dt_sl = _get_start_time(listed_service)
+            end_dt_sl = _get_end_time(listed_service)
+            start_dt_ns = _get_start_time(new_service)
+            end_dt_ns = _get_end_time(new_service)
+
+            if start_dt_ns <= end_dt_sl and end_dt_ns >= start_dt_sl:
+                return True
+
+            ref_time_left = self._get_ref_time(new_service, listed_service)
+            ref_time_right = self._get_ref_time(listed_service, new_service)
+
+            if end_dt_ns > start_dt_sl:
+                if end_dt_sl + ref_time_right > start_dt_ns:
+                    return True
+            else:
+                if end_dt_ns + ref_time_left > start_dt_sl:
+                    return True
+        return False
+
     # Remove seed from config file
     def _generate_service(self) -> Service:
         """
@@ -88,85 +133,6 @@ class ServiceGenerator:
         """
         allow_collisions = self.config['services']['allow_collisions']
 
-        def _get_start_time(s):
-            """
-            Get start time of a service by adding the date and time slot
-
-            Args:
-                s (Service): Service object
-
-            Returns:
-                datetime.datetime: Start time
-            """
-            return datetime.datetime.combine(s.date, datetime.datetime.min.time()) + s.time_slot.start
-
-        def _get_end_time(s):
-            """
-            Get end time of a service by adding the date, time slot and duration. Duration is retrieved from the last
-            schedule entry.
-
-            Args:
-                s (Service): Service object
-
-            Returns:
-                datetime.datetime: End time
-            """
-            end_td = datetime.timedelta(seconds=int(list(s.line.timetable.values())[-1][-1] * 60))
-            return datetime.datetime.combine(s.date, datetime.datetime.min.time()) + s.time_slot.start + end_td
-
-        def _get_ref_time(s1, s2):
-            last_stop_ns = s1.line.stations[-1].id
-            first_stop_sl = s2.line.stations[0].id
-
-            if last_stop_ns == first_stop_sl:
-                return datetime.timedelta(0)
-
-            if (last_stop_ns, first_stop_sl) in self.timetable.keys():
-                ref_time = self.timetable[(last_stop_ns, first_stop_sl)]
-            elif (first_stop_sl, last_stop_ns) in self.timetable.keys():
-                ref_time = self.timetable[(first_stop_sl, last_stop_ns)]
-            else:
-                raise ValueError(f'No timetable entry for {(last_stop_ns, first_stop_sl)} or '
-                                 f'{(first_stop_sl, last_stop_ns)}')
-
-            hours = int(ref_time / 60)
-            minutes = int(ref_time % 60)
-            seconds = int((ref_time - int(ref_time)) * 60)
-            return datetime.timedelta(hours=hours, minutes=minutes, seconds=seconds)
-
-        def _check_collisions(ns, sl):
-            """
-            Check if two services collide
-
-            Args:
-                ns (Service): New service
-                sl (Service): Service in the list of services
-
-            Returns:
-                bool: True if collision, False otherwise
-            """
-
-            # TODO: Check other types of collisions (different train but same line, etc.)
-            if ns.rolling_stock == sl.rolling_stock:
-                start_dt_sl = _get_start_time(sl)
-                end_dt_sl = _get_end_time(sl)
-                start_dt_ns = _get_start_time(ns)
-                end_dt_ns = _get_end_time(ns)
-
-                if start_dt_ns <= end_dt_sl and end_dt_ns >= start_dt_sl:
-                    return True
-
-                ref_time_left = _get_ref_time(ns, sl)
-                ref_time_right = _get_ref_time(sl, ns)
-
-                if end_dt_ns > start_dt_sl:
-                    if end_dt_sl + ref_time_right > start_dt_ns:
-                        return True
-                else:
-                    if end_dt_ns + ref_time_left > start_dt_sl:
-                        return True
-            return False
-
         while True:
             corridor = self._get_random_corridor()
             line = self._get_random_line(corridor)
@@ -175,32 +141,86 @@ class ServiceGenerator:
             rs = self._get_random_rs(tsp)
             date = self._get_random_date()
             prices = self._get_random_prices(line, rs, tsp)  # prices: Dict[Tuple[str, str], Dict[Seat, float]]
-            service = self._create_service(date, line, time_slot, tsp, rs, prices)
+            service = _build_service(date, line, time_slot, tsp, rs, prices)
 
             if allow_collisions:
                 self.services.append(service)
                 return service
 
-            if not any(_check_collisions(service, s) for s in self.services):
+            if not any(self._check_collisions(service, s) for s in self.services):
                 self.services.append(service)
                 return service
 
-    def _create_service(self, date, line, time_slot, tsp, rs, prices):
-        return Service(id_=f'{line.id}_{time_slot.id}',
-                       date=str(date),
-                       line=line,
-                       time_slot=time_slot,
-                       tsp=tsp,
-                       rolling_stock=rs,
-                       prices=prices)
+    def _get_ref_time(self, service_1: Service, service_2: Service):
+        """
+        Get reference time between two services
 
-    def _get_random_rs(self, tsp):
+        Args:
+            service_1 (Service): First service
+            service_2 (Service): Second service
+
+        Returns:
+            datetime.timedelta: Reference time between stations
+        """
+        last_stop_ns = service_1.line.stations[-1].id
+        first_stop_sl = service_2.line.stations[0].id
+
+        if last_stop_ns == first_stop_sl:
+            return datetime.timedelta(0)
+
+        if (last_stop_ns, first_stop_sl) in self.timetable.keys():
+            ref_time = self.timetable[(last_stop_ns, first_stop_sl)]
+        elif (first_stop_sl, last_stop_ns) in self.timetable.keys():
+            ref_time = self.timetable[(first_stop_sl, last_stop_ns)]
+        else:
+            raise ValueError(f'No timetable entry for {(last_stop_ns, first_stop_sl)} or '
+                             f'{(first_stop_sl, last_stop_ns)}')
+
+        hours = int(ref_time / 60)
+        minutes = int(ref_time % 60)
+        seconds = int((ref_time - int(ref_time)) * 60)
+        return datetime.timedelta(hours=hours, minutes=minutes, seconds=seconds)
+
+    def _set_config(self, path_config: str):
+        """
+        Set config file
+
+        Args:
+            path_config (str): Path to config file
+        """
+        with open(path_config, 'r') as f:
+            config = yaml.safe_load(f)
+        self.config = config
+
+    def _get_random_rs(self, tsp: TSP) -> RollingStock:
+        """
+        Get a random rolling stock from a TSP
+
+        Args:
+            tsp (TSP): TSP object
+
+        Returns:
+            RollingStock: Rolling stock object randomly selected from  the specified TSP
+        """
         return random.choice(tsp.rolling_stock)
 
     def _get_random_tsp(self):
+        """
+        Get a random TSP
+
+        Returns:
+            TSP: TSP object randomly selected from the available TSPs
+        """
         return random.choice(list(self.tsps.values()))
 
     def _get_random_corridor(self) -> Corridor:
+        """
+        Get a random corridor
+
+        Returns:
+            Corridor: Corridor object randomly selected from the available corridors
+        :return:
+        """
         # corr_id = self.config.corridors.set_corridor
         corr_id = self.config['corridors']['set_corridor']
 
@@ -208,7 +228,7 @@ class ServiceGenerator:
             return self.corridors[corr_id]
         return random.choice(list(self.corridors.values()))
 
-    def _get_random_date(self):
+    def _get_random_date(self) -> datetime.date:
         """
         This function will return a random datetime between two datetime objects.
 
@@ -222,26 +242,11 @@ class ServiceGenerator:
         random_second = random.randrange(int_delta)
         return start + datetime.timedelta(seconds=random_second)
 
-    def _get_distance(self, line: Line, origin: Station, destination: Station) -> float:
-        """
-        Get distance between two stations.
-
-        Args:
-            line (Line): Line object to get the distance between stations
-            origin (Station): Origin station object
-            destination (Station): Destination station object
-
-        Returns:
-            float: Distance in km
-        """
-        earth_radius = 6371.0
-        assert origin in line.stations and destination in line.stations, 'Stations not in line'
-
-        lat1, lon1, lat2, lon2 = map(radians, [*origin.coords, *destination.coords])
-        lon_diff = lon2 - lon1
-        return acos(sin(lat1) * sin(lat2) + cos(lat1) * cos(lat2) * cos(lon_diff)) * earth_radius
-
-    def _get_random_prices(self, line: Line, rolling_stock: RollingStock, tsp: TSP):
+    def _get_random_prices(self,
+                           line: Line,
+                           rolling_stock: RollingStock,
+                           tsp: TSP
+        ) -> Dict[Tuple[str, str], Dict[Seat, float]]:
         """
         Get prices for a service for a given line, rolling stock and TSP
 
@@ -275,7 +280,15 @@ class ServiceGenerator:
         return prices
 
     def _get_random_time_slot(self, size: int = 10) -> TimeSlot:
-        # Generate random time slot
+        """
+        Get a random time slot
+
+        Args:
+            size (int): Size of the time slot in minutes
+
+        Returns:
+            TimeSlot: Time slot object
+        """
         start_time = datetime.timedelta(hours=random.randint(0, 23), minutes=random.randint(0, 59))
         td_size = datetime.timedelta(minutes=size)
         end_time = start_time + td_size
@@ -474,38 +487,7 @@ class ServiceGenerator:
             id_ = corr['corridor_id']
             name = corr['corridor_name']
             tree = ast.literal_eval(corr['tree'])
-
-            def to_station(tree: Dict, sta_dict: Dict[str, Station]) -> Dict:
-                """
-                Recursive function to build a tree of Station objects from a tree of station IDs
-                Args:
-                    tree (Dict): Tree of station IDs
-                    sta_dict (Dict[str, Station]): Dict of Station objects {station_id: Station object}
-                Returns:
-                    Dict: Tree of Station objects
-                """
-                if not tree:
-                    return {}
-
-                return {sta_dict[node]: to_station(tree[node], sta_dict) for node in tree}
-
-            def tree_to_yaml(dict_tree: Dict[Station, Dict]) -> List[Dict]:
-                """
-                Recursive function to convert a Dict[Station , Dict] tree of Station objects to a tree for yaml file
-                List[Dict[str: Station, str: Dict]
-
-                Args:
-                    tree as nested dictionaries (Dict[Station, Dict]): Tree of Station objects
-                Returns:
-                    tree parsed for yaml file (List[Dict])
-
-                """
-                if len(dict_tree) == 0:
-                    return []
-                else:
-                    return [{'org': node, 'des': tree_to_yaml(dict_tree[node])} for node in dict_tree]
-
-            stations_tree = to_station(tree, self.stations)
+            stations_tree = _to_station(tree, self.stations)
 
             corridors[id_] = Corridor(id_, name, stations_tree)
 
@@ -528,30 +510,6 @@ class ServiceGenerator:
             seats[s['id']] = Seat(s['id'], s['name'], s['hard_type'], s['soft_type'])
 
         return seats
-
-    def save_to_yaml(self, services: List[Service], file_name: str) -> None:
-        """
-        Save the data to a yaml file
-
-        Args:
-            filename (str): Name of the file
-            services (List[Service]): List of Service objects
-
-        Returns:
-            None
-        """
-        rolling_stocks = list(set([rs for tsp in self.tsps.values() for rs in tsp.rolling_stock]))
-
-        yaml_dict = {'stations': [station_to_dict(stn) for stn in self.stations.values()],
-                     'seat': [seat_to_dict(s) for s in self.seats.values()],
-                     'corridor': [corridor_to_dict(corr) for corr in self.corridors.values()],
-                     'line': [line_to_dict(ln) for ln in self.lines.values()],
-                     'rollingStock': [rolling_stock_to_dict(rs) for rs in rolling_stocks],
-                     'trainServiceProvider': [tsp_to_dict(tsp) for tsp in self.tsps.values()],
-                     'timeSlot': [time_slot_to_dict(s) for s in self.time_slots.values()],
-                     'service': [service_to_dict(serv) for serv in services]}
-
-        self._write_to_yaml(file_name, yaml_dict)
 
     @staticmethod
     def _write_to_yaml(filename, objects):
