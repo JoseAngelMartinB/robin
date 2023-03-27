@@ -1,10 +1,15 @@
+"""Entities for the serivce generator module."""
+
 import ast
 import datetime
+import numpy as np
 import os
 import pandas as pd
 import random
 from src.robin.supply.entities import Station, Corridor, Seat, TimeSlot, TSP, Line, RollingStock, Service
-from src.data_generator.yaml_utils import *
+from src.data_generator.utils import _get_distance
+from src.scraping.utils import write_to_yaml, station_to_dict, seat_to_dict, corridor_to_dict, line_to_dict, \
+    rolling_stock_to_dict, time_slot_to_dict, tsp_to_dict, service_to_dict
 from src.data_generator.utils import _get_end_time, _get_start_time, _to_station, _build_service
 import time
 from typing import Tuple, List, Dict
@@ -88,6 +93,7 @@ class ServiceGenerator:
                      'timeSlot': [time_slot_to_dict(s) for s in self.time_slots.values()],
                      'service': [service_to_dict(serv) for serv in services]}
 
+        print(yaml_dict['service'][0])
         self._write_to_yaml(file_name, yaml_dict)
 
     def _check_collisions(self, new_service, listed_service):
@@ -269,13 +275,13 @@ class ServiceGenerator:
 
         for pair in line.pairs:
             origin_sta, destination_sta = line.pairs[pair]
-            distance = self._get_distance(line, origin_sta, destination_sta)
+            distance = _get_distance(line, origin_sta, destination_sta)
             # print(f'Distance between {origin_sta.name} and {destination_sta.name}: {distance} km')
 
             prices[pair] = {}
             for seat in seats:
                 price_calc = (base_price + distance * distance_factor) * seat_factor[seat.id] * tsp_factor[tsp.id]
-                prices[pair][seat] = round(price_calc, 2) if price_calc < max_price else max_price
+                prices[pair][seat] = str(round(price_calc, 2)) if price_calc < max_price else max_price
 
         return prices
 
@@ -546,17 +552,9 @@ class ServiceGenerator:
 
 if __name__ == '__main__':
     config_path = 'config.yml'
-
     init_time = time.time()
-
     r = ServiceGenerator()
-
     services = r.generate(file_name="../../data/test.yml", path_config=config_path, n_services=200, seed=1)
-
     print(services[0])
-
     end_time = time.time()
-
     print(f'Time elapsed: {end_time - init_time} seconds')
-
-    print("Finish")
