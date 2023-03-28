@@ -88,7 +88,7 @@ def _build_service(date: datetime.date,
         Service: Service object
     """
     return Service(id_=f'{line.id}_{time_slot.id}',
-                   date=str(date),
+                   date=date,
                    line=line,
                    time_slot=time_slot,
                    tsp=tsp,
