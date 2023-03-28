@@ -8,7 +8,7 @@ import datetime
 import yaml
 
 
-class Station(object):
+class Station:
     """
     Station: Railway facility where trains stop to load or unload passengers, freight or both.
 
@@ -39,19 +39,19 @@ class Station(object):
         return f'[{self.id}, {self.name}, {self.shortname}, {self.coords}]'
 
 
-class TimeSlot(object):
+class TimeSlot:
     """
     TimeSlot: Discrete time interval
 
     Attributes:
-        id (int): Time slot ID
+        id (str): Time slot ID
         start (datetime.timedelta): Time slot start time
         end (datetime.timedelta): Time slot end time
         class_mark (datetime.timedelta): Time slot class mark
         size (datetime.timedelta): Time slot size
     """
 
-    def __init__(self, id_: Union[int, str], start: datetime.timedelta, end: datetime.timedelta):
+    def __init__(self, id_: str, start: datetime.timedelta, end: datetime.timedelta):
         self.id = id_
         self.start = start
         self.end = end
@@ -85,12 +85,12 @@ class TimeSlot(object):
         return f'[{self.id}, {self.start}, {self.end}, {self.class_mark}, {self.size}]'
 
 
-class Corridor(object):
+class Corridor:
     """
     Corridor: Tree of stations.
 
     Attributes:
-        id (int): Corridor ID
+        id (str): Corridor ID
         name (str): Corridor name
         tree (Dict[Station, Dict]): Tree of stations (with Station objects)
         paths (List[List[Station]]): List of paths (list of stations)
@@ -100,7 +100,7 @@ class Corridor(object):
     *In the real tree, the Station objects are used instead of the Station IDs
     """
 
-    def __init__(self, id_: Union[int, str], name: str, tree: Dict[Station, Dict]):
+    def __init__(self, id_: str, name: str, tree: Dict[Station, Dict]):
         self.id = id_
         self.name = name
         self.tree = tree
@@ -164,12 +164,12 @@ class Corridor(object):
         return f'[{self.id}, {self.name}, {self.stations}]'
 
 
-class Line(object):
+class Line:
     """
     Line: Sequence of stations being served by a train with a timetable.
 
     Attributes:
-        id (int): Line ID
+        id (str): Line ID
         name (str): Line name
         corridor (Corridor): Corridor ID where the Line belongs to
         timetable (Dict[str, Tuple[float, float]]): {station ID: (arrival (float), departure (float)}
@@ -178,7 +178,7 @@ class Line(object):
         with (origin ID, destination ID) as keys, and (origin Station, destination Station) as values
     """
 
-    def __init__(self, id_: Union[int, str], name: str, corridor: Corridor, timetable: Dict[str, Tuple[float, float]]):
+    def __init__(self, id_: str, name: str, corridor: Corridor, timetable: Dict[str, Tuple[float, float]]):
         self.id = id_
         self.name = name
         self.corridor = corridor
@@ -199,12 +199,12 @@ class Line(object):
         return f'[{self.id}, {self.name}, Corridor id: {self.corridor}, {self.timetable}]'
 
 
-class Seat(object):
+class Seat:
     """
     Seat: Seat type of train.
 
     Attributes:
-        id (int): Seat ID
+        id (str): Seat ID
         name (str): Seat type name
         hard_type (int): Hard seat type
         soft_type (int): Soft seat type
@@ -228,12 +228,21 @@ class RollingStock(object):
     Rolling Stock: Locomotives, Carriages, Wagons, or other vehicles used on a railway.
 
     Attributes:
-        id (int): Rolling Stock ID
+        id (str): Rolling Stock ID
         name (str): Rolling Stock name
         seats (Dict[int, int]): Number of seats for each hard_type {hard_type1: quantity1, hard_type2: quantity2}
+        total_capacity (int): Total number of seats
     """
 
-    def __init__(self, id_: Union[int, str], name: str, seats: Dict[int, int]):
+    def __init__(self, id_: str, name: str, seats: Dict[int, int]):
+        """
+        Constructor method for RollingStock class
+
+        Args:
+            id_ (str): Rolling Stock ID
+            name (str): Rolling Stock name
+            seats (Dict[int, int]): Number of seats for each hard_type {hard_type1: quantity1, hard_type2: quantity2}
+        """
         self.id = id_
         self.name = name
         self.seats = seats
@@ -243,17 +252,20 @@ class RollingStock(object):
         return f'[{self.id},{self.name},{self.seats}]'
 
 
-class TSP(object):
+class TSP:
     """
     TSP: Train Service Provider. Company that provides train services.
 
     Attributes:
-        id (int): Train Service Provider ID
+        id (str): Train Service Provider ID
         name (name): Name of the Train Service Provider
         rolling_stock List[RollingStock]: List of RollingStock objects
     """
 
-    def __init__(self, id_: Union[int, str], name: str, rolling_stock: List[RollingStock] = None):
+    def __init__(self, id_: str, name: str, rolling_stock: List[RollingStock] = None):
+        """
+        Constructor method for TSP class
+        """
         self.id = id_
         self.name = name
         self.rolling_stock = rolling_stock if rolling_stock is not None else []
@@ -271,7 +283,7 @@ class TSP(object):
         return f'[{self.id}, {self.name}, {[rs.id for rs in self.rolling_stock]}]'
 
 
-class Service(object):
+class Service:
     """
     Service: Travel options provided by a TSP between stations in a Line with a timetable.
     Capacity is defined by the Rolling Stock. Capacity constraints may apply between some pairs of stations.
@@ -294,7 +306,7 @@ class Service(object):
     """
 
     def __init__(self,
-                 id_: Union[int, str],
+                 id_: str,
                  date: datetime.date,
                  line: Line,
                  tsp: TSP,
@@ -360,8 +372,8 @@ class Service(object):
         """
         absolute_schedule = []
         for dt, at in list(self.line.timetable.values()):
-            abs_dt = datetime.timedelta(seconds=dt*60) + self.time_slot.start
-            abs_at = datetime.timedelta(seconds=at*60) + self.time_slot.start
+            abs_dt = datetime.timedelta(seconds=dt * 60) + self.time_slot.start
+            abs_at = datetime.timedelta(seconds=at * 60) + self.time_slot.start
             absolute_schedule.append((abs_dt, abs_at))
 
         return absolute_schedule
@@ -534,9 +546,13 @@ class Supply(object):
         for s in data[key]:
             assert all(k in s.keys() for k in ('id', 'name', 'short_name', 'city')), "Incomplete Station data"
 
-            coords = tuple(s.get('coordinates', {'lat': None, 'lon': None}).values())
-
-            stations[s['id']] = Station(s['id'], s['name'], s['city'], s['short_name'], coords)
+            lat, lon = tuple(s.get('coordinates', {'lat': None, 'lon': None}).values())
+            if not lat or not lon:
+                station_id = str(s['id'])
+                stations[station_id] = Station(station_id, s['name'], s['city'], s['short_name'])
+            else:
+                coords = (float(lat), float(lon))
+                stations[str(s['id'])] = Station(str(s['id']), s['name'], s['city'], s['short_name'], coords)
         return stations
 
     @classmethod
@@ -554,8 +570,8 @@ class Supply(object):
         time_slots = {}
         for ts in data[key]:
             assert all(k in ts.keys() for k in ('id', 'start', 'end')), "Incomplete TimeSlot data"
-
-            time_slots[ts['id']] = TimeSlot(ts['id'], get_time(ts['start']), get_time(ts['end']))
+            time_slot_id = str(ts['id'])
+            time_slots[time_slot_id] = TimeSlot(time_slot_id, get_time(ts['start']), get_time(ts['end']))
         return time_slots
 
     @classmethod
@@ -629,8 +645,8 @@ class Supply(object):
             assert all(s in stations.keys() for s in corr_stations_ids), "Station not found in Station list"
 
             stations_tree = to_station(deepcopy(tree_dictionary), stations)
-
-            corridors[c['id']] = Corridor(c['id'], c['name'], stations_tree)
+            corridor_id = str(c['id'])
+            corridors[corridor_id] = Corridor(corridor_id, c['name'], stations_tree)
 
         return corridors
 
@@ -651,8 +667,9 @@ class Supply(object):
         for ln in data[key]:
             assert all(k in ln.keys() for k in ('id', 'name', 'corridor', 'stops')), "Incomplete Line data"
 
-            assert ln['corridor'] in corridors.keys(), "Corridor not found in Corridor list"
-            corr = corridors[ln['corridor']]
+            corr_id = str(ln['corridor'])
+            assert corr_id in corridors.keys(), "Corridor not found in Corridor list"
+            corr = corridors[corr_id]
 
             for stn in ln['stops']:
                 assert all(k in stn for k in ('station', 'arrival_time', 'departure_time')), "Incomplete Stops data"
@@ -662,8 +679,8 @@ class Supply(object):
 
             timetable = {s['station']: (float(s['arrival_time']), float(s['departure_time']))
                          for s in ln['stops']}
-
-            lines[ln['id']] = Line(ln['id'], ln['name'], corr, timetable)
+            line_id = str(ln['id'])
+            lines[line_id] = Line(line_id, ln['name'], corr, timetable)
 
         return lines
 
@@ -682,8 +699,8 @@ class Supply(object):
         seats = {}
         for s in data[key]:
             assert all(k in s.keys() for k in ('id', 'name', 'hard_type', 'soft_type')), "Incomplete Seat data"
-
-            seats[s['id']] = Seat(s['id'], s['name'], s['hard_type'], s['soft_type'])
+            seat_id = str(s['id'])
+            seats[seat_id] = Seat(seat_id, s['name'], s['hard_type'], s['soft_type'])
 
         return seats
 
@@ -711,10 +728,10 @@ class Supply(object):
                 "Invalid hard_type for RS"
 
             rs_seats = {s['hard_type']: s['quantity'] for s in rs['seats']}
-
-            rolling_stock[rs['id']] = RollingStock(rs['id'],
-                                                   rs['name'],
-                                                   rs_seats)
+            rs_id = str(rs['id'])
+            rolling_stock[rs_id] = RollingStock(rs_id,
+                                                rs['name'],
+                                                rs_seats)
 
         return rolling_stock
 
@@ -734,9 +751,9 @@ class Supply(object):
         tsp = {}
         for op in data[key]:
             assert all(k in op.keys() for k in ('id', 'name', 'rolling_stock')), "Incomplete TSP data"
-            assert all(i in rolling_stock.keys() for i in op['rolling_stock']), "Unknown RollingStock ID"
-
-            tsp[op['id']] = TSP(op['id'], op['name'], [rolling_stock[i] for i in op['rolling_stock']])
+            assert all(str(i) in rolling_stock.keys() for i in op['rolling_stock']), "Unknown RollingStock ID"
+            tsp_id = str(op['id'])
+            tsp[tsp_id] = TSP(tsp_id, op['name'], [rolling_stock[str(rs_id)] for rs_id in op['rolling_stock']])
 
         return tsp
 
@@ -763,7 +780,7 @@ class Supply(object):
 
             assert all(k in s.keys() for k in service_keys), "Incomplete Service data"
 
-            service_id = s['id']
+            service_id = str(s['id'])
             service_date = get_date(s['date'])
 
             assert s['line'] in lines.keys(), "Line not found"
@@ -788,9 +805,9 @@ class Supply(object):
 
                 for st in od['seats']:
                     assert all(k in st for k in ('seat', 'price')), "Incomplete seats data for Service"
-                    assert st['seat'] in seats, "Invalid seat in Service prices"
+                    assert str(st['seat']) in seats, "Invalid seat in Service prices"
 
-                prices = {seats[st['seat']]: st['price'] for st in od['seats']}
+                prices = {seats[str(st['seat'])]: st['price'] for st in od['seats']}
 
                 service_prices[(org, des)] = prices
 
