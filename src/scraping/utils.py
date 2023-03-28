@@ -71,7 +71,7 @@ def service_to_dict(obj: Service):
     for k, v in obj.prices.items():
         prices.append({'origin': k[0],
                        'destination': k[1],
-                       'seats': [{'seat': str(ks), 'price': str(float(ps))} for ks, ps in v.items()]})
+                       'seats': [{'seat': str(ks.id), 'price': str(float(ps))} for ks, ps in v.items()]})
 
     return {'id': str(obj.id),
             'date': str(obj.date),

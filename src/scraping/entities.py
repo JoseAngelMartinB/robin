@@ -32,12 +32,11 @@ class DataLoader:
         self.seats = self._build_seat_types()
         # Merge services prices dataframe into trips dataframe
         self.trips['prices'] = self.trips['service_id'].apply(
-            lambda x: self._get_trip_price(x, self.seats, self.prices))
+            lambda x: self._get_trip_price(x))
         # Filter trips with NaN prices
         self.trips = self.trips[self.trips['prices'].apply(lambda x: not any(np.isnan(p) for p in x.values()))]
 
         self.stations = {}
-        self.seats = {}
         self.corridors = {}
         self.lines = {}
         self.rolling_stock = {}
@@ -75,7 +74,7 @@ class DataLoader:
         ]
 
         for key, value in data:
-            write_to_yaml(path+filename, {key: value}, key)
+            write_to_yaml(path+filename, {key: value})
 
     def show_metadata(self) -> None:
         """
@@ -109,7 +108,7 @@ class DataLoader:
 
         self.trips['lines'] = self.trips['service_id'].apply(lambda x: self._get_trip_line(x))
 
-    def _build_seat_types(self) -> Tuple[Seat, ...]:
+    def _build_seat_types(self) -> Dict[str, Seat]:
         """
         Build seat types from prices dataframe
 
@@ -117,15 +116,15 @@ class DataLoader:
             seats: tuple of Seat() objects
         """
         hard_type, soft_type = 1, 1
-        seats = []
+        seats = {}
         for i, sn in enumerate(self._seat_names, start=1):
-            seats.append(Seat(i, sn, hard_type, soft_type))
+            seats[str(i)] = Seat(str(i), sn, hard_type, soft_type)
             if i % 2 == 0:
                 soft_type += 1
             else:
                 hard_type += 1
 
-        return tuple(seats)
+        return seats
 
     def _build_station_objects(self, corridor_stations: List[str]) -> None:
         """
@@ -188,24 +187,23 @@ class DataLoader:
 
         return line
 
-    def _get_trip_price(self, service_id: str, seats: Tuple[Seat, ...], price_df: pd.DataFrame) -> None:
+    def _get_trip_price(self, service_id: str) -> None:
         """
         Get trip price from prices dataframe
 
         Args:
             service_id: string
             seats: tuple of Seat() objects
-            price_df: dataframe with prices
 
         Returns:
             price: tuple of floats (three types of seats for Renfe AVE)
         """
         try:
-            prices = price_df[price_df['service_id'] == service_id][self._seat_names].values[0]
+            prices = self.prices[self.prices['service_id'] == service_id][self._seat_names].values[0]
         except IndexError:
             prices = tuple([float("NaN") for _ in range(3)])
 
-        return {s.id: p for s, p in zip(seats, prices)}
+        return {s: p for s, p in zip(self.seats.values(), prices)}
 
     def _build_corridor(self) -> None:
         """
@@ -254,8 +252,6 @@ class DataLoader:
         """
         self.tsps[1] = TSP(1, "Renfe", [rs for rs in self.rolling_stock.values()])
 
-
-
     def _build_services(self) -> None:
         """
         Build Service objects
@@ -296,6 +292,7 @@ class DataLoader:
         """
         id_ = service_id
         date = departure.split(" ")[0]
+        date = datetime.datetime.strptime(date, "%Y-%m-%d").date()
         departure = departure.split(" ")[1]
 
         line = line
@@ -341,7 +338,7 @@ class DataLoader:
 
 
 if __name__ == '__main__':
-    trips_path = '../../data/scraping/renfe/trips/trips_MADRI_BARCE_2023-03-27_2023-03-28.csv'
+    trips_path = '../../data/scraping/renfe/trips/trips_MADRI_BARCE_2023-03-30_2023-03-31.csv'
 
     data_loader = DataLoader(trips_path)
     data_loader.show_metadata()
@@ -349,4 +346,4 @@ if __name__ == '__main__':
     data_loader.build_supply_entities()
     print(list(data_loader.services.values())[0])
 
-    data_loader.save_yaml(filename="supply_data_refactor.yml")
+    data_loader.save_yaml(filename="supply_data_ref.yml")
