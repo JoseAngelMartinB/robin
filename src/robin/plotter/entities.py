@@ -352,8 +352,10 @@ class KernelPlotter:
         if save_path is not None:
             fig.savefig(save_path, dpi=300, bbox_inches='tight')
 
+
 if __name__ == "__main__":
-    kernel_plotter = KernelPlotter(path_output_csv='output_renfe_new.csv', path_config_supply='data/supply_data.yml')
+    kernel_plotter = KernelPlotter(path_output_csv='../../../data/kernel_output/output_renfe_new.csv',
+                                   path_config_supply='../../../data/supply_data.yml')
 
     kernel_plotter.plot_tickets_sold(save_path='total_tickets_sold.png')
     kernel_plotter.plot_tickets_by_user(save_path='tickets_sold_per_usertype.png')
