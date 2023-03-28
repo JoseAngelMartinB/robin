@@ -782,18 +782,21 @@ class Supply(object):
 
             service_id = str(s['id'])
             service_date = get_date(s['date'])
+            service_line_id = str(s['line'])
+            assert service_line_id in lines.keys(), "Line not found"
+            service_line = lines[service_line_id]
 
-            assert s['line'] in lines.keys(), "Line not found"
-            service_line = lines[s['line']]
+            tsp_id = str(s['train_service_provider'])
+            assert tsp_id in tsps.keys(), "TSP not found"
+            service_tsp = tsps[tsp_id]
 
-            assert s['train_service_provider'] in tsps.keys(), "TSP not found"
-            service_tsp = tsps[s['train_service_provider']]
+            time_slot_id = str(s['time_slot'])
+            assert time_slot_id in time_slots.keys(), "TimeSlot not found"
+            service_time_slot = time_slots[time_slot_id]
 
-            assert s['time_slot'] in time_slots.keys(), "TimeSlot not found"
-            service_time_slot = time_slots[s['time_slot']]
-
-            assert s['rolling_stock'] in rolling_stock.keys(), "RollingStock not found"
-            service_rs = rolling_stock[s['rolling_stock']]
+            rolling_stock_id = str(s['rolling_stock'])
+            assert rolling_stock_id in rolling_stock.keys(), "RollingStock not found"
+            service_rs = rolling_stock[rolling_stock_id]
 
             service_prices = {}
             for od in s['origin_destination_tuples']:
