@@ -112,7 +112,7 @@ class UserPattern:
             error: str,
             error_kwargs: Mapping[str, Union[int, float]],
             default_seat_utility: float = DEFAULT_SEAT_UTILITY
-        ) -> None:
+    ) -> None:
         """
         Initialize a user pattern.
 
@@ -346,7 +346,7 @@ class DemandPattern:
             potential_demands: List[str],
             potential_demands_kwargs: List[Mapping[str, Union[int, float]]],
             user_patterns_distribution: List[Mapping[UserPattern, float]]
-        ) -> None:
+    ) -> None:
         """
         Initializes a demand pattern.
 
@@ -759,7 +759,7 @@ class Demand:
             data: Mapping[str, Any],
             markets: Mapping[int, Market],
             user_patterns: Mapping[int, UserPattern]
-        ) -> Mapping[int, DemandPattern]:
+    ) -> Mapping[int, DemandPattern]:
         """
         Returns the demand patterns.
 
@@ -805,15 +805,13 @@ class Demand:
     def _get_days(
             cls,
             data: Mapping[str, Any],
-            markets: Mapping[int, Market],
             demand_patterns: Mapping[int, DemandPattern]
-        ) -> Mapping[int, Day]:
+    ) -> Mapping[int, Day]:
         """
         Returns the days.
 
         Args:
             data (Mapping[str, Any]): The data of the YAML file.
-            markets (Mapping[int, Market]): The markets.
             demand_patterns (Mapping[int, DemandPattern]): The demand patterns.
 
         Returns:
@@ -854,7 +852,7 @@ class Demand:
         markets = Demand._get_markets(data)
         user_patterns = Demand._get_user_patterns(data)
         demand_patterns = Demand._get_demand_patterns(data, markets, user_patterns)
-        days = Demand._get_days(data, markets, demand_patterns)
+        days = Demand._get_days(data, demand_patterns)
 
         return cls(list(days.values()))
     
