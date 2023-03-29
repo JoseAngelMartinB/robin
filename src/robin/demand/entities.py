@@ -150,7 +150,9 @@ class UserPattern:
         self.arrival_time_kwargs = arrival_time_kwargs
         self._purchase_day = get_scipy_distribution(distribution_name=purchase_day, is_discrete=True)
         self.purchase_day_kwargs = purchase_day_kwargs
-        self.forbidden_departure_hours = self._check_forbidden_departure_hours(forbidden_departure_hours=forbidden_departure_hours)
+        self.forbidden_departure_hours = self._check_forbidden_departure_hours(
+            forbidden_departure_hours=forbidden_departure_hours
+        )
         self.seats = seats
         self._penalty_arrival_time = get_function(function_name=penalty_arrival_time)
         self.penalty_arrival_time_kwargs = penalty_arrival_time_kwargs
@@ -328,8 +330,10 @@ class DemandPattern:
         name(str): The demand pattern name.
         markets (List[Market]): The list of markets.
         potential_demands(Mapping[Market, Callable]): The potential demand distribution for each market.
-        potential_demands_kwargs (Mapping[Market, Mapping[str, Union[int, float]]]): The keyword arguments for the potential demand distribution for each market.
-        user_patterns_distribution (Mapping[Market, Mapping[UserPattern, float]]): The distribution of user patterns for each market.
+        potential_demands_kwargs (Mapping[Market, Mapping[str, Union[int, float]]]): The keyword arguments
+            for the potential demand distribution for each market.
+        user_patterns_distribution (Mapping[Market, Mapping[UserPattern, float]]): The distribution of user patterns
+            for each market.
 
     Raises:
         InvalidDistributionException: Raised when the given distribution is not contained in SciPy.
@@ -355,7 +359,8 @@ class DemandPattern:
             name(str): The demand pattern name.
             markets (List[Market]): The list of markets.
             potential_demands(List[Callable]): The list of potential demand distributions.
-            potential_demands_kwargs (List[Mapping[str, Union[int, float]]]): The list of potential demand distribution named parameters.
+            potential_demands_kwargs (List[Mapping[str, Union[int, float]]]): The list of potential
+                demand distribution named parameters.
             user_patterns_distribution (List[Mapping[UserPattern, float]]): The list of user pattern distributions.
 
         Raises:
@@ -363,8 +368,8 @@ class DemandPattern:
             InvalidContinuousDistributionException: Raised when the given distribution is not a continuous distribution.
             InvalidDiscreteDistributionException: Raised when the given distribution is not a discrete distribution.
         """
-        assert len(markets) == len(potential_demands) == len(potential_demands_kwargs) == len(user_patterns_distribution), \
-            'The number of markets must be equal to the number of potential demand distributions and the number of user pattern distributions.'
+        same_length = len(markets) == len(potential_demands) == len(potential_demands_kwargs) == len(user_patterns_distribution)
+        assert same_length, 'The number of markets must be equal to the number of potential demand distributions and the number of user pattern distributions.'
         self.id = id
         self.name = name
         self.markets = markets
@@ -376,7 +381,10 @@ class DemandPattern:
             potential_demand = potential_demands[i]
             potential_demand_kwargs = potential_demands_kwargs[i]
             user_pattern_distribution = user_patterns_distribution[i]
-            self._potential_demands[market] = get_scipy_distribution(distribution_name=potential_demand, is_discrete=True)
+            self._potential_demands[market] = get_scipy_distribution(
+                distribution_name=potential_demand,
+                is_discrete=True
+            )
             self.potential_demands_kwargs[market] = potential_demand_kwargs
             self.user_patterns_distribution[market] = user_pattern_distribution
 
@@ -405,7 +413,10 @@ class DemandPattern:
         Raises:
             ValueError: Raised when the user pattern distribution does not sum up to 1.
         """
-        return np.random.choice(list(self.user_patterns_distribution[market].keys()), p=list(self.user_patterns_distribution[market].values()))
+        return np.random.choice(
+            list(self.user_patterns_distribution[market].keys()),
+            p=list(self.user_patterns_distribution[market].values())
+        )
 
     def __str__(self) -> str:
         """
@@ -522,7 +533,15 @@ class Passenger:
         utility (float): The utility of the seat.
     """
     
-    def __init__(self, id: int, user_pattern: UserPattern, market: Market, arrival_day: Day, arrival_time: float, purchase_day: int) -> None:
+    def __init__(
+            self,
+            id: int,
+            user_pattern: UserPattern,
+            market: Market,
+            arrival_day: Day,
+            arrival_time: float,
+            purchase_day: int
+    ) -> None:
         """
         Initializes a passenger.
 
@@ -558,7 +577,9 @@ class Passenger:
             bool: True if the departure time is valid, False otherwise.
         """
         forbidden_departure_hours = self.user_pattern.forbidden_departure_hours
-        return not (service_departure_time >= forbidden_departure_hours[0] and service_departure_time <= forbidden_departure_hours[1])
+        is_valid_departure_time_early = service_departure_time >= forbidden_departure_hours[0]
+        is_valid_departure_time_later = service_departure_time <= forbidden_departure_hours[1]
+        return not (is_valid_departure_time_early and is_valid_departure_time_later)
 
     def _get_utility_arrival_time(self, service_arrival_time: float) -> float:
         """
@@ -630,7 +651,8 @@ class Passenger:
             service_departure_time (float): The departure time of the service.
             service_arrival_time (float): The arrival time of the service.
             price (float): The price of the seat.
-            departure_time_hard_restriction (bool, optional): If True, the passenger will not be assigned to a service with a departure time that is not valid. Defaults to False.
+            departure_time_hard_restriction (bool, optional): If True, the passenger will not be
+                assigned to a service with a departure time that is not valid. Defaults to False.
         
         Returns:
             float: The utility of the passenger given the seat, the arrival time, the departure time and the price.

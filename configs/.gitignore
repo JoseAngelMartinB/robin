@@ -1,0 +1,8 @@
+# Ignore everything in this directory
+*
+# Except these files
+!.gitignore
+!demand_data_example.yml
+!demand_data.yml
+!supply_data_example.yml
+!supply_data.yml

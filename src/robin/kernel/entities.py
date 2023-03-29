@@ -64,11 +64,6 @@ class Kernel:
                 passenger.utility
             ])
         df = pd.DataFrame(data=data, columns=column_names)
-        # Try to convert service column to int
-        try:
-            df.service = df.service.astype('Int64')
-        except (TypeError, ValueError):
-            pass
         df.to_csv(output_path, index=False)
 
     def simulate(
@@ -79,13 +74,13 @@ class Kernel:
         """
         Simulate the demand-supply interaction.
 
-        The passengers will maximize the utility for each service and seat, 
-        according to its origin-destination and date, buying a ticket
-        only if the utility is positive.
+        The passengers will maximize the utility for each service and seat,  according to
+        its origin-destination and date, buying a ticket only if the utility is positive.
 
         Args:
             output_path (str, optional): Path to the output csv file. Defaults to None.
-            departure_time_hard_restriction (bool, optional): If True, the passenger will not be assigned to a service with a departure time that is not valid. Defaults to False.
+            departure_time_hard_restriction (bool, optional): If True, the passenger will not
+                be assigned to a service with a departure time that is not valid. Defaults to False.
 
         Returns:
             List[Service]: List of services with updated tickets.
@@ -117,7 +112,7 @@ class Kernel:
                         continue
                     # Calculate utility
                     utility = passenger.get_utility(
-                        seat=seat.id,
+                        seat=int(seat.id),
                         service_departure_time=service.service_departure_time,
                         service_arrival_time=service.service_arrival_time,
                         price=service.prices[(origin, destination)][seat],
