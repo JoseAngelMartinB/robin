@@ -202,7 +202,7 @@ service:
             price: 100
           - seat: 4
             price: 70
-    type_of_capacity: "Train"
+    capacity_constraints: null
   - id: 2
     date: "2023-01-22"
     line: 1
@@ -213,37 +213,25 @@ service:
       - origin: "MAD"
         destination: "ZAZ"
         seats:
-          - seat: 1
-            price: 50
           - seat: 2
-            price: 40
-          - seat: 3
             price: 40
           - seat: 4
             price: 35
       - origin: "ZAZ"
         destination: "BCN"
         seats:
-          - seat: 1
-            price: 40
           - seat: 2
             price: 32
-          - seat: 3
-            price: 36
           - seat: 4
             price: 25
       - origin: "MAD"
         destination: "BCN"
         seats:
-          - seat: 1
-            price: 120
           - seat: 2
             price: 90
-          - seat: 3
-            price: 100
           - seat: 4
             price: 70
-    type_of_capacity: "Train"
+    capacity_constraints: null
   - id: 3
     date: "2023-01-22"
     line: 4
@@ -262,4 +250,40 @@ service:
             price: 100
           - seat: 4
             price: 75
-    type_of_capacity: "Train"
+    capacity_constraints: null
+  - id: 4
+    date: "2023-01-22"
+    line: 1
+    train_service_provider: 1
+    time_slot: 2
+    rolling_stock: 2
+    origin_destination_tuples:
+      - origin: "MAD"
+        destination: "BCN"
+        seats:
+          - seat: 1
+            price: 95
+          - seat: 2
+            price: 75
+      - origin: "MAD"
+        destination: "ZAZ"
+        seats:
+          - seat: 1
+            price: 55
+          - seat: 2
+            price: 45
+      - origin: "ZAZ"
+        destination: "BCN"
+        seats:
+          - seat: 1
+            price: 65
+          - seat: 2
+            price: 55
+    capacity_constraints:
+      - origin: "MAD"
+        destination: "ZAZ"
+        seats:
+          - hard_type: 1
+            quantity: 10
+          - hard_type: 2
+            quantity: 20

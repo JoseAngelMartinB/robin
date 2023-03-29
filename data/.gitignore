@@ -2,6 +2,5 @@
 *
 # Except these files
 !.gitignore
-!supply_data_example.yml
-!supply_data.yml
-!demand_data_example.yml
+!renfe/
+!renfe/renfe_stations.csv   
