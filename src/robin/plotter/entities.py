@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 
 from src.robin.supply.entities import Supply
+
 from typing import Dict
 
 # Colors
@@ -18,28 +19,29 @@ class KernelPlotter:
 
     Attributes:
         df (pd.DataFrame): Dataframe with the results of the kernel.
-
-    Methods:
-        plot_tickets_sold: Plot the total number of tickets sold per day.
-        plot_tickets_sold_by_seat_type: Plot the total number of tickets sold per day and seat type.
+        supply (Supply): Supply object.
+        stations_dict (Dict[str, str]): Dictionary with the id of the station as key and the name of
+            the station as value.
+        colors (List[str]): List of colors.
     """
-    def __init__(self, path_output_csv: str, path_config_supply: str):
+
+    def __init__(self, path_output_csv: str, path_config_supply: str) -> None:
         """
-        Initialize the kernel plotter object.
+        Initialize a kernel plotter object.
 
         Args:
             path_output_csv (str): Path to the output csv file.
             path_config_supply (str): Path to the supply configuration file.
         """
         self.df = pd.read_csv(path_output_csv, dtype={'departure_station': str, 'arrival_station': str})
-        self.supply = Supply.from_yaml(path_config_supply)
-        self.df["purchase_date"] = self.df.apply(
+        # Add new column to the dataframe with the purchase date as a datetime.date object
+        self.df['purchase_date'] = self.df.apply(
             lambda row: self._get_purchase_date(row['purchase_day'], row['arrival_day']), axis=1
         )
-
-        plt.style.use('seaborn-pastel')
-        self.colors = ['lemonchiffon', 'lightsteelblue', 'palegreen', 'lightsalmon', 'lavender', 'lightgray']
+        self.supply = Supply.from_yaml(path_config_supply)
         self.stations_dict = {str(sta.id): sta.name for s in self.supply.services for sta in s.line.stations}
+        self.colors = ['lemonchiffon', 'lightsteelblue', 'palegreen', 'lightsalmon', 'lavender', 'lightgray']
+        plt.style.use('seaborn-pastel')
 
     def _get_purchase_date(self, anticipation: int, arrival_day: str) -> datetime.date:
         """
@@ -53,7 +55,7 @@ class KernelPlotter:
             datetime.date: Purchase day of the passenger.
         """
         anticipation = datetime.timedelta(days=anticipation)
-        arrival_day = datetime.datetime.strptime(arrival_day, "%Y-%m-%d")
+        arrival_day = datetime.datetime.strptime(arrival_day, '%Y-%m-%d')
         purchase_day = arrival_day - anticipation
         return purchase_day.date()
 
@@ -67,35 +69,40 @@ class KernelPlotter:
         grouped_data = self.df.groupby(by=['purchase_date', 'seat'])
 
         # Create a dictionary with the total number of tickets sold per day and seat type
-        result_dict = {}
+        tickets_sold = {}
         for group_key, group in grouped_data:
             purchase_date, seat = group_key
-            if purchase_date not in result_dict:
-                result_dict[purchase_date] = {}
-            result_dict[purchase_date][seat] = group.size
+            if purchase_date not in tickets_sold:
+                tickets_sold[purchase_date] = {}
+            tickets_sold[purchase_date][seat] = group.size
 
-        # Sort the data by day in descending order
-        sorted_data = dict(sorted(result_dict.items(), key=lambda x: x[0]))
-        return sorted_data
+        # Sort tickets sold by day in descending order
+        return dict(sorted(tickets_sold.items(), key=lambda x: x[0]))
 
     def _get_pairs_sold(self) -> Dict[str, Dict[str, int]]:
         """
-        Get the total number of tickets sold per day and a pair of stations.
+        Get the total number of tickets sold per day and per each pair of stations.
 
         Returns:
             Dict[str, Dict[str, int]]: Dictionary with the total number of tickets sold per day
                 and per each pair of stations.
         """
-        df = self.df.copy(deep=True)
+        def _get_pair_name(row: pd.Series) -> str:
+            """
+            Get the name of the pair of stations.
 
-        def _get_pair_name(row):
+            Returns:
+                str: Name of the pair of stations.
+            """
             departure, arrival = tuple(row[["departure_station", "arrival_station"]])
             return f'{self.stations_dict[departure]}\n{self.stations_dict[arrival]}'
 
-        df['pair'] = df.apply(_get_pair_name, axis=1)
-        data_dict = df.groupby(by=['pair']).size().to_dict()
-        sorted_data = dict(sorted(data_dict.items(), key=lambda x: x[1], reverse=True))
-        return sorted_data
+        # Add new column to the dataframe with the name of the pair of stations
+        self.df['pair'] = self.df.apply(_get_pair_name, axis=1)
+        grouped_df_by_pair = self.df.groupby(by=['pair']).size()
+        paired_data = grouped_df_by_pair.to_dict()
+        # Sort the data by number of tickets sold in descending order
+        return dict(sorted(paired_data.items(), key=lambda x: x[1], reverse=True))
 
     def _get_service_capacity(self, service_id: str) -> Dict[str, int]:
         """
@@ -105,11 +112,12 @@ class KernelPlotter:
             service_id (str): Id of the service.
 
         Returns:
-            Mapping[str, int]: Dictionary with the capacity of the service grouped by departure, arrival station and purchase day.
+            Dict[str, int]: Dictionary with the capacity of the service grouped by departure, arrival station
+                and purchase day.
         """
         # Get the data of the service
         service_data = self.df[self.df['service'] == service_id]
-        service_data = service_data.groupby(by=['departure_station', 'arrival_station', 'purchase_day']).size()
+        service_data = service_data.groupby(by=['pair', 'purchase_day']).size()
         service_dict = service_data.to_dict()
         service_capacity = self.supply.filter_service_by_id(service_id).rolling_stock.total_capacity
 
@@ -393,10 +401,10 @@ class KernelPlotter:
 
 if __name__ == "__main__":
     kernel_plotter = KernelPlotter(path_output_csv='../../../data/kernel_output/output_renfe_new.csv',
-                                   path_config_supply='../../../data/supply_data.yml')
+                                   path_config_supply='../../../configs/supply_data.yml')
 
-    kernel_plotter.plot_tickets_sold(save_path='total_tickets_sold.png')
-    kernel_plotter.plot_tickets_by_user(save_path='tickets_sold_per_usertype.png')
-    kernel_plotter.plot_capacity(service_id='03211_16-03-2023-21.10', save_path='capacity.png')
+    #kernel_plotter.plot_tickets_sold(save_path='total_tickets_sold.png')
+    #kernel_plotter.plot_tickets_by_user(save_path='tickets_sold_per_usertype.png')
+    #kernel_plotter.plot_capacity(service_id='03211_16-03-2023-21.10', save_path='capacity.png')
     kernel_plotter.plot_pairs(save_path='pairs.png')
-    kernel_plotter.plot_tickets_sold_pie_chart(save_path='pie.png')
+    #kernel_plotter.plot_tickets_sold_pie_chart(save_path='pie.png')
