@@ -1,19 +1,22 @@
 """Entities for Renfe scraping."""
 
 import bs4
-from bs4 import BeautifulSoup
 import datetime
+import os
 import pandas as pd
 import re
 import requests
-from typing import List, Tuple, Dict
 import unicodedata
-from utils import ChromeDriverManager, format_duration, is_number, remove_blanks, time_to_minutes
 
+from src.scraping.renfe.utils import ChromeDriverManager, format_duration, is_number, remove_blanks, time_to_minutes
+
+from bs4 import BeautifulSoup
+from typing import List, Tuple, Dict
 
 MAIN_MENU_URL = "https://www.renfe.com/content/renfe/es/es/viajar/informacion-util/horarios/app-horarios.html"
 SCHEDULE_URL = "https://horarios.renfe.com/HIRRenfeWeb/"
-RENFE_STATIONS_CSV = "../../../data/scraping/renfe/renfe_stations.csv"
+RENFE_STATIONS_CSV = "../../../data/renfe/renfe_stations.csv"
+SAVE_PATH = "../../../data/renfe"
 
 
 class RenfeScraper:
@@ -21,8 +24,8 @@ class RenfeScraper:
     Renfe Scraping class.
 
     Attributes:
-        stations_df (pd.DataFrame): A pandas DataFrame with the available stations.
-        available_stations (List[str]): A list with the available stations.
+        stations_df (pd.DataFrame): A pandas DataFrame to parse stations data.
+        available_stations (List[str]): A list with the available stations in the Renfe website.
     """
 
     def __init__(
@@ -45,7 +48,8 @@ class RenfeScraper:
             origin: str,
             destination: str,
             init_date: datetime.date = None,
-            range_days: int = 1
+            range_days: int = 1,
+            save_path: str = SAVE_PATH
     ) -> None:
         """
         Scrapes the Renfe website for the trips and prices of services between two stations, a given date and for a
@@ -67,10 +71,25 @@ class RenfeScraper:
         if not init_date:
             init_date = datetime.date.today()
 
-        self.scrape_trips(origin_id, destination_id, init_date, range_days)
-        self.scrape_prices(origin_id, destination_id, init_date, range_days)
+        self.scrape_trips(origin_id=origin_id,
+                          destination_id=destination_id,
+                          date=init_date,
+                          range_days=range_days,
+                          save_path=save_path)
+        self.scrape_prices(origin_id=origin_id,
+                           destination_id=destination_id,
+                           date=init_date,
+                           range_days=range_days,
+                           save_path=save_path)
 
-    def scrape_prices(self, origin_id: str, destination_id: str, date: datetime.date, range_days: int) -> None:
+    def scrape_prices(
+            self,
+            origin_id: str,
+            destination_id: str,
+            date: datetime.date,
+            range_days: int,
+            save_path: str
+    ) -> None:
         """
         Scrapes prices from Renfe website using selenium and saves retrieved data to a csv file.
 
@@ -78,7 +97,8 @@ class RenfeScraper:
             origin_id (str): Renfe id of the origin station
             destination_id (str): Renfe id of the destination station
             date (datetime.date): date of the trip
-            range_days: number of days to search for trips
+            range_days (int): number of days to search for trips
+            save_path (str): path to save the csv file
         """
         records = []
         seat_types = []
@@ -109,19 +129,28 @@ class RenfeScraper:
         df = self._get_prices_dataframe(records=records, col_names=col_names, seat_types=seat_types)
 
         print(df.head())
-        df.to_csv(f"../../../data/scraping/renfe/prices/prices_{origin_id}_{destination_id}_{init_date}_{end_date}.csv",
+        os.makedirs(f'{save_path}/prices/', exist_ok=True)
+        df.to_csv(f"{save_path}/prices/prices_{origin_id}_{destination_id}_{init_date}_{end_date}.csv",
                   index=False)
 
-    def scrape_trips(self, origin_id: str, destination_id: str, date: datetime.date, range_days: int) -> None:
+    def scrape_trips(
+            self,
+            origin_id: str,
+            destination_id: str,
+            date: datetime.date,
+            range_days: int,
+            save_path: str = "../../../data/renfe"
+    ) -> None:
         """
         Obtains two pandas dataframes from Renfe website, one with the trips information and another with the stops,
-        which are saved to csv files.
+            which are saved to csv files.
 
         Args:
-            origin_id (str): origin station id
-            destination_id (str): destination station id
-            date (datetime.date): initial date to search for trips
-            range_days (int): number of days to search for trips from the initial date
+            origin_id (str): Origin station id
+            destination_id (str): Destination station id
+            date (datetime.date): Initial date to search for trips
+            range_days (int): Number of days to search for trips from the initial date
+            save_path (str): Path to save the csv files
         """
         rows = []
         init_date = date
@@ -144,14 +173,24 @@ class RenfeScraper:
         col_names = ['trip_id', 'train_type', 'schedule', 'departure', 'duration', 'price']
         df = self._dataframe_from_records(records=rows,
                                           col_names=col_names)
-        RenfeScraper._save_trips_df(df, origin_id, destination_id, init_date, end_date)
-        RenfeScraper._save_stops_df(df, origin_id, destination_id, init_date, end_date)
+        RenfeScraper._save_trips_df(df=df,
+                                    origin_id=origin_id,
+                                    destination_id=destination_id,
+                                    init_date=init_date,
+                                    end_date=end_date,
+                                    save_path=save_path)
+        RenfeScraper._save_stops_df(df=df,
+                                    origin_id=origin_id,
+                                    destination_id=destination_id,
+                                    init_date=init_date,
+                                    end_date=end_date,
+                                    save_path=save_path)
 
     def _dataframe_from_records(self,
                                 records: List,
                                 col_names: List,
                                 allowed_train_types: Tuple = ("AVE", "AVLO")
-        ) -> pd.DataFrame:
+                                ) -> pd.DataFrame:
         """
         Returns a dataframe with the information retrieved from the scraping encoded in a list of lists.
         Each list in the list of lists represents the data of a service, and it becomes a row in the dataframe.
@@ -250,7 +289,8 @@ class RenfeScraper:
                             row: bs4.element.Tag,
                             date: datetime.date,
                             seat_types: List
-        ) -> Tuple[str, str, datetime.datetime, datetime.datetime, datetime.timedelta, Dict[str, float]]:
+                            ) -> Tuple[
+        str, str, datetime.datetime, datetime.datetime, datetime.timedelta, Dict[str, float]]:
         """
         Get the prices of the different seat types for a given row (service in Renfe website).
 
@@ -311,7 +351,7 @@ class RenfeScraper:
     def _get_trip_data(self,
                        row: bs4.element.ResultSet,
                        date: datetime.date
-    ) -> Tuple[str, str, Dict[str, Tuple[int, int]], datetime.datetime, int, Dict[str, float]]:
+                       ) -> Tuple[str, str, Dict[str, Tuple[int, int]], datetime.datetime, int, Dict[str, float]]:
         """
         Returns the data of a trip retrieved from a row from the schedules table.
 
@@ -481,8 +521,8 @@ class RenfeScraper:
                        origin_id: str,
                        destination_id: str,
                        init_date: datetime.date,
-                       end_date: datetime.date
-                       ) -> None:
+                       end_date: datetime.date,
+                       save_path: str) -> None:
         """
         Saves the dataframe with the stops information to a csv file.
 
@@ -492,6 +532,7 @@ class RenfeScraper:
             destination_id (str): Renfe id of the destination station
             init_date (datetime.date): initial date of the trip
             end_date (datetime.date): end date of the trip
+            save_path (str): Path to save the csv file
         """
         schedules_dict = dict(zip(df.service_id, df.schedule))
 
@@ -501,8 +542,10 @@ class RenfeScraper:
              for i, (stop_id, v) in enumerate(v_dict.items())])
         )
         print(df_stops.head())
+
+        os.makedirs(f'{save_path}/stopTimes/', exist_ok=True)
         df_stops.to_csv(
-            f"../../../data/scraping/renfe/stop_times/stopTimes_{origin_id}_{destination_id}_{init_date}_{end_date}.csv",
+            f'{save_path}/stop_times/stopTimes_{origin_id}_{destination_id}_{init_date}_{end_date}.csv',
             index=False, header=True)
 
     @staticmethod
@@ -510,8 +553,8 @@ class RenfeScraper:
                        origin_id: str,
                        destination_id: str,
                        init_date: datetime.date,
-                       end_date: datetime.date
-                       ) -> None:
+                       end_date: datetime.date,
+                       save_path: str) -> None:
         """
         Saves the dataframe with the trips information to a csv file.
 
@@ -521,10 +564,12 @@ class RenfeScraper:
             destination_id (str): Renfe id of the destination station
             init_date (datetime.date): initial date of the trip
             end_date (datetime.date): end date of the trip
+            save_path (str): Path to save the csv file
         """
         df = df.drop(['schedule', 'price'], axis=1)
         print(df.head())
-        df.to_csv(f"../../../data/scraping/renfe/trips/trips_{origin_id}_{destination_id}_{init_date}_{end_date}.csv",
+        os.makedirs(f'{save_path}/trips/', exist_ok=True)
+        df.to_csv(f'{save_path}/trips/trips_{origin_id}_{destination_id}_{init_date}_{end_date}.csv',
                   index=False)
 
     @staticmethod
@@ -551,5 +596,5 @@ if __name__ == "__main__":
 
     origin = "60000"
     destination = "71801"
-    date = datetime.date(day=30, month=3, year=2023)
-    scraper.scrape(origin=origin, destination=destination, init_date=date, range_days=1)
+    date = datetime.date(day=1, month=4, year=2023)
+    scraper.scrape(origin=origin, destination=destination, init_date=date)
