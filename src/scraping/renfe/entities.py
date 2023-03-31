@@ -13,8 +13,10 @@ from src.scraping.renfe.utils import ChromeDriverManager, format_duration, is_nu
 from bs4 import BeautifulSoup
 from typing import List, Tuple, Dict
 
+# Renfe URL's
 MAIN_MENU_URL = "https://www.renfe.com/content/renfe/es/es/viajar/informacion-util/horarios/app-horarios.html"
 SCHEDULE_URL = "https://horarios.renfe.com/HIRRenfeWeb/"
+
 RENFE_STATIONS_CSV = "../../../data/renfe/renfe_stations.csv"
 SAVE_PATH = "../../../data/renfe"
 
@@ -536,11 +538,12 @@ class RenfeScraper:
         """
         schedules_dict = dict(zip(df.service_id, df.schedule))
 
-        df_stops = (pd.DataFrame(
-            [{'service_id': k, 'stop_id': stop_id, 'arrival': v[0], 'departure': v[1], 'stop_sequence': i + 1}
-             for k, v_dict in schedules_dict.items()
-             for i, (stop_id, v) in enumerate(v_dict.items())])
-        )
+        rows = []
+        for service_id, schedule in schedules_dict.items():
+            for stop_id, (arrival, departure) in schedule.items():
+                rows.append({'service_id': service_id, 'stop_id': stop_id, 'arrival': arrival, 'departure': departure})
+
+        df_stops = pd.DataFrame(rows)
         print(df_stops.head())
 
         os.makedirs(f'{save_path}/stopTimes/', exist_ok=True)
