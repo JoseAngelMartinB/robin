@@ -225,7 +225,7 @@ class DataLoader:
             return {sta[0]: corridor_tree(sta[1:])}
 
         corr_tree = corridor_tree(list(self.stations.values()))
-        self.corridors[1] = Corridor(1, corr_name, corr_tree)
+        self.corridors[1] = Corridor("1", corr_name, corr_tree)
 
     def _get_line(self, stops: pd.DataFrame, corr: Corridor) -> Line:
         """
@@ -244,13 +244,13 @@ class DataLoader:
         """
         Build RollingStock objects
         """
-        self.rolling_stock[1] = RollingStock(1, "S-114", {1: 250, 2: 50})
+        self.rolling_stock[1] = RollingStock("1", "S-114", {1: 250, 2: 50})
 
     def _build_tsp(self) -> None:
         """
         Build TSP objects
         """
-        self.tsps[1] = TSP(1, "Renfe", [rs for rs in self.rolling_stock.values()])
+        self.tsps[1] = TSP("1", "Renfe", [rs for rs in self.rolling_stock.values()])
 
     def _build_services(self) -> None:
         """
