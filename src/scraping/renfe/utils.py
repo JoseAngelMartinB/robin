@@ -56,7 +56,11 @@ def format_duration(x: str) -> int:
     Returns:
         str: String with duration in minutes
     """
-    h, m = filter(lambda t: is_number(t), x.split(" "))
+    tuple_hour_min = tuple(filter(lambda t: is_number(t), x.split(" ")))
+    if len(tuple_hour_min) == 1:
+        m = tuple_hour_min[0]
+        return int(m)
+    h, m = tuple_hour_min
     return int(h) * 60 + int(m)
 
 
@@ -82,7 +86,7 @@ class ChromeDriverManager:
         self.chrome_options.add_argument("--headless")  # Don't open browser window
         self.driver = webdriver.Chrome(options=self.chrome_options)
 
-    def request_price(self, url: str, patience: int = 12) -> Union[str, int]:
+    def request_price(self, url: str, patience: int = 15) -> Union[str, int]:
         """
         Function to request a URL with selenium
 
