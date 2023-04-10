@@ -2,21 +2,43 @@
 
 import datetime
 import numpy as np
-import os
 import pandas as pd
+
 from src.robin.supply.entities import Station, TimeSlot, Corridor, Line, Seat, RollingStock, TSP, Service
 from src.robin.supply.utils import get_time
-from src.scraping.utils import write_to_yaml, station_to_dict, seat_to_dict, corridor_to_dict, line_to_dict, \
-    rolling_stock_to_dict, time_slot_to_dict, tsp_to_dict, service_to_dict
-from typing import Dict, List, Tuple
+from src.scraping.utils import *
+from typing import Dict, List
+
+RENFE_STATIONS_PATH = "../../data/renfe/renfe_stations.csv"
 
 
 class DataLoader:
     """
     Class to load data retrieved with the scraping from csv files
+
+    Attributes:
+        trips (pd.DataFrame): Trips dataframe
+        prices (pd.DataFrame): Prices dataframe
+        stops (pd.DataFrame): Stops dataframe
+        renfe_stations (pd.DataFrame): Renfe stations dataframe
+        seats (Dict[str, Seat]): Dictionary with seat types
+        stations (Dict[str, Station]): Dictionary with stations
+        corridors (Dict[str, Corridor]): Dictionary with corridors
+        lines (Dict[str, Line]): Dictionary with lines
+        rolling_stock (Dict[str, RollingStock]): Dictionary with rolling stock
+        tsps (Dict[str, TSP]): Dictionary with TSPs
+        time_slots (Dict[str, TimeSlot]): Dictionary with time slots
+        services (Dict[str, Service]): Dictionary with services
     """
 
-    def __init__(self, trips_path: str, renfe_stations_path: str = "../../data/renfe/renfe_stations.csv"):
+    def __init__(self, trips_path: str, renfe_stations_path: str = RENFE_STATIONS_PATH):
+        """
+        Constructor of the class
+
+        Args:
+            trips_path (str): Path to the trips csv file
+            renfe_stations_path (str, optional): Path to the renfe stations csv file.
+        """
         self._trips_path = trips_path
         self._path_root = os.path.dirname(os.path.dirname(self._trips_path))
         self._scraping_id = self._get_scraping_id()
@@ -316,23 +338,18 @@ class DataLoader:
 
         total_prices = {}
         for pair in line.pairs:
-            prices_df = None
             origin, destination = pair
-            origin_id = self.renfe_stations[self.renfe_stations['stop_id'] == origin]['renfe_id'].values[0]
-            destination_id = self.renfe_stations[self.renfe_stations['stop_id'] == destination]['renfe_id'].values[0]
-            file_name = self._scraping_id
-            file_name = file_name.split("_")
-            file_name[0], file_name[1] = origin_id, destination_id
-            file_name = "_".join(file_name)
-            prices_path = f"{self._path_root}/prices/prices_{file_name}.csv"
-            prices_df = self._load_dataframe(path=prices_path)
             trip_id = service_id.split("_")[0]
             date = "-".join(service_id.split("_")[1].split("-")[:-1])
             departure_time = ts_init + datetime.timedelta(minutes=line.timetable[origin][1])
             departure_time = time_delta_to_time_string(departure_time)
             sub_service_id = f"{trip_id}_{date}-{departure_time}"
+            match_service = self.prices['service_id'] == sub_service_id
+            match_origin = self.prices['origin'] == origin
+            match_destination = self.prices['destination'] == destination
+            condition = match_service & match_origin & match_destination
             try:
-                prices = prices_df[prices_df['service_id'] == sub_service_id].values[0].tolist()[1:]
+                prices = self.prices[condition]['price'].values[0].tolist()[1:]
             except IndexError:
                 print("Missing Prices Entry - Setting Prices to NaN")
                 prices = [float("NaN") for _ in range(len(self.seats))]
