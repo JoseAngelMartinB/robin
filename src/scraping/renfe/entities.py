@@ -372,7 +372,11 @@ class RenfeScraper:
         Returns:
             str: train type.
         """
-        if trip_id[:2] == '03' or trip_id[:2] == '19':
+        if trip_id[:2] == '00':
+            return 'ALVIA'
+        if trip_id[:2] in ('08', '34'):
+            return 'AVANT'
+        if trip_id[:2] in ('03', '19'):
             return 'AVE'
         if trip_id[:2] == '06':
             return 'AVLO'
@@ -656,5 +660,4 @@ if __name__ == "__main__":
     origin = "60000"
     destination = "71801"
     # date = datetime.date(day=14, month=4, year=2023)
-    # scraper.scrape_line(origin=origin, destination=destination, init_date=date)
     scraper.scrape(origin=origin, destination=destination)
