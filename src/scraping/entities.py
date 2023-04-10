@@ -16,7 +16,7 @@ class DataLoader:
     Class to load data retrieved with the scraping from csv files
     """
 
-    def __init__(self, trips_path: str):
+    def __init__(self, trips_path: str, renfe_stations_path: str = "../../data/renfe/renfe_stations.csv"):
         self._trips_path = trips_path
         self._path_root = os.path.dirname(os.path.dirname(self._trips_path))
         self._scraping_id = self._get_scraping_id()
@@ -27,6 +27,9 @@ class DataLoader:
         self.trips = self._load_dataframe(path=self._trips_path, data_type={'trip_id': str})
         self.prices = self._load_dataframe(path=self._prices_path)
         self.stops = self._load_dataframe(path=self._stops_path, data_type={'stop_id': str})
+        self.renfe_stations = pd.read_csv(filepath_or_buffer=renfe_stations_path,
+                                          delimiter=',',
+                                          dtype={'stop_id': str})
 
         self._seat_names = self.prices.columns[1:]
         self.seats = self._build_seat_types()
@@ -74,7 +77,7 @@ class DataLoader:
         ]
 
         for key, value in data:
-            write_to_yaml(path+filename, {key: value})
+            write_to_yaml(path + filename, {key: value})
 
     def show_metadata(self) -> None:
         """
@@ -134,16 +137,12 @@ class DataLoader:
             corridor_stations (List[str]): list of strings with the station ids
         """
         # Parse stations. Use Adif stop_id retrieve station info (name, lat, lon)
-        renfe_stations = pd.read_csv(filepath_or_buffer=f'../../data/scraping/renfe/renfe_stations.csv',
-                                     delimiter=',',
-                                     dtype={'stop_id': str})
-
         # Build dictionary of stations with stop_id as key and Station() object as value
         for s in corridor_stations:
-            name = renfe_stations[renfe_stations['stop_id'] == s]['stop_name'].values[0]
-            city = renfe_stations[renfe_stations['stop_id'] == s]['stop_name'].values[0]
-            shortname = str(renfe_stations[renfe_stations['stop_id'] == s]['stop_name'].values[0])[:3].upper()
-            coords = tuple(renfe_stations[renfe_stations['stop_id'] == s][['stop_lat', 'stop_lon']].values[0])
+            name = self.renfe_stations[self.renfe_stations['stop_id'] == s]['stop_name'].values[0]
+            city = self.renfe_stations[self.renfe_stations['stop_id'] == s]['stop_name'].values[0]
+            shortname = str(self.renfe_stations[self.renfe_stations['stop_id'] == s]['stop_name'].values[0])[:3].upper()
+            coords = tuple(self.renfe_stations[self.renfe_stations['stop_id'] == s][['stop_lat', 'stop_lon']].values[0])
             self.stations[s] = Station(s, name, city, shortname, coords)
 
     def _get_corridor_stations(self) -> List[str]:
@@ -275,7 +274,7 @@ class DataLoader:
                      line: Line,
                      tsp: TSP,
                      rs: RollingStock
-        ) -> Service:
+                     ) -> Service:
         """
         Get Service object from Renfe data
 
@@ -294,26 +293,50 @@ class DataLoader:
         date = departure.split(" ")[0]
         date = datetime.datetime.strptime(date, "%Y-%m-%d").date()
         departure = departure.split(" ")[1]
-
-        line = line
         ts_init = get_time(departure)
         ts_end = get_time(str(get_time(departure) + datetime.timedelta(minutes=10)))
         delta = datetime.timedelta(minutes=10)
-        ts_id = int(str(get_time(departure).seconds // 60) + str(delta.seconds // 60))
+        ts_id = str(get_time(departure).seconds // 60) + str(delta.seconds // 60)
         time_slot = TimeSlot(ts_id, ts_init, ts_end)
         self.time_slots[time_slot.id] = time_slot
 
+        def time_delta_to_time_string(td: datetime.timedelta) -> str:
+            """
+            Convert time delta to string HH.MM
+
+            Args:
+                td: datetime.timedelta object
+
+            Returns:
+                string with time delta in format HH.MM
+            """
+            hours = td.total_seconds() // 3600
+            minutes = (td.total_seconds() % 3600) / 60
+            return f"{int(hours):02d}.{int(minutes):02d}"
+
         total_prices = {}
-        stations = [sta.id for sta in line.stations]
-        dict_prices = {p: np.round(np.linspace(price[p] / 2, price[p], len(stations) - 1), 2) for p in price}
-
         for pair in line.pairs:
-            l = len(stations[stations.index(pair[0]):stations.index(pair[1]) + 1]) - 2
-
+            prices_df = None
+            origin, destination = pair
+            origin_id = self.renfe_stations[self.renfe_stations['stop_id'] == origin]['renfe_id'].values[0]
+            destination_id = self.renfe_stations[self.renfe_stations['stop_id'] == destination]['renfe_id'].values[0]
+            file_name = self._scraping_id
+            file_name = file_name.split("_")
+            file_name[0], file_name[1] = origin_id, destination_id
+            file_name = "_".join(file_name)
+            prices_path = f"{self._path_root}/prices/prices_{file_name}.csv"
+            prices_df = self._load_dataframe(path=prices_path)
+            trip_id = service_id.split("_")[0]
+            date = "-".join(service_id.split("_")[1].split("-")[:-1])
+            departure_time = ts_init + datetime.timedelta(minutes=line.timetable[origin][1])
+            departure_time = time_delta_to_time_string(departure_time)
+            sub_service_id = f"{trip_id}_{date}-{departure_time}"
             try:
-                total_prices[pair] = {p: dict_prices[p][l] for p in dict_prices}
+                prices = prices_df[prices_df['service_id'] == sub_service_id].values[0].tolist()[1:]
             except IndexError:
-                total_prices[pair] = {p: dict_prices[p][-1] for p in dict_prices}
+                print("Missing Prices Entry - Setting Prices to NaN")
+                prices = [float("NaN") for _ in range(len(self.seats))]
+            total_prices[pair] = {st: p for st, p in zip(self.seats.values(), prices)}
 
         return Service(id_=id_,
                        date=date,
@@ -338,7 +361,7 @@ class DataLoader:
 
 
 if __name__ == '__main__':
-    trips_path = '../../data/scraping/renfe/trips/trips_MADRI_BARCE_2023-03-30_2023-03-31.csv'
+    trips_path = '../../data/renfe/trips/trips_MADRI_BARCE_2023-04-14_2023-04-15.csv'
 
     data_loader = DataLoader(trips_path)
     data_loader.show_metadata()
