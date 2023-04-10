@@ -86,7 +86,7 @@ class ChromeDriverManager:
         self.chrome_options.add_argument("--headless")  # Don't open browser window
         self.driver = webdriver.Chrome(options=self.chrome_options)
 
-    def request_price(self, url: str, patience: int = 15) -> Union[str, int]:
+    def request_price(self, url: str, patience: int = 25) -> Union[str, int]:
         """
         Function to request a URL with selenium
 
