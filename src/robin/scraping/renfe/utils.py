@@ -2,15 +2,6 @@
 
 import re
 
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.common.by import By
-from selenium.common.exceptions import TimeoutException
-from typing import Union
-
-
 def is_number(s: str) -> bool:
     """
     Function to check if a string is a number
@@ -76,33 +67,3 @@ def remove_blanks(s: str, replace_by: str = '') -> str:
         str: string without blank spaces
     """
     return re.sub(r'\s+', replace_by, s)
-
-
-class ChromeDriverManager:
-    def __init__(self):
-        self.chrome_options = Options()
-        self.chrome_options.add_argument("--disable-extensions")
-        # self.chrome_options.add_argument("--disable-gpu")
-        self.chrome_options.add_argument("--headless")  # Don't open browser window
-        self.driver = webdriver.Chrome(options=self.chrome_options)
-
-    def request_price(self, url: str, patience: int = 25) -> Union[str, int]:
-        """
-        Function to request a URL with selenium
-
-        Args:
-            url (str): URL to request
-            patience (int, optional): Patience in seconds. Defaults to 12.
-
-        Return:
-            str: HTML code of the page
-            returns bool False if page fails to load
-        """
-        self.driver.get(url)
-
-        try:
-            WebDriverWait(self.driver, patience).until(EC.presence_of_element_located((By.CLASS_NAME, 'trayectoRow')))
-        except TimeoutException:
-            return False
-
-        return self.driver.page_source

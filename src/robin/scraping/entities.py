@@ -7,7 +7,7 @@ import pandas as pd
 
 from src.robin.supply.entities import Station, TimeSlot, Corridor, Line, Seat, RollingStock, TSP, Service
 from src.robin.supply.utils import get_time
-from src.scraping.utils import *
+from src.robin.scraping.utils import *
 from typing import Dict, List
 
 RENFE_STATIONS_PATH = "../../data/renfe/renfe_stations.csv"
