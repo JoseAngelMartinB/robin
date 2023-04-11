@@ -106,7 +106,6 @@ class RenfeScraper:
                                     save_path=save_path)
 
         schedules = trips_df['schedule'].values.tolist()
-        print("Schedules: ", schedules)
         # Initialize corridor with max length trip
         corridor_stations = list(schedules.pop(schedules.index(max(schedules, key=len))))
 
@@ -120,16 +119,17 @@ class RenfeScraper:
                         index = corridor_stations.index(trip[i + 1])
                         corridor_stations[index:index] = [s]
 
-        print("Corridor: ", corridor_stations)
-        date = init_date
         end_date = init_date + datetime.timedelta(days=range_days)
         prices_df = pd.DataFrame()
         for org in corridor_stations:
             for des in corridor_stations[corridor_stations.index(org) + 1:]:
+                date = init_date
                 for i in range(range_days):
+                    org_id = self._get_renfe_station_id(org)
+                    des_id = self._get_renfe_station_id(des)
                     prices_df = pd.concat([prices_df,
-                                           self.scrape_prices(origin_id=org,
-                                                              destination_id=des,
+                                           self.scrape_prices(origin_id=org_id,
+                                                              destination_id=des_id,
                                                               date=date)
                                            ], ignore_index=True)
                     date += datetime.timedelta(days=1)
@@ -166,27 +166,41 @@ class RenfeScraper:
         url = root + query
         print("Date: ", date)
         print("Search url: ", url)
-        while True:
-            html_str = self.chromeDriver.request_price(url)
-            if not html_str:
-                user_input = input("Error retrieving prices. Retry? (y/n): ").lower()
-                if user_input == "n":
-                    break
-            else:
-                break
+        html_str = self.chromeDriver.request_price(url)
+        if not html_str:
+            print("Error retrieving prices. Skipping...")
+            return pd.DataFrame()
 
         soup = BeautifulSoup(html_str, 'html.parser')
         table = soup.find("div", {"class": "tab-content"})
         header = soup.find("thead")
         seat_types = self._get_seat_types(header)
         content_rows = table.find_all("tr", attrs={"cdgotren": True})
+        origin = self._get_adif_station_id(origin_id)
+        destination = self._get_adif_station_id(destination_id)
         for row in content_rows:
             data = self._get_service_prices(row, date, seat_types)
-            data[1:1] = [origin_id, destination_id]
+            data[1:1] = [origin, destination]
+            train_type = self._map_train_type(data[0])
+            if train_type not in self.allowed_train_types:
+                continue
             records.append(data)
-
+        if not records:
+            return pd.DataFrame()
         col_names = ['trip_id', 'origin', 'destination', 'train_type', 'departure', 'arrival', 'duration', 'prices']
         return self._get_prices_dataframe(records=records, col_names=col_names, seat_types=seat_types)
+
+    def _get_adif_station_id(self, renfe_id: str) -> str:
+        """
+        Gets the adif id of a station given its renfe id
+
+        Args:
+            renfe_id (str): Renfe id of the station
+
+        Returns:
+            str: Adif id of the station
+        """
+        return self.stations_df[self.stations_df['renfe_id'] == renfe_id]['stop_id'].values[0]
 
     def scrape_trips(
             self,
@@ -284,13 +298,24 @@ class RenfeScraper:
             pd.DataFrame: Dataframe with the information retrieved from the scraping
         """
         df = self._dataframe_from_records(records, col_names)
-        prices = dict(zip(df.service_id, df.prices))
-        list_prices = []
-        for k, v in prices.items():
-            list_prices.append([k, *list(v.values())])
 
-        df_prices = pd.DataFrame(list_prices, columns=['service_id'] + seat_types)
-        return df_prices
+        def extract_values(row: pd.Series) -> Dict:
+            """
+            Extracts the values of the prices dictionary and returns them as a dictionary
+
+            Args:
+                row (pd.Series): row of the dataframe
+
+            Returns:
+                Dict: Dictionary with the values of the prices dictionary
+            """
+            return {k: v for k, v in row['prices'].items()}
+
+        # Extract the values of the prices dictionary and add them as new columns
+        new_columns = df.apply(extract_values, axis=1, result_type='expand')
+        df = pd.concat([df, new_columns], axis=1)  # Concatenate the new columns to the dataframe
+        df = df.drop('prices', axis=1)  # Drop the prices column
+        return df
 
     def _get_renfe_schedules_url(self, origin_id: str, destination_id: str, date: datetime.date) -> str:
         """
@@ -344,17 +369,13 @@ class RenfeScraper:
         first_col = cols[1].find_all("div")
         departure, duration = first_col[0].text, first_col[1].text
         departure_time = time_to_minutes(remove_blanks(s=departure, replace_by=''))
-        departure = datetime.datetime.combine(date, datetime.time(hour=0, minute=0))
-        departure = departure + datetime.timedelta(minutes=departure_time)
-
+        init_datetime = datetime.datetime.combine(date, datetime.time(hour=0, minute=0))
+        departure = init_datetime + datetime.timedelta(minutes=departure_time)
         duration = remove_blanks(s=duration, replace_by=' ')
         duration = format_duration(duration)
         duration = datetime.timedelta(minutes=duration)
-
         arrival = departure + duration
         train_type = self._map_train_type(trip_id=train_id)
-
-        arrival = arrival + datetime.timedelta(days=1)
         train_type = remove_blanks(s=train_type, replace_by=' ')
         price_cols = cols[4:-1]
         prices = RenfeScraper._get_prices(cols=price_cols, seat_types=seat_types)
@@ -543,6 +564,9 @@ class RenfeScraper:
                 price = price_div[1].text.split(" ")[0].replace(",", ".")
             assert is_number(price), f"Error parsing price: {price}"
             prices[seat] = price
+
+        if len(prices) != len(seat_types):
+            return {st: float("NaN") for st in seat_types}
         return prices
 
     @staticmethod
@@ -607,7 +631,7 @@ class RenfeScraper:
         df_stops = pd.DataFrame(rows)
         print(df_stops.head())
 
-        os.makedirs(f'{save_path}/stopTimes/', exist_ok=True)
+        os.makedirs(f'{save_path}/stop_times/', exist_ok=True)
         df_stops.to_csv(
             f'{save_path}/stop_times/stopTimes_{origin_id}_{destination_id}_{init_date}_{end_date}.csv',
             index=False, header=True)
@@ -659,5 +683,5 @@ if __name__ == "__main__":
 
     origin = "60000"
     destination = "71801"
-    # date = datetime.date(day=14, month=4, year=2023)
-    scraper.scrape(origin=origin, destination=destination)
+    date = datetime.date(day=17, month=5, year=2023)
+    scraper.scrape(origin=origin, destination=destination, init_date=date)
