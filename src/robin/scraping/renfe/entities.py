@@ -762,6 +762,7 @@ class RenfeScraper:
                     prices_df = pd.concat([prices_df, new_prices_df], ignore_index=True)
                     date += datetime.timedelta(days=1)
 
+        print(prices_df.head())
         # Save prices
         os.makedirs(f'{save_path}/prices/', exist_ok=True)
         prices_df.to_csv(f'{save_path}/prices/prices_{origin_id}_{destination_id}_{init_date}_{end_date}.csv',
