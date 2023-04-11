@@ -24,7 +24,7 @@ MAIN_MENU_URL = 'https://www.renfe.com/content/renfe/es/es/viajar/informacion-ut
 SCHEDULE_URL = 'https://horarios.renfe.com/HIRRenfeWeb/'
 
 # Renfe stations CSV path
-SAVE_PATH = '../data/renfe'
+SAVE_PATH = 'data/renfe'
 RENFE_STATIONS_CSV = f'{SAVE_PATH}/renfe_stations.csv'
 
 
