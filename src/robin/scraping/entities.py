@@ -2,6 +2,7 @@
 
 import datetime
 import numpy as np
+import os
 import pandas as pd
 
 from src.robin.supply.entities import Station, TimeSlot, Corridor, Line, Seat, RollingStock, TSP, Service

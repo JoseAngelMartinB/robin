@@ -8,17 +8,17 @@ import re
 import requests
 import unicodedata
 
-from src.scraping.renfe.utils import ChromeDriverManager, format_duration, is_number, remove_blanks, time_to_minutes
+from src.robin.scraping.renfe.utils import ChromeDriverManager, format_duration, is_number, remove_blanks, time_to_minutes
 
 from bs4 import BeautifulSoup
 from typing import List, Tuple, Dict
 
 # Renfe URL's
-MAIN_MENU_URL = "https://www.renfe.com/content/renfe/es/es/viajar/informacion-util/horarios/app-horarios.html"
-SCHEDULE_URL = "https://horarios.renfe.com/HIRRenfeWeb/"
+MAIN_MENU_URL = 'https://www.renfe.com/content/renfe/es/es/viajar/informacion-util/horarios/app-horarios.html'
+SCHEDULE_URL = 'https://horarios.renfe.com/HIRRenfeWeb/'
 
-RENFE_STATIONS_CSV = "../../../data/renfe/renfe_stations.csv"
-SAVE_PATH = "../../../data/renfe"
+SAVE_PATH = 'data/renfe'
+RENFE_STATIONS_CSV = f'{SAVE_PATH}/renfe_stations.csv'
 
 
 class RenfeScraper:
