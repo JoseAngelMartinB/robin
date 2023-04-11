@@ -10,7 +10,9 @@ from src.robin.supply.utils import get_time
 from src.robin.scraping.utils import *
 from typing import Dict, List
 
-RENFE_STATIONS_PATH = "../../data/renfe/renfe_stations.csv"
+SAVE_PATH = '../../../configs/'
+IMPORT_PATH = '../../../data/renfe/'
+RENFE_STATIONS_PATH = f'{IMPORT_PATH}renfe_stations.csv'
 
 
 class DataLoader:
@@ -48,13 +50,13 @@ class DataLoader:
         self.origin_id, self.destination_id, self.start_date, self.end_date = self._scraping_id.split('_')
 
         self.trips = self._load_dataframe(path=self._trips_path, data_type={'trip_id': str})
-        self.prices = self._load_dataframe(path=self._prices_path)
+        self.prices = self._load_dataframe(path=self._prices_path, data_type={'origin': str, 'destination': str})
         self.stops = self._load_dataframe(path=self._stops_path, data_type={'stop_id': str})
         self.renfe_stations = pd.read_csv(filepath_or_buffer=renfe_stations_path,
                                           delimiter=',',
                                           dtype={'stop_id': str})
 
-        self._seat_names = self.prices.columns[1:]
+        self._seat_names = self.prices.columns[-3:]
         self.seats = self._build_seat_types()
         self.stations = {}
         self.corridors = {}
@@ -74,7 +76,7 @@ class DataLoader:
         self._build_tsp()
         self._build_services()
 
-    def save_yaml(self, filename: str, path: str = "../../data/") -> None:
+    def save_yaml(self, filename: str, save_path: str = SAVE_PATH) -> None:
         """
         Save supply entities to yaml file
 
@@ -94,7 +96,7 @@ class DataLoader:
         ]
 
         for key, value in data:
-            write_to_yaml(path + filename, {key: value})
+            write_to_yaml(save_path + filename, {key: value})
 
     def show_metadata(self) -> None:
         """
@@ -153,9 +155,9 @@ class DataLoader:
         Args:
             corridor_stations (List[str]): list of strings with the station ids
         """
-        # Parse stations. Use Adif stop_id retrieve station info (name, lat, lon)
         # Build dictionary of stations with stop_id as key and Station() object as value
         for s in corridor_stations:
+            # Parse stations. Use Adif stop_id to retrieve station info (name, lat, lon)
             name = self.renfe_stations[self.renfe_stations['stop_id'] == s]['stop_name'].values[0]
             city = self.renfe_stations[self.renfe_stations['stop_id'] == s]['stop_name'].values[0]
             shortname = str(self.renfe_stations[self.renfe_stations['stop_id'] == s]['stop_name'].values[0])[:3].upper()
@@ -272,17 +274,6 @@ class DataLoader:
         """
         Build Service objects
         """
-        for i, row in self.trips.iterrows():
-            service = self._get_service(
-                row['service_id'],
-                row['departure'],
-                row['lines'],
-                tuple(self.tsps.values())[0],
-                tuple(self.rolling_stock.values())[0]
-            )
-
-            print(service)
-        """
         self.trips['service'] = self.trips.apply(lambda x: self._get_service(x['service_id'],
                                                                              x['departure'],
                                                                              x['lines'],
@@ -293,7 +284,6 @@ class DataLoader:
         my_services = self.trips['service'].values.tolist()
         for s in my_services:
             self.services[s.id] = s
-        """
 
     def _get_service(self,
                      service_id: str,
@@ -349,10 +339,15 @@ class DataLoader:
             departure_time = ts_init + datetime.timedelta(minutes=line.timetable[origin][1])
             departure_time = time_delta_to_time_string(departure_time)
             sub_service_id = f"{trip_id}_{date}-{departure_time}"
-            print(sub_service_id)
-            prices = self.prices[(self.prices['service_id'] == sub_service_id) & (self.prices['origin'] == origin) & (self.prices['destination'] == destination)]
-            print(prices)
-            # prices = [float("NaN") for _ in range(len(self.seats))]
+            match_service = self.prices['service_id'] == sub_service_id
+            match_origin = self.prices['origin'] == origin
+            match_destination = self.prices['destination'] == destination
+            condition = match_service & match_origin & match_destination
+            price_cols = [seat.name for seat in self.seats.values()]
+            try:
+                prices = self.prices[condition][price_cols].values[0].tolist()
+            except IndexError:
+                prices = [float("NaN") for _ in range(3)]
             total_prices[pair] = {st: p for st, p in zip(self.seats.values(), prices)}
         service = Service(id_=id_,
                           date=date,
@@ -361,7 +356,6 @@ class DataLoader:
                           time_slot=time_slot,
                           rolling_stock=rs,
                           prices=total_prices)
-        #print(service)
         return service
 
     def _load_dataframe(self, path: str, data_type: Dict = None) -> pd.DataFrame:
@@ -379,12 +373,12 @@ class DataLoader:
 
 
 if __name__ == '__main__':
-    trips_path = '../../data/renfe/trips/trips_MADRI_BARCE_2023-04-11_2023-04-12.csv'
+    trips_path = f'{IMPORT_PATH}trips/trips_MADRI_BARCE_2023-05-17_2023-05-18.csv'
 
     data_loader = DataLoader(trips_path)
     data_loader.show_metadata()
 
     data_loader.build_supply_entities()
-    print(list(data_loader.services.values())[0])
+    print(list(data_loader.services.values())[1])
 
     data_loader.save_yaml(filename="supply_data_ref.yml")
