@@ -234,7 +234,7 @@ class BrowserManager:
         Returns:
             pd.DataFrame: Dataframe with the information retrieved from the scraping
         """
-        df = self._get_dataframe_from_records(records, col_names)
+        df_prices = self._get_dataframe_from_records(records, col_names)
 
         def extract_values(row: pd.Series) -> Dict:
             """
@@ -249,10 +249,10 @@ class BrowserManager:
             return {k: v for k, v in row['prices'].items()}
 
         # Extract the values of the prices dictionary and add them as new columns
-        new_columns = df.apply(extract_values, axis=1, result_type='expand')
-        df = pd.concat([df, new_columns], axis=1)  # Concatenate the new columns to the dataframe
-        df = df.drop('prices', axis=1)  # Drop the prices column
-        return df
+        new_columns = df_prices.apply(extract_values, axis=1, result_type='expand')
+        df_prices = pd.concat([df_prices, new_columns], axis=1)  # Concatenate the new columns to the dataframe
+        df_prices = df_prices.drop('prices', axis=1)  # Drop the prices column
+        return df_prices
 
     def _get_seat_types(self, thead: bs4.element.Tag) -> List[str]:
         """
@@ -403,6 +403,22 @@ class BrowserManager:
         col_names = ['trip_id', 'origin', 'destination', 'train_type', 'departure', 'arrival', 'duration', 'prices']
         return self._get_prices_dataframe(records=records, col_names=col_names)
 
+    def scrape_stations(self, url: str) -> Dict[str, str]:
+        """
+        Scrapes the stations from the Renfe main menu.
+
+        Args:
+            url (str): URL of the Renfe main menu.
+
+        Returns:
+            Dict[str, str]: A dictionary with the Renfe station ids (str) as keys and the station names (str) as values.
+        """
+        req = requests.get(url)
+        soup = BeautifulSoup(req.text, 'html.parser')
+        menu = soup.find('div', {'class': 'irf-search-shedule__container-ipt'})
+        options = menu.find_all('option')
+        return {opt["value"]: " ".join(filter(lambda x: x != "", opt.text.split(" "))) for opt in options}
+    
     def scrape_trips(
             self,
             origin_id: str,
@@ -523,9 +539,7 @@ class RenfeScraper:
     Attributes:
         stations_df (pd.DataFrame): A pandas DataFrame to parse stations data.
         available_stations (List[str]): A list with the available stations in the Renfe website.
-        allowed_train_types (List[str]): A list with the allowed train types to scrape.
-        chrome_driver (ChromeDriverManager): A ChromeDriverManager object to manage the ChromeDriver.
-        line_stations (List[str]): A list with the stations of the line.
+        browser (BrowserManager): A BrowserManager object to manage the browser.
     """
 
     def __init__(
@@ -542,13 +556,12 @@ class RenfeScraper:
             menu_url (str): URL of the Renfe main menu.
             allowed_train_types (List[str]): List of allowed train types to scrape.
         """
-        self.stations_df = self._load_stations_df(stations_csv_path)
-        self.available_stations = self._scrape_stations(menu_url)
+        self.stations_df = pd.read_csv(stations_csv_path, dtype={'stop_id': str, 'renfe_id': str})
         self.browser = BrowserManager(
             stations_df=self.stations_df,
             allowed_train_types=allowed_train_types
         )
-        self.line_stations = []
+        self.available_stations = self.browser.scrape_stations(menu_url)
 
     def _get_corridor_stations(self, trips_df: pd.DataFrame) -> List[str]:
         """
@@ -560,34 +573,23 @@ class RenfeScraper:
         Returns:
             List[str]: List with the stations of the corridor.
         """
-        schedules = trips_df['schedule'].values.tolist()
-
         # Initialize corridor with max length trip
+        schedules = trips_df['schedule'].values.tolist()
         corridor_stations = list(schedules.pop(schedules.index(max(schedules, key=len))))
 
         # Complete corridor with other stops that are not in the initial defined corridor
         for trip in schedules:
-            for i, s in enumerate(trip):
-                if s not in corridor_stations:
+            for i, station in enumerate(trip):
+                if station not in corridor_stations:
+                    # If station is the last one, append it to the end of the corridor
                     if i == len(trip) - 1:
-                        corridor_stations.append(s)
+                        corridor_stations.append(station)
                     else:
+                        # If station is not the last one, insert it in the corridor before the next station
                         index = corridor_stations.index(trip[i + 1])
-                        corridor_stations[index:index] = [s]
+                        corridor_stations.insert(index, station)
 
         return corridor_stations
-
-    def _load_stations_df(self, csv_path: str) -> pd.DataFrame:
-        """
-        Loads the available stations from a csv file.
-
-        Args:
-            csv_path (str): Path to the csv file.
-
-        Returns:
-            pd.DataFrame: A pandas DataFrame with the available stations.
-        """
-        return pd.read_csv(csv_path, dtype={"stop_id": str, "renfe_id": str})
 
     def _get_renfe_station_id(self, adif_id: str) -> str:
         """
@@ -601,8 +603,9 @@ class RenfeScraper:
         """
         return self.stations_df[self.stations_df['stop_id'] == adif_id]['renfe_id'].values[0]
 
-    def _save_stops_df(
-            self, df,
+    def _save_df_stops(
+            self,
+            df_trips: pd.DataFrame,
             origin_id: str,
             destination_id: str,
             init_date: datetime.date,
@@ -610,34 +613,36 @@ class RenfeScraper:
             save_path: str
     ) -> None:
         """
-        Saves the dataframe with the stops information to a csv file.
+        Saves the dataframe with the stops information to a CSV file.
 
         Args:
-            df (pd.DataFrame): dataframe with the stops information
-            origin_id (str): Renfe id of the origin station
-            destination_id (str): Renfe id of the destination station
-            init_date (datetime.date): initial date of the trip
-            end_date (datetime.date): end date of the trip
-            save_path (str): Path to save the csv file
+            df_trips (pd.DataFrame): Dataframe with the trips information.
+            origin_id (str): Renfe id of the origin station.
+            destination_id (str): Renfe id of the destination station.
+            init_date (datetime.date): initial date of the trip.
+            end_date (datetime.date): end date of the trip.
+            save_path (str): Path to save the CSV file.
         """
-        schedules_dict = dict(zip(df.service_id, df.schedule))
+        # Create a dictionary with the service_id as key and the schedule as value
+        schedules_dict = dict(zip(df_trips.service_id, df_trips.schedule))
 
+        # Create a list of dictionaries with the stop information
         rows = []
         for service_id, schedule in schedules_dict.items():
             for stop_id, (arrival, departure) in schedule.items():
                 rows.append({'service_id': service_id, 'stop_id': stop_id, 'arrival': arrival, 'departure': departure})
 
+        # Create a stops DataFrame with the list of dictionaries and save it to a CSV file
         df_stops = pd.DataFrame(rows)
-        print(df_stops.head())
-
         os.makedirs(f'{save_path}/stop_times/', exist_ok=True)
         df_stops.to_csv(
             f'{save_path}/stop_times/stopTimes_{origin_id}_{destination_id}_{init_date}_{end_date}.csv',
-            index=False, header=True)
+            index=False
+        )
 
-    def _save_trips_df(
+    def _save_df_trips(
             self,
-            df: pd.DataFrame,
+            df_trips: pd.DataFrame,
             origin_id: str,
             destination_id: str,
             init_date: datetime.date,
@@ -645,37 +650,23 @@ class RenfeScraper:
             save_path: str
     ) -> None:
         """
-        Saves the dataframe with the trips information to a csv file.
+        Saves the dataframe with the trips information to a CSV file.
 
         Args:
-            df (pd.DataFrame): dataframe with the trips information
-            origin_id (str): Renfe id of the origin station
-            destination_id (str): Renfe id of the destination station
-            init_date (datetime.date): initial date of the trip
-            end_date (datetime.date): end date of the trip
-            save_path (str): Path to save the csv file
+            df_trips (pd.DataFrame): Dataframe with the trips information.
+            origin_id (str): Renfe id of the origin station.
+            destination_id (str): Renfe id of the destination station.
+            init_date (datetime.date): Initial date of the trip.
+            end_date (datetime.date): End date of the trip.
+            save_path (str): Path to save the CSV file.
         """
-        df = df.drop(['schedule', 'price'], axis=1)
-        print(df.head())
+        # Drop schedule and price columns as schedule it is contained in stops df and the price contains wrong values
+        df_trips = df_trips.drop(['schedule', 'price'], axis=1)
         os.makedirs(f'{save_path}/trips/', exist_ok=True)
-        df.to_csv(f'{save_path}/trips/trips_{origin_id}_{destination_id}_{init_date}_{end_date}.csv',
-                  index=False)
-
-    def _scrape_stations(self, url: str) -> Dict[str, str]:
-        """
-        Scrapes the stations from the Renfe main menu.
-
-        Args:
-            url (str): URL of the Renfe main menu.
-
-        Returns:
-            Dict[str, str]: A dictionary with the Renfe station ids (str) as keys and the station names (str) as values.
-        """
-        req = requests.get(url)
-        soup = BeautifulSoup(req.text, 'html.parser')
-        menu = soup.find('div', {'class': 'irf-search-shedule__container-ipt'})
-        options = menu.find_all('option')
-        return {opt["value"]: " ".join(filter(lambda x: x != "", opt.text.split(" "))) for opt in options}
+        df_trips.to_csv(
+            f'{save_path}/trips/trips_{origin_id}_{destination_id}_{init_date}_{end_date}.csv',
+            index=False
+        )
 
     def scrape(
             self,
@@ -708,23 +699,28 @@ class RenfeScraper:
             init_date = datetime.date.today()
 
         # Scrape trips
-        trips_df = self.scrape_trips(
+        df_trips = self.scrape_trips(
             origin_id=origin_id,
             destination_id=destination_id,
             init_date=init_date,
             range_days=range_days,
             save_path=save_path
         )
+        end_date = init_date + datetime.timedelta(days=range_days)
+        print(f'Scraped {len(df_trips)} trips between {origin_id} and {destination_id} from {init_date} to {end_date}')
+        print(df_trips.head())
 
         # Scrape prices
-        self.scrape_prices(
+        df_prices = self.scrape_prices(
             origin_id=origin_id,
             destination_id=destination_id,
             init_date=init_date,
             range_days=range_days,
-            trips_df=trips_df,
+            df_trips=df_trips,
             save_path=save_path
         )
+        print(f'Scraped prices between {origin_id} and {destination_id} from {init_date} to {end_date}')
+        print(df_prices.head())
 
     def scrape_prices(
             self,
@@ -732,9 +728,9 @@ class RenfeScraper:
             destination_id: str,
             init_date: datetime.date = None,
             range_days: int = 1,
-            trips_df: pd.DataFrame = None,
+            df_trips: pd.DataFrame = None,
             save_path: str = SAVE_PATH
-    ) -> None:
+    ) -> pd.DataFrame:
         """
         Scrapes the Renfe website for the prices of services between two stations.
 
@@ -743,30 +739,36 @@ class RenfeScraper:
             destination_id (str): Renfe station id of the destination station.
             init_date (datetime.date): Initial date to start scraping.
             range_days (int): Number of days to scrape.
-            trips_df (pd.DataFrame): DataFrame containing the trips to scrape the prices from.
+            df_trips (pd.DataFrame): DataFrame containing the scraped trips.
             save_path (str): Path to save the scraped data.
+        
+        Returns:
+            pd.DataFrame: DataFrame containing the scraped prices.
         """
         # Get corridor stations
-        corridor_stations = self._get_corridor_stations(trips_df)
+        corridor_stations = self._get_corridor_stations(df_trips)
 
         # Scrape prices
         end_date = init_date + datetime.timedelta(days=range_days)
-        prices_df = pd.DataFrame()
+        df_prices = pd.DataFrame()
         for org in corridor_stations:
+            # If the origin station is the same as the destination station, skip it
             for des in corridor_stations[corridor_stations.index(org) + 1:]:
                 date = init_date
                 for _ in range(range_days):
                     org_id = self._get_renfe_station_id(org)
                     des_id = self._get_renfe_station_id(des)
-                    new_prices_df = self.browser.scrape_prices(origin_id=org_id, destination_id=des_id, date=date)
-                    prices_df = pd.concat([prices_df, new_prices_df], ignore_index=True)
+                    new_df_prices = self.browser.scrape_prices(origin_id=org_id, destination_id=des_id, date=date)
+                    df_prices = pd.concat([df_prices, new_df_prices], ignore_index=True)
                     date += datetime.timedelta(days=1)
 
-        print(prices_df.head())
         # Save prices
         os.makedirs(f'{save_path}/prices/', exist_ok=True)
-        prices_df.to_csv(f'{save_path}/prices/prices_{origin_id}_{destination_id}_{init_date}_{end_date}.csv',
-                         index=False)
+        df_prices.to_csv(
+            f'{save_path}/prices/prices_{origin_id}_{destination_id}_{init_date}_{end_date}.csv',
+            index=False
+        )
+        return df_prices
 
     def scrape_trips(
             self,
@@ -792,28 +794,27 @@ class RenfeScraper:
         # Scrape trips from the schedules table
         date = init_date
         end_date = init_date + datetime.timedelta(days=range_days)
-        trips_df = pd.DataFrame()
+        df_trips = pd.DataFrame()
         for _ in range(range_days):
-            new_trips_df = self.browser.scrape_trips(origin_id=origin_id, destination_id=destination_id, date=date)
-            trips_df = pd.concat([trips_df, new_trips_df], ignore_index=True)
+            new_df_trips = self.browser.scrape_trips(origin_id=origin_id, destination_id=destination_id, date=date)
+            df_trips = pd.concat([df_trips, new_df_trips], ignore_index=True)
             date += datetime.timedelta(days=1)
 
         # Save trips and stops
-        self._save_trips_df(
-            df=trips_df,
+        self._save_df_trips(
+            df_trips=df_trips,
             origin_id=origin_id,
             destination_id=destination_id,
             init_date=init_date,
             end_date=end_date,
             save_path=save_path
         )
-        self._save_stops_df(
-            df=trips_df,
+        self._save_df_stops(
+            df_trips=df_trips,
             origin_id=origin_id,
             destination_id=destination_id,
             init_date=init_date,
             end_date=end_date,
             save_path=save_path
         )
-
-        return trips_df
+        return df_trips
