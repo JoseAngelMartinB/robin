@@ -55,12 +55,6 @@ class DataLoader:
 
         self._seat_names = self.prices.columns[1:]
         self.seats = self._build_seat_types()
-        # Merge services prices dataframe into trips dataframe
-        self.trips['prices'] = self.trips['service_id'].apply(
-            lambda x: self._get_trip_price(x))
-        # Filter trips with NaN prices
-        self.trips = self.trips[self.trips['prices'].apply(lambda x: not any(np.isnan(p) for p in x.values()))]
-
         self.stations = {}
         self.corridors = {}
         self.lines = {}
@@ -277,9 +271,19 @@ class DataLoader:
         """
         Build Service objects
         """
+        for i, row in self.trips.iterrows():
+            service = self._get_service(
+                row['service_id'],
+                row['departure'],
+                row['lines'],
+                tuple(self.tsps.values())[0],
+                tuple(self.rolling_stock.values())[0]
+            )
+
+            print(service)
+        """
         self.trips['service'] = self.trips.apply(lambda x: self._get_service(x['service_id'],
                                                                              x['departure'],
-                                                                             x['prices'],
                                                                              x['lines'],
                                                                              tuple(self.tsps.values())[0],
                                                                              tuple(self.rolling_stock.values())[0]),
@@ -288,11 +292,11 @@ class DataLoader:
         my_services = self.trips['service'].values.tolist()
         for s in my_services:
             self.services[s.id] = s
+        """
 
     def _get_service(self,
                      service_id: str,
                      departure: str,
-                     price: dict,
                      line: Line,
                      tsp: TSP,
                      rs: RollingStock
@@ -344,24 +348,20 @@ class DataLoader:
             departure_time = ts_init + datetime.timedelta(minutes=line.timetable[origin][1])
             departure_time = time_delta_to_time_string(departure_time)
             sub_service_id = f"{trip_id}_{date}-{departure_time}"
-            match_service = self.prices['service_id'] == sub_service_id
-            match_origin = self.prices['origin'] == origin
-            match_destination = self.prices['destination'] == destination
-            condition = match_service & match_origin & match_destination
-            try:
-                prices = self.prices[condition]['price'].values[0].tolist()[1:]
-            except IndexError:
-                print("Missing Prices Entry - Setting Prices to NaN")
-                prices = [float("NaN") for _ in range(len(self.seats))]
+            print(sub_service_id)
+            prices = self.prices[(self.prices['service_id'] == sub_service_id) & (self.prices['origin'] == origin) & (self.prices['destination'] == destination)]
+            print(prices)
+            # prices = [float("NaN") for _ in range(len(self.seats))]
             total_prices[pair] = {st: p for st, p in zip(self.seats.values(), prices)}
-
-        return Service(id_=id_,
-                       date=date,
-                       line=line,
-                       tsp=tsp,
-                       time_slot=time_slot,
-                       rolling_stock=rs,
-                       prices=total_prices)
+        service = Service(id_=id_,
+                          date=date,
+                          line=line,
+                          tsp=tsp,
+                          time_slot=time_slot,
+                          rolling_stock=rs,
+                          prices=total_prices)
+        #print(service)
+        return service
 
     def _load_dataframe(self, path: str, data_type: Dict = None) -> pd.DataFrame:
         """
@@ -378,7 +378,7 @@ class DataLoader:
 
 
 if __name__ == '__main__':
-    trips_path = '../../data/renfe/trips/trips_MADRI_BARCE_2023-04-14_2023-04-15.csv'
+    trips_path = '../../data/renfe/trips/trips_MADRI_BARCE_2023-04-11_2023-04-12.csv'
 
     data_loader = DataLoader(trips_path)
     data_loader.show_metadata()
