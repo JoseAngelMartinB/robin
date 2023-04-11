@@ -24,13 +24,28 @@ MAIN_MENU_URL = 'https://www.renfe.com/content/renfe/es/es/viajar/informacion-ut
 SCHEDULE_URL = 'https://horarios.renfe.com/HIRRenfeWeb/'
 
 # Renfe stations CSV path
-SAVE_PATH = 'data/renfe'
+SAVE_PATH = '../data/renfe'
 RENFE_STATIONS_CSV = f'{SAVE_PATH}/renfe_stations.csv'
 
 
 class BrowserManager:
+    """
+    Browser manager to handle the webdriver and the scraping of the Renfe website.
 
-    def __init__(self, stations_df: pd.DataFrame, allowed_train_types: List[str] = ['AVE', 'AVLO']):
+    Attributes:
+        chrome_options (Options): Options for the webdriver
+        driver (webdriver): Webdriver to handle the browser
+        stations_df (pd.DataFrame): Dataframe with the stations information
+        allowed_train_types (List[str]): List of allowed train types
+    """
+    def __init__(self, stations_df: pd.DataFrame, allowed_train_types: List[str] = ['AVE', 'AVLO']) -> None:
+        """
+        Initializes the BrowserManager object.
+
+        Args:
+            stations_df (pd.DataFrame): Dataframe with the stations information
+            allowed_train_types (List[str]): List of allowed train types
+        """
         self.chrome_options = Options()
         self.chrome_options.add_argument("--disable-extensions")
         # self.chrome_options.add_argument("--disable-gpu")
@@ -40,10 +55,11 @@ class BrowserManager:
         self.stations_df = stations_df
         self.allowed_train_types = allowed_train_types
 
-    def _get_dataframe_from_records(self,
-                                records: List,
-                                col_names: List,
-                                ) -> pd.DataFrame:
+    def _get_dataframe_from_records(
+            self,
+            records: List,
+            col_names: List,
+    ) -> pd.DataFrame:
         """
         Returns a dataframe with the information retrieved from the scraping encoded in a list of lists.
         Each list in the list of lists represents the data of a service, and it becomes a row in the dataframe.
@@ -87,10 +103,11 @@ class BrowserManager:
             return self.stations_df.at[adif_names.index(best_match), 'stop_id']
         return "00000"
 
-    def _get_trip_data(self,
-                       row: bs4.element.ResultSet,
-                       date: datetime.date
-                       ) -> Tuple[str, str, Dict[str, Tuple[int, int]], datetime.datetime, int, Dict[str, float]]:
+    def _get_trip_data(
+            self,
+            row: bs4.element.ResultSet,
+            date: datetime.date
+    ) -> Tuple[str, str, Dict[str, Tuple[int, int]], datetime.datetime, int, Dict[str, float]]:
         """
         Returns the data of a trip retrieved from a row from the schedules table.
 
@@ -137,10 +154,7 @@ class BrowserManager:
             return False
         return True
 
-    def _scrape_trip_schedule(
-            self,
-            url: str,
-    ) -> Dict[str, Tuple[int, int]]:
+    def _scrape_trip_schedule(self, url: str) -> Dict[str, Tuple[int, int]]:
         """
         Returns dictionary of stops from URL with stops information from Renfe
 
@@ -175,7 +189,7 @@ class BrowserManager:
 
         relative_schedule = BrowserManager._absolute_to_relative(trip_schedule)
         return relative_schedule
-    
+
     def _map_train_type(self, trip_id: str) -> str:
         """
         Returns the train type given the trip id.
@@ -197,7 +211,7 @@ class BrowserManager:
         if trip_id[:2] == '17':
             return 'REG.EXP'
         return 'UNK'
-    
+
     def _get_adif_station_id(self, renfe_id: str) -> str:
         """
         Gets the adif id of a station given its renfe id
@@ -239,7 +253,7 @@ class BrowserManager:
         df = pd.concat([df, new_columns], axis=1)  # Concatenate the new columns to the dataframe
         df = df.drop('prices', axis=1)  # Drop the prices column
         return df
-    
+
     def _get_seat_types(self, thead: bs4.element.Tag) -> List[str]:
         """
         Get a list of seat types from the table header.
@@ -262,10 +276,11 @@ class BrowserManager:
 
         return seat_types
 
-    def _get_service_prices(self,
-                            row: bs4.element.Tag,
-                            date: datetime.date,
-                            seat_types: List
+    def _get_service_prices(
+            self,
+            row: bs4.element.Tag,
+            date: datetime.date,
+            seat_types: List
     ) -> List:
         """
         Get the prices of the different seat types for a given row (service in Renfe website).
@@ -315,7 +330,7 @@ class BrowserManager:
         print("Date: ", date)
         print("Search url: ", url)
         return url
-    
+
     def _request_price(self, url: str, patience: int = 25) -> Union[str, int]:
         """
         Request a page and wait for the price to load.
@@ -336,7 +351,7 @@ class BrowserManager:
             return False
 
         return self.driver.page_source
-    
+
     def scrape_prices(
             self,
             origin_id: str,
@@ -536,6 +551,15 @@ class RenfeScraper:
         self.line_stations = []
 
     def _get_corridor_stations(self, trips_df: pd.DataFrame) -> List[str]:
+        """
+        Get the stations of the corridor from the trips DataFrame.
+
+        Args:
+            trips_df (pd.DataFrame): DataFrame with the trips information.
+
+        Returns:
+            List[str]: List with the stations of the corridor.
+        """
         schedules = trips_df['schedule'].values.tolist()
 
         # Initialize corridor with max length trip
@@ -576,13 +600,15 @@ class RenfeScraper:
             str: Renfe station id.
         """
         return self.stations_df[self.stations_df['stop_id'] == adif_id]['renfe_id'].values[0]
-    
-    def _save_stops_df(self, df,
-                       origin_id: str,
-                       destination_id: str,
-                       init_date: datetime.date,
-                       end_date: datetime.date,
-                       save_path: str) -> None:
+
+    def _save_stops_df(
+            self, df,
+            origin_id: str,
+            destination_id: str,
+            init_date: datetime.date,
+            end_date: datetime.date,
+            save_path: str
+    ) -> None:
         """
         Saves the dataframe with the stops information to a csv file.
 
@@ -609,12 +635,15 @@ class RenfeScraper:
             f'{save_path}/stop_times/stopTimes_{origin_id}_{destination_id}_{init_date}_{end_date}.csv',
             index=False, header=True)
 
-    def _save_trips_df(self, df: pd.DataFrame,
-                       origin_id: str,
-                       destination_id: str,
-                       init_date: datetime.date,
-                       end_date: datetime.date,
-                       save_path: str) -> None:
+    def _save_trips_df(
+            self,
+            df: pd.DataFrame,
+            origin_id: str,
+            destination_id: str,
+            init_date: datetime.date,
+            end_date: datetime.date,
+            save_path: str
+    ) -> None:
         """
         Saves the dataframe with the trips information to a csv file.
 
@@ -664,6 +693,7 @@ class RenfeScraper:
             destination (str): Adif station id of the destination station.
             init_date (datetime.date): Initial date to start scraping.
             range_days (int): Number of days to scrape.
+            save_path (str): Path to save the csv files.
         """
         # Convert Adif station ids to Renfe station ids
         origin_id = self._get_renfe_station_id(origin)
@@ -732,9 +762,11 @@ class RenfeScraper:
                     prices_df = pd.concat([prices_df, new_prices_df], ignore_index=True)
                     date += datetime.timedelta(days=1)
 
+        print(prices_df.head())
         # Save prices
         os.makedirs(f'{save_path}/prices/', exist_ok=True)
-        prices_df.to_csv(f'{save_path}/prices/prices_{origin_id}_{destination_id}_{init_date}_{end_date}.csv', index=False)
+        prices_df.to_csv(f'{save_path}/prices/prices_{origin_id}_{destination_id}_{init_date}_{end_date}.csv',
+                         index=False)
 
     def scrape_trips(
             self,
