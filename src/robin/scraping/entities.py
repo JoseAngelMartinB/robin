@@ -10,9 +10,9 @@ from src.robin.supply.utils import get_time
 from src.robin.scraping.utils import *
 from typing import Dict, List, Tuple
 
-SAVE_PATH = '../../../configs/'
-IMPORT_PATH = '../../../data/renfe/'
-RENFE_STATIONS_PATH = f'{IMPORT_PATH}renfe_stations.csv'
+SAVE_PATH = 'configs'
+IMPORT_PATH = 'data/renfe'
+RENFE_STATIONS_PATH = f'{IMPORT_PATH}/renfe_stations.csv'
 
 
 class DataLoader:
@@ -140,7 +140,7 @@ class DataLoader:
         """
         hard_type, soft_type = 1, 1  # Initialize seat types
         for i, seat_name in enumerate(self._seat_names, start=1):
-            self.seats[str(i)] = Seat(str(i), seat_name, hard_type, soft_type)
+            self.seats[seat_name] = Seat(seat_name, seat_name, hard_type, soft_type)
             if i % 2 == 0:
                 soft_type += 1
             else:
@@ -324,13 +324,16 @@ class DataLoader:
             match_destination = self.prices['destination'] == destination
             condition = match_service & match_origin & match_destination
             price_cols = [seat.name for seat in self.seats.values()]
+            # If prices not found for a pair of stations, skip this pair and continue with the next one
+            # It could happen if the pair is in the stops df but not in prices df
             try:
                 prices = self.prices[condition][price_cols].values[0].tolist()
             except IndexError:
-                prices = [float("NaN") for _ in range(3)]
+                continue
             total_prices[pair] = {st: p for st, p in zip(self.seats.values(), prices)}
 
-        return total_prices
+        filtered_prices = {pair: {st: p for st, p in total_prices[pair].items() if not np.isnan(p)} for pair in total_prices}
+        return filtered_prices
 
     def _get_service(self,
                      service_id: str,
@@ -381,15 +384,3 @@ class DataLoader:
             pd.dataframe
         """
         return pd.read_csv(path, delimiter=',', dtype=data_type)
-
-
-if __name__ == '__main__':
-    trips_path = f'{IMPORT_PATH}trips/trips_MADRI_BARCE_2023-05-17_2023-05-18.csv'
-
-    data_loader = DataLoader(trips_path)
-    data_loader.show_metadata()
-
-    data_loader.build_supply_entities()
-    print(list(data_loader.services.values())[1])
-
-    data_loader.save_yaml(filename="supply_data_ref.yml")
