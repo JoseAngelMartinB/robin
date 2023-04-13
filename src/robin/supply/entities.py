@@ -523,17 +523,52 @@ class Service:
         if not self.tickets_available(origin, destination, seat, anticipation):
             return False
 
-        for pair in self.line.pairs:  # pairs attribute is a dictionary with all the pairs of stations
+        # Get index of first pair which includes the origin station
+        index = 0
+        for i, pair in enumerate(self.line.pairs):
+            if pair[0] == origin:
+                index = i
+                break
+
+        # Check every pair capacity until the destination station is reached
+        for pair in list(self.line.pairs.keys())[index:]:
             origin_id, destination_id = pair
-            stations_in_pair = set(range(stations_ids.index(origin_id), stations_ids.index(destination_id)))
-            # TODO: Check test_supply.py
-            if service_route.intersection(stations_in_pair):
-                if self._pair_capacity[pair][seat.hard_type] < self.rolling_stock.seats[seat.hard_type]:
-                    self._pair_capacity[pair][seat.hard_type] += 1
+            self._pair_capacity[pair][seat.hard_type] += 1
+            if destination_id == destination:
+                break
 
         self.tickets_sold_pair_seats[(origin, destination)][seat] += 1
         self.tickets_sold_seats[seat] += 1
         self.tickets_sold_hard_type[seat.hard_type] += 1
+
+        return True
+
+    def _tickets_available(self, origin: str, destination: str, seat: Seat):
+        """
+        Check if there are tickets available for the service without considering capacity constraints.
+
+        Args:
+            origin (str): Origin station ID.
+            destination (str): Destination station ID.
+            seat (Seat): Seat type.
+
+        Returns:
+            bool: True if there are tickets available, False otherwise.
+        """
+        # Get index of first pair which includes the origin station
+        index = 0
+        for i, pair in enumerate(self.line.pairs):
+            if pair[0] == origin:
+                index = i
+                break
+
+        # Check every pair capacity until the destination station is reached
+        for pair in list(self.line.pairs.keys())[index:]:
+            origin_id, destination_id = pair
+            if self._pair_capacity[pair][seat.hard_type] >= self.rolling_stock.seats[seat.hard_type]:
+                return False
+            if destination_id == destination:
+                break
 
         return True
 
@@ -542,7 +577,6 @@ class Service:
         Check if there are tickets available for the service.
 
         Args:
-            self (Service): Service object.
             origin (str): Origin station ID.
             destination (str): Destination station ID.
             seat (Seat): Seat type.
@@ -551,19 +585,15 @@ class Service:
         Returns:
             bool: True if there are tickets available, False otherwise.
         """
-        occupied_seats = self._pair_capacity[(origin, destination)][seat.hard_type]
-
+        pair_capacity = self._pair_capacity[(origin, destination)][seat.hard_type]
+        tickets_available = self._tickets_available(origin=origin, destination=destination, seat=seat)
         if self.capacity_constraints and anticipation > self.lift_constraints:
             if (origin, destination) in self.capacity_constraints:
                 constrained_capacity = self.capacity_constraints[(origin, destination)][seat.hard_type]
-                if occupied_seats < constrained_capacity:
+                if pair_capacity < constrained_capacity and tickets_available:
                     return True
-        else:
-            max_capacity = self.rolling_stock.seats[seat.hard_type]
-            if occupied_seats < max_capacity:
-                return True
 
-        return False
+        return tickets_available
 
     def __str__(self) -> str:
         """
