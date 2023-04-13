@@ -3,10 +3,10 @@
 import datetime
 import yaml
 
-from src.robin.supply.utils import get_time, get_date, format_td
+from src.robin.supply.utils import get_time, get_date, format_td, set_stations_ids, convert_tree_to_dict
 
 from copy import deepcopy
-from typing import Any, Dict, List, Set, Tuple, Union
+from typing import Any, Dict, List, Tuple, Union
 
 
 class Station:
@@ -298,7 +298,7 @@ class Seat:
             str: Human readable string representation of the Seat object.
         """
         return f'[{self.id}, {self.name}, {self.hard_type}, {self.soft_type}]'
-    
+
     def __repr__(self) -> str:
         """
         Returns the debuggable string representation of the Seat object.
@@ -318,18 +318,18 @@ class RollingStock(object):
     Attributes:
         id (str): Rolling Stock ID.
         name (str): Rolling Stock name.
-        seats (Dict[str, int]): Number of seats for each hard type.
+        seats (Dict[int, int]): Number of seats for each hard type.
         total_capacity (int): Total number of seats.
     """
 
-    def __init__(self, id_: str, name: str, seats: Dict[str, int]) -> None:
+    def __init__(self, id_: str, name: str, seats: Dict[int, int]) -> None:
         """
         Constructor method for RollingStock class.
 
         Args:
             id_ (str): Rolling Stock ID.
             name (str): Rolling Stock name.
-            seats (Dict[str, int]): Number of seats for each hard type.
+            seats (Dict[int, int]): Number of seats for each hard type.
         """
         self.id = id_
         self.name = name
@@ -461,10 +461,11 @@ class Service:
         self._seat_types = set([seat for seat_price in self.prices.values() for seat in seat_price.keys()])
         self.seat_types = {seat.name: seat for seat in self._seat_types}
         self.tickets_sold_seats = {seat: 0 for seat in self._seat_types}
-        self.tickets_sold_hard_type = {hard_type: 0 for hard_type in self.rolling_stock.seats.keys()}
+        self.tickets_sold_hard_types = {hard_type: 0 for hard_type in self.rolling_stock.seats.keys()}
         self.tickets_sold_pair_seats = {pair: {seat: 0 for seat in self._seat_types} for pair in self.line.pairs}
-        self.tickets_sold_pair_hard_type = self._get_tickets_sold_pair_hard_type()
-        self._pair_capacity = {pair: {hard_type: 0 for hard_type in self.rolling_stock.seats.keys()} for pair in self.line.pairs}
+        self.tickets_sold_pair_hard_types = self._get_tickets_sold_pair_hard_type()
+        self._pair_capacity = {pair: {hard_type: 0 for hard_type in self.rolling_stock.seats.keys()} for pair in
+                               self.line.pairs}
 
     def _get_tickets_sold_pair_hard_type(self) -> Dict[Tuple[str, str], Dict[int, int]]:
         """
@@ -487,9 +488,6 @@ class Service:
         """
         Private method to get the absolute schedule of the service, using the relative schedule and the time slot start time.
 
-        Args:
-            self (Service): Service object.
-
         Returns:
             List[Tuple[datetime.timedelta, datetime.timedelta]]: Absolute schedule of the service.
         """
@@ -499,7 +497,7 @@ class Service:
             abs_at = datetime.timedelta(seconds=at * 60) + self.time_slot.start
             absolute_schedule.append((abs_dt, abs_at))
         return absolute_schedule
-    
+
     def _get_index(self, station_id: str) -> int:
         """
         Private method to get the index of the first pair which includes the origin station.
@@ -514,7 +512,7 @@ class Service:
             if pair[0] == station_id:
                 return i
         return 0
-    
+
     def _tickets_available(self, origin: str, destination: str, seat: Seat):
         """
         Check if there are tickets available for the service without considering capacity constraints.
@@ -536,7 +534,7 @@ class Service:
             if destination_id == destination:
                 break
         return True
-    
+
     def buy_ticket(self, origin: str, destination: str, seat: Seat, anticipation: int) -> bool:
         """
         Buy a ticket for the service.
@@ -563,7 +561,7 @@ class Service:
 
         self.tickets_sold_pair_seats[(origin, destination)][seat] += 1
         self.tickets_sold_seats[seat] += 1
-        self.tickets_sold_hard_type[seat.hard_type] += 1
+        self.tickets_sold_hard_types[seat.hard_type] += 1
         return True
 
     def tickets_available(self, origin: str, destination: str, seat: Seat, anticipation: int) -> bool:
@@ -610,9 +608,9 @@ class Service:
             f'\tPrices: \n'
             f'\t\t{new_line.join(f"{key}: {value}" for key, value in self.prices.items())} \n'
             f'\tTickets sold (seats): {self.tickets_sold_seats} \n'
-            f'\tTickets sold (hard type): {self.tickets_sold_hard_type} \n'
+            f'\tTickets sold (hard type): {self.tickets_sold_hard_types} \n'
             f'\tTickets sold per each pair (seats): {self.tickets_sold_pair_seats} \n'
-            f'\tTickets sold per each pair (hard type): {self.tickets_sold_pair_hard_type} \n'
+            f'\tTickets sold per each pair (hard type): {self.tickets_sold_pair_hard_types} \n'
             f'\tCapacity constraints: {self.capacity_constraints} \n'
         )
 
@@ -728,18 +726,18 @@ class Supply:
             Dict[str, TimeSlot]: Dict of TimeSlot objects.
         """
         time_slots = {}
-        for ts in data[key]:
-            assert all(k in ts.keys() for k in ('id', 'start', 'end')), "Incomplete TimeSlot data"
-            time_slot_id = str(ts['id'])
-            time_slots[time_slot_id] = TimeSlot(time_slot_id, get_time(ts['start']), get_time(ts['end']))
+        for time_slot in data[key]:
+            assert all(k in time_slot.keys() for k in ('id', 'start', 'end')), "Incomplete TimeSlot data"
+            time_slot_id = str(time_slot['id'])
+            time_slots[time_slot_id] = TimeSlot(time_slot_id, get_time(time_slot['start']), get_time(time_slot['end']))
         return time_slots
 
     @classmethod
     def _get_corridors(
-        cls,
-        data: Dict[Any, Any],
-        stations: (Dict[str, Station]),
-        key: str = 'corridor'
+            cls,
+            data: Dict[Any, Any],
+            stations: (Dict[str, Station]),
+            key: str = 'corridor'
     ) -> Dict[str, Corridor]:
         """
         Private method to build a dict of Corridor objects from YAML data.
@@ -767,44 +765,6 @@ class Supply:
             if not tree:
                 return {}
             return {sta_dict[node]: to_station(tree[node], sta_dict) for node in tree}
-
-        def set_stations_ids(tree: Dict, sta_set: Union[Set, None] = None) -> Set[str]:
-            """
-            Recursive function to build a set of station IDs from a tree of station IDs.
-
-            Args:
-                tree (Dict): Tree of station IDs.
-                sta_set (Union[Set, None]): Set of station IDs. Default: None.
-
-            Returns:
-                Set[str]: Set of station IDs.
-            """
-            if sta_set is None:
-                sta_set = set()
-            if not tree:
-                return
-
-            for node in tree:
-                sta_set.add(node)
-                set_stations_ids(tree[node], sta_set)
-
-            return sta_set
-
-        def convert_tree_to_dict(tree: Dict) -> Dict[str, str]:
-            """
-            Recursive function to convert a tree of station IDs to a dict of station IDs.
-
-            Args:
-                tree (Dict): Tree of station IDs.
-
-            Returns:
-                Dict[str, str]: Dict of station IDs.
-            """
-            if len(tree) == 1:
-                node = tree[0]
-                return {node['org']: convert_tree_to_dict(node['des'])}
-            else:
-                return {node['org']: convert_tree_to_dict(node['des']) for node in tree}
 
         corridors = {}
         for c in data[key]:
@@ -875,10 +835,10 @@ class Supply:
 
     @classmethod
     def _get_rolling_stock(
-        cls,
-        data: Dict[Any, Any],
-        seats: Dict[str, Seat],
-        key: str = 'rollingStock'
+            cls,
+            data: Dict[Any, Any],
+            seats: Dict[str, Seat],
+            key: str = 'rollingStock'
     ) -> Dict[str, RollingStock]:
         """
         Private method to build a dict of RollingStock objects from YAML data.
@@ -891,29 +851,30 @@ class Supply:
         Returns:
             Dict[str, RollingStock]: Dict of RollingStock objects.
         """
-        rolling_stock = {}
-        for rs in data[key]:
-            assert all(k in rs.keys() for k in ('id', 'name', 'seats')), 'Incomplete RollingStock data'
+        rolling_stocks = {}
+        for rolling_stock in data[key]:
+            assert all(k in rolling_stock.keys() for k in ('id', 'name', 'seats')), 'Incomplete RollingStock data'
 
-            for st in rs['seats']:
-                assert all(k in st for k in ('hard_type', 'quantity')), 'Incomplete seats data for RS'
+            for seat in rolling_stock['seats']:
+                assert all(key in seat for key in ('hard_type', 'quantity')), 'Incomplete seats data for RS'
 
-            assert all(s['hard_type'] in [s.hard_type for s in seats.values()] for s in rs['seats']), 'Invalid hard_type for RS'
+            assert all(seat['hard_type'] in [seat.hard_type for seat in seats.values()] for seat in
+                       rolling_stock['seats']), 'Invalid hard_type for RS'
 
-            rs_seats = {s['hard_type']: s['quantity'] for s in rs['seats']}
-            rs_id = str(rs['id'])
-            rolling_stock[rs_id] = RollingStock(rs_id,
-                                                rs['name'],
-                                                rs_seats)
+            rolling_stock_seats = {int(seat['hard_type']): int(seat['quantity']) for seat in rolling_stock['seats']}
+            rolling_stock_id = str(rolling_stock['id'])
+            rolling_stocks[rolling_stock_id] = RollingStock(rolling_stock_id,
+                                                            rolling_stock['name'],
+                                                            rolling_stock_seats)
 
-        return rolling_stock
+        return rolling_stocks
 
     @classmethod
     def _get_tsps(
-        cls,
-        data: Dict[Any, Any],
-        rolling_stock: Dict[str, RollingStock],
-        key: str = 'trainServiceProvider'
+            cls,
+            data: Dict[Any, Any],
+            rolling_stock: Dict[str, RollingStock],
+            key: str = 'trainServiceProvider'
     ) -> Dict[str, TSP]:
         """
         Private method to build a dict of TSP objects from YAML data.
@@ -926,24 +887,96 @@ class Supply:
         Returns:
             Dict[str, TSP]: Dict of TSP objects.
         """
-        tsp = {}
-        for op in data[key]:
-            assert all(k in op.keys() for k in ('id', 'name', 'rolling_stock')), 'Incomplete TSP data'
-            assert all(str(i) in rolling_stock.keys() for i in op['rolling_stock']), 'Unknown RollingStock ID'
-            tsp_id = str(op['id'])
-            tsp[tsp_id] = TSP(tsp_id, op['name'], [rolling_stock[str(rs_id)] for rs_id in op['rolling_stock']])
-        return tsp
+        tsps = {}
+        for tsp in data[key]:
+            assert all(k in tsp.keys() for k in ('id', 'name', 'rolling_stock')), 'Incomplete TSP data'
+            assert all(str(i) in rolling_stock.keys() for i in tsp['rolling_stock']), 'Unknown RollingStock ID'
+            tsp_id = str(tsp['id'])
+            tsps[tsp_id] = TSP(tsp_id, tsp['name'], [rolling_stock[str(rs_id)] for rs_id in tsp['rolling_stock']])
+        return tsps
+
+    @classmethod
+    def _get_capacity_constraints(
+            cls,
+            service_line: Line,
+            service_rolling_stock: RollingStock,
+            yaml_capacity_constraints: Dict
+    ) -> Union[Dict, None]:
+        """
+        Private method to build a dict of capacity constraints from YAML data.
+
+        Args:
+            service_line (Line): Line object.
+            yaml_capacity_constraints (Dict[str, Any]): Dict of capacity constraints from YAML data.
+
+        Returns:
+            Union[Dict, None]: Dict of capacity constraints.
+        """
+        if yaml_capacity_constraints:
+            capacity_constraints = {}
+            for capacity_constraint in yaml_capacity_constraints:
+                assert all(k in capacity_constraint for k in
+                           ('origin', 'destination', 'seats')), 'Incomplete capacity constraints data for Service'
+                assert all(s in service_line.corridor.stations.keys() for s in
+                           (capacity_constraint['origin'],
+                            capacity_constraint['destination'])), 'Invalid station in capacity constraints'
+
+                for seat in capacity_constraint['seats']:
+                    assert all(k in seat for k in ('hard_type', 'quantity')), 'Incomplete seats data for Service'
+                    assert seat['hard_type'] in service_rolling_stock.seats.keys(), 'Invalid hard type in capacity constraints'
+
+                origin_destination_tuple = (capacity_constraint['origin'], capacity_constraint['destination'])
+                pair_constraints = {}
+                for seat in capacity_constraint['seats']:
+                    pair_constraints[seat['hard_type']] = seat['quantity']
+                capacity_constraints[origin_destination_tuple] = pair_constraints
+            return capacity_constraints
+        return None
+
+    @classmethod
+    def _get_service_prices(
+            cls,
+            service_line: Line,
+            seats: Dict[str, Seat],
+            yaml_service_prices: Dict
+    ) -> Dict[Tuple[str, str], Dict[Seat, float]]:
+        """
+        Private method to build a dict of service prices from YAML data.
+
+        Args:
+            service_line (Line): Line object.
+            seats (Dict[str, Seat]): Dict of Seat objects.
+            yaml_service_prices (Dict[str, Any]): Dict of service prices from YAML data.
+
+        Returns:
+            Dict[Tuple[str, str], Dict[Seat, float]]: Dict of service prices.
+        """
+        service_prices = {}
+        for pair in yaml_service_prices:
+            assert all(k in pair.keys() for k in ('origin', 'destination', 'seats')), 'Incomplete Service prices'
+
+            origin = pair['origin']
+            destination = pair['destination']
+            assert all(s in service_line.corridor.stations.keys() for s in (origin, destination)), 'Invalid station in Service'
+            for seat in pair['seats']:
+                assert all(key in seat for key in ('seat', 'price')), 'Incomplete seats data for Service'
+                assert str(seat['seat']) in seats, 'Invalid seat in Service prices'
+
+            prices = {seats[str(seat['seat'])]: seat['price'] for seat in pair['seats']}
+            service_prices[(origin, destination)] = prices
+
+        return service_prices
 
     @classmethod
     def _get_services(
-        cls,
-        data: Dict[Any, Any],
-        lines: Dict[str, Line],
-        tsps: Dict[str, TSP],
-        time_slots: Dict[str, TimeSlot],
-        seats: Dict[str, Seat],
-        rolling_stock: Dict[str, RollingStock],
-        key: str = 'service'
+            cls,
+            data: Dict[Any, Any],
+            lines: Dict[str, Line],
+            tsps: Dict[str, TSP],
+            time_slots: Dict[str, TimeSlot],
+            seats: Dict[str, Seat],
+            rolling_stock: Dict[str, RollingStock],
+            key: str = 'service'
     ) -> Dict[str, Service]:
         """
         Private method to build a dict of Service objects from YAML data.
@@ -961,62 +994,40 @@ class Supply:
             Dict[str, Service]: Dict of Service objects.
         """
         services = {}
-        for s in data[key]:
+        for service in data[key]:
             service_keys = (
                 'id', 'date', 'line', 'train_service_provider', 'time_slot', 'rolling_stock',
                 'origin_destination_tuples', 'capacity_constraints'
             )
-            assert all(k in s.keys() for k in service_keys), 'Incomplete Service data'
+            assert all(k in service.keys() for k in service_keys), 'Incomplete Service data'
 
-            service_id = str(s['id'])
-            service_date = get_date(s['date'])
-            service_line_id = str(s['line'])
+            service_id = str(service['id'])
+            service_date = get_date(service['date'])
+            service_line_id = str(service['line'])
             assert service_line_id in lines.keys(), 'Line not found'
             service_line = lines[service_line_id]
 
-            tsp_id = str(s['train_service_provider'])
+            tsp_id = str(service['train_service_provider'])
             assert tsp_id in tsps.keys(), 'TSP not found'
             service_tsp = tsps[tsp_id]
 
-            time_slot_id = str(s['time_slot'])
+            time_slot_id = str(service['time_slot'])
             assert time_slot_id in time_slots.keys(), 'TimeSlot not found'
             service_time_slot = time_slots[time_slot_id]
 
-            rolling_stock_id = str(s['rolling_stock'])
+            rolling_stock_id = str(service['rolling_stock'])
             assert rolling_stock_id in rolling_stock.keys(), 'RollingStock not found'
-            service_rs = rolling_stock[rolling_stock_id]
+            service_rolling_stock = rolling_stock[rolling_stock_id]
 
-            service_prices = {}
-            for od in s['origin_destination_tuples']:
-                assert all(k in od.keys() for k in ('origin', 'destination', 'seats')), 'Incomplete Service prices'
+            yaml_service_prices = service['origin_destination_tuples']
+            service_prices = cls._get_service_prices(service_line=service_line,
+                                                     seats=seats,
+                                                     yaml_service_prices=yaml_service_prices)
 
-                org = od['origin']
-                des = od['destination']
-                assert all(s in service_line.corridor.stations.keys() for s in (org, des)), 'Invalid station in Service'
-                for st in od['seats']:
-                    assert all(k in st for k in ('seat', 'price')), 'Incomplete seats data for Service'
-                    assert str(st['seat']) in seats, 'Invalid seat in Service prices'
-
-                prices = {seats[str(st['seat'])]: st['price'] for st in od['seats']}
-                service_prices[(org, des)] = prices
-
-            capacity_constraints = s['capacity_constraints']
-            if capacity_constraints:
-                cc_constraints = {}
-                for cc in capacity_constraints:
-                    assert all(k in cc for k in ('origin', 'destination', 'seats')), 'Incomplete capacity constraints data for Service'
-                    assert all(s in service_line.corridor.stations.keys() for s in (cc['origin'], cc['destination'])), 'Invalid station in capacity constraints'
-
-                    for st in cc['seats']:
-                        assert all(k in st for k in ('hard_type', 'quantity')), 'Incomplete seats data for Service'
-                        assert st['hard_type'] in service_rs.seats.keys(), 'Invalid hard type in capacity constraints'
-
-                    cc_constraints[(cc['origin'], cc['destination'])] = {
-                        st['hard_type']: st['quantity']
-                        for st in cc['seats']
-                    }
-            else:
-                cc_constraints = None
+            yaml_capacity_constraints = service['capacity_constraints']
+            capacity_constraints = cls._get_capacity_constraints(service_line=service_line,
+                                                                 service_rolling_stock=service_rolling_stock,
+                                                                 yaml_capacity_constraints=yaml_capacity_constraints)
 
             services[service_id] = Service(
                 service_id,
@@ -1024,8 +1035,8 @@ class Supply:
                 service_line,
                 service_tsp,
                 service_time_slot,
-                service_rs,
+                service_rolling_stock,
                 service_prices,
-                cc_constraints
+                capacity_constraints
             )
         return services

@@ -1,9 +1,11 @@
 """Utils for the supply module."""
 
-from src.robin.supply.exceptions import InvalidTimeStringFormat, InvalidDateStringFormat
-
 import datetime
 import re
+
+from src.robin.supply.exceptions import InvalidTimeStringFormat, InvalidDateStringFormat
+
+from typing import Dict, Set
 
 
 def get_time(time) -> datetime.timedelta:
@@ -71,3 +73,36 @@ def format_td(td: datetime.timedelta) -> str:
         minutes = '0' + minutes
 
     return f'{hours}:{minutes}'
+
+
+def set_stations_ids(tree: Dict) -> Set[str]:
+    """
+    Recursive function to build a set of station IDs from a tree of station IDs.
+
+    Args:
+        tree (Dict): Tree of station IDs.
+
+    Returns:
+        Set[str]: Set of station IDs.
+    """
+    stations_set = set()
+    for node in tree:
+        stations_set.add(node)
+        stations_set |= set_stations_ids(tree[node])
+    return stations_set
+
+
+def convert_tree_to_dict(tree: Dict) -> Dict[str, Dict]:
+    """
+    Recursive function to convert a tree of station IDs to a dict of station IDs.
+
+    Args:
+        tree (Dict): Tree of station IDs.
+
+    Returns:
+        Dict[str, Dict]: Dict of station IDs.
+    """
+    if not tree:
+        return {}
+
+    return {node['org']: convert_tree_to_dict(node['des']) for node in tree}
