@@ -157,7 +157,6 @@ class KernelPlotter:
             Mapping[str, int]: Dictionary with the percentage of tickets sold per seat type.
         """
         tickets_sold = self.df.groupby(by=['seat']).size()
-        # Calculate the percentage of tickets sold per seat type
         total_tickets = tickets_sold.sum()
         tickets_sold = tickets_sold.apply(lambda x: x / total_tickets * 100)
         return tickets_sold.to_dict()
