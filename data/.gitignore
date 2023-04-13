@@ -3,4 +3,10 @@
 # Except these files
 !.gitignore
 !renfe/
-!renfe/renfe_stations.csv   
+!renfe/renfe_stations.csv
+!renfe/prices
+!renfe/prices/prices_MADRI_BARCE_2023-06-01_2023-06-02.csv
+!renfe/stop_times
+!renfe/stop_times/stopTimes_MADRI_BARCE_2023-06-01_2023-06-02.csv
+!renfe/trips
+!renfe/trips/trips_MADRI_BARCE_2023-06-01_2023-06-02.csv
