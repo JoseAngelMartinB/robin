@@ -139,7 +139,7 @@ class DataLoader:
         """
         hard_type, soft_type = 1, 1  # Initialize seat types
         for i, seat_name in enumerate(self._seat_names, start=1):
-            self.seats[seat_name] = Seat(seat_name, seat_name, hard_type, soft_type)
+            self.seats[str(i)] = Seat(str(i), seat_name, hard_type, soft_type)
             if i % 2 == 0:
                 soft_type += 1
             else:
