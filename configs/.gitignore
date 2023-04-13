@@ -7,3 +7,6 @@
 !supply_data_error.yml
 !supply_data_example.yml
 !supply_data.yml
+!test_case
+!test_case/demand_data.yml
+!test_case/supply_data.yml
