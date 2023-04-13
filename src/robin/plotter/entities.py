@@ -108,32 +108,26 @@ class KernelPlotter:
         """
         # Get the data of the service
         service_data = self.df[self.df['service'] == service_id]
-        service_data = service_data.groupby(by=['departure_station', 'arrival_station', 'purchase_day']).size()
-        service_dict = service_data.to_dict()
-        service_capacity = self.supply.filter_service_by_id(service_id).rolling_stock.total_capacity
+        tickets_sold = service_data.groupby(by=['departure_station']).size()
+        negative_tickets = service_data.groupby(by=['arrival_station']).size()
 
-        # Calculate the percentage of tickets sold per day and pair of stations
-        data = {}
-        for key, value in service_dict.items():
-            origin, destination, day = key
-            pair = f'{self.stations_dict[origin]} - {self.stations_dict[destination]}'
-            value = value / service_capacity * 100
+        # Filter the service
+        service = self.supply.filter_service_by_id(service_id)
+        stations_tickets = {station.id: () for station in service.line.stations}
 
-            if pair not in data:
-                data[pair] = {day: value}
+        # Calculate the total capacity of each station 
+        for i, station in enumerate(stations_tickets):
+            _tickets_sold = tickets_sold.get(station, 0)
+            _negative_tickets = negative_tickets.get(station, 0)
+            if i == 0:
+                total_capacity = _tickets_sold
             else:
-                data[pair][day] = value
+                total_capacity = total_capacity + _tickets_sold - _negative_tickets
+            stations_tickets[station] = (total_capacity, _tickets_sold, -_negative_tickets)
 
-        # Sort the data by day in descending order
-        sorted_data = {pair: dict(sorted(data[pair].items(), key=lambda x: x[0], reverse=True)) for pair in data}
-
-        # Calculate the cumulative percentage of tickets sold per day and pair of stations
-        final_data = {}
-        for pair in sorted_data:
-            final_data[pair] = {}
-            for i, day in enumerate(sorted_data[pair]):
-                final_data[pair][day] = sum(list(sorted_data[pair].values())[:i+1])
-        return final_data
+        # Translate the station ids to station names
+        stations_tickets = {self.stations_dict[station]: stations_tickets[station] for station in stations_tickets}
+        return stations_tickets
 
     def _get_tickets_sold_by_user(self):
         data = {}
@@ -190,34 +184,37 @@ class KernelPlotter:
             rotation (int, optional): Rotation of the x-axis labels. Defaults to 0.
             save_path (str, optional): Path to save the plot. Defaults to None.
         """
-        fig, axs = plt.subplots(nrows=len(data), ncols=1, figsize=(7, 4 * len(data)))
-        
-        # If there is only one row, axs is not a list
-        if len(data) == 1:
-            axs = [axs]
+        fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(7, 4))
 
         # Plot the data
-        for i, (key, value) in enumerate(data.items()):
-            ax = axs[i]
-            ax.set_facecolor(WHITE_SMOKE)
-            if title is None:
-                title = key
-            ax.set_title(title, fontweight='bold')
-            ax.set_xlabel(xlabel)
-            ax.set_ylabel(ylabel, labelpad=10)
-            ax.set_xticks(np.arange(len(value)))
-            ax.set_xticklabels(value.keys(), rotation=rotation, ha='right')
-            ax.set_xlim(-0.5, len(value) - 0.5)
-            ax.bar(
-                x=np.arange(len(value)),
-                height=value.values(),
-                width=0.5,
-                color=self.colors[i % len(self.colors)],
-                edgecolor='black',
-                linewidth=0.5,
-                zorder=2
-            )
-            ax.grid(axis='y', color='#A9A9A9', alpha=0.3, zorder=1)
+        ax.set_facecolor(WHITE_SMOKE)
+        ax.set_title(title, fontweight='bold')
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel(ylabel, labelpad=10)
+        ax.set_xticks(np.arange(len(data)))
+        ax.set_xticklabels(data.keys(), rotation=rotation, ha='right')
+        ax.set_xlim(-0.5, len(data) - 0.5)
+        for i, tickets in enumerate(data.values()):
+            for j, value in enumerate(tickets):
+                # Total capacity (yellow), tickets sold (green) and negative tickets (red)
+                if j == 0:
+                    color = self.colors[0]
+                elif j == 1:
+                    color = self.colors[2]
+                else:
+                    color = self.colors[3]
+                ax.bar(
+                    x=i,
+                    height=value,
+                    width=0.5,
+                    color=color,
+                    edgecolor='black',
+                    linewidth=0.5,
+                    zorder=2
+                )
+        ax.grid(axis='y', color='#A9A9A9', alpha=0.3, zorder=1)
+        ax.legend(['Ocupación del tren', 'Tickets vendidos', 'Pasajeros que bajan'])
+        ax.axhline(y=0, color='black', linewidth=0.5, zorder=1)
         
         if save_path:
             fig.savefig(save_path, dpi=300, bbox_inches='tight')
@@ -233,7 +230,7 @@ class KernelPlotter:
             save_path (str, optional): Path to save the plot. Defaults to None.
         """
         data = self._get_service_capacity(service_id)
-        self._plot_bar_chart(data, xlabel='Día de antelación de compra', ylabel='Porcentaje de ocupación', save_path=save_path)
+        self._plot_bar_chart(data, title=f'Capacidad para el servicio {service_id}', xlabel='Estación', ylabel='Tickets', rotation=25, save_path=save_path)
 
     def plot_pairs(self, save_path: str = None):
         pairs_sold = self._get_pairs_sold()
@@ -254,7 +251,6 @@ class KernelPlotter:
             ax.bar(i, pairs_sold[pair],
                    bottom=0,
                    color=self.colors[i % len(self.colors)],
-                   alpha=0.5,
                    label=pair,
                    edgecolor='black')
 
@@ -354,11 +350,13 @@ class KernelPlotter:
 
 
 if __name__ == "__main__":
-    kernel_plotter = KernelPlotter(path_output_csv='../../../data/kernel_output/output_renfe_new.csv',
-                                   path_config_supply='../../../data/supply_data.yml')
+    kernel_plotter = KernelPlotter(
+        path_output_csv='data/test_case/output.csv',
+        path_config_supply='configs/test_case/supply_data.yml'
+    )
 
-    kernel_plotter.plot_tickets_sold(save_path='total_tickets_sold.png')
-    kernel_plotter.plot_tickets_by_user(save_path='tickets_sold_per_usertype.png')
-    kernel_plotter.plot_capacity(service_id='03211_16-03-2023-21.10', save_path='capacity.png')
-    kernel_plotter.plot_pairs(save_path='pairs.png')
-    kernel_plotter.plot_tickets_sold_pie_chart(save_path='pie.png')
+    #kernel_plotter.plot_tickets_sold(save_path='total_tickets_sold.png')
+    #kernel_plotter.plot_tickets_by_user(save_path='tickets_sold_per_usertype.png')
+    kernel_plotter.plot_capacity(service_id='03063_01-06-2023-06.30')
+    #kernel_plotter.plot_pairs(save_path='pairs.png')
+    #kernel_plotter.plot_tickets_sold_pie_chart(save_path='pie.png')
