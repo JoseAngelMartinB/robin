@@ -465,14 +465,10 @@ class Service:
         self.tickets_sold_pair_seats = {pair: {seat: 0 for seat in self._seat_types} for pair in self.line.pairs}
         self.tickets_sold_pair_hard_type = self._get_tickets_sold_pair_hard_type()
         self._pair_capacity = {pair: {hard_type: 0 for hard_type in self.rolling_stock.seats.keys()} for pair in self.line.pairs}
-        
 
     def _get_tickets_sold_pair_hard_type(self) -> Dict[Tuple[str, str], Dict[int, int]]:
         """
         Private method to get the hard type tickets sold of the service.
-
-        Args:
-            self (Service): Service object.
 
         Returns:
             Dict[Tuple[str, str], Dict[int, int]]: Hard type tickets sold of the service.
@@ -503,46 +499,22 @@ class Service:
             abs_at = datetime.timedelta(seconds=at * 60) + self.time_slot.start
             absolute_schedule.append((abs_dt, abs_at))
         return absolute_schedule
-
-    def buy_ticket(self, origin: str, destination: str, seat: Seat, anticipation: int) -> bool:
+    
+    def _get_index(self, station_id: str) -> int:
         """
-        Buy a ticket for the service.
+        Private method to get the index of the first pair which includes the origin station.
 
         Args:
-            self (Service): Service object.
-            origin (str): Origin station ID.
-            destination (str): Destination station ID.
-            seat (Seat): Seat type.
-            anticipation (int): Days of anticipation in the purchase of the ticket.
+            station_id (str): Station ID.
 
         Returns:
-            bool: True if the ticket was bought, False otherwise.
+            int: Index of the first pair which includes the origin station.
         """
-        stations_ids = list(self.line.timetable.keys())
-        service_route = set(range(stations_ids.index(origin), stations_ids.index(destination)))
-        if not self.tickets_available(origin, destination, seat, anticipation):
-            return False
-
-        # Get index of first pair which includes the origin station
-        index = 0
         for i, pair in enumerate(self.line.pairs):
-            if pair[0] == origin:
-                index = i
-                break
-
-        # Check every pair capacity until the destination station is reached
-        for pair in list(self.line.pairs.keys())[index:]:
-            origin_id, destination_id = pair
-            self._pair_capacity[pair][seat.hard_type] += 1
-            if destination_id == destination:
-                break
-
-        self.tickets_sold_pair_seats[(origin, destination)][seat] += 1
-        self.tickets_sold_seats[seat] += 1
-        self.tickets_sold_hard_type[seat.hard_type] += 1
-
-        return True
-
+            if pair[0] == station_id:
+                return i
+        return 0
+    
     def _tickets_available(self, origin: str, destination: str, seat: Seat):
         """
         Check if there are tickets available for the service without considering capacity constraints.
@@ -555,21 +527,43 @@ class Service:
         Returns:
             bool: True if there are tickets available, False otherwise.
         """
-        # Get index of first pair which includes the origin station
-        index = 0
-        for i, pair in enumerate(self.line.pairs):
-            if pair[0] == origin:
-                index = i
-                break
-
         # Check every pair capacity until the destination station is reached
+        index = self._get_index(origin)
         for pair in list(self.line.pairs.keys())[index:]:
-            origin_id, destination_id = pair
+            _, destination_id = pair
             if self._pair_capacity[pair][seat.hard_type] >= self.rolling_stock.seats[seat.hard_type]:
                 return False
             if destination_id == destination:
                 break
+        return True
+    
+    def buy_ticket(self, origin: str, destination: str, seat: Seat, anticipation: int) -> bool:
+        """
+        Buy a ticket for the service.
 
+        Args:
+            origin (str): Origin station ID.
+            destination (str): Destination station ID.
+            seat (Seat): Seat type.
+            anticipation (int): Days of anticipation in the purchase of the ticket.
+
+        Returns:
+            bool: True if the ticket was bought, False otherwise.
+        """
+        if not self.tickets_available(origin, destination, seat, anticipation):
+            return False
+
+        # Check every pair capacity until the destination station is reached
+        index = self._get_index(origin)
+        for pair in list(self.line.pairs.keys())[index:]:
+            _, destination_id = pair
+            self._pair_capacity[pair][seat.hard_type] += 1
+            if destination_id == destination:
+                break
+
+        self.tickets_sold_pair_seats[(origin, destination)][seat] += 1
+        self.tickets_sold_seats[seat] += 1
+        self.tickets_sold_hard_type[seat.hard_type] += 1
         return True
 
     def tickets_available(self, origin: str, destination: str, seat: Seat, anticipation: int) -> bool:
@@ -585,14 +579,15 @@ class Service:
         Returns:
             bool: True if there are tickets available, False otherwise.
         """
+        # Check if there are tickets available without considering capacity constraints
         pair_capacity = self._pair_capacity[(origin, destination)][seat.hard_type]
         tickets_available = self._tickets_available(origin=origin, destination=destination, seat=seat)
+        # Check if there are tickets available considering capacity constraints
         if self.capacity_constraints and anticipation > self.lift_constraints:
             if (origin, destination) in self.capacity_constraints:
                 constrained_capacity = self.capacity_constraints[(origin, destination)][seat.hard_type]
                 if pair_capacity < constrained_capacity and tickets_available:
                     return True
-
         return tickets_available
 
     def __str__(self) -> str:
