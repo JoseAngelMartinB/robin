@@ -1,0 +1,98 @@
+# Yaml datafile for supply data. Example data for testing.
+
+# Train stations
+stations:
+  - id: 'MAD'
+    name: 'Atocha'
+    city: 'Madrid'
+    short_name: 'MAD'
+  - id: 'ZAZ'
+    name: 'Zaragoza-Delicias'
+    city: 'Zaragoza'
+    short_name: 'ZAZ'
+  - id: 'BCN'
+    name: 'Barcelona-Sants'
+    city: 'Barcelona'
+    short_name: 'BCN'
+
+# Time slots (surcos)
+timeSlot:
+  - id: 1
+    start: '8:00:00'
+    end: '8:10:00'
+    mark: '8:05:00'
+
+# Corridor
+corridor:
+  - id: 1
+    name: 'Madrid-Barcelona'
+    stations:
+      - org: 'MAD'
+        des:
+          - org: 'ZAZ'
+            des:
+              - org: 'BCN'
+                des: []
+
+# Lines
+line:
+  - id: 1
+    name: 'L1'
+    corridor: 1
+    stops:
+      - station: 'MAD'
+        arrival_time: 0
+        departure_time: 0
+      - station: 'ZAZ'
+        arrival_time: 79.3
+        departure_time: 94.3
+      - station: 'BCN'
+        arrival_time: 185.1
+        departure_time: 185.1
+
+# Seats
+seat:
+  - id: 1
+    name: 'First class - With luggage'
+    hard_type: 1
+    soft_type: 1
+
+# Rolling stock
+rollingStock:
+  - id: 1
+    name: 'Talgo 350'
+    seats:
+      - hard_type: 1
+        quantity: 3
+
+# Train service provider
+trainServiceProvider:
+  - id: 1
+    name: 'Renfe'
+    rolling_stock: [1]
+
+# Service
+service:
+  - id: 1
+    date: '2023-01-22'
+    line: 1
+    train_service_provider: 1
+    time_slot: 1
+    rolling_stock: 1
+    origin_destination_tuples:
+      - origin: 'MAD'
+        destination: 'ZAZ'
+        seats:
+          - seat: 1
+            price: 50
+      - origin: 'ZAZ'
+        destination: 'BCN'
+        seats:
+          - seat: 1
+            price: 40
+      - origin: 'MAD'
+        destination: 'BCN'
+        seats:
+          - seat: 1
+            price: 120
+    capacity_constraints: null

@@ -318,18 +318,18 @@ class RollingStock(object):
     Attributes:
         id (str): Rolling Stock ID.
         name (str): Rolling Stock name.
-        seats (Dict[int, int]): Number of seats for each hard type.
+        seats (Dict[str, int]): Number of seats for each hard type.
         total_capacity (int): Total number of seats.
     """
 
-    def __init__(self, id_: str, name: str, seats: Dict[int, int]) -> None:
+    def __init__(self, id_: str, name: str, seats: Dict[str, int]) -> None:
         """
         Constructor method for RollingStock class.
 
         Args:
             id_ (str): Rolling Stock ID.
             name (str): Rolling Stock name.
-            seats (Dict[int, int]): Number of seats for each hard type.
+            seats (Dict[str, int]): Number of seats for each hard type.
         """
         self.id = id_
         self.name = name
@@ -406,10 +406,17 @@ class Service:
         service_departure_time (float): Service departure time in hours.
         service_arrival_time (float): Service arrival time in hours.
         rolling_stock (RollingStock): Rolling Stock used in the service.
-        prices (Dict[Tuple[str, str], Dict[Seat, float]]): Prices for each pair of stations and each Seat type.
         capacity_constraints (Dict[Tuple[str, str], Dict[int, int]]): Constrained capacity (limit seats available
             between a specific pair of stations).
         lift_constraints (int): Minimum anticipation (days) to lift capacity constraints.
+        prices (Dict[Tuple[str, str], Dict[Seat, float]]): Prices for each pair of stations and each Seat type.
+        seat_types (Dict[str, Seat]): Seat types available in the service.
+        tickets_sold_seats (Dict[Seat, int]): Number of seats sold for each Seat type.
+        tickets_sold_hard_types (Dict[int, int]): Number of seats sold for each hard type.
+        tickets_sold_pair_seats (Dict[Tuple[str, str], Dict[Seat, int]]): Number of seats sold for each pair of stations
+            and each Seat types.
+        tickets_sold_pair_hard_types (Dict[Tuple[str, str], Dict[int, int]]): Number of seats sold for each pair of
+            stations and each hard types.
     """
 
     def __init__(
@@ -451,33 +458,34 @@ class Service:
         self.capacity_constraints = capacity_constraints
         self.lift_constraints = lift_constraints
         self.prices = prices
+        self._seat_types = set([seat for seat_price in self.prices.values() for seat in seat_price.keys()])
+        self.seat_types = {seat.name: seat for seat in self._seat_types}
+        self.tickets_sold_seats = {seat: 0 for seat in self._seat_types}
+        self.tickets_sold_hard_type = {hard_type: 0 for hard_type in self.rolling_stock.seats.keys()}
+        self.tickets_sold_pair_seats = {pair: {seat: 0 for seat in self._seat_types} for pair in self.line.pairs}
+        self.tickets_sold_pair_hard_type = self._get_tickets_sold_pair_hard_type()
+        self._pair_capacity = {pair: {hard_type: 0 for hard_type in self.rolling_stock.seats.keys()} for pair in self.line.pairs}
+        
 
-        _seats = set([s for d in self.prices.values() for s in d.keys()])
-        self._capacity_log = {p: {ht: 0 for ht in self.rolling_stock.seats.keys()} for p in self.line.pairs}
-        self.seats_log = {p: {s: 0 for s in _seats} for p in self.line.pairs}
-        self.hardtype_log = self._get_hardtype_log()
-        self.seats_reduce_log = {s: 0 for s in _seats}
-        self.rs_reduce_log = {ht: 0 for ht in self.rolling_stock.seats.keys()}
-
-    def _get_hardtype_log(self) -> Dict[Tuple[str, str], Dict[int, int]]:
+    def _get_tickets_sold_pair_hard_type(self) -> Dict[Tuple[str, str], Dict[int, int]]:
         """
-        Private method to get the hard type log of the service.
+        Private method to get the hard type tickets sold of the service.
 
         Args:
             self (Service): Service object.
 
         Returns:
-            Dict[Tuple[str, str], Dict[int, int]]: Hard type log of the service.
+            Dict[Tuple[str, str], Dict[int, int]]: Hard type tickets sold of the service.
         """
-        hardtype_log = {}
-        for p in self.seats_log:
-            hardtype_log[p] = {}
-            for s in self.seats_log[p].keys():
-                if s.hard_type not in hardtype_log[p]:
-                    hardtype_log[p][s.hard_type] = 0
+        tickets_sold_pair_hard_type = {}
+        for p in self.tickets_sold_pair_seats:
+            tickets_sold_pair_hard_type[p] = {}
+            for s in self.tickets_sold_pair_seats[p].keys():
+                if s.hard_type not in tickets_sold_pair_hard_type[p]:
+                    tickets_sold_pair_hard_type[p][s.hard_type] = 0
                 else:
-                    hardtype_log[p][s.hard_type] += self.seats_log[p][s]
-        return hardtype_log
+                    tickets_sold_pair_hard_type[p][s.hard_type] += self.tickets_sold_pair_seats[p][s]
+        return tickets_sold_pair_hard_type
 
     def _get_absolute_schedule(self) -> List[Tuple[datetime.timedelta, datetime.timedelta]]:
         """
@@ -518,13 +526,14 @@ class Service:
         for pair in self.line.pairs:  # pairs attribute is a dictionary with all the pairs of stations
             origin_id, destination_id = pair
             stations_in_pair = set(range(stations_ids.index(origin_id), stations_ids.index(destination_id)))
+            # TODO: Check test_supply.py
             if service_route.intersection(stations_in_pair):
-                if self._capacity_log[pair][seat.hard_type] < self.rolling_stock.seats[seat.hard_type]:
-                    self._capacity_log[pair][seat.hard_type] += 1
+                if self._pair_capacity[pair][seat.hard_type] < self.rolling_stock.seats[seat.hard_type]:
+                    self._pair_capacity[pair][seat.hard_type] += 1
 
-        self.seats_log[(origin, destination)][seat] += 1
-        self.seats_reduce_log[seat] += 1
-        self.rs_reduce_log[seat.hard_type] += 1
+        self.tickets_sold_pair_seats[(origin, destination)][seat] += 1
+        self.tickets_sold_seats[seat] += 1
+        self.tickets_sold_hard_type[seat.hard_type] += 1
 
         return True
 
@@ -542,7 +551,7 @@ class Service:
         Returns:
             bool: True if there are tickets available, False otherwise.
         """
-        occupied_seats = self._capacity_log[(origin, destination)][seat.hard_type]
+        occupied_seats = self._pair_capacity[(origin, destination)][seat.hard_type]
 
         if self.capacity_constraints and anticipation > self.lift_constraints:
             if (origin, destination) in self.capacity_constraints:
@@ -575,10 +584,10 @@ class Service:
             f'\tRolling Stock: {self.rolling_stock} \n'
             f'\tPrices: \n'
             f'\t\t{new_line.join(f"{key}: {value}" for key, value in self.prices.items())} \n'
-            f'\tTickets sold per each pair (hard type): {self.hardtype_log} \n'
-            f'\tTickets sold per each pair (seats): {self.seats_log} \n'
-            f'\tTickets sold (count, seats): {self.seats_reduce_log} \n'
-            f'\tTickets sold (count, hard type): {self.rs_reduce_log} \n'
+            f'\tTickets sold (seats): {self.tickets_sold_seats} \n'
+            f'\tTickets sold (hard type): {self.tickets_sold_hard_type} \n'
+            f'\tTickets sold per each pair (seats): {self.tickets_sold_pair_seats} \n'
+            f'\tTickets sold per each pair (hard type): {self.tickets_sold_pair_hard_type} \n'
             f'\tCapacity constraints: {self.capacity_constraints} \n'
         )
 
