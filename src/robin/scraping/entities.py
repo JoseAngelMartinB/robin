@@ -10,7 +10,6 @@ from src.robin.supply.utils import get_time
 from src.robin.scraping.utils import *
 from typing import Dict, List, Tuple
 
-SAVE_PATH = 'configs'
 IMPORT_PATH = 'data/renfe'
 RENFE_STATIONS_PATH = f'{IMPORT_PATH}/renfe_stations.csv'
 
@@ -77,7 +76,7 @@ class DataLoader:
         self._build_tsp()
         self._build_services()
 
-    def save_yaml(self, filename: str, save_path: str = SAVE_PATH) -> None:
+    def save_yaml(self, save_path: str) -> None:
         """
         Save supply entities to yaml file
 
@@ -97,7 +96,7 @@ class DataLoader:
         ]
 
         for key, value in data:
-            write_to_yaml(save_path + filename, {key: value})
+            write_to_yaml(save_path, {key: value})
 
     def show_metadata(self) -> None:
         """
@@ -157,7 +156,7 @@ class DataLoader:
             # Retrieve station info from dataframe using the station id
             station_row = self.renfe_stations[self.renfe_stations['stop_id'] == station]
             name = station_row['stop_name'].values[0]
-            city = station_row['stop_name'].values[0]
+            city = station_row['stop_name'].values[0].replace('-', ' ').split(' ')[0]
             shortname = str(station_row['stop_name'].values[0])[:3].upper()
             coords = tuple(station_row[['stop_lat', 'stop_lon']].values[0])
             self.stations[station] = Station(station, name, city, shortname, coords)
