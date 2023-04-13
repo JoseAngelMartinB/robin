@@ -149,20 +149,18 @@ class KernelPlotter:
         sorted_data = dict(sorted(data.items(), key=lambda x: x[0]))
         return sorted_data
     
-    def _get_tickets_sold_pie_chart(self):
-        data = {}
-        for row in self.df.iterrows():
-            seat = row[1]["seat"]
+    def _get_tickets_sold_pie_chart(self) -> Mapping[str, int]:
+        """
+        Get the percentage of tickets sold per seat type.
 
-            if seat is np.nan:
-                continue
-
-            if seat not in data:
-                data[seat] = 0
-
-            data[seat] += 1
-
-        return {seat: data[seat] / sum(data.values()) for seat in data}
+        Returns:
+            Mapping[str, int]: Dictionary with the percentage of tickets sold per seat type.
+        """
+        tickets_sold = self.df.groupby(by=['seat']).size()
+        # Calculate the percentage of tickets sold per seat type
+        total_tickets = tickets_sold.sum()
+        tickets_sold = tickets_sold.apply(lambda x: x / total_tickets * 100)
+        return tickets_sold.to_dict()
 
     def _plot_bar_chart(
             self,
@@ -357,6 +355,6 @@ if __name__ == "__main__":
 
     #kernel_plotter.plot_tickets_sold(save_path='total_tickets_sold.png')
     #kernel_plotter.plot_tickets_by_user(save_path='tickets_sold_per_usertype.png')
-    kernel_plotter.plot_capacity(service_id='03063_01-06-2023-06.30')
+    #kernel_plotter.plot_capacity(service_id='03063_01-06-2023-06.30')
     #kernel_plotter.plot_pairs(save_path='pairs.png')
-    #kernel_plotter.plot_tickets_sold_pie_chart(save_path='pie.png')
+    kernel_plotter.plot_tickets_sold_pie_chart()
