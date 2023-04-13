@@ -98,6 +98,28 @@ corridor:
                   - org: '04307'
                     des: []
 line:
+- id: '03073'
+  name: Line 03073
+  corridor: '1'
+  stops:
+  - station: '60000'
+    arrival_time: 0
+    departure_time: 0
+  - station: '70200'
+    arrival_time: 23
+    departure_time: 24
+  - station: '04040'
+    arrival_time: 81
+    departure_time: 82
+  - station: '78400'
+    arrival_time: 125
+    departure_time: 127
+  - station: '71500'
+    arrival_time: 154
+    departure_time: 156
+  - station: '71801'
+    arrival_time: 192
+    departure_time: 192
 - id: 03081
   name: Line 03081
   corridor: '1'
@@ -517,28 +539,6 @@ line:
   - station: '71801'
     arrival_time: 150
     departure_time: 150
-- id: '03073'
-  name: Line 03073
-  corridor: '1'
-  stops:
-  - station: '60000'
-    arrival_time: 0
-    departure_time: 0
-  - station: '70200'
-    arrival_time: 23
-    departure_time: 24
-  - station: '04040'
-    arrival_time: 81
-    departure_time: 82
-  - station: '78400'
-    arrival_time: 125
-    departure_time: 127
-  - station: '71500'
-    arrival_time: 154
-    departure_time: 156
-  - station: '71801'
-    arrival_time: 192
-    departure_time: 192
 rollingStock:
 - id: '1'
   name: S-114
@@ -1293,18 +1293,18 @@ service:
     destination: '04040'
     seats:
     - seat: '1'
-      price: 29.45
+      price: 44.15
     - seat: '2'
-      price: 36.8
+      price: 51.5
     - seat: '3'
       price: 77.75
   - origin: '60000'
     destination: '78400'
     seats:
     - seat: '1'
-      price: 37.1
+      price: 55.7
     - seat: '2'
-      price: 46.4
+      price: 64.95
     - seat: '3'
       price: 93.05
   - origin: '60000'
