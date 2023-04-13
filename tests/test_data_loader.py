@@ -1,6 +1,6 @@
 from src.robin.scraping.entities import DataLoader, IMPORT_PATH
 
-trips_path = f'{IMPORT_PATH}/trips/trips_MADRI_BARCE_2023-05-17_2023-05-18.csv'
+trips_path = f'{IMPORT_PATH}/trips/trips_MADRI_BARCE_2023-06-01_2023-06-01.csv'
 
 data_loader = DataLoader(trips_path)
 data_loader.show_metadata()
