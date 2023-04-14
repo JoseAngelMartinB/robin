@@ -498,20 +498,31 @@ class Service:
             absolute_schedule.append((abs_dt, abs_at))
         return absolute_schedule
 
-    def _get_index(self, station_id: str) -> int:
+    def _get_start_end_index(self, origin: str, destination: str) -> int:
         """
         Private method to get the index of the first pair which includes the origin station.
 
         Args:
-            station_id (str): Station ID.
+            origin (str): Origin station ID.
+            destination (str): Destination station ID.
 
         Returns:
             int: Index of the first pair which includes the origin station.
         """
-        for i, pair in enumerate(self.line.pairs):
-            if pair[0] == station_id:
-                return i
-        return 0
+        pairs = list(self.line.pairs.keys())
+        # Get the index of the first pair which includes the origin station
+        start_index = 0
+        for i, pair in enumerate(pairs):
+            if pair[0] == origin:
+                start_index = i
+                break
+        # Get the index of the last pair which includes the destination station
+        end_index = -1
+        for i, pair in enumerate(pairs):
+            if pair[1] == destination:
+                end_index = len(pairs) - i
+                break
+        return start_index, end_index
 
     def _tickets_available(self, origin: str, destination: str, seat: Seat):
         """
@@ -526,13 +537,10 @@ class Service:
             bool: True if there are tickets available, False otherwise.
         """
         # Check every pair capacity until the destination station is reached
-        index = self._get_index(origin)
-        for pair in list(self.line.pairs.keys())[index:]:
-            _, destination_id = pair
+        start_index, end_index = self._get_start_end_index(origin, destination)
+        for pair in list(self.line.pairs.keys())[start_index:end_index]:
             if self._pair_capacity[pair][seat.hard_type] >= self.rolling_stock.seats[seat.hard_type]:
                 return False
-            if destination_id == destination:
-                break
         return True
 
     def buy_ticket(self, origin: str, destination: str, seat: Seat, anticipation: int) -> bool:
@@ -552,12 +560,9 @@ class Service:
             return False
 
         # Check every pair capacity until the destination station is reached
-        index = self._get_index(origin)
-        for pair in list(self.line.pairs.keys())[index:]:
-            _, destination_id = pair
+        start_index, end_index = self._get_start_end_index(origin, destination)
+        for pair in list(self.line.pairs.keys())[start_index:end_index]:
             self._pair_capacity[pair][seat.hard_type] += 1
-            if destination_id == destination:
-                break
 
         self.tickets_sold_pair_seats[(origin, destination)][seat] += 1
         self.tickets_sold_seats[seat] += 1
