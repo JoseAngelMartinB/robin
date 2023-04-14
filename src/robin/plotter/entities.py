@@ -64,15 +64,16 @@ class KernelPlotter:
         Returns:
             Mapping[str, Mapping[str, int]]: Dictionary with the total number of tickets sold per day and seat type.
         """
-        grouped_data = self.df.groupby(by=['purchase_date', 'seat'])
+        grouped_data = self.df[~self.df.service.isnull()]
+        grouped_data = grouped_data.groupby(by=['purchase_date', 'seat'], as_index=False).size()
 
         # Create a dictionary with the total number of tickets sold per day and seat type
         result_dict = {}
-        for group_key, group in grouped_data:
-            purchase_date, seat = group_key
-            if purchase_date not in result_dict:
-                result_dict[purchase_date] = {}
-            result_dict[purchase_date][seat] = group.size
+        for date, group in grouped_data.groupby('purchase_date'):
+            seats_dict = {}
+            for seat, count in zip(group['seat'], group['size']):
+                seats_dict[seat] = count
+            result_dict[date] = seats_dict
 
         # Sort the data by day in descending order
         sorted_data = dict(sorted(result_dict.items(), key=lambda x: x[0]))
