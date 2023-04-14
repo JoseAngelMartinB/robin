@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 
 from src.robin.supply.entities import Supply
-from typing import Union, Mapping
+from typing import Mapping, Tuple, Union
 
 # Colors
 WHITE_SMOKE = '#F5F5F5'
@@ -83,18 +83,17 @@ class KernelPlotter:
         Get the total number of tickets sold per day and a pair of stations.
 
         Returns:
-            Dict[str, Dict[str, int]]: Dictionary with the total number of tickets sold per day and pair of stations.
+            Dict[str, Dict[str, int]]: Dictionary with the total number of tickets sold per day and a pair of stations.
         """
-        df = self.df.copy(deep=True)
+        df_pairs_sold = self.df.groupby(by=['departure_station', 'arrival_station']).size()
 
-        def _get_pair_name(row):
-            departure, arrival = tuple(row[["departure_station", "arrival_station"]])
+        def _get_pair_name(pair: Tuple[str, str]):
+            departure, arrival = pair
             return f'{self.stations_dict[departure]}\n{self.stations_dict[arrival]}'
 
-        df['pair'] = df.apply(_get_pair_name, axis=1)
-        data_dict = df.groupby(by=['pair']).size().to_dict()
-        sorted_data = dict(sorted(data_dict.items(), key=lambda x: x[1], reverse=True))
-        return sorted_data
+        count_pairs_sold = {_get_pair_name(pair): count for pair, count in df_pairs_sold.to_dict().items()}
+        sorted_count_pairs_sold = dict(sorted(count_pairs_sold.items(), key=lambda x: x[1], reverse=True))
+        return sorted_count_pairs_sold
 
     def _get_service_capacity(self, service_id: Union[int, str]) -> Mapping[str, int]:
         """
