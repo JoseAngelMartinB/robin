@@ -6,7 +6,7 @@ import yaml
 from src.robin.supply.utils import get_time, get_date, format_td, set_stations_ids, convert_tree_to_dict
 
 from copy import deepcopy
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any, Dict, List, Set, Tuple, Union
 
 
 class Station:
@@ -498,12 +498,65 @@ class Service:
             absolute_schedule.append((abs_dt, abs_at))
         return absolute_schedule
 
+    def _get_affected_pairs(self, origin: str, destination: str) -> Set[Tuple[str, str]]:
+        """
+        Private method to get the pairs affected by origin-destination selection.
+
+        Args:
+            origin (str): Origin station ID.
+            destination (str): Destination station ID.
+
+        Returns:
+            Set[Tuple[str, str]]: Set of pairs affected by origin-destination selection.
+        """
+        pairs = list(self.line.pairs.keys())
+        stations_ids = [station .id for station in self.line.stations]
+        # Get the index of the first pair which includes the origin station
+        start_index = 0
+        for i, pair in enumerate(pairs):
+            if pair[0] == origin:
+                start_index = i
+                break
+        # Get the index of the last pair which includes the destination station
+        end_index = -1
+        for i, pair in enumerate(pairs[::-1]):
+            if pair[1] == destination:
+                end_index = len(pairs) - i
+                break
+
+        affected_pairs = pairs[start_index:end_index]
+        # Get stations between selected origin-destination
+        origin_index = stations_ids.index(origin) + 1
+        destination_index = stations_ids.index(destination)
+        intermediate_stations = stations_ids[origin_index:destination_index]
+        # Include pairs which depart between selected origin-destination
+        affected_pairs.extend([pair for pair in pairs if pair[0] in intermediate_stations])
+        return set(affected_pairs)
+
+    def _tickets_available(self, origin: str, destination: str, seat: Seat):
+        """
+        Check if there are tickets available for the service without considering capacity constraints.
+
+        Args:
+            origin (str): Origin station ID.
+            destination (str): Destination station ID.
+            seat (Seat): Seat type.
+
+        Returns:
+            bool: True if there are tickets available, False otherwise.
+        """
+        # Check every pair capacity until the destination station is reached
+        affected_pairs = self._get_affected_pairs(origin, destination)
+        for pair in affected_pairs:
+            if self._pair_capacity[pair][seat.hard_type] >= self.rolling_stock.seats[seat.hard_type]:
+                return False
+        return True
+
     def buy_ticket(self, origin: str, destination: str, seat: Seat, anticipation: int) -> bool:
         """
         Buy a ticket for the service.
 
         Args:
-            self (Service): Service object.
             origin (str): Origin station ID.
             destination (str): Destination station ID.
             seat (Seat): Seat type.
@@ -512,23 +565,17 @@ class Service:
         Returns:
             bool: True if the ticket was bought, False otherwise.
         """
-        stations_ids = list(self.line.timetable.keys())
-        service_route = set(range(stations_ids.index(origin), stations_ids.index(destination)))
         if not self.tickets_available(origin, destination, seat, anticipation):
             return False
 
-        for pair in self.line.pairs:  # pairs attribute is a dictionary with all the pairs of stations
-            origin_id, destination_id = pair
-            stations_in_pair = set(range(stations_ids.index(origin_id), stations_ids.index(destination_id)))
-            # TODO: Check test_supply.py
-            if service_route.intersection(stations_in_pair):
-                if self._pair_capacity[pair][seat.hard_type] < self.rolling_stock.seats[seat.hard_type]:
-                    self._pair_capacity[pair][seat.hard_type] += 1
+        # Check every pair capacity until the destination station is reached
+        affected_pairs = self._get_affected_pairs(origin, destination)
+        for pair in affected_pairs:
+            self._pair_capacity[pair][seat.hard_type] += 1
 
         self.tickets_sold_pair_seats[(origin, destination)][seat] += 1
         self.tickets_sold_seats[seat] += 1
         self.tickets_sold_hard_types[seat.hard_type] += 1
-
         return True
 
     def tickets_available(self, origin: str, destination: str, seat: Seat, anticipation: int) -> bool:
@@ -536,7 +583,6 @@ class Service:
         Check if there are tickets available for the service.
 
         Args:
-            self (Service): Service object.
             origin (str): Origin station ID.
             destination (str): Destination station ID.
             seat (Seat): Seat type.
@@ -545,19 +591,16 @@ class Service:
         Returns:
             bool: True if there are tickets available, False otherwise.
         """
-        occupied_seats = self._pair_capacity[(origin, destination)][seat.hard_type]
-
+        # Check if there are tickets available without considering capacity constraints
+        pair_capacity = self._pair_capacity[(origin, destination)][seat.hard_type]
+        tickets_available = self._tickets_available(origin=origin, destination=destination, seat=seat)
+        # Check if there are tickets available considering capacity constraints
         if self.capacity_constraints and anticipation > self.lift_constraints:
             if (origin, destination) in self.capacity_constraints:
                 constrained_capacity = self.capacity_constraints[(origin, destination)][seat.hard_type]
-                if occupied_seats < constrained_capacity:
+                if pair_capacity < constrained_capacity and tickets_available:
                     return True
-        else:
-            max_capacity = self.rolling_stock.seats[seat.hard_type]
-            if occupied_seats < max_capacity:
-                return True
-
-        return False
+        return tickets_available
 
     def __str__(self) -> str:
         """
