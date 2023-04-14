@@ -6,7 +6,7 @@ import yaml
 from src.robin.supply.utils import get_time, get_date, format_td, set_stations_ids, convert_tree_to_dict
 
 from copy import deepcopy
-from typing import Any, Dict, List, Set, Tuple, Union
+from typing import Any, Dict, List, Mapping, Set, Tuple, Union
 
 
 class Station:
@@ -127,19 +127,19 @@ class Corridor:
     Attributes:
         id (str): Corridor ID.
         name (str): Corridor name.
-        tree (Dict[Station, Dict]): Tree of stations (with Station objects).
+        tree (Mapping[Station, Mapping]): Tree of stations (with Station objects).
         paths (List[List[Station]]): List of paths (list of stations).
         stations (Dict[str, Station]): Dictionary of stations (with Station IDs as keys).
     """
 
-    def __init__(self, id_: str, name: str, tree: Dict[Station, Dict]) -> None:
+    def __init__(self, id_: str, name: str, tree: Mapping[Station, Mapping]) -> None:
         """
         Initialize a Corridor object.
 
         Args:
             id_ (str): Corridor ID.
             name (str): Corridor name.
-            tree (Dict[Station, Dict]): Tree of stations (with Station objects).
+            tree (Mapping[Station, Mapping]): Tree of stations (with Station objects).
         """
         self.id = id_
         self.name = name
@@ -149,7 +149,7 @@ class Corridor:
 
     def _get_paths(
             self,
-            tree: Dict[Station, Dict],
+            tree: Mapping[Station, Mapping],
             path: List[Station] = None,
             paths: List[List[Station]] = None
     ) -> List[List[Station]]:
@@ -180,12 +180,12 @@ class Corridor:
 
         return paths
 
-    def _dict_stations(self, tree: Dict[Station, Dict], sta=None) -> Dict[str, Station]:
+    def _dict_stations(self, tree: Mapping[Station, Mapping], sta=None) -> Dict[str, Station]:
         """
         Get dictionary of stations (with Station IDs as keys).
 
         Args:
-            tree (List[Dict]): Tree of stations.
+            tree (List[Mapping]): Tree of stations.
 
         Returns:
             Dict[str, Station]: Dictionary of stations, with Station IDs as keys, and Station objects as values.
@@ -218,14 +218,14 @@ class Line:
         id (str): Line ID.
         name (str): Line name.
         corridor (Corridor): Corridor ID where the Line belongs to.
-        timetable (Dict[str, Tuple[float, float]]): Dict with pairs of stations (origin, destination)
+        timetable (Mapping[str, Tuple[float, float]]): Dict with pairs of stations (origin, destination)
             with (origin ID, destination ID) as keys, and (origin time, destination time) as values.
         stations (List[Station]): List of Stations being served by the Line.
-        pairs (Dict[Tuple[str, str], Tuple[Station, Station]]): Dict with pairs of stations (origin, destination)
+        pairs (Mapping[Tuple[str, str], Tuple[Station, Station]]): Dict with pairs of stations (origin, destination)
             with (origin ID, destination ID) as keys, and (origin Station, destination Station) as values.
     """
 
-    def __init__(self, id_: str, name: str, corridor: Corridor, timetable: Dict[str, Tuple[float, float]]) -> None:
+    def __init__(self, id_: str, name: str, corridor: Corridor, timetable: Mapping[str, Tuple[float, float]]) -> None:
         """
         Initialize a Line object.
 
@@ -233,7 +233,7 @@ class Line:
             id_ (str): Line ID.
             name (str): Line name.
             corridor (Corridor): Corridor ID where the Line belongs to.
-            timetable (Dict[str, Tuple[float, float]]): Dict with pairs of stations (origin, destination)
+            timetable (Mapping[str, Tuple[float, float]]): Dict with pairs of stations (origin, destination)
                 with (origin ID, destination ID) as keys, and (origin time, destination time) as values.
         """
         self.id = id_
@@ -318,18 +318,18 @@ class RollingStock(object):
     Attributes:
         id (str): Rolling Stock ID.
         name (str): Rolling Stock name.
-        seats (Dict[int, int]): Number of seats for each hard type.
+        seats (Mapping[int, int]): Number of seats for each hard type.
         total_capacity (int): Total number of seats.
     """
 
-    def __init__(self, id_: str, name: str, seats: Dict[int, int]) -> None:
+    def __init__(self, id_: str, name: str, seats: Mapping[int, int]) -> None:
         """
         Constructor method for RollingStock class.
 
         Args:
             id_ (str): Rolling Stock ID.
             name (str): Rolling Stock name.
-            seats (Dict[int, int]): Number of seats for each hard type.
+            seats (Mapping[int, int]): Number of seats for each hard type.
         """
         self.id = id_
         self.name = name
@@ -406,16 +406,16 @@ class Service:
         service_departure_time (float): Service departure time in hours.
         service_arrival_time (float): Service arrival time in hours.
         rolling_stock (RollingStock): Rolling Stock used in the service.
-        capacity_constraints (Dict[Tuple[str, str], Dict[int, int]]): Constrained capacity (limit seats available
+        capacity_constraints (Mapping[Tuple[str, str], Mapping[int, int]]): Constrained capacity (limit seats available
             between a specific pair of stations).
         lift_constraints (int): Minimum anticipation (days) to lift capacity constraints.
-        prices (Dict[Tuple[str, str], Dict[Seat, float]]): Prices for each pair of stations and each Seat type.
-        seat_types (Dict[str, Seat]): Seat types available in the service.
-        tickets_sold_seats (Dict[Seat, int]): Number of seats sold for each Seat type.
-        tickets_sold_hard_types (Dict[int, int]): Number of seats sold for each hard type.
-        tickets_sold_pair_seats (Dict[Tuple[str, str], Dict[Seat, int]]): Number of seats sold for each pair of stations
+        prices (Mapping[Tuple[str, str], Mapping[Seat, float]]): Prices for each pair of stations and each Seat type.
+        seat_types (Mapping[str, Seat]): Seat types available in the service.
+        tickets_sold_seats (Mapping[Seat, int]): Number of seats sold for each Seat type.
+        tickets_sold_hard_types (Mapping[int, int]): Number of seats sold for each hard type.
+        tickets_sold_pair_seats (Mapping[Tuple[str, str], Dict[Seat, int]]): Number of seats sold for each pair of stations
             and each Seat types.
-        tickets_sold_pair_hard_types (Dict[Tuple[str, str], Dict[int, int]]): Number of seats sold for each pair of
+        tickets_sold_pair_hard_types (Mapping[Tuple[str, str], Mapping[int, int]]): Number of seats sold for each pair of
             stations and each hard types.
     """
 
@@ -427,8 +427,8 @@ class Service:
             tsp: TSP,
             time_slot: TimeSlot,
             rolling_stock: RollingStock,
-            prices: Dict[Tuple[str, str], Dict[Seat, float]],
-            capacity_constraints: Dict[Tuple[str, str], Dict[int, int]] = None,
+            prices: Mapping[Tuple[str, str], Mapping[Seat, float]],
+            capacity_constraints: Mapping[Tuple[str, str], Mapping[int, int]] = None,
             lift_constraints: int = 1
     ) -> None:
         """
@@ -441,8 +441,8 @@ class Service:
             tsp (TSP): Train Service Provider which provides the service.
             time_slot (TimeSlot): Time Slot. Defines the start time of the service.
             rolling_stock (RollingStock): Rolling Stock used in the service.
-            prices (Dict[Tuple[str, str], Dict[Seat, float]]): Prices for each pair of stations and each Seat type.
-            capacity_constraints (Dict[Tuple[str, str], Dict[int, int]]): Constrained capacity (limit seats available
+            prices (Mapping[Tuple[str, str], Mapping[Seat, float]]): Prices for each pair of stations and each Seat type.
+            capacity_constraints (Mapping[Tuple[str, str], Mapping[int, int]]): Constrained capacity (limit seats available
                 between a specific pair of stations).
             lift_constraints (int): Minimum anticipation (days) to lift capacity constraints.
         """
@@ -467,12 +467,12 @@ class Service:
         self._pair_capacity = {pair: {hard_type: 0 for hard_type in self.rolling_stock.seats.keys()} for pair in
                                self.line.pairs}
 
-    def _get_tickets_sold_pair_hard_type(self) -> Dict[Tuple[str, str], Dict[int, int]]:
+    def _get_tickets_sold_pair_hard_type(self) -> Mapping[Tuple[str, str], Mapping[int, int]]:
         """
         Private method to get the hard type tickets sold of the service.
 
         Returns:
-            Dict[Tuple[str, str], Dict[int, int]]: Hard type tickets sold of the service.
+            Mapping[Tuple[str, str], Mapping[int, int]]: Hard type tickets sold of the service.
         """
         tickets_sold_pair_hard_type = {}
         for p in self.tickets_sold_pair_seats:
@@ -704,12 +704,12 @@ class Supply:
         return filtered_services
 
     @classmethod
-    def _get_stations(cls, data: Dict[Any, Any], key: str = 'stations') -> Dict[str, Station]:
+    def _get_stations(cls, data: Mapping[Any, Any], key: str = 'stations') -> Dict[str, Station]:
         """
         Private method to build a dict of Station objects from YAML data.
 
         Args:
-            data (Dict[Any, Any]): YAML data as nested dict.
+            data (Mapping[Any, Any]): YAML data as nested dict.
             key (str): Key to access the data in the YAML file. Default: 'stations'.
 
         Returns:
@@ -728,12 +728,12 @@ class Supply:
         return stations
 
     @classmethod
-    def _get_time_slots(cls, data: Dict[Any, Any], key: str = 'timeSlot') -> Dict[str, TimeSlot]:
+    def _get_time_slots(cls, data: Mapping[Any, Any], key: str = 'timeSlot') -> Dict[str, TimeSlot]:
         """
         Private method to build a dict of TimeSlot objects from YAML data.
 
         Args:
-            data (Dict[Any, Any]): YAML data as nested dict.
+            data (Mapping[Any, Any]): YAML data as nested dict.
             key (str): Key to access the data in the YAML file. Default: 'timeSlot'.
 
         Returns:
@@ -749,29 +749,29 @@ class Supply:
     @classmethod
     def _get_corridors(
             cls,
-            data: Dict[Any, Any],
-            stations: (Dict[str, Station]),
+            data: Mapping[Any, Any],
+            stations: (Mapping[str, Station]),
             key: str = 'corridor'
     ) -> Dict[str, Corridor]:
         """
         Private method to build a dict of Corridor objects from YAML data.
 
         Args:
-            data (Dict[Any, Any]): YAML data as nested dict.
-            stations (Dict[str, Station]): Dict of Station objects.
+            data (Mapping[Any, Any]): YAML data as nested dict.
+            stations (Mapping[str, Station]): Dict of Station objects.
             key (str): Key to access the data in the YAML file. Default: 'corridor'.
 
         Returns:
             Dict[str, Corridor]: Dict of Corridor objects.
         """
 
-        def to_station(tree: Dict, sta_dict: Dict[str, Station]) -> Dict[Station, Dict]:
+        def to_station(tree: Dict, sta_dict: Mapping[str, Station]) -> Dict[Station, Dict]:
             """
             Recursive function to build a tree of Station objects from a tree of station IDs.
 
             Args:
-                tree (Dict): Tree of station IDs.
-                sta_dict (Dict[str, Station]): Dict of Station objects {station_id: Station object}
+                tree (Mapping): Tree of station IDs.
+                sta_dict (Mapping[str, Station]): Dict of Station objects {station_id: Station object}
 
             Returns:
                 Dict[Station, Dict]: Tree of Station objects.
@@ -795,13 +795,13 @@ class Supply:
         return corridors
 
     @classmethod
-    def _get_lines(cls, data: Dict[Any, Any], corridors: Dict[str, Corridor], key='line') -> Dict[str, Line]:
+    def _get_lines(cls, data: Mapping[Any, Any], corridors: Mapping[str, Corridor], key='line') -> Dict[str, Line]:
         """
         Private method to build a dict of Line objects from YAML data.
 
         Args:
-            data (Dict[Any, Any]): YAML data
-            corridors (Dict[str, Corridor]): Dict of Corridor objects.
+            data (Mapping[Any, Any]): YAML data
+            corridors (Mapping[str, Corridor]): Dict of Corridor objects.
             key (str): Key to access the data in the YAML file. Default: 'line'.
 
         Returns:
@@ -829,12 +829,12 @@ class Supply:
         return lines
 
     @classmethod
-    def _get_seats(cls, data: Dict[Any, Any], key: str = 'seat') -> Dict[str, Seat]:
+    def _get_seats(cls, data: Mapping[Any, Any], key: str = 'seat') -> Dict[str, Seat]:
         """
         Private method to build a dict of Seat objects from YAML data.
 
         Args:
-            data (Dict[Any, Any]): YAML data.
+            data (Mapping[Any, Any]): YAML data.
             key (str): Key to access the data in the YAML file. Default: 'seat'.
 
         Returns:
@@ -850,16 +850,16 @@ class Supply:
     @classmethod
     def _get_rolling_stock(
             cls,
-            data: Dict[Any, Any],
-            seats: Dict[str, Seat],
+            data: Mapping[Any, Any],
+            seats: Mapping[str, Seat],
             key: str = 'rollingStock'
     ) -> Dict[str, RollingStock]:
         """
         Private method to build a dict of RollingStock objects from YAML data.
 
         Args:
-            data (Dict[Any, Any]): YAML data.
-            seats (Dict[str, Seat]): Dict of Seat objects.
+            data (Mapping[Any, Any]): YAML data.
+            seats (Mapping[str, Seat]): Dict of Seat objects.
             key (str): Key to access the data in the YAML file. Default: 'rollingStock'.
 
         Returns:
@@ -886,16 +886,16 @@ class Supply:
     @classmethod
     def _get_tsps(
             cls,
-            data: Dict[Any, Any],
-            rolling_stock: Dict[str, RollingStock],
+            data: Mapping[Any, Any],
+            rolling_stock: Mapping[str, RollingStock],
             key: str = 'trainServiceProvider'
     ) -> Dict[str, TSP]:
         """
         Private method to build a dict of TSP objects from YAML data.
 
         Args:
-            data (Dict[Any, Any])): YAML data
-            rolling_stock (Dict[str, RollingStock]): Dict of RollingStock objects.
+            data (Mapping[Any, Any])): YAML data
+            rolling_stock (Mapping[str, RollingStock]): Dict of RollingStock objects.
             key (str): Key to access the data in the YAML file. Default: 'trainServiceProvider'.
 
         Returns:
@@ -914,14 +914,14 @@ class Supply:
             cls,
             service_line: Line,
             service_rolling_stock: RollingStock,
-            yaml_capacity_constraints: Dict
+            yaml_capacity_constraints: Mapping
     ) -> Union[Dict, None]:
         """
         Private method to build a dict of capacity constraints from YAML data.
 
         Args:
             service_line (Line): Line object.
-            yaml_capacity_constraints (Dict[str, Any]): Dict of capacity constraints from YAML data.
+            yaml_capacity_constraints (Mapping[str, Any]): Dict of capacity constraints from YAML data.
 
         Returns:
             Union[Dict, None]: Dict of capacity constraints.
@@ -951,16 +951,16 @@ class Supply:
     def _get_service_prices(
             cls,
             service_line: Line,
-            seats: Dict[str, Seat],
-            yaml_service_prices: Dict
+            seats: Mapping[str, Seat],
+            yaml_service_prices: Mapping
     ) -> Dict[Tuple[str, str], Dict[Seat, float]]:
         """
         Private method to build a dict of service prices from YAML data.
 
         Args:
             service_line (Line): Line object.
-            seats (Dict[str, Seat]): Dict of Seat objects.
-            yaml_service_prices (Dict[str, Any]): Dict of service prices from YAML data.
+            seats (Mapping[str, Seat]): Dict of Seat objects.
+            yaml_service_prices (Mapping[str, Any]): Dict of service prices from YAML data.
 
         Returns:
             Dict[Tuple[str, str], Dict[Seat, float]]: Dict of service prices.
@@ -984,24 +984,24 @@ class Supply:
     @classmethod
     def _get_services(
             cls,
-            data: Dict[Any, Any],
-            lines: Dict[str, Line],
-            tsps: Dict[str, TSP],
-            time_slots: Dict[str, TimeSlot],
-            seats: Dict[str, Seat],
-            rolling_stock: Dict[str, RollingStock],
+            data: Mapping[Any, Any],
+            lines: Mapping[str, Line],
+            tsps: Mapping[str, TSP],
+            time_slots: Mapping[str, TimeSlot],
+            seats: Mapping[str, Seat],
+            rolling_stock: Mapping[str, RollingStock],
             key: str = 'service'
     ) -> Dict[str, Service]:
         """
         Private method to build a dict of Service objects from YAML data.
 
         Args:
-            data (Dict[Any, Any]): YAML data
-            lines (Dict[str, Line]): Dict of Line objects.
-            tsps (Dict[str, TSP]): Dict of TSP objects.
-            time_slots (Dict[str, TimeSlot]): Dict of TimeSlot objects.
-            seats (Dict[str, Seat]): Dict of Seat objects.
-            rolling_stock (Dict[str, RollingStock]): Dict of RollingStock objects.
+            data (Mapping[Any, Any]): YAML data
+            lines (Mapping[str, Line]): Dict of Line objects.
+            tsps (Mapping[str, TSP]): Dict of TSP objects.
+            time_slots (Mapping[str, TimeSlot]): Dict of TimeSlot objects.
+            seats (Mapping[str, Seat]): Dict of Seat objects.
+            rolling_stock (Mapping[str, RollingStock]): Dict of RollingStock objects.
             key (str): Key to access the data in the YAML file. Default: 'service'.
 
         Returns:
