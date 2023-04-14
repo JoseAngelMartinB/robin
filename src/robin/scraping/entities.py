@@ -10,8 +10,8 @@ from src.robin.supply.utils import get_time
 from src.robin.scraping.utils import *
 from typing import Dict, List, Tuple
 
-IMPORT_PATH = 'data/renfe'
-RENFE_STATIONS_PATH = f'{IMPORT_PATH}/renfe_stations.csv'
+RENFE_STATIONS_PATH = f'data/renfe/renfe_stations.csv'
+DEFAULT_SEAT_QUANTITY = {1: 250, 2: 50}
 
 
 class DataLoader:
@@ -65,14 +65,14 @@ class DataLoader:
         self.time_slots = {}
         self.services = {}
 
-    def build_supply_entities(self) -> None:
+    def build_supply_entities(self, seat_quantity: Mapping[int, int] = DEFAULT_SEAT_QUANTITY) -> None:
         """
         Build supply entities from scraping data
         """
         self._build_seat_types()
         self._build_corridor()
         self._build_lines()
-        self._build_rolling_stock()
+        self._build_rolling_stock(seat_quantity=seat_quantity)
         self._build_tsp()
         self._build_services()
 
@@ -249,11 +249,11 @@ class DataLoader:
         line_id = stops['service_id'].values[0].split("_")[0]
         return Line(line_id, f"Line {line_id}", corridor, line_data)
 
-    def _build_rolling_stock(self) -> None:
+    def _build_rolling_stock(self, seat_quantity: Mapping[int, int]) -> None:
         """
         Build RollingStock objects
         """
-        self.rolling_stock[1] = RollingStock("1", "S-114", {1: 250, 2: 50})
+        self.rolling_stock[1] = RollingStock("1", "S-114", seat_quantity)
 
     def _build_tsp(self) -> None:
         """
