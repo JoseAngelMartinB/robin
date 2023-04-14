@@ -10,3 +10,7 @@
 !test_case
 !test_case/demand_data.yml
 !test_case/supply_data.yml
+!test_case/demand_data_tourist.yml
+!test_case/supply_data_doubled_capacities.yml
+!test_case/supply_data_increased_prices.yml
+!test_case/supply_data_removed_full_service.yml
