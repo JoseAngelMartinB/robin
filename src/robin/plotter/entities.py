@@ -85,7 +85,8 @@ class KernelPlotter:
         Returns:
             Dict[str, Dict[str, int]]: Dictionary with the total number of tickets sold per day and a pair of stations.
         """
-        df_pairs_sold = self.df.groupby(by=['departure_station', 'arrival_station']).size()
+        df_pairs_sold = self.df[~self.df.service.isnull()]
+        df_pairs_sold = df_pairs_sold.groupby(by=['departure_station', 'arrival_station']).size()
 
         def _get_pair_name(pair: Tuple[str, str]):
             departure, arrival = pair
@@ -121,7 +122,7 @@ class KernelPlotter:
             if i == 0:
                 total_capacity = _tickets_sold
             else:
-                total_capacity = total_capacity + _tickets_sold - _negative_tickets
+                total_capacity += _tickets_sold - _negative_tickets
             stations_tickets[station] = (total_capacity, _tickets_sold, -_negative_tickets)
 
         # Translate the station ids to station names
