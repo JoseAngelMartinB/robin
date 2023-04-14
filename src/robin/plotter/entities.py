@@ -231,12 +231,13 @@ class KernelPlotter:
 
     def plot_pairs(self, save_path: str = None):
         pairs_sold = self._get_pairs_sold()
+        total_tickets_sold = sum(pairs_sold.values())
 
         fig, ax = plt.subplots(1, 1, figsize=(7, 4))
         fig.subplots_adjust(hspace=0.75, bottom=0.2, top=0.9)
 
         ax.set_facecolor('#F5F5F5')
-        ax.set_title(f'Tickets vendidos por pares de estaciones', fontweight='bold')
+        ax.set_title(f'Tickets vendidos por pares de estaciones ({total_tickets_sold} tickets)', fontweight='bold')
         ax.set_ylabel('Nº de tickets vendidos')
         ax.set_xlabel('Origen - Destino', labelpad=10)
         ax.set_xticks(np.arange(len(pairs_sold)))
@@ -250,6 +251,7 @@ class KernelPlotter:
                    color=self.colors[i % len(self.colors)],
                    label=pair,
                    edgecolor='black')
+            ax.bar_label(ax.containers[i], padding=3)
 
         ax.grid(axis='y', color='#A9A9A9', alpha=0.3, zorder=1)
         ax.legend()
@@ -275,6 +277,7 @@ class KernelPlotter:
             ax.set_xticks(np.arange(len(data)))
             ax.set_xticklabels(data.keys(), rotation=60, fontsize=8, ha='right')
             ax.set_xlim([-0.5, len(data)])
+            ax.set_ylim([0, max(sum(data[d].get(user_type, {}).values()) for d in data) * 1.1])
 
             bottom = np.zeros(len(data))
             for j, seat_type in enumerate(seat_types):
@@ -306,7 +309,7 @@ class KernelPlotter:
         ax.set_facecolor('#F5F5F5')
         ax.set_title(f'Total de tickets vendidos por día', fontweight='bold')
         ax.set_ylabel('Número de tickets')
-        ax.set_xlabel('Fecha de llegada', labelpad=10)
+        ax.set_xlabel('Fecha de compra', labelpad=10)
         ax.set_xticks(np.arange(len(data)))
         ax.set_xticklabels(data.keys(), rotation=60, fontsize=8, ha='right')
         ax.set_xlim([-0.5, len(data)])
@@ -344,16 +347,3 @@ class KernelPlotter:
 
         if save_path is not None:
             fig.savefig(save_path, dpi=300, bbox_inches='tight')
-
-
-if __name__ == "__main__":
-    kernel_plotter = KernelPlotter(
-        path_output_csv='data/test_case/output.csv',
-        path_config_supply='configs/test_case/supply_data.yml'
-    )
-
-    #kernel_plotter.plot_tickets_sold(save_path='total_tickets_sold.png')
-    kernel_plotter.plot_tickets_sold_by_user()
-    #kernel_plotter.plot_capacity(service_id='03063_01-06-2023-06.30')
-    #kernel_plotter.plot_pairs(save_path='pairs.png')
-    #kernel_plotter.plot_tickets_sold_pie_chart()
