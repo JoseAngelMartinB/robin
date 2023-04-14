@@ -258,7 +258,7 @@ class KernelPlotter:
         if save_path is not None:
             fig.savefig(save_path, dpi=300, bbox_inches='tight')
 
-    def plot_tickets_by_user(self, save_path: str = None):
+    def plot_tickets_sold_by_user(self, save_path: str = None):
         data = self._get_tickets_sold_by_user()
         user_types = sorted(set(ut for d in data for ut in data[d]))
         seat_types = sorted(set(st for d in data for ut in data[d] for st in data[d][ut]))
@@ -353,7 +353,7 @@ if __name__ == "__main__":
     )
 
     #kernel_plotter.plot_tickets_sold(save_path='total_tickets_sold.png')
-    #kernel_plotter.plot_tickets_by_user(save_path='tickets_sold_per_usertype.png')
+    kernel_plotter.plot_tickets_sold_by_user()
     #kernel_plotter.plot_capacity(service_id='03063_01-06-2023-06.30')
     #kernel_plotter.plot_pairs(save_path='pairs.png')
-    kernel_plotter.plot_tickets_sold_pie_chart()
+    #kernel_plotter.plot_tickets_sold_pie_chart()
