@@ -34,8 +34,6 @@ userPattern:
         utility: 15
       - id: 3
         utility: 20
-      - id: 4
-        utility: 5
     penalty_arrival_time: polynomial
     penalty_arrival_time_kwargs:
       b_0: 0
@@ -76,8 +74,6 @@ userPattern:
         utility: 12
       - id: 3
         utility: 15
-      - id: 4
-        utility: 8
     penalty_arrival_time: polynomial
     penalty_arrival_time_kwargs:
       b_0: 0
