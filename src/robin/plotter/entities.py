@@ -246,7 +246,7 @@ class KernelPlotter:
         """
         data, service_max_capacity = self._get_service_capacity(service_id)
         if not data:
-            print(f'Service {service_id} not found in the provided supply data. Exiting...')
+            print(f'Service {service_id} not found in the provided supply data.')
             return
         self._plot_bar_chart(
             data=data,
@@ -279,7 +279,9 @@ class KernelPlotter:
                    bottom=0,
                    color=self.colors[i % len(self.colors)],
                    label=pair,
-                   edgecolor='black')
+                   edgecolor='black',
+                   linewidth=0.5,
+                   zorder=2)
             ax.bar_label(ax.containers[i], padding=3)
 
         ax.grid(axis='y', color='#A9A9A9', alpha=0.3, zorder=1)
