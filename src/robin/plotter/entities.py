@@ -57,7 +57,7 @@ class KernelPlotter:
         purchase_day = arrival_day - anticipation
         return purchase_day.date()
 
-    def _get_total_tickets_sold(self) -> Mapping[str, Mapping[str, int]]:
+    def _get_tickets_by_date_seat(self) -> Mapping[str, Mapping[str, int]]:
         """
         Get the total number of tickets sold per day and seat type.
 
@@ -86,18 +86,21 @@ class KernelPlotter:
         Returns:
             Dict[str, int]: Dictionary with total tickets sold for each pair of stations.
         """
-        df_pairs_sold = self.df[~self.df.service.isnull()]
-        df_pairs_sold = df_pairs_sold.groupby(by=['departure_station', 'arrival_station']).size()
+        passengers_with_ticket = self.df[~self.df.service.isnull()]
+        tickets_sold_by_pair = passengers_with_ticket.groupby(by=['departure_station', 'arrival_station']).size()
 
         def _get_pair_name(pair: Tuple[str, str]):
             departure, arrival = pair
             return f'{self.stations_dict[departure]}\n{self.stations_dict[arrival]}'
 
-        count_pairs_sold = {_get_pair_name(pair): count for pair, count in df_pairs_sold.to_dict().items()}
+        count_pairs_sold = {_get_pair_name(pair): count for pair, count in tickets_sold_by_pair.to_dict().items()}
         sorted_count_pairs_sold = dict(sorted(count_pairs_sold.items(), key=lambda x: x[1], reverse=True))
         return sorted_count_pairs_sold
 
-    def _get_service_capacity(self, service_id: Union[int, str]) -> Mapping[str, Tuple[int, int, int]]:
+    def _get_service_capacity(
+            self,
+            service_id: Union[int, str]
+    ) -> Tuple[Mapping[str, Tuple[int, int, int]], int]:
         """
         Get the capacity of the service grouped by departure, arrival station and purchase day.
 
@@ -105,16 +108,20 @@ class KernelPlotter:
             service_id (Union[int, str]): Id of the service.
 
         Returns:
-            Mapping[str, Tuple[int, int, int]: Dictionary with the occupancy, number of people boarding and number of
-                people getting off per station.
+            Tuple[Mapping[str, Tuple[int, int, int], int]: Tuple which contains a Dictionary with the occupancy,
+                number of people boarding and number of people getting off per station, and an integer with the
+                maximum capacity of the service.
         """
         # Get the data of the service
         service_data = self.df[self.df['service'] == service_id]
+        if service_data.empty:
+            return {}, 0
         tickets_sold = service_data.groupby(by=['departure_station']).size()
         negative_tickets = service_data.groupby(by=['arrival_station']).size()
 
         # Filter the service
         service = self.supply.filter_service_by_id(service_id)
+        service_max_capacity = sum(service.rolling_stock.seats.values())
         stations_tickets = {station.id: () for station in service.line.stations}
 
         # Calculate the total capacity of each station 
@@ -129,9 +136,9 @@ class KernelPlotter:
 
         # Translate the station ids to station names
         stations_tickets = {self.stations_dict[station]: stations_tickets[station] for station in stations_tickets}
-        return stations_tickets
+        return stations_tickets, service_max_capacity
 
-    def _get_tickets_sold_by_user(self) -> Dict[str, Dict[str, Dict[str, int]]]:
+    def _get_tickets_by_date_user_seat(self) -> Dict[str, Dict[str, Dict[str, int]]]:
         """
         Get number of tickets sold by purchase date, user and seat type.
 
@@ -158,7 +165,7 @@ class KernelPlotter:
         sorted_data = dict(sorted(data.items(), key=lambda x: x[0]))
         return sorted_data
     
-    def _get_tickets_sold_pie_chart(self) -> Mapping[str, int]:
+    def _get_tickets_by_seat(self) -> Mapping[str, int]:
         """
         Get the percentage of tickets sold per seat type.
 
@@ -171,6 +178,7 @@ class KernelPlotter:
     def _plot_bar_chart(
             self,
             data: Mapping[str, Tuple[int, int, int]],
+            service_max_capacity: int,
             title: str = None,
             xlabel: str = None,
             ylabel: str = None,
@@ -198,6 +206,7 @@ class KernelPlotter:
         ax.set_xticks(np.arange(len(data)))
         ax.set_xticklabels(data.keys(), rotation=rotation, ha='right')
         ax.set_xlim(-0.5, len(data) - 0.5)
+        ax.set_ylim(-service_max_capacity * 1.1, service_max_capacity * 1.1)
         for i, tickets in enumerate(data.values()):
             for j, value in enumerate(tickets):
                 # Total capacity (yellow), tickets sold (green) and negative tickets (red)
@@ -219,13 +228,15 @@ class KernelPlotter:
         ax.grid(axis='y', color='#A9A9A9', alpha=0.3, zorder=1)
         ax.legend(['Ocupación del tren', 'Tickets vendidos', 'Pasajeros que bajan'])
         ax.axhline(y=0, color='black', linewidth=0.5, zorder=1)
-        
+        ax.axhline(y=service_max_capacity, color='lightcoral', linewidth=0.5, zorder=1)
+        ax.axhline(y=-service_max_capacity, color='lightcoral', linewidth=0.5, zorder=1)
+
         if save_path:
             fig.savefig(save_path, dpi=300, bbox_inches='tight')
 
         plt.show()
 
-    def plot_capacity(self, service_id: Union[int, str], save_path: str = None):
+    def plot_service_capacity(self, service_id: Union[int, str], save_path: str = None):
         """
         Plot the capacity of the service grouped by departure, arrival station and purchase day.
 
@@ -233,10 +244,21 @@ class KernelPlotter:
             service_id (Union[int, str]): Id of the service.
             save_path (str, optional): Path to save the plot. Defaults to None.
         """
-        data = self._get_service_capacity(service_id)
-        self._plot_bar_chart(data, title=f'Capacidad para el servicio {service_id}', xlabel='Estación', ylabel='Tickets', rotation=25, save_path=save_path)
+        data, service_max_capacity = self._get_service_capacity(service_id)
+        if not data:
+            print(f'Service {service_id} not found in the provided supply data. Exiting...')
+            return
+        self._plot_bar_chart(
+            data=data,
+            service_max_capacity=service_max_capacity,
+            title=f'Capacidad para el servicio {service_id}',
+            xlabel='Estación',
+            ylabel='Tickets',
+            rotation=25,
+            save_path=save_path
+        )
 
-    def plot_pairs(self, save_path: str = None):
+    def plot_tickets_by_pair(self, save_path: str = None):
         pairs_sold = self._get_pairs_sold()
         total_tickets_sold = sum(pairs_sold.values())
 
@@ -267,8 +289,8 @@ class KernelPlotter:
         if save_path is not None:
             fig.savefig(save_path, dpi=300, bbox_inches='tight')
 
-    def plot_tickets_sold_by_user(self, save_path: str = None):
-        data = self._get_tickets_sold_by_user()
+    def plot_tickets_by_user(self, save_path: str = None):
+        data = self._get_tickets_by_date_user_seat()
         user_types = sorted(set(ut for d in data for ut in data[d]))
         seat_types = sorted(set(st for d in data for ut in data[d] for st in data[d][ut]))
 
@@ -306,9 +328,9 @@ class KernelPlotter:
         if save_path is not None:
             fig.savefig(save_path, dpi=300, bbox_inches='tight')
 
-    def plot_tickets_sold(self, save_path: str = None):
-        data = self._get_total_tickets_sold()
-        seat_types = sorted(set(st for d in data for st in data[d]))
+    def plot_tickets_by_date(self, save_path: str = None):
+        tickets_by_date_seat = self._get_tickets_by_date_seat()
+        seat_types = sorted(set(st for d in tickets_by_date_seat for st in tickets_by_date_seat[d]))
 
         fig, ax = plt.subplots(1, 1, figsize=(7, 4))
         fig.subplots_adjust(hspace=0.75, bottom=0.2, top=0.9)
@@ -317,14 +339,14 @@ class KernelPlotter:
         ax.set_title(f'Total de tickets vendidos por día', fontweight='bold')
         ax.set_ylabel('Número de tickets')
         ax.set_xlabel('Fecha de compra', labelpad=10)
-        ax.set_xticks(np.arange(len(data)))
-        ax.set_xticklabels(data.keys(), rotation=60, fontsize=8, ha='right')
-        ax.set_xlim([-0.5, len(data)])
+        ax.set_xticks(np.arange(len(tickets_by_date_seat)))
+        ax.set_xticklabels(tickets_by_date_seat.keys(), rotation=60, fontsize=8, ha='right')
+        ax.set_xlim([-0.5, len(tickets_by_date_seat)])
 
-        bottom = np.zeros(len(data))
+        bottom = np.zeros(len(tickets_by_date_seat))
         for j, seat_type in enumerate(seat_types):
-            values = [data[date].get(seat_type, 0) for date in data.keys()]
-            ax.bar(np.arange(len(data)), values,
+            values = [tickets_by_date_seat[date].get(seat_type, 0) for date in tickets_by_date_seat.keys()]
+            ax.bar(np.arange(len(tickets_by_date_seat)), values,
                    width=0.5,
                    bottom=bottom,
                    color=self.colors[j % len(self.colors)],
@@ -341,8 +363,8 @@ class KernelPlotter:
         if save_path is not None:
             fig.savefig(save_path, dpi=300, bbox_inches='tight')
 
-    def plot_tickets_sold_pie_chart(self, save_path: str = None):
-        tickets_sold_by_seat = self._get_tickets_sold_pie_chart()
+    def plot_seat_distribution_pie_chart(self, save_path: str = None):
+        tickets_sold_by_seat = self._get_tickets_by_seat()
         total_tickets = sum(tickets_sold_by_seat.values())
         tickets_sold_by_seat = {seat: tickets_sold_by_seat[seat] / total_tickets * 100 for seat in tickets_sold_by_seat}
 
@@ -359,7 +381,7 @@ class KernelPlotter:
 
     def plotter_data_analysis(self):
         print("Data from pie chart: ")
-        tickets_sold_by_seat = self._get_tickets_sold_pie_chart()
+        tickets_sold_by_seat = self._get_tickets_by_seat()
         total_tickets = sum(tickets_sold_by_seat.values())
         print("\tTotal tickets sold: ", total_tickets)
         tickets_sold_by_seat = {seat: tickets_sold_by_seat[seat] / total_tickets * 100 for seat in tickets_sold_by_seat}
@@ -368,7 +390,7 @@ class KernelPlotter:
             print(f'\t\tSeat: {seat} - Percentage: {round(tickets_sold_by_seat[seat], 2)} %')
         print()
         print("Data from plot tickets sold by purchase day: ")
-        tickets_sold_by_date_seat = self._get_total_tickets_sold()
+        tickets_sold_by_date_seat = self._get_tickets_by_date_seat()
         total_tickets = 0
         for date in tickets_sold_by_date_seat:
             for seat in tickets_sold_by_date_seat[date]:
@@ -381,7 +403,7 @@ class KernelPlotter:
                 print(f'\t\t\tSeat: {seat} - Number of tickets sold: {tickets_sold_by_date_seat[date][seat]}')
         print()
         print("Data from plot tickets sold by purchase date, user and seat type: ")
-        tickets_sold_date_user_seat = self._get_tickets_sold_by_user()
+        tickets_sold_date_user_seat = self._get_tickets_by_date_user_seat()
         total_tickets = 0
         for date in tickets_sold_date_user_seat:
             for user in tickets_sold_date_user_seat[date]:
