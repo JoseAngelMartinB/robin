@@ -120,15 +120,19 @@ class Kernel:
                         price=service.prices[(origin, destination)][seat],
                         departure_time_hard_restriction=departure_time_hard_restriction
                     )
-                    # Update service with max utility
-                    if utility > seat_utility:
+                    # Update global utility
+                    if utility > seat_utility_global:
                         service_arg_max_global = service
                         seat_arg_max_global = seat
                         seat_utility_global = utility
-                        # Check if seat is available
-                        anticipation = passenger.purchase_day
-                        if not service.tickets_available(origin, destination, seat, anticipation):
-                            continue
+
+                    # Check if seat is available
+                    anticipation = passenger.purchase_day
+                    if not service.tickets_available(origin, destination, seat, anticipation):
+                        continue
+
+                    # Update service with max utility
+                    if utility > seat_utility:
                         service_arg_max = service
                         seat_arg_max = seat
                         seat_utility = utility
