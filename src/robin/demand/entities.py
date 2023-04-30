@@ -531,6 +531,9 @@ class Passenger:
         seat (Seat): The seat that this passenger is assigned to.
         seat_price (float): The price of the seat.
         utility (float): The utility of the seat.
+        best_service (Service): The best service that fits the passenger needs
+        best_seat (Seat): The best seat from the best service for the passenger
+        best_utility (float): The utility of the best seat
     """
     
     def __init__(
@@ -565,6 +568,9 @@ class Passenger:
         self.seat = None
         self.ticket_price = None
         self.utility = None
+        self.best_service = None
+        self.best_seat = None
+        self.best_utility = None
 
     def _is_valid_departure_time(self, service_departure_time: float) -> bool:
         """
