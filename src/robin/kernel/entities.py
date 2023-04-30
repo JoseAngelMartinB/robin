@@ -44,7 +44,7 @@ class Kernel:
         column_names = [
             'id', 'user_pattern', 'departure_station', 'arrival_station',
             'arrival_day', 'arrival_time', 'purchase_day', 'service', 'service_departure_time',
-            'service_arrival_time', 'seat', 'price', 'utility'
+            'service_arrival_time', 'seat', 'price', 'utility', 'best_service', 'best_seat', 'best_utility'
         ]
         data = []
         for passenger in passengers:
@@ -61,7 +61,10 @@ class Kernel:
                 passenger.service_arrival_time,
                 passenger.seat,
                 passenger.ticket_price,
-                passenger.utility
+                passenger.utility,
+                passenger.best_service,
+                passenger.best_seat,
+                passenger.best_utility
             ])
         df = pd.DataFrame(data=data, columns=column_names)
         df.to_csv(output_path, index=False)
@@ -103,13 +106,12 @@ class Kernel:
             seat_arg_max = None
             seat_utility = 0
             ticket_price = 0
+            service_arg_max_global = 0
+            seat_arg_max_global = 0
+            seat_utility_global = 0
 
             for service in services:
                 for seat in service.prices[(origin, destination)].keys():
-                    # Check if seat is available
-                    anticipation = passenger.purchase_day
-                    if not service.tickets_available(origin, destination, seat, anticipation):
-                        continue
                     # Calculate utility
                     utility = passenger.get_utility(
                         seat=int(seat.id),
@@ -120,6 +122,13 @@ class Kernel:
                     )
                     # Update service with max utility
                     if utility > seat_utility:
+                        service_arg_max_global = service
+                        seat_arg_max_global = seat
+                        seat_utility_global = utility
+                        # Check if seat is available
+                        anticipation = passenger.purchase_day
+                        if not service.tickets_available(origin, destination, seat, anticipation):
+                            continue
                         service_arg_max = service
                         seat_arg_max = seat
                         seat_utility = utility
@@ -142,6 +151,12 @@ class Kernel:
                     passenger.seat = seat_arg_max.name
                     passenger.ticket_price = ticket_price
                     passenger.utility = seat_utility
+
+            # Even if passenger doesn't buy ticket, save best service found (if utility is positive)
+            if seat_utility_global > 0:
+                passenger.best_service = service_arg_max_global
+                passenger.best_seat = seat_arg_max_global
+                passenger.best_utility = seat_utility_global
 
         # Save passengers data to csv file
         if output_path is not None:
