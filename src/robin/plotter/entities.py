@@ -175,6 +175,60 @@ class KernelPlotter:
         tickets_sold = self.df.groupby(by=['seat']).size()
         return tickets_sold.to_dict()
 
+    def _get_not_attended_demand(self) -> Mapping[str, int]:
+        """
+        Get number of attended passenger based on their purchase status.
+
+        Returns:
+            Mapping[str, int]: Dictionary with the number of passengers attended based on their purchase status.
+        """
+        data = dict()
+        data['Any service matches'] = self.df[self.df.best_service.isnull()].shape[0]
+        data['Couldnt buy, but wanted'] = self.df[(self.df.service.isnull()) & (~self.df.best_service.isnull())].shape[0]
+        df_bought = self.df[~self.df.service.isnull()]
+        bought_best = df_bought[df_bought['service'] == df_bought['best_service']].shape[0]
+        data['Bought the best'] = bought_best
+        data['Bought but not the best'] = df_bought.shape[0] - bought_best
+        return data
+
+    def plot_demand_status(self,  save_path: str = None) -> None:
+        """
+        Plot the number of passengers attended based on their purchase status.
+
+        Args:
+            save_path (str): Path to save the plot.
+        """
+        demand_data = self._get_not_attended_demand()
+
+        fig, ax = plt.subplots(1, 1, figsize=(7, 4))
+        fig.subplots_adjust(hspace=0.75, bottom=0.2, top=0.9)
+
+        ax.set_facecolor('#F5F5F5')
+        ax.set_title(f'Análisis de la demanda atendida', fontweight='bold')
+        ax.set_ylabel('Nº de pasajeros')
+        ax.set_xlabel('Situación', labelpad=10)
+        ax.set_xticks(np.arange(len(demand_data)))
+        ax.set_xticklabels(demand_data.keys(), fontsize=8)
+        ax.set_xlim([-0.5, len(demand_data) - 0.5])
+        ax.set_ylim([0, max(demand_data.values()) * 1.1])
+
+        for i, status in enumerate(demand_data):
+            ax.bar(i, demand_data[status],
+                   bottom=0,
+                   color=self.colors[i % len(self.colors)],
+                   label=status,
+                   edgecolor='black',
+                   linewidth=0.5,
+                   zorder=2)
+            ax.bar_label(ax.containers[i], padding=3)
+
+        ax.grid(axis='y', color='#A9A9A9', alpha=0.3, zorder=1)
+        ax.legend()
+        plt.show()
+
+        if save_path is not None:
+            fig.savefig(save_path, dpi=300, bbox_inches='tight')
+
     def _plot_bar_chart(
             self,
             data: Mapping[str, Tuple[int, int, int]],
