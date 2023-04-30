@@ -154,8 +154,8 @@ class Kernel:
 
             # Even if passenger doesn't buy ticket, save best service found (if utility is positive)
             if seat_utility_global > 0:
-                passenger.best_service = service_arg_max_global
-                passenger.best_seat = seat_arg_max_global
+                passenger.best_service = service_arg_max_global.id
+                passenger.best_seat = seat_arg_max_global.name
                 passenger.best_utility = seat_utility_global
 
         # Save passengers data to csv file
