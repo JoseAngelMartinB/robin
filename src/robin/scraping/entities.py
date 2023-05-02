@@ -8,6 +8,8 @@ import pandas as pd
 from src.robin.supply.entities import Station, TimeSlot, Corridor, Line, Seat, RollingStock, TSP, Service
 from src.robin.supply.utils import get_time
 from src.robin.scraping.utils import *
+
+from collections import OrderedDict
 from typing import Dict, List, Tuple
 
 RENFE_STATIONS_PATH = f'data/renfe/renfe_stations.csv'
@@ -33,27 +35,27 @@ class DataLoader:
         services (Dict[str, Service]): Dictionary with services
     """
 
-    def __init__(self, trips_path: str, renfe_stations_path: str = RENFE_STATIONS_PATH):
+    def __init__(self, stops_path: str, renfe_stations_path: str = RENFE_STATIONS_PATH):
         """
         Constructor of the class
 
         Args:
-            trips_path (str): Path to the trips csv file
+            stops_path (str): Path to the trips csv file
             renfe_stations_path (str, optional): Path to the renfe stations csv file.
         """
-        self._trips_path = trips_path
-        self._path_root = os.path.dirname(os.path.dirname(self._trips_path))
+        self._stops_path = stops_path
+        self._path_root = os.path.dirname(os.path.dirname(self._stops_path))
         self._scraping_id = self._get_scraping_id()
         self._prices_path = f"{self._path_root}/prices/prices_{self._scraping_id}.csv"
-        self._stops_path = f"{self._path_root}/stop_times/stopTimes_{self._scraping_id}.csv"
         self.origin_id, self.destination_id, self.start_date, self.end_date = self._scraping_id.split('_')
 
-        self.trips = self._load_dataframe(path=self._trips_path, data_type={'trip_id': str})
         self.prices = self._load_dataframe(path=self._prices_path, data_type={'origin': str, 'destination': str})
         self.stops = self._load_dataframe(path=self._stops_path, data_type={'stop_id': str})
         self.renfe_stations = pd.read_csv(filepath_or_buffer=renfe_stations_path,
                                           delimiter=',',
                                           dtype={'stop_id': str})
+
+        self.trips = pd.DataFrame({'service_id': list(OrderedDict.fromkeys(self.stops['service_id']))})
 
         self._seat_names = self.prices.columns[-3:]
         self.seats = {}
@@ -113,7 +115,7 @@ class DataLoader:
             string with scraping id
         """
         # E.g file_name = 'trips_MADRI_BARCE_2022-12-30_2023-01-03'
-        file_name = self._trips_path.split('/')[-1].split(".")[0]
+        file_name = self._stops_path.split('/')[-1].split(".")[0]
 
         # E.g. 'MADRI_BARCE_2022-12-30_2023-01-03'
         return "_".join(file_name.split("_")[1:])
@@ -266,7 +268,6 @@ class DataLoader:
         Build Service objects
         """
         self.trips['service'] = self.trips.apply(lambda x: self._get_service(x['service_id'],
-                                                                             x['departure'],
                                                                              x['lines'],
                                                                              tuple(self.tsps.values())[0],
                                                                              tuple(self.rolling_stock.values())[0]),
@@ -336,7 +337,6 @@ class DataLoader:
 
     def _get_service(self,
                      service_id: str,
-                     departure: str,
                      line: Line,
                      tsp: TSP,
                      rs: RollingStock
@@ -356,10 +356,9 @@ class DataLoader:
             Service() object
         """
         id_ = service_id
-        date = departure.split(" ")[0]
-        date = datetime.datetime.strptime(date, "%Y-%m-%d").date()
-        departure = departure.split(" ")[1]
-        start_time = get_time(departure)
+        date = datetime.datetime.strptime(service_id.split("_")[1], "%d-%m-%Y-%H.%M").date()
+        departure_str = service_id.split("-")[-1].replace(".", ":") + ":00"
+        start_time = get_time(departure_str)
         time_slot = self._build_time_slot(start_time=start_time)
         total_prices = self._get_trip_prices(line=line, service_id=service_id, start_time=start_time)
 
