@@ -98,77 +98,6 @@ corridor:
                   - org: '04307'
                     des: []
 line:
-- id: '03073'
-  name: Line 03073
-  corridor: '1'
-  stops:
-  - station: '60000'
-    arrival_time: 0
-    departure_time: 0
-  - station: '70200'
-    arrival_time: 23
-    departure_time: 24
-  - station: '04040'
-    arrival_time: 81
-    departure_time: 82
-  - station: '78400'
-    arrival_time: 125
-    departure_time: 127
-  - station: '71500'
-    arrival_time: 154
-    departure_time: 156
-  - station: '71801'
-    arrival_time: 192
-    departure_time: 192
-- id: 03081
-  name: Line 03081
-  corridor: '1'
-  stops:
-  - station: '60000'
-    arrival_time: 0
-    departure_time: 0
-  - station: '71801'
-    arrival_time: 150
-    departure_time: 150
-- id: '03063'
-  name: Line 03063
-  corridor: '1'
-  stops:
-  - station: '60000'
-    arrival_time: 0
-    departure_time: 0
-  - station: '70600'
-    arrival_time: 55
-    departure_time: 56
-  - station: '04040'
-    arrival_time: 81
-    departure_time: 82
-  - station: '71801'
-    arrival_time: 170
-    departure_time: 170
-- id: 03083
-  name: Line 03083
-  corridor: '1'
-  stops:
-  - station: '60000'
-    arrival_time: 0
-    departure_time: 0
-  - station: '04040'
-    arrival_time: 75
-    departure_time: 76
-  - station: '71801'
-    arrival_time: 165
-    departure_time: 165
-- id: 03091
-  name: Line 03091
-  corridor: '1'
-  stops:
-  - station: '60000'
-    arrival_time: 0
-    departure_time: 0
-  - station: '71801'
-    arrival_time: 150
-    departure_time: 150
 - id: 03093
   name: Line 03093
   corridor: '1'
@@ -194,6 +123,132 @@ line:
   - station: '04307'
     arrival_time: 250
     departure_time: 250
+- id: '19725'
+  name: Line 19725
+  corridor: '1'
+  stops:
+  - station: '60000'
+    arrival_time: 0
+    departure_time: 0
+  - station: '70200'
+    arrival_time: 23
+    departure_time: 25
+  - station: '04040'
+    arrival_time: 82
+    departure_time: 85
+  - station: '71500'
+    arrival_time: 139
+    departure_time: 141
+  - station: '71801'
+    arrival_time: 177
+    departure_time: 189
+  - station: '79300'
+    arrival_time: 227
+    departure_time: 230
+  - station: '04307'
+    arrival_time: 244
+    departure_time: 244
+- id: '03131'
+  name: Line 03131
+  corridor: '1'
+  stops:
+  - station: '60000'
+    arrival_time: 0
+    departure_time: 0
+  - station: '71801'
+    arrival_time: 150
+    departure_time: 150
+- id: 03081
+  name: Line 03081
+  corridor: '1'
+  stops:
+  - station: '60000'
+    arrival_time: 0
+    departure_time: 0
+  - station: '71801'
+    arrival_time: 150
+    departure_time: 150
+- id: '03071'
+  name: Line 03071
+  corridor: '1'
+  stops:
+  - station: '60000'
+    arrival_time: 0
+    departure_time: 0
+  - station: '71801'
+    arrival_time: 150
+    departure_time: 150
+- id: '03073'
+  name: Line 03073
+  corridor: '1'
+  stops:
+  - station: '60000'
+    arrival_time: 0
+    departure_time: 0
+  - station: '70200'
+    arrival_time: 23
+    departure_time: 24
+  - station: '04040'
+    arrival_time: 81
+    departure_time: 82
+  - station: '78400'
+    arrival_time: 125
+    departure_time: 127
+  - station: '71500'
+    arrival_time: 154
+    departure_time: 156
+  - station: '71801'
+    arrival_time: 192
+    departure_time: 192
+- id: 03083
+  name: Line 03083
+  corridor: '1'
+  stops:
+  - station: '60000'
+    arrival_time: 0
+    departure_time: 0
+  - station: '04040'
+    arrival_time: 75
+    departure_time: 76
+  - station: '71801'
+    arrival_time: 165
+    departure_time: 165
+- id: 03091
+  name: Line 03091
+  corridor: '1'
+  stops:
+  - station: '60000'
+    arrival_time: 0
+    departure_time: 0
+  - station: '71801'
+    arrival_time: 150
+    departure_time: 150
+- id: '03063'
+  name: Line 03063
+  corridor: '1'
+  stops:
+  - station: '60000'
+    arrival_time: 0
+    departure_time: 0
+  - station: '70600'
+    arrival_time: 55
+    departure_time: 56
+  - station: '04040'
+    arrival_time: 81
+    departure_time: 82
+  - station: '71801'
+    arrival_time: 170
+    departure_time: 170
+- id: '03201'
+  name: Line 03201
+  corridor: '1'
+  stops:
+  - station: '60000'
+    arrival_time: 0
+    departure_time: 0
+  - station: '71801'
+    arrival_time: 150
+    departure_time: 150
 - id: '03113'
   name: Line 03113
   corridor: '1'
@@ -216,28 +271,6 @@ line:
   - station: '71801'
     arrival_time: 192
     departure_time: 192
-- id: '03123'
-  name: Line 03123
-  corridor: '1'
-  stops:
-  - station: '60000'
-    arrival_time: 0
-    departure_time: 0
-  - station: '04040'
-    arrival_time: 75
-    departure_time: 76
-  - station: '78400'
-    arrival_time: 119
-    departure_time: 121
-  - station: '71801'
-    arrival_time: 190
-    departure_time: 200
-  - station: '79300'
-    arrival_time: 238
-    departure_time: 240
-  - station: '04307'
-    arrival_time: 255
-    departure_time: 255
 - id: '03143'
   name: Line 03143
   corridor: '1'
@@ -260,8 +293,46 @@ line:
   - station: '04307'
     arrival_time: 235
     departure_time: 235
-- id: '03131'
-  name: Line 03131
+- id: '03123'
+  name: Line 03123
+  corridor: '1'
+  stops:
+  - station: '60000'
+    arrival_time: 0
+    departure_time: 0
+  - station: '04040'
+    arrival_time: 75
+    departure_time: 76
+  - station: '78400'
+    arrival_time: 119
+    departure_time: 121
+  - station: '71801'
+    arrival_time: 190
+    departure_time: 200
+  - station: '79300'
+    arrival_time: 238
+    departure_time: 240
+  - station: '04307'
+    arrival_time: 255
+    departure_time: 255
+- id: 03183
+  name: Line 03183
+  corridor: '1'
+  stops:
+  - station: '60000'
+    arrival_time: 0
+    departure_time: 0
+  - station: '04040'
+    arrival_time: 75
+    departure_time: 76
+  - station: '71500'
+    arrival_time: 134
+    departure_time: 136
+  - station: '71801'
+    arrival_time: 170
+    departure_time: 170
+- id: '03161'
+  name: Line 03161
   corridor: '1'
   stops:
   - station: '60000'
@@ -302,177 +373,6 @@ line:
   - station: '71801'
     arrival_time: 192
     departure_time: 192
-- id: '03161'
-  name: Line 03161
-  corridor: '1'
-  stops:
-  - station: '60000'
-    arrival_time: 0
-    departure_time: 0
-  - station: '71801'
-    arrival_time: 150
-    departure_time: 150
-- id: '03163'
-  name: Line 03163
-  corridor: '1'
-  stops:
-  - station: '60000'
-    arrival_time: 0
-    departure_time: 0
-  - station: '04040'
-    arrival_time: 75
-    departure_time: 76
-  - station: '71801'
-    arrival_time: 165
-    departure_time: 175
-  - station: '79300'
-    arrival_time: 221
-    departure_time: 223
-  - station: '04307'
-    arrival_time: 238
-    departure_time: 238
-- id: '03171'
-  name: Line 03171
-  corridor: '1'
-  stops:
-  - station: '60000'
-    arrival_time: 0
-    departure_time: 0
-  - station: '71801'
-    arrival_time: 150
-    departure_time: 150
-- id: 03183
-  name: Line 03183
-  corridor: '1'
-  stops:
-  - station: '60000'
-    arrival_time: 0
-    departure_time: 0
-  - station: '04040'
-    arrival_time: 75
-    departure_time: 76
-  - station: '71500'
-    arrival_time: 134
-    departure_time: 136
-  - station: '71801'
-    arrival_time: 170
-    departure_time: 170
-- id: '03173'
-  name: Line 03173
-  corridor: '1'
-  stops:
-  - station: '60000'
-    arrival_time: 0
-    departure_time: 0
-  - station: '70200'
-    arrival_time: 23
-    departure_time: 24
-  - station: '04040'
-    arrival_time: 81
-    departure_time: 82
-  - station: '78400'
-    arrival_time: 125
-    departure_time: 127
-  - station: '71500'
-    arrival_time: 154
-    departure_time: 156
-  - station: '71801'
-    arrival_time: 192
-    departure_time: 192
-- id: '03203'
-  name: Line 03203
-  corridor: '1'
-  stops:
-  - station: '60000'
-    arrival_time: 0
-    departure_time: 0
-  - station: '70200'
-    arrival_time: 23
-    departure_time: 24
-  - station: '70600'
-    arrival_time: 60
-    departure_time: 61
-  - station: '04040'
-    arrival_time: 85
-    departure_time: 86
-  - station: '78400'
-    arrival_time: 129
-    departure_time: 131
-  - station: '71500'
-    arrival_time: 158
-    departure_time: 160
-  - station: '71801'
-    arrival_time: 195
-    departure_time: 195
-- id: 03191
-  name: Line 03191
-  corridor: '1'
-  stops:
-  - station: '60000'
-    arrival_time: 0
-    departure_time: 0
-  - station: '71801'
-    arrival_time: 150
-    departure_time: 160
-  - station: '79300'
-    arrival_time: 198
-    departure_time: 200
-  - station: '04307'
-    arrival_time: 215
-    departure_time: 215
-- id: '03201'
-  name: Line 03201
-  corridor: '1'
-  stops:
-  - station: '60000'
-    arrival_time: 0
-    departure_time: 0
-  - station: '71801'
-    arrival_time: 150
-    departure_time: 150
-- id: '03211'
-  name: Line 03211
-  corridor: '1'
-  stops:
-  - station: '60000'
-    arrival_time: 0
-    departure_time: 0
-  - station: '71801'
-    arrival_time: 150
-    departure_time: 150
-- id: '06301'
-  name: Line 06301
-  corridor: '1'
-  stops:
-  - station: '60000'
-    arrival_time: 0
-    departure_time: 0
-  - station: '71801'
-    arrival_time: 150
-    departure_time: 150
-- id: '06303'
-  name: Line 06303
-  corridor: '1'
-  stops:
-  - station: '60000'
-    arrival_time: 0
-    departure_time: 0
-  - station: '04040'
-    arrival_time: 74
-    departure_time: 75
-  - station: '71801'
-    arrival_time: 165
-    departure_time: 165
-- id: '06307'
-  name: Line 06307
-  corridor: '1'
-  stops:
-  - station: '60000'
-    arrival_time: 0
-    departure_time: 0
-  - station: '71801'
-    arrival_time: 150
-    departure_time: 150
 - id: 06309
   name: Line 06309
   corridor: '1'
@@ -504,8 +404,37 @@ line:
   - station: '04307'
     arrival_time: 261
     departure_time: 261
-- id: '19725'
-  name: Line 19725
+- id: '03171'
+  name: Line 03171
+  corridor: '1'
+  stops:
+  - station: '60000'
+    arrival_time: 0
+    departure_time: 0
+  - station: '71801'
+    arrival_time: 150
+    departure_time: 150
+- id: '03163'
+  name: Line 03163
+  corridor: '1'
+  stops:
+  - station: '60000'
+    arrival_time: 0
+    departure_time: 0
+  - station: '04040'
+    arrival_time: 75
+    departure_time: 76
+  - station: '71801'
+    arrival_time: 165
+    departure_time: 175
+  - station: '79300'
+    arrival_time: 221
+    departure_time: 223
+  - station: '04307'
+    arrival_time: 238
+    departure_time: 238
+- id: '03173'
+  name: Line 03173
   corridor: '1'
   stops:
   - station: '60000'
@@ -513,24 +442,95 @@ line:
     departure_time: 0
   - station: '70200'
     arrival_time: 23
-    departure_time: 25
+    departure_time: 24
   - station: '04040'
-    arrival_time: 82
-    departure_time: 85
+    arrival_time: 81
+    departure_time: 82
+  - station: '78400'
+    arrival_time: 125
+    departure_time: 127
   - station: '71500'
-    arrival_time: 139
-    departure_time: 141
+    arrival_time: 154
+    departure_time: 156
   - station: '71801'
-    arrival_time: 177
-    departure_time: 189
+    arrival_time: 192
+    departure_time: 192
+- id: '03211'
+  name: Line 03211
+  corridor: '1'
+  stops:
+  - station: '60000'
+    arrival_time: 0
+    departure_time: 0
+  - station: '71801'
+    arrival_time: 150
+    departure_time: 150
+- id: '06303'
+  name: Line 06303
+  corridor: '1'
+  stops:
+  - station: '60000'
+    arrival_time: 0
+    departure_time: 0
+  - station: '04040'
+    arrival_time: 74
+    departure_time: 75
+  - station: '71801'
+    arrival_time: 165
+    departure_time: 165
+- id: 03191
+  name: Line 03191
+  corridor: '1'
+  stops:
+  - station: '60000'
+    arrival_time: 0
+    departure_time: 0
+  - station: '71801'
+    arrival_time: 150
+    departure_time: 160
   - station: '79300'
-    arrival_time: 227
-    departure_time: 230
+    arrival_time: 198
+    departure_time: 200
   - station: '04307'
-    arrival_time: 244
-    departure_time: 244
-- id: '03071'
-  name: Line 03071
+    arrival_time: 215
+    departure_time: 215
+- id: '03203'
+  name: Line 03203
+  corridor: '1'
+  stops:
+  - station: '60000'
+    arrival_time: 0
+    departure_time: 0
+  - station: '70200'
+    arrival_time: 23
+    departure_time: 24
+  - station: '70600'
+    arrival_time: 60
+    departure_time: 61
+  - station: '04040'
+    arrival_time: 85
+    departure_time: 86
+  - station: '78400'
+    arrival_time: 129
+    departure_time: 131
+  - station: '71500'
+    arrival_time: 158
+    departure_time: 160
+  - station: '71801'
+    arrival_time: 195
+    departure_time: 195
+- id: '06301'
+  name: Line 06301
+  corridor: '1'
+  stops:
+  - station: '60000'
+    arrival_time: 0
+    departure_time: 0
+  - station: '71801'
+    arrival_time: 150
+    departure_time: 150
+- id: '06307'
+  name: Line 06307
   corridor: '1'
   stops:
   - station: '60000'
