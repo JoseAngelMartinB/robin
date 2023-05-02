@@ -360,7 +360,7 @@ class DriverManager:
             origin_id: str,
             destination_id: str,
             date: datetime.date
-    ) -> pd.DataFrame:
+    ) -> Union[None, pd.DataFrame]:
         """
         Scrapes prices from Renfe website using selenium and saves retrieved data to a CSV file.
 
@@ -389,6 +389,8 @@ class DriverManager:
 
         soup = BeautifulSoup(html_str, 'html.parser')
         table = soup.find('div', {'class': 'tab-content'})
+        if not table:
+            return None
         header = soup.find('thead')
         seat_types = self._get_seat_types(header)
         content_rows = table.find_all('tr', attrs={'cdgotren': True})
@@ -427,7 +429,7 @@ class DriverManager:
             origin_id: str,
             destination_id: str,
             date: datetime.date
-    ) -> pd.DataFrame:
+    ) -> Union[bool, pd.DataFrame]:
         """
         Obtains two pandas dataframes from Renfe website, one with the trips information and another with the stops,
             which are saved to CSV files.
@@ -447,6 +449,10 @@ class DriverManager:
         req = requests.get(url)
         soup = BeautifulSoup(req.text, 'html.parser')
         main_table = soup.select_one('.irf-travellers-table__container-table')
+
+        if not main_table:
+            return None
+
         for tr in main_table.select('tr.odd.irf-travellers-table__tr'):
             row = tr.select('td.txt_borde1.irf-travellers-table__td')
             if not self._is_content_row(row):
@@ -734,8 +740,17 @@ class RenfeScraper:
                     org_id = self._get_renfe_station_id(org)
                     des_id = self._get_renfe_station_id(des)
                     new_df_prices = self.driver.scrape_prices(origin_id=org_id, destination_id=des_id, date=date)
+                    if new_df_prices is None:
+                        print(f'No prices found for {org_id} - {des_id} on {date}. Exiting...')
+                        break
                     df_prices = pd.concat([df_prices, new_df_prices], ignore_index=True)
                     date += datetime.timedelta(days=1)
+                else:
+                    continue
+                break
+            else:
+                continue
+            break
 
         # Save prices
         os.makedirs(f'{save_path}/prices/', exist_ok=True)
@@ -772,6 +787,9 @@ class RenfeScraper:
         df_trips = pd.DataFrame()
         for _ in range(range_days):
             new_df_trips = self.driver.scrape_trips(origin_id=origin_id, destination_id=destination_id, date=date)
+            if new_df_trips is None:
+                print(f'No trips found for {origin_id} - {destination_id} on {date}. Exiting...')
+                break
             df_trips = pd.concat([df_trips, new_df_trips], ignore_index=True)
             date += datetime.timedelta(days=1)
 
