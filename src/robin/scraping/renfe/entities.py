@@ -643,34 +643,6 @@ class RenfeScraper:
             index=False
         )
 
-    def _save_df_trips(
-            self,
-            df_trips: pd.DataFrame,
-            origin_id: str,
-            destination_id: str,
-            init_date: datetime.date,
-            end_date: datetime.date,
-            save_path: str
-    ) -> None:
-        """
-        Saves the dataframe with the trips information to a CSV file.
-
-        Args:
-            df_trips (pd.DataFrame): Dataframe with the trips information.
-            origin_id (str): Renfe id of the origin station.
-            destination_id (str): Renfe id of the destination station.
-            init_date (datetime.date): Initial date of the trip.
-            end_date (datetime.date): End date of the trip.
-            save_path (str): Path to save the CSV file.
-        """
-        # Drop schedule and price columns as schedule it is contained in stops df and the price contains wrong values
-        df_trips = df_trips.drop(['schedule', 'price'], axis=1)
-        os.makedirs(f'{save_path}/trips/', exist_ok=True)
-        df_trips.to_csv(
-            f'{save_path}/trips/trips_{origin_id}_{destination_id}_{init_date}_{end_date}.csv',
-            index=False
-        )
-
     def scrape(
             self,
             origin: str,
@@ -803,15 +775,6 @@ class RenfeScraper:
             df_trips = pd.concat([df_trips, new_df_trips], ignore_index=True)
             date += datetime.timedelta(days=1)
 
-        # Save trips and stops
-        self._save_df_trips(
-            df_trips=df_trips,
-            origin_id=origin_id,
-            destination_id=destination_id,
-            init_date=init_date,
-            end_date=end_date,
-            save_path=save_path
-        )
         self._save_df_stops(
             df_trips=df_trips,
             origin_id=origin_id,
