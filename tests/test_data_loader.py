@@ -1,7 +1,7 @@
 from src.robin.scraping.entities import DataLoader
 
 import_path = 'data/renfe'
-trips_path = f'{import_path}/trips/trips_MADRI_BARCE_2023-06-01_2023-06-02.csv'
+trips_path = f'{import_path}/stop_times/stopTimes_MADRI_BARCE_2023-06-01_2023-06-02.csv'
 
 data_loader = DataLoader(trips_path)
 data_loader.show_metadata()
