@@ -20,10 +20,9 @@ userPattern:
     arrival_time_kwargs:
       loc: 8
       scale: 1
-    purchase_day: randint
+    purchase_day: poisson
     purchase_day_kwargs:
-      low: 2
-      high: 7
+      mu: 1.25
     forbidden_departure_hours:
       start: 9
       end: 24
@@ -60,10 +59,9 @@ userPattern:
     arrival_time_kwargs:
       loc: 18
       scale: 3
-    purchase_day: randint
+    purchase_day: poisson
     purchase_day_kwargs:
-      low: 0
-      high: 4
+      mu: 1
     forbidden_departure_hours:
       start: 6
       end: 14
@@ -104,8 +102,8 @@ demandPattern:
       - market: 1
         potential_demand: randint
         potential_demand_kwargs:
-          low: 1500
-          high: 1800
+          low: 750
+          high: 900
         user_pattern_distribution:
           - id: 1
             percentage: 0.4
@@ -115,8 +113,8 @@ demandPattern:
       - market: 2
         potential_demand: randint
         potential_demand_kwargs:
-          low: 1000
-          high: 1200
+          low: 500
+          high: 600
         user_pattern_distribution:
           - id: 1
             percentage: 0.5
@@ -126,8 +124,8 @@ demandPattern:
       - market: 3
         potential_demand: randint
         potential_demand_kwargs:
-          low: 5000
-          high: 7000
+          low: 2500
+          high: 3500
         user_pattern_distribution:
           - id: 1
             percentage: 0.8
