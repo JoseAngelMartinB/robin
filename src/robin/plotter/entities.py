@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 
 from src.robin.supply.entities import Supply
-from typing import Dict, Mapping, Tuple, Union
+from typing import Dict, List, Mapping, Tuple, Union
 
 # Colors
 WHITE_SMOKE = '#F5F5F5'
@@ -175,7 +175,7 @@ class KernelPlotter:
         tickets_sold = self.df.groupby(by=['seat']).size()
         return tickets_sold.to_dict()
 
-    def _get_not_attended_demand(self) -> Mapping[str, int]:
+    def _get_not_attended_demand(self) -> Tuple[Mapping[int, int], List[str]]:
         """
         Get number of attended passenger based on their purchase status.
 
@@ -183,51 +183,66 @@ class KernelPlotter:
             Mapping[str, int]: Dictionary with the number of passengers attended based on their purchase status.
         """
         data = dict()
-        data['Any service matches'] = self.df[self.df.best_service.isnull()].shape[0]
-        data['Couldnt buy, but wanted'] = self.df[(self.df.service.isnull()) & (~self.df.best_service.isnull())].shape[0]
+        # User didn't find a service with the desired characteristics
+        data[3] = self.df[self.df.best_service.isnull()].shape[0]
+        # User found a service with the desired characteristics but couldn't buy it
+        data[0] = self.df[(self.df.service.isnull()) & (~self.df.best_service.isnull())].shape[0]
         df_bought = self.df[~self.df.service.isnull()]
         bought_best = df_bought[df_bought['service'] == df_bought['best_service']].shape[0]
-        data['Bought the best'] = bought_best
-        data['Bought but not the best'] = df_bought.shape[0] - bought_best
-        return data
+        # User bought the service with the highest utility
+        data[2] = bought_best
+        # User bought a service that wasn't the one with the highest utility
+        data[1] = df_bought.shape[0] - bought_best
 
-    def plot_demand_status(self,  save_path: str = None) -> None:
+        label1 = f"El usuario encontró\nalgún servicio que\ncumplía sus necesidades,\npero no pudo comprarlo"
+        label2 = f"El usuario compró\nun servicio que\nno era el de\nmayor utilidad"
+        label3 = f"El usuario compró\nel servicio con\nmayor utilidad"
+        label4 = f"El usuario no encontró\nningún servicio\nque cumpliera\nsus necesidades"
+        x_labels = [label1, label2, label3, label4]
+
+        return dict(sorted(data.items(), key=lambda x: x[1], reverse=True)), x_labels
+
+    def plot_demand_status(self,  y_limit: int = None, save_path: str = None) -> None:
         """
         Plot the number of passengers attended based on their purchase status.
 
         Args:
+            y_limit: Maximum value of the y-axis.
             save_path (str): Path to save the plot.
         """
-        demand_data = self._get_not_attended_demand()
+        demand_data, x_labels = self._get_not_attended_demand()
 
         fig, ax = plt.subplots(1, 1, figsize=(7, 4))
         fig.subplots_adjust(hspace=0.75, bottom=0.2, top=0.9)
 
+        passengers = sum(demand_data.values())
         ax.set_facecolor('#F5F5F5')
-        ax.set_title(f'Análisis de la demanda atendida', fontweight='bold')
+        ax.set_title(f'Análisis de la demanda ({passengers} pasajeros)', fontweight='bold')
         ax.set_ylabel('Nº de pasajeros')
         ax.set_xlabel('Situación', labelpad=10)
         ax.set_xticks(np.arange(len(demand_data)))
-        ax.set_xticklabels(demand_data.keys(), fontsize=8)
+        xticklables = [x_labels[int(status)] for status in demand_data]
+        ax.set_xticklabels(xticklables, fontsize=8)
         ax.set_xlim([-0.5, len(demand_data) - 0.5])
-        ax.set_ylim([0, max(demand_data.values()) * 1.1])
+        y_limit = y_limit if y_limit is not None else max(demand_data.values()) * 1.1
+        ax.set_ylim([0, y_limit])
 
         for i, status in enumerate(demand_data):
             ax.bar(i, demand_data[status],
                    bottom=0,
-                   color=self.colors[i % len(self.colors)],
-                   label=status,
+                   color=self.colors[int(status) % len(self.colors)],
+                   label=x_labels[int(status)],
                    edgecolor='black',
                    linewidth=0.5,
                    zorder=2)
-            ax.bar_label(ax.containers[i], padding=3)
+            status_perc = round(demand_data[status] / passengers * 100, 2)
+            ax.bar_label(ax.containers[i], labels=[f"{demand_data[status]} ({status_perc}%)"], padding=3)
 
         ax.grid(axis='y', color='#A9A9A9', alpha=0.3, zorder=1)
-        ax.legend()
         plt.show()
 
         if save_path is not None:
-            fig.savefig(save_path, dpi=300, bbox_inches='tight')
+            fig.savefig(save_path, dpi=300, bbox_inches='tight', transparent=True)
 
     def _plot_bar_chart(
             self,
@@ -286,7 +301,7 @@ class KernelPlotter:
         ax.axhline(y=-service_max_capacity, color='lightcoral', linewidth=0.5, zorder=1)
 
         if save_path:
-            fig.savefig(save_path, dpi=300, bbox_inches='tight')
+            fig.savefig(save_path, dpi=300, bbox_inches='tight', transparent=True)
 
         plt.show()
 
@@ -312,7 +327,7 @@ class KernelPlotter:
             save_path=save_path
         )
 
-    def plot_tickets_by_pair(self, save_path: str = None):
+    def plot_tickets_by_pair(self, y_limit: int = None, save_path: str = None):
         pairs_sold = self._get_pairs_sold()
         total_tickets_sold = sum(pairs_sold.values())
 
@@ -326,7 +341,8 @@ class KernelPlotter:
         ax.set_xticks(np.arange(len(pairs_sold)))
         ax.set_xticklabels(pairs_sold.keys(), fontsize=8)
         ax.set_xlim([-0.5, len(pairs_sold)-0.5])
-        ax.set_ylim([0, max(pairs_sold.values())*1.1])
+        y_limit = y_limit if y_limit is not None else max(pairs_sold.values()) * 1.1
+        ax.set_ylim([0, y_limit])
 
         for i, pair in enumerate(pairs_sold):
             ax.bar(i, pairs_sold[pair],
@@ -343,7 +359,7 @@ class KernelPlotter:
         plt.show()
 
         if save_path is not None:
-            fig.savefig(save_path, dpi=300, bbox_inches='tight')
+            fig.savefig(save_path, dpi=300, bbox_inches='tight', transparent=True)
 
     def plot_tickets_by_user(self, save_path: str = None):
         data = self._get_tickets_by_date_user_seat()
@@ -382,7 +398,7 @@ class KernelPlotter:
         plt.show()
 
         if save_path is not None:
-            fig.savefig(save_path, dpi=300, bbox_inches='tight')
+            fig.savefig(save_path, dpi=300, bbox_inches='tight', transparent=True)
 
     def plot_tickets_by_date(self, save_path: str = None):
         tickets_by_date_seat = self._get_tickets_by_date_seat()
@@ -417,7 +433,7 @@ class KernelPlotter:
         plt.show()
 
         if save_path is not None:
-            fig.savefig(save_path, dpi=300, bbox_inches='tight')
+            fig.savefig(save_path, dpi=300, bbox_inches='tight', transparent=True)
 
     def plot_seat_distribution_pie_chart(self, save_path: str = None):
         tickets_sold_by_seat = self._get_tickets_by_seat()
@@ -427,23 +443,29 @@ class KernelPlotter:
         fig, ax = plt.subplots(1, 1, figsize=(7, 4))
         colors = [self.colors[i % len(self.colors)] for i, _ in enumerate(tickets_sold_by_seat.keys())]
 
-        ax.set_title('Distribución de pasajeros', fontweight='bold')
+        ax.set_title('Distribución de Asientos', fontweight='bold')
         ax.pie(tickets_sold_by_seat.values(), labels=tickets_sold_by_seat.keys(), colors=colors, autopct='%1.1f%%')
         ax.legend(bbox_to_anchor=(0.2, 0.2))
         plt.show()
 
         if save_path is not None:
-            fig.savefig(save_path, dpi=300, bbox_inches='tight')
+            fig.savefig(save_path, dpi=300, bbox_inches='tight', transparent=True)
 
     def plotter_data_analysis(self):
+        print("Data from demand plot: ")
+        demand_data, x_labels = self._get_not_attended_demand()
+        for status, passenger in demand_data.items():
+            status_str = x_labels[int(status)].replace("\n", " ")
+            print(f'\tStatus: {status_str} - Passengers: {passenger}')
+        print()
         print("Data from pie chart: ")
         tickets_sold_by_seat = self._get_tickets_by_seat()
         total_tickets = sum(tickets_sold_by_seat.values())
         print("\tTotal tickets sold: ", total_tickets)
-        tickets_sold_by_seat = {seat: tickets_sold_by_seat[seat] / total_tickets * 100 for seat in tickets_sold_by_seat}
+        tickets_by_seat_perc = {seat: tickets_sold_by_seat[seat] / total_tickets * 100 for seat in tickets_sold_by_seat}
         print("\tPercentage of tickets sold by seat type: ")
-        for seat in tickets_sold_by_seat:
-            print(f'\t\tSeat: {seat} - Percentage: {round(tickets_sold_by_seat[seat], 2)} %')
+        for seat in tickets_by_seat_perc:
+            print(f'\t\tSeat: {seat} - Passengers: {tickets_sold_by_seat[seat]} - Percentage: {round(tickets_by_seat_perc[seat], 2)} %')
         print()
         print("Data from plot tickets sold by purchase day: ")
         tickets_sold_by_date_seat = self._get_tickets_by_date_seat()
