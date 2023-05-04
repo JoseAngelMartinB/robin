@@ -6,6 +6,7 @@ import yaml
 from src.robin.supply.utils import get_time, get_date, format_td, set_stations_ids, convert_tree_to_dict
 
 from copy import deepcopy
+from functools import cache
 from typing import Any, Dict, List, Mapping, Set, Tuple, Union
 
 
@@ -685,6 +686,7 @@ class Supply:
             if service.id == service_id:
                 return service
 
+    @cache
     def filter_services(self, origin: str, destination: str, date: datetime.date) -> List[Service]:
         """
         Filters a List of Services available in the system that meet the users requirements.
