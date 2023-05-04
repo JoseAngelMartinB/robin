@@ -499,6 +499,7 @@ class Service:
             absolute_schedule.append((abs_dt, abs_at))
         return absolute_schedule
 
+    @cache
     def _get_affected_pairs(self, origin: str, destination: str) -> Set[Tuple[str, str]]:
         """
         Private method to get the pairs affected by origin-destination selection.
