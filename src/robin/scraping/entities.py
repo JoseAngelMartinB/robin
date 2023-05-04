@@ -14,6 +14,7 @@ from typing import Dict, List, Tuple
 
 RENFE_STATIONS_PATH = f'data/renfe/renfe_stations.csv'
 DEFAULT_SEAT_QUANTITY = {1: 250, 2: 50}
+INFLATION = 1.0
 
 
 class DataLoader:
@@ -330,7 +331,7 @@ class DataLoader:
                 prices = self.prices[condition][price_cols].values[0].tolist()
             except IndexError:
                 continue
-            total_prices[pair] = {st: p for st, p in zip(self.seats.values(), prices)}
+            total_prices[pair] = {st: p * INFLATION for st, p in zip(self.seats.values(), prices)}
 
         filtered_prices = {pair: {st: p for st, p in total_prices[pair].items() if not np.isnan(p)} for pair in total_prices}
         return filtered_prices
