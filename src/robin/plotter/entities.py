@@ -400,7 +400,7 @@ class KernelPlotter:
         if save_path is not None:
             fig.savefig(save_path, dpi=300, bbox_inches='tight', transparent=True)
 
-    def plot_tickets_by_date(self, save_path: str = None):
+    def plot_tickets_by_date(self, y_limit: int = None, save_path: str = None):
         tickets_by_date_seat = self._get_tickets_by_date_seat()
         seat_types = sorted(set(st for d in tickets_by_date_seat for st in tickets_by_date_seat[d]))
 
@@ -414,7 +414,8 @@ class KernelPlotter:
         ax.set_xticks(np.arange(len(tickets_by_date_seat)))
         ax.set_xticklabels(tickets_by_date_seat.keys(), rotation=60, fontsize=8, ha='right')
         ax.set_xlim([-0.5, len(tickets_by_date_seat)])
-        ax.set_ylim([0, max(sum(tickets_by_date_seat[d].values()) for d in tickets_by_date_seat) * 1.1])
+        y_limit = y_limit if y_limit is not None else max(sum(tickets_by_date_seat[d].values()) for d in tickets_by_date_seat)
+        ax.set_ylim([0, y_limit * 1.1])
 
         bottom = np.zeros(len(tickets_by_date_seat))
         for j, seat_type in enumerate(seat_types):
