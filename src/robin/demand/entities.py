@@ -531,9 +531,9 @@ class Passenger:
         seat (Seat): The seat that this passenger is assigned to.
         seat_price (float): The price of the seat.
         utility (float): The utility of the seat.
-        best_service (Service): The best service that fits the passenger needs
-        best_seat (Seat): The best seat from the best service for the passenger
-        best_utility (float): The utility of the best seat
+        best_service (Service): The best service that fits the passenger needs.
+        best_seat (Seat): The best seat from the best service for the passenger.
+        best_utility (float): The utility of the best seat.
     """
     
     def __init__(

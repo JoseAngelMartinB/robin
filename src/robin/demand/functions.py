@@ -2,6 +2,7 @@
 
 import numpy as np
 
+from functools import cache
 from typing import Mapping
 
 
@@ -14,6 +15,7 @@ class Function:
     """
 
     @staticmethod
+    @cache
     def polynomial(x: float, **kwargs: Mapping[str, float]) -> float:
         """
         Polynomial function.
