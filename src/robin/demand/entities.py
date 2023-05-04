@@ -876,7 +876,7 @@ class Demand:
         with open(path, 'r') as f:
             demand_yaml = f.read()
 
-        data = yaml.safe_load(demand_yaml)
+        data = yaml.load(demand_yaml, Loader=yaml.CSafeLoader)
         markets = Demand._get_markets(data)
         user_patterns = Demand._get_user_patterns(data)
         demand_patterns = Demand._get_demand_patterns(data, markets, user_patterns)

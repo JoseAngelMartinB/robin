@@ -660,7 +660,7 @@ class Supply:
             Supply: Supply object.
         """
         with open(path, 'r') as file:
-            data = yaml.safe_load(file)
+            data = yaml.load(file, Loader=yaml.CSafeLoader)
 
         stations = Supply._get_stations(data, key='stations')
         time_slots = Supply._get_time_slots(data, key='timeSlot')
