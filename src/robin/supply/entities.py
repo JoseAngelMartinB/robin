@@ -698,9 +698,9 @@ class Supply:
             List[Service]: List of Service objects that meet the user requests.
         """
         filtered_services = []
-        for s in self.services:
-            if s.date == date and (origin, destination) in s.line.pairs.keys():
-                filtered_services.append(s)
+        for service in self.services:
+            if service.date == date and (origin, destination) in service.prices.keys():
+                filtered_services.append(service)
         return filtered_services
 
     @classmethod
