@@ -671,7 +671,7 @@ class Passenger:
         price_utility = self._get_utility_price(price)
         travel_time_utility = self._get_utility_travel_time(service_arrival_time, service_departure_time)
         error_utility = self.user_pattern.error
-        return seat_utility + arrival_time_utility - departure_time_utility - price_utility - travel_time_utility + error_utility
+        return seat_utility - arrival_time_utility - departure_time_utility - price_utility - travel_time_utility + error_utility
 
     def __str__(self) -> str:
         """

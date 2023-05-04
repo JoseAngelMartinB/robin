@@ -414,6 +414,7 @@ class KernelPlotter:
         ax.set_xticks(np.arange(len(tickets_by_date_seat)))
         ax.set_xticklabels(tickets_by_date_seat.keys(), rotation=60, fontsize=8, ha='right')
         ax.set_xlim([-0.5, len(tickets_by_date_seat)])
+        ax.set_ylim([0, max(sum(tickets_by_date_seat[d].values()) for d in tickets_by_date_seat) * 1.1])
 
         bottom = np.zeros(len(tickets_by_date_seat))
         for j, seat_type in enumerate(seat_types):

@@ -36,7 +36,7 @@ userPattern:
     penalty_arrival_time: polynomial
     penalty_arrival_time_kwargs:
       b_0: 0
-      b_1: 1
+      b_1: 0.8
     penalty_departure_time: polynomial
     penalty_departure_time_kwargs:
       b_0: 0
@@ -102,8 +102,8 @@ demandPattern:
       - market: 1
         potential_demand: randint
         potential_demand_kwargs:
-          low: 750
-          high: 900
+          low: 1125
+          high: 1350
         user_pattern_distribution:
           - id: 1
             percentage: 0.4
@@ -113,8 +113,8 @@ demandPattern:
       - market: 2
         potential_demand: randint
         potential_demand_kwargs:
-          low: 500
-          high: 600
+          low: 750
+          high: 900
         user_pattern_distribution:
           - id: 1
             percentage: 0.5
@@ -124,8 +124,8 @@ demandPattern:
       - market: 3
         potential_demand: randint
         potential_demand_kwargs:
-          low: 2500
-          high: 3500
+          low: 3750
+          high: 5250
         user_pattern_distribution:
           - id: 1
             percentage: 0.8
