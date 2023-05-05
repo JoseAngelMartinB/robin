@@ -331,6 +331,12 @@ class KernelPlotter:
         pairs_sold = self._get_pairs_sold()
         total_tickets_sold = sum(pairs_sold.values())
 
+        # Sort alphabetical pairs
+        pairs = sorted(list(pairs_sold.keys()))
+
+        # Assign a color to each pair
+        colors = {pair: color for pair, color in zip(pairs, self.colors)}
+
         fig, ax = plt.subplots(1, 1, figsize=(7, 4))
         fig.subplots_adjust(hspace=0.75, bottom=0.2, top=0.9)
 
@@ -347,7 +353,7 @@ class KernelPlotter:
         for i, pair in enumerate(pairs_sold):
             ax.bar(i, pairs_sold[pair],
                    bottom=0,
-                   color=self.colors[i % len(self.colors)],
+                   color=colors[pair],
                    label=pair,
                    edgecolor='black',
                    linewidth=0.5,
