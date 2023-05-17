@@ -1,11 +1,14 @@
 """Entities for the plotter module."""
 
 import datetime
+import locale
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
 from src.robin.supply.entities import Supply
+
+from calendar import month_name
 from typing import Dict, List, Mapping, Tuple, Union
 
 # Colors
@@ -40,6 +43,7 @@ class KernelPlotter:
         plt.style.use('seaborn-pastel')
         self.colors = ['lemonchiffon', 'lightsteelblue', 'palegreen', 'lightsalmon', 'lavender', 'lightgray']
         self.stations_dict = {str(sta.id): sta.name for s in self.supply.services for sta in s.line.stations}
+        locale.setlocale(locale.LC_ALL, 'es_ES.UTF-8')
 
     def _get_purchase_date(self, anticipation, arrival_day):
         """
@@ -56,6 +60,29 @@ class KernelPlotter:
         arrival_day = datetime.datetime.strptime(arrival_day, "%Y-%m-%d")
         purchase_day = arrival_day - anticipation
         return purchase_day.date()
+
+    def _get_tickets_by_arrival_day_seat(self) -> Mapping[str, Mapping[str, int]]:
+        """
+        Get the total number of tickets sold per arrival day and seat type.
+        
+        Returns:
+            Mapping[str, Mapping[str, int]]: Dictionary with the total number of tickets sold per arrival day and seat
+                type.
+        """
+        grouped_data = self.df[~self.df.service.isnull()]
+        grouped_data = grouped_data.groupby(by=['arrival_day', 'seat'], as_index=False).size()
+
+        # Create a dictionary with the total number of tickets sold per day and seat type
+        result_dict = {}
+        for date, group in grouped_data.groupby('arrival_day'):
+            seats_dict = {}
+            for seat, count in zip(group['seat'], group['size']):
+                seats_dict[seat] = count
+            result_dict[date] = seats_dict
+
+        # Sort the data by day in descending order
+        sorted_data = dict(sorted(result_dict.items(), key=lambda x: x[0]))
+        return sorted_data
 
     def _get_tickets_by_date_seat(self) -> Mapping[str, Mapping[str, int]]:
         """
@@ -401,6 +428,48 @@ class KernelPlotter:
 
             ax.grid(axis='y', color='#A9A9A9', alpha=0.3, zorder=1)
             ax.legend()
+        plt.show()
+
+        if save_path is not None:
+            fig.savefig(save_path, dpi=300, bbox_inches='tight', transparent=True)
+
+    def plot_tickets_by_arrival_date(self, y_limit: int = None, seat = 'Total', save_path: str = None):
+        tickets_by_arrival_day_seat = self._get_tickets_by_arrival_day_seat()
+        seat_types = sorted(set(st for d in tickets_by_arrival_day_seat for st in tickets_by_arrival_day_seat[d]))
+
+        fig, ax = plt.subplots(1, 1, figsize=(7, 4))
+        fig.subplots_adjust(hspace=0.75, bottom=0.2, top=0.9)
+
+        ax.set_facecolor('#F5F5F5')
+        ax.set_title(f'Total de tickets vendidos por día', fontweight='bold')
+        ax.set_ylabel('Número de tickets')
+        ax.set_xlabel('Mes', labelpad=10)
+        ax.set_xticks(np.arange(0, len(tickets_by_arrival_day_seat), len(tickets_by_arrival_day_seat) / 12))
+        ax.set_xticklabels([month_name[i] for i in range(1, 13, 1)], rotation=60, fontsize=8, ha='right')
+        ax.set_xlim([-0.5, len(tickets_by_arrival_day_seat)])
+        y_limit = y_limit if y_limit is not None else max(sum(tickets_by_arrival_day_seat[d].values()) for d in tickets_by_arrival_day_seat)
+        ax.set_ylim([0, y_limit * 1.1])
+
+        if seat == 'Total':
+            values = [sum(tickets_by_arrival_day_seat[d].values()) for d in tickets_by_arrival_day_seat.keys()]
+            ax.plot(np.arange(len(tickets_by_arrival_day_seat)), values, label='Total')
+        elif seat == 'All':
+            colors = [self.colors[1], self.colors[3], self.colors[2]]
+            for j, seat_type in enumerate(seat_types):
+                values = [tickets_by_arrival_day_seat[date].get(seat_type, 0) for date in tickets_by_arrival_day_seat.keys()]
+                ax.plot(np.arange(len(tickets_by_arrival_day_seat)), values, label=seat_type, color=colors[j])
+        elif seat == 'Basico':
+            values = [tickets_by_arrival_day_seat[date].get('Basico', 0) for date in tickets_by_arrival_day_seat.keys()]
+            ax.plot(np.arange(len(tickets_by_arrival_day_seat)), values, label='Basico', color=self.colors[1])
+        elif seat == 'Elige':
+            values = [tickets_by_arrival_day_seat[date].get('Elige', 0) for date in tickets_by_arrival_day_seat.keys()]
+            ax.plot(np.arange(len(tickets_by_arrival_day_seat)), values, label='Elige', color=self.colors[3])
+        elif seat == 'Premium':
+            values = [tickets_by_arrival_day_seat[date].get('Premium', 0) for date in tickets_by_arrival_day_seat.keys()]
+            ax.plot(np.arange(len(tickets_by_arrival_day_seat)), values, label='Premium', color=self.colors[2])
+
+        ax.grid(axis='y', color='#A9A9A9', alpha=0.3, zorder=1)
+        ax.legend()
         plt.show()
 
         if save_path is not None:
