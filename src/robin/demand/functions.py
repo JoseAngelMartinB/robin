@@ -1,8 +1,7 @@
 """Functions for demand module."""
 
-import numpy as np
-
 from functools import cache
+from numpy.polynomial.polynomial import polyval
 from typing import Mapping
 
 
@@ -27,6 +26,5 @@ class Function:
         Returns:
             float: The y value.
         """
-        reverse_sorted = dict(sorted(kwargs.items(), key=lambda item: item[1], reverse=True))
-        coeff = list(reverse_sorted.values())
-        return np.polyval(x=x, p=coeff)
+        coeff = list(kwargs.values())
+        return polyval(x=x, c=coeff)
