@@ -149,14 +149,16 @@ class UserPattern:
         """
         self.id = id
         self.name = name
-        self._arrival_time = get_scipy_distribution(distribution_name=arrival_time, is_discrete=False)
+        self._arrival_time, self.arrival_time_kwargs = get_scipy_distribution(
+            distribution_name=arrival_time, is_discrete=False, **arrival_time_kwargs
+        )
         self._arrival_time_rvs = None
         self._arrival_time_rvs_idx = 0
-        self.arrival_time_kwargs = arrival_time_kwargs
-        self._purchase_day = get_scipy_distribution(distribution_name=purchase_day, is_discrete=True)
+        self._purchase_day, self.purchase_day_kwargs = get_scipy_distribution(
+            distribution_name=purchase_day, is_discrete=True, **purchase_day_kwargs
+        )
         self._purchase_day_rvs = None
         self._purchase_day_rvs_idx = 0
-        self.purchase_day_kwargs = purchase_day_kwargs
         self.forbidden_departure_hours = self._check_forbidden_departure_hours(
             forbidden_departure_hours=forbidden_departure_hours
         )
@@ -169,10 +171,11 @@ class UserPattern:
         self.penalty_cost_kwargs = penalty_cost_kwargs
         self._penalty_travel_time = get_function(function_name=penalty_travel_time)
         self.penalty_travel_time_kwargs = penalty_travel_time_kwargs
-        self._error = get_scipy_distribution(distribution_name=error, is_discrete=False)
+        self._error, self.error_kwargs = get_scipy_distribution(
+            distribution_name=error, is_discrete=False, **error_kwargs
+        )
         self._error_rvs = None
         self._error_rvs_idx = 0
-        self.error_kwargs = error_kwargs
         self.default_seat_utility = default_seat_utility
         self.default_rvs_size = default_rvs_size
 
@@ -413,11 +416,11 @@ class DemandPattern:
             potential_demand = potential_demands[i]
             potential_demand_kwargs = potential_demands_kwargs[i]
             user_pattern_distribution = user_patterns_distribution[i]
-            self._potential_demands[market] = get_scipy_distribution(
+            self._potential_demands[market], self.potential_demands_kwargs[market] = get_scipy_distribution(
                 distribution_name=potential_demand,
-                is_discrete=True
+                is_discrete=True,
+                **potential_demand_kwargs
             )
-            self.potential_demands_kwargs[market] = potential_demand_kwargs
             self.user_patterns_distribution[market] = user_pattern_distribution
 
     def potential_demand(self, market: Market) -> int:
