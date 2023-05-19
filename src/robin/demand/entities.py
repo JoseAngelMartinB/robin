@@ -203,6 +203,8 @@ class UserPattern:
     def arrival_time(self) -> float:
         """
         Returns a random variable sample from the arrival time distribution.
+        
+        It implements a cache mechanism to avoid the generation of random variables at each call.
 
         In case the arrival time is greater than 24, it is reduced to the range [0, 24).
 
@@ -210,7 +212,8 @@ class UserPattern:
             float: A random variable sample from the distribution.
         """
         if self._arrival_time_rvs is None or self._arrival_time_rvs_idx >= len(self._arrival_time_rvs) - 1:
-            self._arrival_time_rvs = self._arrival_time.rvs(**self.arrival_time_kwargs, size=self.default_rvs_size) % 24
+            self._arrival_time_rvs = self._arrival_time.rvs(**self.arrival_time_kwargs, size=self.default_rvs_size)
+            self._arrival_time_rvs %= 24 # Reduce the arrival time to the range [0, 24) hours
             self._arrival_time_rvs_idx = 0
         else:
             self._arrival_time_rvs_idx += 1
@@ -220,12 +223,15 @@ class UserPattern:
     def purchase_day(self) -> int:
         """
         Returns a random variable sample from the purchase day distribution.
+        
+        It implements a cache mechanism to avoid the generation of random variables at each call.
 
         Returns:
             float: A random variable sample from the distribution.
         """
         if self._purchase_day_rvs is None or self._purchase_day_rvs_idx >= len(self._purchase_day_rvs) - 1:
             self._purchase_day_rvs = self._purchase_day.rvs(**self.purchase_day_kwargs, size=self.default_rvs_size)
+            self._purchase_day_rvs = self._purchase_day_rvs.clip(min=0) # Clip the purchase day to the range [0, inf) days
             self._purchase_day_rvs_idx = 0
         else:
             self._purchase_day_rvs_idx += 1
@@ -295,6 +301,8 @@ class UserPattern:
     def error(self) -> float:
         """
         Returns a random variable sample from the error distribution.
+        
+        It implements a cache mechanism to avoid the generation of random variables at each call.
 
         Returns:
             float: A random variable sample from the distribution.
@@ -422,7 +430,9 @@ class DemandPattern:
         Returns:
             int: A random variable sample from the distribution.
         """
-        return self._potential_demands[market].rvs(**self.potential_demands_kwargs[market])
+        potential_demand = self._potential_demands[market].rvs(**self.potential_demands_kwargs[market])
+        assert potential_demand >= 0, 'The potential demand must be non-negative.'
+        return potential_demand
     
     def get_user_pattern(self, market: Market) -> UserPattern:
         """
