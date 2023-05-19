@@ -14,7 +14,7 @@ class Function:
     """
 
     @staticmethod
-    @cache
+    @cache # NOTE: This can grow very large, take care about memory usage. (100 M can be a good limit)
     def polynomial(x: float, **kwargs: Mapping[str, float]) -> float:
         """
         Polynomial function.
