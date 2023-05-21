@@ -4,7 +4,7 @@ import datetime
 import numpy as np
 import yaml
 
-from .constants import DEFAULT_SEAT_UTILITY
+from .constants import DEFAULT_SEAT_UTILITY, DEFAULT_RVS_SIZE
 from .exceptions import InvalidForbiddenDepartureHoursException
 from .utils import get_function, get_scipy_distribution
 
@@ -82,6 +82,7 @@ class UserPattern:
         error (Callable): The error distribution function.
         error_kwargs (Mapping[str, Union[int, float]]): The error distribution named parameters.
         default_seat_utility (float): The default utility of the seats.
+        default_rvs_size (int): The default size of the random variables sample.
 
     Raises:
         InvalidDistributionException: Raised when the given distribution is not contained in SciPy.
@@ -111,7 +112,8 @@ class UserPattern:
             penalty_travel_time_kwargs: Mapping[str, Union[int, float]],
             error: str,
             error_kwargs: Mapping[str, Union[int, float]],
-            default_seat_utility: float = DEFAULT_SEAT_UTILITY
+            default_seat_utility: float = DEFAULT_SEAT_UTILITY,
+            default_rvs_size: int = DEFAULT_RVS_SIZE
     ) -> None:
         """
         Initialize a user pattern.
@@ -136,6 +138,7 @@ class UserPattern:
             error (str): The error distribution name.
             error_kwargs (Mapping[str, Union[int, float]]): The error distribution named parameters.
             default_seat_utility (float, optional): The default utility of the seats.
+            default_rvs_size (int, optional): The default size of the random variables sample.
         
         Raises:
             InvalidDistributionException: Raised when the given distribution is not contained in SciPy.
@@ -146,10 +149,16 @@ class UserPattern:
         """
         self.id = id
         self.name = name
-        self._arrival_time = get_scipy_distribution(distribution_name=arrival_time, is_discrete=False)
-        self.arrival_time_kwargs = arrival_time_kwargs
-        self._purchase_day = get_scipy_distribution(distribution_name=purchase_day, is_discrete=True)
-        self.purchase_day_kwargs = purchase_day_kwargs
+        self._arrival_time, self.arrival_time_kwargs = get_scipy_distribution(
+            distribution_name=arrival_time, is_discrete=False, **arrival_time_kwargs
+        )
+        self._arrival_time_rvs = None
+        self._arrival_time_rvs_idx = 0
+        self._purchase_day, self.purchase_day_kwargs = get_scipy_distribution(
+            distribution_name=purchase_day, is_discrete=True, **purchase_day_kwargs
+        )
+        self._purchase_day_rvs = None
+        self._purchase_day_rvs_idx = 0
         self.forbidden_departure_hours = self._check_forbidden_departure_hours(
             forbidden_departure_hours=forbidden_departure_hours
         )
@@ -162,9 +171,13 @@ class UserPattern:
         self.penalty_cost_kwargs = penalty_cost_kwargs
         self._penalty_travel_time = get_function(function_name=penalty_travel_time)
         self.penalty_travel_time_kwargs = penalty_travel_time_kwargs
-        self._error = get_scipy_distribution(distribution_name=error, is_discrete=False)
-        self.error_kwargs = error_kwargs
+        self._error, self.error_kwargs = get_scipy_distribution(
+            distribution_name=error, is_discrete=False, **error_kwargs
+        )
+        self._error_rvs = None
+        self._error_rvs_idx = 0
         self.default_seat_utility = default_seat_utility
+        self.default_rvs_size = default_rvs_size
 
     def _check_forbidden_departure_hours(self, forbidden_departure_hours: Tuple[int, int]) -> Tuple[int, int]:
         """
@@ -193,24 +206,39 @@ class UserPattern:
     def arrival_time(self) -> float:
         """
         Returns a random variable sample from the arrival time distribution.
+        
+        It implements a cache mechanism to avoid the generation of random variables at each call.
 
         In case the arrival time is greater than 24, it is reduced to the range [0, 24).
 
         Returns:
             float: A random variable sample from the distribution.
         """
-        arrival_time = self._arrival_time.rvs(**self.arrival_time_kwargs)
-        return arrival_time % 24
+        if self._arrival_time_rvs is None or self._arrival_time_rvs_idx >= len(self._arrival_time_rvs) - 1:
+            self._arrival_time_rvs = self._arrival_time.rvs(**self.arrival_time_kwargs, size=self.default_rvs_size)
+            self._arrival_time_rvs %= 24 # Reduce the arrival time to the range [0, 24) hours
+            self._arrival_time_rvs_idx = 0
+        else:
+            self._arrival_time_rvs_idx += 1
+        return self._arrival_time_rvs[self._arrival_time_rvs_idx]
     
     @property
     def purchase_day(self) -> int:
         """
         Returns a random variable sample from the purchase day distribution.
+        
+        It implements a cache mechanism to avoid the generation of random variables at each call.
 
         Returns:
             float: A random variable sample from the distribution.
         """
-        return self._purchase_day.rvs(**self.purchase_day_kwargs)
+        if self._purchase_day_rvs is None or self._purchase_day_rvs_idx >= len(self._purchase_day_rvs) - 1:
+            self._purchase_day_rvs = self._purchase_day.rvs(**self.purchase_day_kwargs, size=self.default_rvs_size)
+            self._purchase_day_rvs = self._purchase_day_rvs.clip(min=0) # Clip the purchase day to the range [0, inf) days
+            self._purchase_day_rvs_idx = 0
+        else:
+            self._purchase_day_rvs_idx += 1
+        return self._purchase_day_rvs[self._purchase_day_rvs_idx]
     
     def get_seat_utility(self, seat: int) -> float:
         """
@@ -276,11 +304,18 @@ class UserPattern:
     def error(self) -> float:
         """
         Returns a random variable sample from the error distribution.
+        
+        It implements a cache mechanism to avoid the generation of random variables at each call.
 
         Returns:
             float: A random variable sample from the distribution.
         """
-        return self._error.rvs(**self.error_kwargs)
+        if self._error_rvs is None or self._error_rvs_idx >= len(self._error_rvs) - 1:
+            self._error_rvs = self._error.rvs(**self.error_kwargs, size=self.default_rvs_size)
+            self._error_rvs_idx = 0
+        else:
+            self._error_rvs_idx += 1
+        return self._error_rvs[self._error_rvs_idx]
 
     def __str__(self) -> str:
         """
@@ -381,11 +416,11 @@ class DemandPattern:
             potential_demand = potential_demands[i]
             potential_demand_kwargs = potential_demands_kwargs[i]
             user_pattern_distribution = user_patterns_distribution[i]
-            self._potential_demands[market] = get_scipy_distribution(
+            self._potential_demands[market], self.potential_demands_kwargs[market] = get_scipy_distribution(
                 distribution_name=potential_demand,
-                is_discrete=True
+                is_discrete=True,
+                **potential_demand_kwargs
             )
-            self.potential_demands_kwargs[market] = potential_demand_kwargs
             self.user_patterns_distribution[market] = user_pattern_distribution
 
     def potential_demand(self, market: Market) -> int:
@@ -398,7 +433,9 @@ class DemandPattern:
         Returns:
             int: A random variable sample from the distribution.
         """
-        return self._potential_demands[market].rvs(**self.potential_demands_kwargs[market])
+        potential_demand = self._potential_demands[market].rvs(**self.potential_demands_kwargs[market])
+        assert potential_demand >= 0, 'The potential demand must be non-negative.'
+        return potential_demand
     
     def get_user_pattern(self, market: Market) -> UserPattern:
         """
