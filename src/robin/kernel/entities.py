@@ -19,9 +19,9 @@ class Kernel:
         demand (Demand): Demand object.
     """
     
-    def __init__(self, path_config_supply: str, path_config_demand: str, seed: Union[int, None] = None):
+    def __init__(self, path_config_supply: str, path_config_demand: str, seed: Union[int, None] = None) -> None:
         """
-        Initialize the kernel object.
+        Initialize a kernel object.
 
         Args:
             path_config_supply (str): Path to the supply configuration file.
@@ -72,7 +72,7 @@ class Kernel:
     def simulate(
             self,
             output_path: Union[str, None] = None,
-            departure_time_hard_restriction: bool = False
+            departure_time_hard_restriction: bool = True
         ) -> List[Service]:
         """
         Simulate the demand-supply interaction.
@@ -83,7 +83,7 @@ class Kernel:
         Args:
             output_path (str, optional): Path to the output csv file. Defaults to None.
             departure_time_hard_restriction (bool, optional): If True, the passenger will not
-                be assigned to a service with a departure time that is not valid. Defaults to False.
+                be assigned to a service with a departure time that is not valid. Defaults to True.
 
         Returns:
             List[Service]: List of services with updated tickets.
