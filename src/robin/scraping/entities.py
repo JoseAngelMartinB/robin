@@ -1,11 +1,9 @@
 """Entities to be used in the data loader module."""
 
-import datetime
 import numpy as np
-import os
 import pandas as pd
 
-from src.robin.supply.entities import Station, TimeSlot, Corridor, Line, Seat, RollingStock, TSP, Service
+from src.robin.supply.entities import Station, TimeSlot, Corridor, Line, Seat, RollingStock, TSP, Service, Supply
 from src.robin.supply.utils import get_time
 from src.robin.scraping.utils import *
 
@@ -383,3 +381,30 @@ class DataLoader:
             pd.dataframe
         """
         return pd.read_csv(path, delimiter=',', dtype=data_type)
+
+
+class SupplySaver(Supply):
+    def __init__(self, services: List[Service]):
+        Supply.__init__(self, services)
+
+    def to_yaml(self, filename: str, save_path: str) -> None:
+        """
+        Save supply entities to yaml file
+
+        Args:
+            filename (str): File name for the yaml file
+            save_path (str): Path to save yaml file
+        """
+        data = [
+            ('stations', [station_to_dict(stn) for stn in self.stations]),
+            ('seat', [seat_to_dict(s) for s in self.seats]),
+            ('corridor', [corridor_to_dict(corr) for corr in self.corridors]),
+            ('line', [line_to_dict(ln) for ln in self.lines]),
+            ('rollingStock', [rolling_stock_to_dict(rs) for rs in self.rolling_stocks]),
+            ('trainServiceProvider', [tsp_to_dict(tsp) for tsp in self.tsps]),
+            ('timeSlot', [time_slot_to_dict(s) for s in self.time_slots]),
+            ('service', [service_to_dict(s) for s in self.services])
+        ]
+
+        for key, value in data:
+            write_to_yaml(save_path+filename, {key: value})
