@@ -64,7 +64,7 @@ class DataLoader:
         self.rolling_stock = {}
         self.tsps = {}
         self.time_slots = {}
-        self.services = {}
+        self.services = []
 
     def build_supply_entities(self, seat_quantity: Mapping[int, int] = DEFAULT_SEAT_QUANTITY) -> None:
         """
@@ -76,28 +76,6 @@ class DataLoader:
         self._build_rolling_stock(seat_quantity=seat_quantity)
         self._build_tsp()
         self._build_services()
-
-    def save_yaml(self, save_path: str) -> None:
-        """
-        Save supply entities to yaml file
-
-        Args:
-            filename (str): File name for the yaml file
-            path (str): Path to save yaml file
-        """
-        data = [
-            ('stations', [station_to_dict(stn) for stn in self.stations.values()]),
-            ('seat', [seat_to_dict(s) for s in self.seats.values()]),
-            ('corridor', [corridor_to_dict(corr) for corr in self.corridors.values()]),
-            ('line', [line_to_dict(ln) for ln in self.lines.values()]),
-            ('rollingStock', [rolling_stock_to_dict(rs) for rs in self.rolling_stock.values()]),
-            ('trainServiceProvider', [tsp_to_dict(tsp) for tsp in self.tsps.values()]),
-            ('timeSlot', [time_slot_to_dict(s) for s in self.time_slots.values()]),
-            ('service', [service_to_dict(s) for s in self.services.values()])
-        ]
-
-        for key, value in data:
-            write_to_yaml(save_path, {key: value})
 
     def show_metadata(self) -> None:
         """
@@ -273,8 +251,8 @@ class DataLoader:
                                                  axis=1)
 
         my_services = self.trips['service'].values.tolist()
-        for s in my_services:
-            self.services[s.id] = s
+        for service in my_services:
+            self.services.append(service)
 
     def _build_time_slot(self, start_time: datetime.timedelta, ts_size: int = 10) -> TimeSlot:
         """
@@ -384,7 +362,19 @@ class DataLoader:
 
 
 class SupplySaver(Supply):
+    """
+    Class to save supply entities to yaml file.
+
+    Methods:
+        to_yaml: Save supply entities to yaml file
+    """
     def __init__(self, services: List[Service]):
+        """
+        Constructor method
+
+        Args:
+            services: List of service entities
+        """
         Supply.__init__(self, services)
 
     def to_yaml(self, filename: str, save_path: str) -> None:
