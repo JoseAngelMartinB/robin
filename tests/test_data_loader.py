@@ -10,4 +10,4 @@ data_loader.build_supply_entities()
 print(data_loader.services[0])
 
 services = data_loader.services
-SupplySaver(services).to_yaml(filename='supply_data_23Jun.yml', save_path='data/')
+SupplySaver(services).to_yaml(filename='supply_data_23Jun.yml', save_path='configs/')
