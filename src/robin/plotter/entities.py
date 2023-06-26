@@ -221,10 +221,10 @@ class KernelPlotter:
         # User bought a service that wasn't the one with the highest utility
         data[1] = df_bought.shape[0] - bought_best
 
-        label1 = f"El usuario encontró\nalgún servicio que\ncumplía sus necesidades,\npero no pudo comprarlo"
-        label2 = f"El usuario compró\nun servicio que\nno era el de\nmayor utilidad"
-        label3 = f"El usuario compró\nel servicio con\nmayor utilidad"
-        label4 = f"El usuario no encontró\nningún servicio\nque cumpliera\nsus necesidades"
+        label1 = f"User found \nany service that\nmet his needs\nbut couldn't purchase."
+        label2 = f"User bought\na service which\nwas not the one\nwith the best utility."
+        label3 = f"User bought\nthe ticket with\nbest utility."
+        label4 = f"User didn't find\nany ticket\nthat met his needs."
         x_labels = [label1, label2, label3, label4]
 
         return dict(sorted(data.items(), key=lambda x: x[1], reverse=True)), x_labels
@@ -239,14 +239,15 @@ class KernelPlotter:
         """
         demand_data, x_labels = self._get_not_attended_demand()
 
+        demand_served = sum([demand_data[1], demand_data[2]])
         fig, ax = plt.subplots(1, 1, figsize=(7, 4))
         fig.subplots_adjust(hspace=0.75, bottom=0.2, top=0.9)
 
         passengers = sum(demand_data.values())
         ax.set_facecolor('#F5F5F5')
-        ax.set_title(f'Análisis de la demanda ({passengers} pasajeros)', fontweight='bold')
-        ax.set_ylabel('Nº de pasajeros')
-        ax.set_xlabel('Situación', labelpad=10)
+        ax.set_title(f'Demand analysis - {round(demand_served/passengers * 100, 2)}% bought ticket', fontweight='bold')
+        ax.set_ylabel('Number of passengers')
+        ax.set_xlabel('Status', labelpad=10)
         ax.set_xticks(np.arange(len(demand_data)))
         xticklables = [x_labels[int(status)] for status in demand_data]
         ax.set_xticklabels(xticklables, fontsize=8)
@@ -322,13 +323,13 @@ class KernelPlotter:
                     zorder=2
                 )
         ax.grid(axis='y', color='#A9A9A9', alpha=0.3, zorder=1)
-        ax.legend(['Ocupación del tren', 'Tickets vendidos', 'Pasajeros que bajan'])
+        ax.legend(['Train occupation', 'Embarking passengers', 'Disembarking passengers'], loc='lower left')
         ax.axhline(y=0, color='black', linewidth=0.5, zorder=1)
         ax.axhline(y=service_max_capacity, color='lightcoral', linewidth=0.5, zorder=1)
         ax.axhline(y=-service_max_capacity, color='lightcoral', linewidth=0.5, zorder=1)
 
         if save_path:
-            fig.savefig(save_path, dpi=300, bbox_inches='tight', transparent=True)
+            fig.savefig(save_path, format='svg', dpi=300, bbox_inches='tight', transparent=True)
 
         plt.show()
 
@@ -347,9 +348,9 @@ class KernelPlotter:
         self._plot_bar_chart(
             data=data,
             service_max_capacity=service_max_capacity,
-            title=f'Capacidad para el servicio {service_id}',
-            xlabel='Estación',
-            ylabel='Tickets',
+            title=f'Capacity for service {service_id}',
+            xlabel='Station',
+            ylabel='Passengers',
             rotation=25,
             save_path=save_path
         )
@@ -368,9 +369,9 @@ class KernelPlotter:
         fig.subplots_adjust(hspace=0.75, bottom=0.2, top=0.9)
 
         ax.set_facecolor('#F5F5F5')
-        ax.set_title(f'Tickets vendidos por pares de estaciones ({total_tickets_sold} tickets)', fontweight='bold')
-        ax.set_ylabel('Nº de tickets vendidos')
-        ax.set_xlabel('Origen - Destino', labelpad=10)
+        ax.set_title(f'Tickets sold by trip ({total_tickets_sold} tickets sold)', fontweight='bold')
+        ax.set_ylabel('Number of tickets sold')
+        ax.set_xlabel('Trip (Origin-Destination)', labelpad=10)
         ax.set_xticks(np.arange(len(pairs_sold)))
         ax.set_xticklabels(pairs_sold.keys(), fontsize=8)
         ax.set_xlim([-0.5, len(pairs_sold)-0.5])
@@ -405,9 +406,9 @@ class KernelPlotter:
         for i, user_type in enumerate(user_types):
             ax = axs[i]
             ax.set_facecolor('#F5F5F5')
-            ax.set_title(f'Total de tickets vendidos para el tipo de usuario "{user_type}"', fontweight='bold')
-            ax.set_ylabel('Número de tickets')
-            ax.set_xlabel('Fecha de llegada', labelpad=10)
+            ax.set_title(f'Tickets sold for user type "{user_type}"', fontweight='bold')
+            ax.set_ylabel('Number of tickets')
+            ax.set_xlabel('Arrival date', labelpad=10)
             ax.set_xticks(np.arange(len(data)))
             ax.set_xticklabels(data.keys(), rotation=60, fontsize=8, ha='right')
             ax.set_xlim([-0.5, len(data)])
@@ -441,9 +442,9 @@ class KernelPlotter:
         fig.subplots_adjust(hspace=0.75, bottom=0.2, top=0.9)
 
         ax.set_facecolor('#F5F5F5')
-        ax.set_title(f'Total de tickets vendidos por día', fontweight='bold')
-        ax.set_ylabel('Número de tickets')
-        ax.set_xlabel('Mes', labelpad=10)
+        ax.set_title(f'Tickets sold by day', fontweight='bold')
+        ax.set_ylabel('Number of tickets')
+        ax.set_xlabel('Month', labelpad=10)
         ax.set_xticks(np.arange(0, len(tickets_by_arrival_day_seat), len(tickets_by_arrival_day_seat) / 12))
         ax.set_xticklabels([month_name[i] for i in range(1, 13, 1)], rotation=60, fontsize=8, ha='right')
         ax.set_xlim([-0.5, len(tickets_by_arrival_day_seat)])
@@ -483,9 +484,9 @@ class KernelPlotter:
         fig.subplots_adjust(hspace=0.75, bottom=0.2, top=0.9)
 
         ax.set_facecolor('#F5F5F5')
-        ax.set_title(f'Total de tickets vendidos por día', fontweight='bold')
-        ax.set_ylabel('Número de tickets')
-        ax.set_xlabel('Fecha de compra', labelpad=10)
+        ax.set_title(f'Tickets sold by day', fontweight='bold')
+        ax.set_ylabel('Number of tickets')
+        ax.set_xlabel('Purchase date', labelpad=10)
         ax.set_xticks(np.arange(len(tickets_by_date_seat)))
         ax.set_xticklabels(tickets_by_date_seat.keys(), rotation=60, fontsize=8, ha='right')
         ax.set_xlim([-0.5, len(tickets_by_date_seat)])
