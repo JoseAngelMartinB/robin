@@ -325,8 +325,8 @@ class KernelPlotter:
         ax.grid(axis='y', color='#A9A9A9', alpha=0.3, zorder=1)
         ax.legend(['Train occupation', 'Embarking passengers', 'Disembarking passengers'], loc='lower left')
         ax.axhline(y=0, color='black', linewidth=0.5, zorder=1)
-        ax.axhline(y=service_max_capacity, color='lightcoral', linewidth=0.5, zorder=1)
-        ax.axhline(y=-service_max_capacity, color='lightcoral', linewidth=0.5, zorder=1)
+        ax.axhline(y=service_max_capacity, color='lightcoral', linewidth=2, zorder=1)
+        ax.axhline(y=-service_max_capacity, color='lightcoral', linewidth=2, zorder=1)
 
         if save_path:
             fig.savefig(save_path, format='svg', dpi=300, bbox_inches='tight', transparent=True)
