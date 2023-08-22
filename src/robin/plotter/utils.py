@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from typing import Mapping, Tuple
 
 
-def series_plot(x_data: Tuple,
+def plot_series(x_data: Tuple,
                 y_data: Mapping,
                 title: str,
                 xlabel: str,

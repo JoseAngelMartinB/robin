@@ -8,7 +8,7 @@ import shutil
 import yaml
 
 from src.robin.kernel.entities import Kernel
-from src.robin.plotter.utils import series_plot
+from src.robin.plotter.utils import plot_series
 
 from matplotlib import pyplot as plt
 from tqdm.auto import tqdm
@@ -148,7 +148,7 @@ class RobinLab:
             for seat_key in series_keys:
                 series[seat_key].append(tickets_sold[file_key].get(seat_key, 0))
 
-        fig, ax = series_plot(x_data=tuple(x_data),
+        fig, ax = plot_series(x_data=tuple(x_data),
                               y_data=series,
                               title="Prices elasticity curve",
                               xlabel="Price increase (%)",
