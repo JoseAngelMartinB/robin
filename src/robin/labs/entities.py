@@ -8,6 +8,7 @@ import shutil
 import yaml
 
 from src.robin.kernel.entities import Kernel
+from src.robin.plotter.utils import series_plot
 
 from matplotlib import pyplot as plt
 from tqdm.auto import tqdm
@@ -139,21 +140,21 @@ class RobinLab:
 
         supply_lab_config = self.lab_config["supply"]
         arange_args = supply_lab_config
-        t = np.arange(**arange_args)
-        series_keys = set(k for v in tickets_sold.values() for k in v)
-        series = {k: [] for k in series_keys}
+        x_data = np.arange(**arange_args)
+        series_keys = set(key for value in tickets_sold.values() for key in value)
+        series = {key: [] for key in series_keys}
 
-        for k in tickets_sold:
-            for kk in series_keys:
-                series[kk].append(tickets_sold[k].get(kk, 0))
+        for file_key in tickets_sold:
+            for seat_key in series_keys:
+                series[seat_key].append(tickets_sold[file_key].get(seat_key, 0))
 
-        plt.figure(figsize=(10, 5))
-        plt.title("Price elasticity curve")
-        for k in series:
-            plt.plot(t, series[k], label=k)
+        fig, ax = series_plot(x_data=tuple(x_data),
+                              y_data=series,
+                              title="Prices elasticity curve",
+                              xlabel="Price increase (%)",
+                              ylabel="Tickets sold",
+                              xticks=x_data[::3],
+                              xticks_labels=tuple([f"{x:.0f}%" for x in x_data][::3]),
+                              figsize=(10, 6))
 
-        plt.xticks(ticks=t[::3], labels=[f"{x:.0f}%" for x in t][::3])
-        plt.xlabel("Price increase (%)")
-        plt.ylabel("Tickets sold")
-        plt.legend()
         plt.show()

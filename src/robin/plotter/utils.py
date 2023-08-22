@@ -33,7 +33,7 @@ def series_plot(x_data: Tuple,
     fig.subplots_adjust(hspace=0.75, bottom=0.2, top=0.9)
 
     ax.set_facecolor('#F5F5F5')
-    ax.set_title(title)
+    ax.set_title(title, fontweight='bold')
     ax.set_xlim(x_data[0], x_data[-1])
     ax.set_ylim(0, max([max(y_data[y]) for y in y_data]) * 1.1)
     for y in y_data:
