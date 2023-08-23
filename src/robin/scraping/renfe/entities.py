@@ -509,9 +509,9 @@ class DriverManager:
         for seat, col in zip(seat_types, cols):
             button_col = col.find('button')  # Button columns contains the prices info
             price = float('NaN')
-            price_div = button_col.find_all('div')
+            price_div = button_col.find('div', {'class': 'precio booking-list-element-big-font'})
             if price_div:
-                price = price_div[1].text.split(' ')[0].replace(',', '.')
+                price = price_div.text.split(' ')[0].replace(',', '.')
             assert is_number(price), f'Error parsing price: {price}'
             prices[seat] = price
 
