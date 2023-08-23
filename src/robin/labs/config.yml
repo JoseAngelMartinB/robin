@@ -1,0 +1,13 @@
+# Config file used in Robin Labs
+
+seed: 10
+supply:
+  - prices: default
+  - capacities: default
+  - capacity_constraints: default
+  - services: default
+
+demand:
+  - passengers: default
+  - markets: default
+  - user_types: default
