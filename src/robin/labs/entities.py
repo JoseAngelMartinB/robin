@@ -11,6 +11,7 @@ from src.robin.kernel.entities import Kernel
 from src.robin.plotter.utils import plot_series
 
 from matplotlib import pyplot as plt
+from pathlib import Path
 from tqdm.auto import tqdm
 from typing import Mapping
 
@@ -22,9 +23,9 @@ class RobinLab:
     This class is intended to run Robin simulation experiments.
     """
     def __init__(self,
-                 path_config_supply: str,
-                 path_config_demand: str,
-                 tmp_path: str,
+                 path_config_supply: Path,
+                 path_config_demand: Path,
+                 tmp_path: Path,
                  verbose=0):
         """
         Initialize Robin Lab experiment.
@@ -49,7 +50,7 @@ class RobinLab:
         Args:
             config: Lab configuration.
         """
-        if os.path.exists(self.tmp_path):
+        if self.tmp_path.exists():
             shutil.rmtree(self.tmp_path)
         self._create_tmp_dir()
         self.lab_config = config
@@ -59,7 +60,7 @@ class RobinLab:
 
         if self.lab_config["supply"]:  # Check if it's a supply or demand experiment
             self._supply_yaml_editor()
-            shutil.copy(self.path_config_demand, self.tmp_path + "/demand/" + os.path.basename(self.path_config_demand))
+            shutil.copy(self.path_config_demand, self.tmp_path / "demand" / self.path_config_demand.name)
         else:
             raise ValueError("At least one of the lab configs must be non-empty.")
 
@@ -69,17 +70,17 @@ class RobinLab:
         """
         Create temporary directory and folders.
         """
-        if not os.path.exists(self.tmp_path):
+        if not self.tmp_path.exists():
             os.makedirs(self.tmp_path)
 
-        if not os.path.exists(self.tmp_path + "/supply"):
-            os.makedirs(self.tmp_path + "/supply")
+        if not os.path.exists(self.tmp_path / "supply"):
+            os.makedirs(self.tmp_path / "supply")
 
-        if not os.path.exists(self.tmp_path + "/demand"):
-            os.makedirs(self.tmp_path + "/demand")
+        if not os.path.exists(self.tmp_path / "demand"):
+            os.makedirs(self.tmp_path / "demand")
 
-        if not os.path.exists(self.tmp_path + "/output"):
-            os.makedirs(self.tmp_path + "/output")
+        if not os.path.exists(self.tmp_path / "output"):
+            os.makedirs(self.tmp_path / "output")
 
     def _supply_yaml_editor(self) -> None:
         """
@@ -116,25 +117,40 @@ class RobinLab:
 
     def simulate(self) -> None:
         """Simulate the experiment."""
-        # For each supply file, run the simulation.
-        for i, supply_file in enumerate(tqdm(sorted(os.listdir(self.tmp_path + "/supply"), key=lambda x: int(x.split(".")[0].split("_")[-1]))), start=1):
-            kernel = Kernel(path_config_supply=self.tmp_path + "/supply/" + supply_file,
-                            path_config_demand=self.tmp_path + "/demand/" + os.path.basename(self.path_config_demand),
+        def file_number(file) -> int:
+            """
+            Get number from file name.
+
+            Args:
+                file: File name.
+
+            Returns:
+                int number from file name.
+            """
+            file = Path(file)
+            file_name = file.stem
+            return int(file_name.split("_")[-1])
+
+        # Run simulation for each supply file
+        sorted_supply_files = sorted(os.listdir(self.tmp_path / "supply"), key=file_number)
+        for i, supply_file in enumerate(tqdm(sorted_supply_files), start=1):
+            kernel = Kernel(path_config_supply=self.tmp_path / "supply" / supply_file,
+                            path_config_demand=self.tmp_path / "demand" / self.path_config_demand.name,
                             seed=self.seed)
-            kernel.simulate(output_path=f"{self.tmp_path}/output/output_{i}.csv")
+            kernel.simulate(output_path=Path(f"{self.tmp_path}/output/output_{i}.csv"))
 
     def _get_tickets_sold(self) -> Mapping:
         """Get the number of tickets sold for each supply file."""
         tickets_sold = {}
-        for output_file in sorted(os.listdir(self.tmp_path + "/output"), key=lambda x: int(x.split(".")[0].split("_")[-1])):
-            df = pd.read_csv(self.tmp_path + "/output/" + output_file)
+        for output_file in sorted(os.listdir(self.tmp_path / "output"), key=lambda x: int(x.split(".")[0].split("_")[-1])):
+            df = pd.read_csv(self.tmp_path / "output" / output_file)
             buffer_tickets_sold = df.groupby(by=['seat']).size().to_dict()
             buffer_tickets_sold['Total'] = sum(buffer_tickets_sold.values())
             tickets_sold[output_file.split(".")[0].split("_")[-1]] = buffer_tickets_sold
 
         return tickets_sold
 
-    def plot_elasticity_curve(self) -> None:
+    def plot_elasticity_curve(self, save_path: Path = None) -> None:
         """Plot the elasticity curve."""
         tickets_sold = self._get_tickets_sold()
 
@@ -158,3 +174,6 @@ class RobinLab:
                               figsize=(10, 6))
 
         plt.show()
+
+        if save_path:
+            fig.savefig(save_path, format='svg', dpi=300, bbox_inches='tight', transparent=True)

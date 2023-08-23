@@ -13,7 +13,6 @@ def plot_series(x_data: Tuple,
                 xticks: Tuple,
                 xticks_labels: Tuple,
                 figsize: Tuple[int, int] = (10, 8),
-                save_path: str = None
     ) -> Tuple[plt.Figure, plt.Axes]:
     """
     Generic plot for series.
@@ -27,7 +26,6 @@ def plot_series(x_data: Tuple,
         xticks: X-axis ticks.
         xticks_labels: X-axis ticks labels.
         figsize: Figure size.
-        save_path: Path to save the plot.
     """
     fig, ax = plt.subplots(nrows=1, ncols=1, figsize=figsize)
     fig.subplots_adjust(hspace=0.75, bottom=0.2, top=0.9)
@@ -44,8 +42,5 @@ def plot_series(x_data: Tuple,
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
     ax.legend()
-
-    if save_path:
-        fig.savefig(save_path, format='svg', dpi=300, bbox_inches='tight', transparent=True)
 
     return fig, ax
