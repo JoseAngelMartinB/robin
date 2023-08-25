@@ -4,6 +4,7 @@ import copy
 import numpy as np
 import os
 import pandas as pd
+import progressbar
 import shutil
 import yaml
 
@@ -12,7 +13,6 @@ from src.robin.plotter.utils import plot_series
 
 from matplotlib import pyplot as plt
 from pathlib import Path
-from tqdm.auto import tqdm
 from typing import Mapping
 
 
@@ -102,18 +102,20 @@ class RobinLab:
 
         supply_lab_config = self.lab_config["supply"]
         arange_args = supply_lab_config
-        for i, factor in enumerate(tqdm(np.arange(**arange_args)), start=1):
-            modified_data = copy.deepcopy(original_data)
-            modified_services = modified_data.get('service')
-            assert modified_services, "No services found in the supply config."
-            for service in modified_services:
-                modify_prices(service['origin_destination_tuples'], factor)
+        with progressbar.ProgressBar(min_value=1, max_value=len(np.arange(**arange_args))) as bar:
+            for i, factor in enumerate(np.arange(**arange_args), start=1):
+                modified_data = copy.deepcopy(original_data)
+                modified_services = modified_data.get('service')
+                assert modified_services, "No services found in the supply config."
+                for service in modified_services:
+                    modify_prices(service['origin_destination_tuples'], factor)
 
-            modified_data['service'] = modified_services
-            supply_file_name = f"supply_{i}.yml"
-            save_path = f"{self.tmp_path}/supply/{supply_file_name}"
-            with open(save_path, 'w') as file:
-                yaml.safe_dump(modified_data, file)
+                modified_data['service'] = modified_services
+                supply_file_name = f"supply_{i}.yml"
+                save_path = f"{self.tmp_path}/supply/{supply_file_name}"
+                with open(save_path, 'w') as file:
+                    yaml.safe_dump(modified_data, file)
+                bar.update(i)
 
     def simulate(self) -> None:
         """Simulate the experiment."""
@@ -133,11 +135,13 @@ class RobinLab:
 
         # Run simulation for each supply file
         sorted_supply_files = sorted(os.listdir(self.tmp_path / "supply"), key=file_number)
-        for i, supply_file in enumerate(tqdm(sorted_supply_files), start=1):
-            kernel = Kernel(path_config_supply=self.tmp_path / "supply" / supply_file,
-                            path_config_demand=self.tmp_path / "demand" / self.path_config_demand.name,
-                            seed=self.seed)
-            kernel.simulate(output_path=Path(f"{self.tmp_path}/output/output_{i}.csv"))
+        with progressbar.ProgressBar(min_value=1, max_value=len(sorted_supply_files)) as bar:
+            for i, supply_file in enumerate(sorted_supply_files, start=1):
+                kernel = Kernel(path_config_supply=self.tmp_path / "supply" / supply_file,
+                                path_config_demand=self.tmp_path / "demand" / self.path_config_demand.name,
+                                seed=self.seed)
+                kernel.simulate(output_path=Path(f"{self.tmp_path}/output/output_{i}.csv"))
+                bar.update(i)
 
     def _get_tickets_sold(self) -> Mapping:
         """Get the number of tickets sold for each supply file."""
