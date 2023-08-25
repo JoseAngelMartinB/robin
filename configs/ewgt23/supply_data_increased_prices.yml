@@ -72,7 +72,7 @@ seat:
   hard_type: 2
   soft_type: 2
 - id: '1'
-  name: Basico
+  name: Básico
   hard_type: 1
   soft_type: 1
 corridor:
