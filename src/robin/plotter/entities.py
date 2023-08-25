@@ -141,8 +141,7 @@ class KernelPlotter:
         """
         # Get the data of the service
         service_data = self.df[self.df['service'] == service_id]
-        if service_data.empty:
-            return {}, 0
+
         tickets_sold = service_data.groupby(by=['departure_station']).size()
         negative_tickets = service_data.groupby(by=['arrival_station']).size()
 
@@ -341,10 +340,12 @@ class KernelPlotter:
             service_id (Union[int, str]): Id of the service.
             save_path (str, optional): Path to save the plot. Defaults to None.
         """
-        data, service_max_capacity = self._get_service_capacity(service_id)
-        if not data:
+        if not service_id in (service.id for service in self.supply.services):
             print(f'Service {service_id} not found in the provided supply data.')
             return
+
+        data, service_max_capacity = self._get_service_capacity(service_id)
+
         self._plot_bar_chart(
             data=data,
             service_max_capacity=service_max_capacity,
@@ -521,7 +522,7 @@ class KernelPlotter:
         fig, ax = plt.subplots(1, 1, figsize=(7, 4))
         colors = [self.colors[i % len(self.colors)] for i, _ in enumerate(tickets_sold_by_seat.keys())]
 
-        ax.set_title('Distribución de Asientos', fontweight='bold')
+        ax.set_title('Seat types distribution', fontweight='bold')
         ax.pie(tickets_sold_by_seat.values(), labels=tickets_sold_by_seat.keys(), colors=colors, autopct='%1.1f%%')
         ax.legend(bbox_to_anchor=(0.2, 0.2))
         plt.show()
