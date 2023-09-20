@@ -190,7 +190,28 @@ class KernelPlotter:
 
         sorted_data = dict(sorted(data.items(), key=lambda x: x[0]))
         return sorted_data
-    
+
+    def _get_tickets_by_pair_seat(self) -> Dict[str, Dict[str, int]]:
+        """
+        Get number of tickets sold by pair of stations and seat type.
+
+        Returns:
+            Dict[str, Dict[str, int]]: Dictionary with number of tickets sold by pair of stations and seat type.
+        """
+        passengers_with_ticket = self.df[~self.df.service.isnull()]
+        tickets_sold = (passengers_with_ticket.groupby(by=['departure_station', 'arrival_station', 'seat'])
+                        .size()
+                        .reset_index(name='count'))
+
+        result = {}
+        for (departure, arrival), group in tickets_sold.groupby(['departure_station', 'arrival_station']):
+            origin_destination = f'{self.stations_dict[departure]}\n{self.stations_dict[arrival]}'
+            seat_counts = group.groupby('seat')['count'].apply(lambda x: x.values[0]).to_dict()
+            result[origin_destination] = seat_counts
+
+        sorted_count_pairs_sold = dict(sorted(result.items(), key=lambda x: sum(x[1].values()), reverse=True))
+        return sorted_count_pairs_sold
+
     def _get_tickets_by_seat(self) -> Mapping[str, int]:
         """
         Get the percentage of tickets sold per seat type.
@@ -356,42 +377,70 @@ class KernelPlotter:
             save_path=save_path
         )
 
-    def plot_tickets_by_pair(self, y_limit: int = None, save_path: str = None):
-        pairs_sold = self._get_pairs_sold()
-        total_tickets_sold = sum(pairs_sold.values())
+    def plot_tickets_by_pair(self, y_limit: int = None, save_path: str = None, seat_disaggregation: bool = False):
+        def set_ax_properties(ax, pairs, y_limit, title, x_labels):
+            ax.set_facecolor('#F5F5F5')
+            ax.set_title(title, fontweight='bold')
+            ax.set_ylabel('Number of tickets sold')
+            ax.set_xlabel('Trip (Origin-Destination)', labelpad=10)
+            ax.set_xticks(np.arange(len(pairs)))
+            ax.set_xticklabels(x_labels, fontsize=8)
+            ax.set_xlim([-0.5, len(pairs) - 0.5])
+            ax.set_ylim([0, y_limit])
+            ax.grid(axis='y', color='#A9A9A9', alpha=0.3, zorder=1)
 
-        # Sort alphabetical pairs
-        pairs = sorted(list(pairs_sold.keys()))
+        if seat_disaggregation:
+            pairs_seat_sold = self._get_tickets_by_pair_seat()
+            total_tickets_sold = sum(sum(v.values()) for v in pairs_seat_sold.values())
 
-        # Assign a color to each pair
-        colors = {pair: color for pair, color in zip(pairs, self.colors)}
+            pairs = sorted(pairs_seat_sold.keys())
+            seats = sorted(set(seat for pair in pairs_seat_sold.values() for seat in pair.keys()))
 
-        fig, ax = plt.subplots(1, 1, figsize=(7, 4))
-        fig.subplots_adjust(hspace=0.75, bottom=0.2, top=0.9)
+            colors = {seat: color for seat, color in zip(seats, self.colors)}
 
-        ax.set_facecolor('#F5F5F5')
-        ax.set_title(f'Tickets sold by trip ({total_tickets_sold} tickets sold)', fontweight='bold')
-        ax.set_ylabel('Number of tickets sold')
-        ax.set_xlabel('Trip (Origin-Destination)', labelpad=10)
-        ax.set_xticks(np.arange(len(pairs_sold)))
-        ax.set_xticklabels(pairs_sold.keys(), fontsize=8)
-        ax.set_xlim([-0.5, len(pairs_sold)-0.5])
-        y_limit = y_limit if y_limit is not None else max(pairs_sold.values()) * 1.1
-        ax.set_ylim([0, y_limit])
+            fig, axs = plt.subplots(1, 1, figsize=(7, 4))
+            fig.subplots_adjust(hspace=0.75, bottom=0.2, top=0.9)
 
-        for i, pair in enumerate(pairs_sold):
-            ax.bar(i, pairs_sold[pair],
-                   bottom=0,
-                   color=colors[pair],
-                   label=pair,
-                   edgecolor='black',
-                   linewidth=0.5,
-                   zorder=2)
-            ax.bar_label(ax.containers[i], padding=3)
+            y_limit = y_limit if y_limit is not None else max(sum(v.values()) for v in pairs_seat_sold.values()) * 1.1
+            set_ax_properties(axs, pairs_seat_sold, y_limit,
+                              f'Tickets sold by trip ({total_tickets_sold} tickets sold)', pairs)
 
-        ax.grid(axis='y', color='#A9A9A9', alpha=0.3, zorder=1)
-        ax.legend()
-        plt.show()
+            bottom = np.zeros(len(pairs_seat_sold))
+            total_values = np.zeros(len(pairs_seat_sold))
+            for j, seat_type in enumerate(seats):
+                values = [pairs_seat_sold[pair].get(seat_type, 0) for pair in pairs_seat_sold.keys()]
+                axs.bar(np.arange(len(pairs_seat_sold)), values, bottom=bottom, color=colors[seat_type],
+                        label=seat_type, edgecolor='black', linewidth=0.5, zorder=2)
+                bottom += values
+                total_values += values
+
+            for i, total_value in enumerate(total_values):
+                axs.text(i, total_value + 0.01 * y_limit, int(total_value), ha='center', va='bottom')
+
+            axs.legend()
+            plt.show()
+        else:
+            pairs_sold = self._get_pairs_sold()
+            total_tickets_sold = sum(pairs_sold.values())
+
+            pairs = sorted(pairs_sold.keys())
+
+            colors = {pair: color for pair, color in zip(pairs, self.colors)}
+
+            fig, ax = plt.subplots(1, 1, figsize=(7, 4))
+            fig.subplots_adjust(hspace=0.75, bottom=0.2, top=0.9)
+
+            y_limit = y_limit if y_limit is not None else max(pairs_sold.values()) * 1.1
+            set_ax_properties(ax, pairs_sold, y_limit, f'Tickets sold by trip ({total_tickets_sold} tickets sold)',
+                              pairs)
+
+            for i, pair in enumerate(pairs):
+                ax.bar(i, pairs_sold[pair], bottom=0, color=colors[pair], label=pair, edgecolor='black', linewidth=0.5,
+                       zorder=2)
+                ax.bar_label(ax.containers[i], padding=3)
+
+            ax.legend()
+            plt.show()
 
         if save_path is not None:
             fig.savefig(save_path, dpi=300, bbox_inches='tight', transparent=True)
