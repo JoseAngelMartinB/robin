@@ -99,14 +99,13 @@ class DriverManager:
         raw_name = re.sub(r'[^a-zA-Z0-9 -]', '', raw_text)  # Remove non-alphanumeric characters
         name = ' '.join(filter(None, re.split(r'\W+', raw_name))).lower()
 
-        print(name)
-
         best_match = max(adif_names,
                          key=lambda gn: sum(w in gn.split(' ') for w in name.split(' ')),
                          default='Unknown')
 
         if best_match != 'Unknown':
             return self.stations_df.at[adif_names.index(best_match), 'stop_id']
+        print(f'Unknown station: {name}')
         return '00000'
 
     def _get_trip_data(
@@ -441,8 +440,6 @@ class DriverManager:
             origin_id (str): Origin station id.
             destination_id (str): Destination station id.
             date (datetime.date): Initial date to search for trips.
-            range_days (int): Number of days to search for trips from the initial date.
-            save_path (str): Path to save the CSV files.
 
         Returns:
             pd.DataFrame: DataFrame with the scraped trips data.
