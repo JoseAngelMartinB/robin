@@ -26,7 +26,7 @@ SCHEDULE_URL = 'https://horarios.renfe.com/HIRRenfeWeb/'
 # Renfe stations CSV path
 SAVE_PATH = 'data/renfe'
 RENFE_STATIONS_CSV = f'{SAVE_PATH}/renfe_stations.csv'
-
+LR_RENFE_SERVICES = ['AVE', 'AVLO', 'ALVIA', 'AVANT']
 
 class DriverManager:
     """
@@ -38,13 +38,16 @@ class DriverManager:
         allowed_train_types (List[str]): List of allowed train types.
     """
 
-    def __init__(self, stations_df: pd.DataFrame, allowed_train_types: List[str] = ['AVE', 'AVLO']) -> None:
+    def __init__(self,
+                 stations_df: pd.DataFrame,
+                 allowed_train_types: List[str] = LR_RENFE_SERVICES
+        ) -> None:
         """
         Initializes the DriverManager object.
 
         Args:
             stations_df (pd.DataFrame): Dataframe with the stations information.
-            allowed_train_types (List[str]): List of allowed train types. Defaults to ['AVE', 'AVLO'].
+            allowed_train_types (List[str]): List of allowed train types.
         """
         driver_options = Options()
         driver_options.add_argument('--disable-extensions')
@@ -74,9 +77,9 @@ class DriverManager:
         """
         df = pd.DataFrame(records, columns=col_names)
 
-        # Filter only AVE or AVLO trains
         train_type_filter = df['train_type'].str.contains('|'.join(self.allowed_train_types))
         df = df[train_type_filter].reset_index(drop=True)
+        print(df.head())
         df['service_id'] = df.apply(lambda x: x['trip_id'] + '_' + x['departure'].strftime('%d-%m-%Y-%H.%M'), axis=1)
         return df
 
@@ -95,6 +98,8 @@ class DriverManager:
 
         raw_name = re.sub(r'[^a-zA-Z0-9 -]', '', raw_text)  # Remove non-alphanumeric characters
         name = ' '.join(filter(None, re.split(r'\W+', raw_name))).lower()
+
+        print(name)
 
         best_match = max(adif_names,
                          key=lambda gn: sum(w in gn.split(' ') for w in name.split(' ')),
@@ -119,15 +124,13 @@ class DriverManager:
         Returns:
             Tuple[str, str, str, datetime.datetime, float, Dict[str, float]]: Data of the trip from the schedules table.
         """
-        trip_id = tuple(filter(None, re.split(r'\s+', row[0].text.strip())))[0]
-        train_type = self._map_train_type(trip_id=trip_id)
+        trip_info = list(filter(None, re.split(r'\s+', row[0].text.strip())))[:2]
+        trip_id, train_type = trip_info
+        train_type = remove_blanks(x=train_type, replace_by='')
 
         schedule_link = row[0].find('a')['href']
         trip_url = DriverManager._get_trip_url(schedule_link=schedule_link, schedule_url=SCHEDULE_URL)
-        if train_type not in ['AVE', 'AVLO']:
-            trip_schedule = 1
-        else:
-            trip_schedule = self._scrape_trip_schedule(url=trip_url)
+        trip_schedule = self._scrape_trip_schedule(url=trip_url)
 
         html_prices = re.sub(r'\s+', '', row[4].find('div').text)
         raw_prices = re.sub(r'PrecioInternet|:', '', html_prices).replace(',', '.')
@@ -429,7 +432,7 @@ class DriverManager:
             origin_id: str,
             destination_id: str,
             date: datetime.date
-    ) -> Union[bool, pd.DataFrame]:
+    ) -> Union[None, pd.DataFrame]:
         """
         Obtains two pandas dataframes from Renfe website, one with the trips information and another with the stops,
             which are saved to CSV files.
@@ -457,9 +460,13 @@ class DriverManager:
             row = tr.select('td.txt_borde1.irf-travellers-table__td')
             if not self._is_content_row(row):
                 continue
-            service_data = self._get_trip_data(row, date)
-            if service_data[1] not in self.allowed_train_types:
+
+            trip_info = list(filter(None, re.split(r'\s+', row[0].text.strip())))[:2]
+            trip_id, train_type = trip_info
+            train_type = remove_blanks(x=train_type, replace_by='')
+            if train_type not in self.allowed_train_types:
                 continue
+            service_data = self._get_trip_data(row=row, date=date)
             rows.append(service_data)
         date += datetime.timedelta(days=1)
 
@@ -555,7 +562,7 @@ class RenfeScraper:
             self,
             stations_csv_path: str = RENFE_STATIONS_CSV,
             menu_url: str = MAIN_MENU_URL,
-            allowed_train_types: List[str] = ['AVE', 'AVLO']
+            allowed_train_types: List[str] = LR_RENFE_SERVICES
     ) -> None:
         """
         Initialize a RenfeScraper object.
