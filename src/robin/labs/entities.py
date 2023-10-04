@@ -1,14 +1,13 @@
 """Entities for Robin Labs."""
 
 import copy
-import numpy as np
 import os
-import pandas as pd
 import progressbar
 import shutil
 import yaml
 
 from src.robin.kernel.entities import Kernel
+from src.robin.labs.utils import *
 from src.robin.plotter.utils import plot_series
 
 from matplotlib import pyplot as plt
@@ -181,3 +180,38 @@ class RobinLab:
 
         if save_path:
             fig.savefig(save_path, format='svg', dpi=300, bbox_inches='tight', transparent=True)
+
+
+class RobinKPIs:
+    """
+        Robin KPIs class.
+
+        This class is intended to calculate KPIs from multiple Robin's output files.
+    """
+    def __init__(self,
+                 path_supply_files: Path,
+                 path_demand_files: Path,
+                 path_output_files: Path
+        ):
+        """
+        Initialize Robin Lab experiment.
+
+        Args:
+            path_supply_files: Path to supply configurations.
+            path_demand_files: Path to demand configurations.
+            path_output_files: Path to output files.
+        """
+        self.path_supply_files = path_supply_files
+        self.path_demand_files = path_demand_files
+        self.path_output_files = path_output_files
+
+    # TODO: Add KPIs calculation
+    # Beneficio (bruto) total y desagregado por tipo de asiento
+    # Nº pasajeros (Total y desagregado por tipos)
+    # Ranking trayectos más demandados
+    # Ranking trayectos mayor beneficio
+    # Ranking trayectos mayor ocupación
+    # Utilidad media (total y desagregada por tipos)
+    # Ocupación media (total y desagregada por tipos) -> Revisar si es posible en servicio completo
+    # o desagregado por tramos
+    # Estudiar pasajeros con utilidad negativa (tipos, trayectos, etc.)
