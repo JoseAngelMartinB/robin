@@ -37,29 +37,13 @@ class KernelPlotter:
         self.df = pd.read_csv(path_output_csv, dtype={'departure_station': str, 'arrival_station': str})
         self.supply = Supply.from_yaml(path_config_supply)
         self.df["purchase_date"] = self.df.apply(
-            lambda row: self._get_purchase_date(row['purchase_day'], row['arrival_day']), axis=1
+            lambda row: get_purchase_date(row['purchase_day'], row['arrival_day']), axis=1
         )
 
         plt.style.use('seaborn-pastel')
         self.colors = ['lemonchiffon', 'lightsteelblue', 'palegreen', 'lightsalmon', 'lavender', 'lightgray']
-        self.stations_dict = {str(sta.id): sta.name for s in self.supply.services for sta in s.line.stations}
+        self.stations_dict = self.supply.get_stations_dict()
         locale.setlocale(locale.LC_ALL, 'es_ES.UTF-8')
-
-    def _get_purchase_date(self, anticipation, arrival_day):
-        """
-        Get purchase date using the anticipation and arrival day of the passenger.
-
-        Args:
-            anticipation (int): Anticipation of the passenger.
-            arrival_day (str): Arrival day of the passenger.
-
-        Returns:
-            datetime.date: Purchase day of the passenger.
-        """
-        anticipation = datetime.timedelta(days=anticipation)
-        arrival_day = datetime.datetime.strptime(arrival_day, "%Y-%m-%d")
-        purchase_day = arrival_day - anticipation
-        return purchase_day.date()
 
     def _get_tickets_by_arrival_day_seat(self) -> Mapping[str, Mapping[str, int]]:
         """
