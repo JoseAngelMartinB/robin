@@ -7,6 +7,8 @@ import shutil
 import yaml
 
 from src.robin.kernel.entities import Kernel
+from src.robin.supply.entities import Supply
+from src.robin.demand.entities import Demand
 from src.robin.labs.utils import *
 from src.robin.plotter.utils import plot_series
 
@@ -21,6 +23,7 @@ class RobinLab:
 
     This class is intended to run Robin simulation experiments.
     """
+
     def __init__(self,
                  path_config_supply: Path,
                  path_config_demand: Path,
@@ -37,6 +40,9 @@ class RobinLab:
         """
         self.path_config_supply = path_config_supply
         self.path_config_demand = path_config_demand
+        self.default_supply = Supply.from_yaml(path_config_supply)
+        self.default_demand = Demand.from_yaml(path_config_demand)
+        self.stations_dict = self.default_supply.get_stations_dict()
         self.tmp_path = tmp_path
         self.lab_config = None
         self.verbose = verbose
@@ -59,7 +65,6 @@ class RobinLab:
 
         if self.lab_config["supply"]:  # Check if it's a supply or demand experiment
             self._supply_yaml_editor()
-            shutil.copy(self.path_config_demand, self.tmp_path / "demand" / self.path_config_demand.name)
         else:
             raise ValueError("At least one of the lab configs must be non-empty.")
 
@@ -85,6 +90,7 @@ class RobinLab:
         """
         Modify default supply based on provided simulation config.
         """
+
         def modify_prices(data: Mapping, factor: float):
             if isinstance(data, dict):
                 for key, value in data.items():
@@ -111,13 +117,17 @@ class RobinLab:
 
                 modified_data['service'] = modified_services
                 supply_file_name = f"supply_{i}.yml"
-                save_path = f"{self.tmp_path}/supply/{supply_file_name}"
-                with open(save_path, 'w') as file:
+                save_path_supply = f"{self.tmp_path}/supply/{supply_file_name}"
+
+                with open(save_path_supply, 'w') as file:
                     yaml.safe_dump(modified_data, file)
+
+                shutil.copy(self.path_config_demand, self.tmp_path / "demand" / f"demand_{i}.yml")
                 bar.update(i)
 
     def simulate(self) -> None:
         """Simulate the experiment."""
+
         def file_number(file) -> int:
             """
             Get number from file name.
@@ -134,10 +144,13 @@ class RobinLab:
 
         # Run simulation for each supply file
         sorted_supply_files = sorted(os.listdir(self.tmp_path / "supply"), key=file_number)
+        sorted_demand_files = sorted(os.listdir(self.tmp_path / "demand"), key=file_number)
         with progressbar.ProgressBar(min_value=1, max_value=len(sorted_supply_files)) as bar:
-            for i, supply_file in enumerate(sorted_supply_files, start=1):
+            for i, supply_file, demand_file in zip(range(1, len(sorted_supply_files)+1),
+                                                   sorted_supply_files,
+                                                   sorted_demand_files):
                 kernel = Kernel(path_config_supply=self.tmp_path / "supply" / supply_file,
-                                path_config_demand=self.tmp_path / "demand" / self.path_config_demand.name,
+                                path_config_demand=self.tmp_path / "demand" / demand_file,
                                 seed=self.seed)
                 kernel.simulate(output_path=Path(f"{self.tmp_path}/output/output_{i}.csv"))
                 bar.update(i)
@@ -145,7 +158,8 @@ class RobinLab:
     def _get_tickets_sold(self) -> Mapping:
         """Get the number of tickets sold for each supply file."""
         tickets_sold = {}
-        for output_file in sorted(os.listdir(self.tmp_path / "output"), key=lambda x: int(x.split(".")[0].split("_")[-1])):
+        for output_file in sorted(os.listdir(self.tmp_path / "output"),
+                                  key=lambda x: int(x.split(".")[0].split("_")[-1])):
             df = pd.read_csv(self.tmp_path / "output" / output_file)
             buffer_tickets_sold = df.groupby(by=['seat']).size().to_dict()
             buffer_tickets_sold['Total'] = sum(buffer_tickets_sold.values())
@@ -181,37 +195,37 @@ class RobinLab:
         if save_path:
             fig.savefig(save_path, format='svg', dpi=300, bbox_inches='tight', transparent=True)
 
+    def get_kpis(self):
+        file_number = lambda file: int(Path(file).stem.split("_")[-1])
+        output_files = sorted(os.listdir(self.tmp_path / "output"), key=file_number)
+        supply_files = sorted(os.listdir(self.tmp_path / "supply"), key=file_number)
+        demand_files = sorted(os.listdir(self.tmp_path / "demand"), key=file_number)
 
-class RobinKPIs:
-    """
-        Robin KPIs class.
+        passenger_status = {}
+        tickets_by_seat = {}
+        tickets_by_date_seat = {}
+        tickets_by_date_user_seat = {}
+        tickets_by_pair_seat = {}
+        pairs_sold = {}
+        with progressbar.ProgressBar(min_value=1, max_value=len(output_files)) as bar:
+            for i, supply_file, demand_file, output_file in zip(range(1, len(output_files)+1),
+                                                                supply_files,
+                                                                demand_files,
+                                                                output_files):
+                # supply = Supply.from_yaml(supply_file)
+                # demand = Demand.from_yaml(demand_file)
+                output = pd.read_csv(self.tmp_path / "output" / output_file,
+                                     dtype={'departure_station': str, 'arrival_station': str})
+                output["purchase_date"] = output.apply(
+                    lambda row: get_purchase_date(row['purchase_day'], row['arrival_day']), axis=1
+                )
 
-        This class is intended to calculate KPIs from multiple Robin's output files.
-    """
-    def __init__(self,
-                 path_supply_files: Path,
-                 path_demand_files: Path,
-                 path_output_files: Path
-        ):
-        """
-        Initialize Robin Lab experiment.
+                passenger_status[i] = get_passenger_status(output)
+                # tickets_by_seat[i] = get_tickets_by_seat(output)
+                # tickets_by_date_seat[i] = get_tickets_by_date_seat(output)
+                tickets_by_date_user_seat[i] = get_tickets_by_date_user_seat(output)
+                tickets_by_pair_seat[i] = get_tickets_by_pair_seat(output, self.stations_dict)
+                pairs_sold[i] = get_pairs_sold(output, self.stations_dict)
+                bar.update(i)
 
-        Args:
-            path_supply_files: Path to supply configurations.
-            path_demand_files: Path to demand configurations.
-            path_output_files: Path to output files.
-        """
-        self.path_supply_files = path_supply_files
-        self.path_demand_files = path_demand_files
-        self.path_output_files = path_output_files
-
-    # TODO: Add KPIs calculation
-    # Beneficio (bruto) total y desagregado por tipo de asiento
-    # Nº pasajeros (Total y desagregado por tipos)
-    # Ranking trayectos más demandados
-    # Ranking trayectos mayor beneficio
-    # Ranking trayectos mayor ocupación
-    # Utilidad media (total y desagregada por tipos)
-    # Ocupación media (total y desagregada por tipos) -> Revisar si es posible en servicio completo
-    # o desagregado por tramos
-    # Estudiar pasajeros con utilidad negativa (tipos, trayectos, etc.)
+        return passenger_status, tickets_by_date_user_seat, tickets_by_pair_seat, pairs_sold
