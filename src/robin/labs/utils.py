@@ -1,9 +1,27 @@
 """Utils for the Robin Labs module."""
 
+import datetime
 import numpy as np
 import pandas as pd
 
 from typing import Dict, List, Mapping, Tuple
+
+
+def get_purchase_date(anticipation, arrival_day):
+    """
+    Get purchase date using the anticipation and arrival day of the passenger.
+
+    Args:
+        anticipation (int): Anticipation of the passenger.
+        arrival_day (str): Arrival day of the passenger.
+
+    Returns:
+        datetime.date: Purchase day of the passenger.
+    """
+    anticipation = datetime.timedelta(days=anticipation)
+    arrival_day = datetime.datetime.strptime(arrival_day, "%Y-%m-%d")
+    purchase_day = arrival_day - anticipation
+    return purchase_day.date()
 
 
 def get_passenger_status(df: pd.DataFrame) -> Tuple[Mapping[int, int], List[str]]:
@@ -140,6 +158,7 @@ def get_pairs_sold(df: pd.DataFrame, stations_dict: Mapping) -> Dict[str, int]:
 
     Args:
         df (pd.DataFrame): Dataframe with the information of the passengers.
+        stations_dict (Mapping): Dictionary with the mapping between station id and station name.
 
     Returns:
         Dict[str, int]: Dictionary with total tickets sold for each pair of stations.
