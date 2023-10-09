@@ -7,6 +7,7 @@ from src.robin.supply.utils import get_time, get_date, format_td, set_stations_i
 
 from copy import deepcopy
 from functools import cache
+from pathlib import Path
 from typing import Any, Dict, List, Mapping, Set, Tuple, Union
 
 
@@ -656,12 +657,12 @@ class Supply:
         self.tsps = list(set(service.tsp for service in services))
 
     @classmethod
-    def from_yaml(cls, path: str) -> 'Supply':
+    def from_yaml(cls, path: Path) -> 'Supply':
         """
         Class method to create a Supply object (List[Service]) from a yaml file.
 
         Args:
-            path (str): Path to the yaml file.
+            path (Path): Path to the yaml file.
 
         Returns:
             Supply: Supply object.
@@ -679,6 +680,16 @@ class Supply:
         services = Supply._get_services(data, lines, tsps, time_slots, seats, rolling_stock, key='service')
 
         return cls(list(services.values()))
+
+    def get_stations_dict(self):
+        """
+        Get a dictionary of stations in the supply with the station id as key and the station name as value.
+
+        Returns:
+            Dict[str, str]: Dictionary of stations in the supply with the station id as key and the station name
+            as value.
+        """
+        return {str(sta.id): sta.name for s in self.services for sta in s.line.stations}
 
     def filter_service_by_id(self, service_id: str) -> Service:
         """

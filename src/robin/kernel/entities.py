@@ -7,6 +7,8 @@ import os
 
 from src.robin.demand.entities import Demand, Passenger
 from src.robin.supply.entities import Service, Supply
+
+from pathlib import Path
 from typing import List, Union
 
 
@@ -19,13 +21,13 @@ class Kernel:
         demand (Demand): Demand object.
     """
     
-    def __init__(self, path_config_supply: str, path_config_demand: str, seed: Union[int, None] = None) -> None:
+    def __init__(self, path_config_supply: Path, path_config_demand: Path, seed: Union[int, None] = None) -> None:
         """
         Initialize a kernel object.
 
         Args:
-            path_config_supply (str): Path to the supply configuration file.
-            path_config_demand (str): Path to the demand configuration file.
+            path_config_supply (Path): Path to the supply configuration file.
+            path_config_demand (Path): Path to the demand configuration file.
             seed (int, optional): Seed for the random number generator. Defaults to None.
         """
         if seed is not None:
@@ -33,13 +35,13 @@ class Kernel:
         self.supply = Supply.from_yaml(path_config_supply)
         self.demand = Demand.from_yaml(path_config_demand)
 
-    def _to_csv(self, passengers: List[Passenger], output_path: str = 'output.csv') -> None:
+    def _to_csv(self, passengers: List[Passenger], output_path: Path = Path('output.csv')) -> None:
         """
         Save passengers data to csv file.
 
         Args:
             passengers (List[Passenger]): List of passengers.
-            output_path (str, optional): Path to the output csv file. Defaults to 'output.csv'.
+            output_path (Path, optional): Path to the output csv file. Defaults to 'output.csv'.
         """
         column_names = [
             'id', 'user_pattern', 'departure_station', 'arrival_station',
@@ -71,7 +73,7 @@ class Kernel:
 
     def simulate(
             self,
-            output_path: Union[str, None] = None,
+            output_path: Union[Path, None] = None,
             departure_time_hard_restriction: bool = True
         ) -> List[Service]:
         """
@@ -81,7 +83,7 @@ class Kernel:
         its origin-destination and date, buying a ticket only if the utility is positive.
 
         Args:
-            output_path (str, optional): Path to the output csv file. Defaults to None.
+            output_path (Path, optional): Path to the output csv file. Defaults to None.
             departure_time_hard_restriction (bool, optional): If True, the passenger will not
                 be assigned to a service with a departure time that is not valid. Defaults to True.
 
