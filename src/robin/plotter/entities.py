@@ -149,7 +149,7 @@ class KernelPlotter:
         plt.show()
 
         if save_path is not None:
-            fig.savefig(save_path, dpi=300, bbox_inches='tight', transparent=True)
+            fig.savefig(save_path, format='pdf', dpi=300, bbox_inches='tight', transparent=True)
 
     def _plot_bar_chart(
             self,
@@ -208,7 +208,7 @@ class KernelPlotter:
         ax.axhline(y=-service_max_capacity, color='lightcoral', linewidth=2, zorder=1)
 
         if save_path:
-            fig.savefig(save_path, format='svg', dpi=300, bbox_inches='tight', transparent=True)
+            fig.savefig(save_path, format='pdf', dpi=300, bbox_inches='tight', transparent=True)
 
         plt.show()
 
@@ -302,7 +302,7 @@ class KernelPlotter:
             plt.show()
 
         if save_path is not None:
-            fig.savefig(save_path, dpi=300, bbox_inches='tight', transparent=True)
+            fig.savefig(save_path, format='pdf', dpi=300, bbox_inches='tight', transparent=True)
 
     def plot_tickets_by_user(self, save_path: str = None):
         data = get_tickets_by_date_user_seat(self.df)
@@ -341,7 +341,7 @@ class KernelPlotter:
         plt.show()
 
         if save_path is not None:
-            fig.savefig(save_path, dpi=300, bbox_inches='tight', transparent=True)
+            fig.savefig(save_path, format='pdf', dpi=300, bbox_inches='tight', transparent=True)
 
     def plot_tickets_by_arrival_date(self, y_limit: int = None, seat = 'Total', save_path: str = None):
         tickets_by_arrival_day_seat = self._get_tickets_by_arrival_day_seat()
@@ -383,7 +383,7 @@ class KernelPlotter:
         plt.show()
 
         if save_path is not None:
-            fig.savefig(save_path, dpi=300, bbox_inches='tight', transparent=True)
+            fig.savefig(save_path, format='pdf', dpi=300, bbox_inches='tight', transparent=True)
 
     def plot_tickets_by_date(self, y_limit: int = None, save_path: str = None):
         tickets_by_date_seat = get_tickets_by_date_seat(self.df)
@@ -420,7 +420,7 @@ class KernelPlotter:
         plt.show()
 
         if save_path is not None:
-            fig.savefig(save_path, dpi=300, bbox_inches='tight', transparent=True)
+            fig.savefig(save_path, format='pdf', dpi=300, bbox_inches='tight', transparent=True)
 
     def plot_seat_distribution_pie_chart(self, save_path: str = None):
         tickets_sold_by_seat = get_tickets_by_seat(self.df)
@@ -436,7 +436,7 @@ class KernelPlotter:
         plt.show()
 
         if save_path is not None:
-            fig.savefig(save_path, dpi=300, bbox_inches='tight', transparent=True)
+            fig.savefig(save_path, format='pdf', dpi=300, bbox_inches='tight', transparent=True)
 
     def plotter_data_analysis(self):
         print("Data from demand plot: ")
