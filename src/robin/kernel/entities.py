@@ -5,8 +5,8 @@ import pandas as pd
 import random
 import os
 
-from .robin.demand.entities import Demand, Passenger
-from .robin.supply.entities import Service, Supply
+from robin.demand.entities import Demand, Passenger
+from robin.supply.entities import Service, Supply
 
 from pathlib import Path
 from typing import List, Union
