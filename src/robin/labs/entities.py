@@ -6,11 +6,11 @@ import progressbar
 import shutil
 import yaml
 
-from src.robin.kernel.entities import Kernel
-from src.robin.supply.entities import Supply
-from src.robin.demand.entities import Demand
-from src.robin.labs.utils import *
-from src.robin.plotter.utils import plot_series
+from .robin.kernel.entities import Kernel
+from .robin.supply.entities import Supply
+from .robin.demand.entities import Demand
+from .robin.labs.utils import *
+from .robin.plotter.utils import plot_series
 
 from matplotlib import pyplot as plt
 from pathlib import Path

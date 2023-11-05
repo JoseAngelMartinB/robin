@@ -3,7 +3,7 @@
 import datetime
 import yaml
 
-from src.robin.supply.utils import get_time, get_date, format_td, set_stations_ids, convert_tree_to_dict
+from .utils import get_time, get_date, format_td, set_stations_ids, convert_tree_to_dict
 
 from copy import deepcopy
 from functools import cache

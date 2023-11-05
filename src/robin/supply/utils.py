@@ -3,7 +3,7 @@
 import datetime
 import re
 
-from src.robin.supply.exceptions import InvalidTimeStringFormat, InvalidDateStringFormat
+from .exceptions import InvalidTimeStringFormat, InvalidDateStringFormat
 
 from typing import Dict, Set
 
