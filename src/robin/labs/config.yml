@@ -1,13 +1,9 @@
-# Config file used in Robin Labs
-
+demand:
+  passengers: null
 seed: 10
 supply:
-  - prices: default
-  - capacities: default
-  - capacity_constraints: default
-  - services: default
-
-demand:
-  - passengers: default
-  - markets: default
-  - user_types: default
+  capacities: null
+  prices:
+    start: 1
+    step: 25.0
+    stop: 500
