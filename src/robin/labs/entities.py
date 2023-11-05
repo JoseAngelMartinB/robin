@@ -6,11 +6,11 @@ import progressbar
 import shutil
 import yaml
 
-from .robin.kernel.entities import Kernel
-from .robin.supply.entities import Supply
-from .robin.demand.entities import Demand
-from .robin.labs.utils import *
-from .robin.plotter.utils import plot_series
+from robin.kernel.entities import Kernel
+from robin.supply.entities import Supply
+from robin.demand.entities import Demand
+from robin.labs.utils import *
+from robin.plotter.utils import plot_series
 
 from matplotlib import pyplot as plt
 from pathlib import Path
@@ -105,8 +105,9 @@ class RobinLab:
         with open(self.path_config_supply, 'r') as file:
             original_data = yaml.load(file, Loader=yaml.CSafeLoader)
 
+        # TODO: Temporary fix only to test prices
         supply_lab_config = self.lab_config["supply"]
-        arange_args = supply_lab_config
+        arange_args = supply_lab_config["prices"]
         with progressbar.ProgressBar(min_value=1, max_value=len(np.arange(**arange_args))) as bar:
             for i, factor in enumerate(np.arange(**arange_args), start=1):
                 modified_data = copy.deepcopy(original_data)
@@ -171,8 +172,9 @@ class RobinLab:
         """Plot the elasticity curve."""
         tickets_sold = self._get_tickets_sold()
 
+        # TODO: Temporary fix only to test prices
         supply_lab_config = self.lab_config["supply"]
-        arange_args = supply_lab_config
+        arange_args = supply_lab_config["prices"]
         x_data = np.arange(**arange_args)
         series_keys = set(key for value in tickets_sold.values() for key in value)
         series = {key: [] for key in series_keys}
@@ -228,4 +230,4 @@ class RobinLab:
                 pairs_sold[i] = get_pairs_sold(output, self.stations_dict)
                 bar.update(i)
 
-        return passenger_status, tickets_by_date_user_seat, tickets_by_pair_seat, pairs_sold
+        return passenger_status, tickets_by_date_user_seat, tickets_by_pair_seat
