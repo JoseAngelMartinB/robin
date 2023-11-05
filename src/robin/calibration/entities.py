@@ -9,6 +9,7 @@ from .constants import HOURS_IN_DAY
 from src.robin.kernel.entities import Kernel
 from src.robin.supply.entities import Supply
 
+from sklearn.metrics import mean_squared_error
 from typing import Union
 
 
@@ -84,28 +85,39 @@ class Calibration:
     def create_study(
         self,
         direction: str = 'minimize',
-        study_name: str = None,
-        n_trials: int = None,
-        timeout: int = None,
-        n_jobs: int = 1,
+        study_name: Union[int, None] = None,
+        storage: Union[str, None] = None,
+        n_trials: Union[int, None] = None,
+        timeout: Union[int, None] = None,
         show_progress_bar: bool = False
     ) -> None:
         """
         Creates an Optuna study and optimize the demand hyperparameters.
         """
-        study = optuna.create_study(direction=direction, study_name=study_name)
+        study = optuna.create_study(
+            direction=direction,
+            study_name=study_name,
+            storage=storage,
+            load_if_exists=True
+        )
         study.optimize(
             func=self.optimize,
             n_trials=n_trials,
             timeout=timeout,
-            n_jobs=n_jobs,
             show_progress_bar=show_progress_bar
         )
 
     def objetive_function(self, trial: optuna.Trial) -> float:
         """
         """
-        return 0
+        df_temp = pd.read_csv(f'temp_{trial.number}.csv')
+        df_temp = df_temp.groupby(by='service').size().to_frame()
+        df_temp.columns = ['tickets_sold_prediction']
+        self.df_target_output.update(df_temp)
+        actual = self.df_target_output['tickets_sold_target'].values
+        prediction = self.df_target_output['tickets_sold_prediction'].values
+        print(self.df_target_output)
+        return mean_squared_error(actual, prediction)
 
     def optimize(self, trial: optuna.Trial) -> float:
         """
@@ -118,7 +130,6 @@ class Calibration:
             float: Objective function value.
         """
         self.suggest_hyperparameters(trial)
-        print(trial.user_attrs)
         self.simulate(trial)
         return self.objetive_function(trial)
     
@@ -129,7 +140,7 @@ class Calibration:
         Args:
             trial (optuna.Trial): Optuna trial object.
         """
-        kernel = Kernel(self.path_config_supply, self.path_config_demand, self.seed)
+        kernel = Kernel(self.path_config_supply, f'temp_{trial.number}.yaml', self.seed)
         kernel.simulate(output_path=f'temp_{trial.number}.csv', departure_time_hard_restriction=True)
 
     def suggest_hyperparameters(self, trial: optuna.Trial) -> None:
@@ -148,7 +159,16 @@ class Calibration:
         with open(self.path_config_demand, 'r') as f:
             demand_yaml = f.read()
         data = yaml.load(demand_yaml, Loader=yaml.CSafeLoader)
-        #print(data)
+        
+        arrival_time = {}
+        for hour in range(HOURS_IN_DAY):
+            arrival_time[str(hour)] = self.arrival_time[hour]
+            
+        for user_pattern in data['userPattern']:
+            user_pattern['arrival_time_kwargs'] = arrival_time
+        
+        with open(f'temp_{trial.number}.yaml', 'w') as f:
+            yaml.dump(data, f, sort_keys=False, Dumper=yaml.CSafeDumper)
 
 
 if __name__ == '__main__':
@@ -158,4 +178,6 @@ if __name__ == '__main__':
         target_output_path='data/calibration/target.csv',
         seed=0
     )
-    calibration.create_study(n_trials=1, show_progress_bar=True)
+    calibration.create_study(study_name='distributed-example', storage='sqlite:///example.db', n_trials=100, show_progress_bar=True)
+    # include max number of trials
+    # rename temp to checkpoint
