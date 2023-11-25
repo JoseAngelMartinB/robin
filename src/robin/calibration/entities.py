@@ -5,7 +5,7 @@ import pandas as pd
 import optuna
 import yaml
 
-from .constants import HOURS_IN_DAY
+from .constants import HOURS_IN_DAY, LOW_ARRIVAL_TIME, HIGH_ARRIVAL_TIME
 from src.robin.kernel.entities import Kernel
 from src.robin.supply.entities import Supply
 
@@ -28,6 +28,7 @@ class Calibration:
         path_config_supply: str,
         path_config_demand: str,
         target_output_path: str,
+        departure_time_hard_restriction: bool = True,
         seed: Union[int, None] = None
     ) -> None:
         """
@@ -42,9 +43,10 @@ class Calibration:
         self.path_config_supply = path_config_supply
         self.path_config_demand = path_config_demand
         self.df_target_output = self._get_df_target_output(target_output_path)
+        self.departure_time_hard_restriction = departure_time_hard_restriction
         self.arrival_time = np.zeros(HOURS_IN_DAY)
         self.seed = seed
-        
+    
     def _get_df_target_output(self, target_output_path: str) -> pd.DataFrame:
         """
         Reads the target output CSV file and returns a DataFrame with the number of tickets sold for each service.
@@ -56,12 +58,11 @@ class Calibration:
             pd.DataFrame: DataFrame with 'tickets_sold_target' and 'tickets_sold_prediction'
                 columns and service IDs as the index.
         """
+        services = [service.id for service in Supply.from_yaml(self.path_config_supply).services]
+        df_target_output = pd.DataFrame(0, columns=['tickets_sold_target', 'tickets_sold_prediction'], index=services)
         df_target = pd.read_csv(target_output_path)
         df_result = df_target.groupby(by='service').size().to_frame()
         df_result.columns = ['tickets_sold_target']
-
-        services = [service.id for service in Supply.from_yaml(self.path_config_supply).services]
-        df_target_output = pd.DataFrame(0, columns=['tickets_sold_target', 'tickets_sold_prediction'], index=services)
         df_target_output.update(df_result)
         return df_target_output
     
@@ -69,13 +70,13 @@ class Calibration:
         """
         Suggest arrival time hyperparameters.
         
-        It is important to note that the arrival time hyperparameters are normalized to sum to 1.
+        Arrival time hyperparameters are normalized to sum to 1.
         
         Args:
             trial (optuna.Trial): Optuna trial object.
         """
         self.arrival_time = [
-            trial.suggest_float(name=f'arrival_time_{hour}', low=0.0, high=1.0) for hour in range(HOURS_IN_DAY)
+            trial.suggest_float(name=f'arrival_time_{hour}', low=LOW_ARRIVAL_TIME, high=HIGH_ARRIVAL_TIME) for hour in range(HOURS_IN_DAY)
         ]
         total_arrival_time = sum(self.arrival_time)
         for hour in range(HOURS_IN_DAY):
@@ -107,18 +108,6 @@ class Calibration:
             show_progress_bar=show_progress_bar
         )
 
-    def objetive_function(self, trial: optuna.Trial) -> float:
-        """
-        """
-        df_temp = pd.read_csv(f'temp_{trial.number}.csv')
-        df_temp = df_temp.groupby(by='service').size().to_frame()
-        df_temp.columns = ['tickets_sold_prediction']
-        self.df_target_output.update(df_temp)
-        actual = self.df_target_output['tickets_sold_target'].values
-        prediction = self.df_target_output['tickets_sold_prediction'].values
-        print(self.df_target_output)
-        return mean_squared_error(actual, prediction)
-
     def optimize(self, trial: optuna.Trial) -> float:
         """
         Optimize the demand hyperparameters.
@@ -131,18 +120,9 @@ class Calibration:
         """
         self.suggest_hyperparameters(trial)
         self.simulate(trial)
-        return self.objetive_function(trial)
+        error = self.objetive_function(trial)
+        return error
     
-    def simulate(self, trial: optuna.Trial) -> None:
-        """
-        Simulate the demand with the suggested hyperparameters.
-        
-        Args:
-            trial (optuna.Trial): Optuna trial object.
-        """
-        kernel = Kernel(self.path_config_supply, f'temp_{trial.number}.yaml', self.seed)
-        kernel.simulate(output_path=f'temp_{trial.number}.csv', departure_time_hard_restriction=True)
-
     def suggest_hyperparameters(self, trial: optuna.Trial) -> None:
         """
         Suggest demand hyperparameters.
@@ -167,8 +147,53 @@ class Calibration:
         for user_pattern in data['userPattern']:
             user_pattern['arrival_time_kwargs'] = arrival_time
         
-        with open(f'temp_{trial.number}.yaml', 'w') as f:
+        with open(f'checkpoint_{trial.number}.yaml', 'w') as f:
             yaml.dump(data, f, sort_keys=False, Dumper=yaml.CSafeDumper)
+
+    def simulate(self, trial: optuna.Trial) -> None:
+        """
+        Simulate the demand with the suggested hyperparameters.
+        
+        Args:
+            trial (optuna.Trial): Optuna trial object.
+        """
+        kernel = Kernel(
+            path_config_supply=self.path_config_supply,
+            path_config_demand=f'checkpoint_{trial.number}.yaml',
+            seed=self.seed
+        )
+        kernel.simulate(
+            output_path=f'checkpoint_{trial.number}.csv',
+            departure_time_hard_restriction=self.departure_time_hard_restriction
+        )
+
+    def _update_df_target_output(self, trial: optuna.Trial) -> None:
+        """
+        Update the target output DataFrame with the predicted number of tickets sold.
+        
+        Args:
+            trial (optuna.Trial): Optuna trial object.
+        """
+        df_checkpoint = pd.read_csv(f'checkpoint_{trial.number}.csv')
+        df_checkpoint = df_checkpoint.groupby(by='service').size().to_frame()
+        df_checkpoint.columns = ['tickets_sold_prediction']
+        self.df_target_output.update(df_checkpoint)
+
+    def objetive_function(self, trial: optuna.Trial) -> float:
+        """
+        Objective function to optimize.
+        
+        Args:
+            trial (optuna.Trial): Optuna trial object.
+        
+        Returns:
+            float: Mean squared error between the target tickets sold and the predicted tickets sold.
+        """
+        self._update_df_target_output(trial)
+        actual = self.df_target_output['tickets_sold_target'].values
+        prediction = self.df_target_output['tickets_sold_prediction'].values
+        error = mean_squared_error(actual, prediction)
+        return error
 
 
 if __name__ == '__main__':
@@ -180,4 +205,4 @@ if __name__ == '__main__':
     )
     calibration.create_study(study_name='distributed-example', storage='sqlite:///example.db', n_trials=100, show_progress_bar=True)
     # include max number of trials
-    # rename temp to checkpoint
+    # rename checkpoint to checkpoint
