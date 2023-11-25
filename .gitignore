@@ -54,3 +54,6 @@ MANIFEST
 
 # Profiling files
 profiling/*
+
+# Calibration logs files
+calibration_logs/*

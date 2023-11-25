@@ -3,6 +3,7 @@
 import numpy as np
 import pandas as pd
 import optuna
+import os
 import yaml
 
 from .constants import HOURS_IN_DAY, LOW_ARRIVAL_TIME, HIGH_ARRIVAL_TIME
@@ -28,6 +29,7 @@ class Calibration:
         path_config_supply: str,
         path_config_demand: str,
         target_output_path: str,
+        calibration_logs: str = 'calibration_logs',
         departure_time_hard_restriction: bool = True,
         seed: Union[int, None] = None
     ) -> None:
@@ -38,14 +40,31 @@ class Calibration:
             path_config_supply (str): Path to the supply configuration file.
             path_config_demand (str): Path to the demand configuration file.
             target_output_path (str): File path to the target output CSV file.
+            calibration_logs (str): Path to the calibration logs. Defaults to 'calibration_logs'.
+            departure_time_hard_restriction (bool, optional): If True, the passenger will not
+                be assigned to a service with a departure time that is not valid. Defaults to True.
             seed (int, optional): Seed for the random number generator. Defaults to None.
         """
         self.path_config_supply = path_config_supply
         self.path_config_demand = path_config_demand
         self.df_target_output = self._get_df_target_output(target_output_path)
+        self.calibration_logs = self._create_directory(calibration_logs)
         self.departure_time_hard_restriction = departure_time_hard_restriction
         self.arrival_time = np.zeros(HOURS_IN_DAY)
         self.seed = seed
+    
+    def _create_directory(self, directory: str) -> str:
+        """
+        Creates a directory if it does not exist.
+        
+        Args:
+            directory (str): Path to the directory.
+        
+        Returns:
+            str: Path to the directory.
+        """
+        os.makedirs(directory, exist_ok=True)
+        return directory
     
     def _get_df_target_output(self, target_output_path: str) -> pd.DataFrame:
         """
@@ -65,7 +84,7 @@ class Calibration:
         df_result.columns = ['tickets_sold_target']
         df_target_output.update(df_result)
         return df_target_output
-    
+
     def _suggest_arrival_time(self, trial: optuna.Trial) -> None:
         """
         Suggest arrival time hyperparameters.
@@ -118,12 +137,13 @@ class Calibration:
         Returns:
             float: Objective function value.
         """
-        self.suggest_hyperparameters(trial)
-        self.simulate(trial)
-        error = self.objetive_function(trial)
+        trial_directory = self._create_directory(f'{self.calibration_logs}/trial_{trial.number}')
+        self.suggest_hyperparameters(trial, trial_directory)
+        self.simulate(trial, trial_directory)
+        error = self.objetive_function(trial, trial_directory)
         return error
     
-    def suggest_hyperparameters(self, trial: optuna.Trial) -> None:
+    def suggest_hyperparameters(self, trial: optuna.Trial, trial_directory: str) -> None:
         """
         Suggest demand hyperparameters.
         
@@ -133,6 +153,7 @@ class Calibration:
         
         Args:
             trial (optuna.Trial): Optuna trial object.
+            trial_directory (str): Path to the trial directory.
         """
         self._suggest_arrival_time(trial)
         # generate yaml file with the suggested hyperparameters
@@ -147,49 +168,53 @@ class Calibration:
         for user_pattern in data['userPattern']:
             user_pattern['arrival_time_kwargs'] = arrival_time
         
-        with open(f'checkpoint_{trial.number}.yaml', 'w') as f:
+        yaml_file = f'{trial_directory}/checkpoint_{trial.number}.yaml'
+        with open(yaml_file, 'w') as f:
             yaml.dump(data, f, sort_keys=False, Dumper=yaml.CSafeDumper)
 
-    def simulate(self, trial: optuna.Trial) -> None:
+    def simulate(self, trial: optuna.Trial, trial_directory: str) -> None:
         """
         Simulate the demand with the suggested hyperparameters.
         
         Args:
             trial (optuna.Trial): Optuna trial object.
+            trial_directory (str): Path to the trial directory.
         """
         kernel = Kernel(
             path_config_supply=self.path_config_supply,
-            path_config_demand=f'checkpoint_{trial.number}.yaml',
+            path_config_demand=f'{trial_directory}/checkpoint_{trial.number}.yaml',
             seed=self.seed
         )
         kernel.simulate(
-            output_path=f'checkpoint_{trial.number}.csv',
+            output_path=f'{trial_directory}/checkpoint_{trial.number}.csv',
             departure_time_hard_restriction=self.departure_time_hard_restriction
         )
 
-    def _update_df_target_output(self, trial: optuna.Trial) -> None:
+    def _update_df_target_output(self, trial: optuna.Trial, trial_directory: str) -> None:
         """
         Update the target output DataFrame with the predicted number of tickets sold.
         
         Args:
             trial (optuna.Trial): Optuna trial object.
+            trial_directory (str): Path to the trial directory.
         """
-        df_checkpoint = pd.read_csv(f'checkpoint_{trial.number}.csv')
+        df_checkpoint = pd.read_csv(f'{trial_directory}/checkpoint_{trial.number}.csv')
         df_checkpoint = df_checkpoint.groupby(by='service').size().to_frame()
         df_checkpoint.columns = ['tickets_sold_prediction']
         self.df_target_output.update(df_checkpoint)
 
-    def objetive_function(self, trial: optuna.Trial) -> float:
+    def objetive_function(self, trial: optuna.Trial, trial_directory: str) -> float:
         """
         Objective function to optimize.
         
         Args:
             trial (optuna.Trial): Optuna trial object.
+            trial_directory (str): Path to the trial directory.
         
         Returns:
             float: Mean squared error between the target tickets sold and the predicted tickets sold.
         """
-        self._update_df_target_output(trial)
+        self._update_df_target_output(trial, trial_directory)
         actual = self.df_target_output['tickets_sold_target'].values
         prediction = self.df_target_output['tickets_sold_prediction'].values
         error = mean_squared_error(actual, prediction)
@@ -203,6 +228,9 @@ if __name__ == '__main__':
         target_output_path='data/calibration/target.csv',
         seed=0
     )
-    calibration.create_study(study_name='distributed-example', storage='sqlite:///example.db', n_trials=100, show_progress_bar=True)
-    # include max number of trials
-    # rename checkpoint to checkpoint
+    calibration.create_study(
+        study_name='distributed-example',
+        storage='sqlite:///example.db',
+        n_trials=100,
+        show_progress_bar=True
+    )
