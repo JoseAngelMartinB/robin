@@ -1,7 +1,10 @@
-"""Constants for the ROBIN calibration package."""
+"""Constants for the ROBIN calibration module."""
 
 LOW_ARRIVAL_TIME = 0.0
 HIGH_ARRIVAL_TIME = 1.0
 
 LOW_SEATS_UTILITY = 1
 HIGH_SEATS_UTILITY = 40
+
+LOW_PENALTY_UTILITY = 0.0
+HIGH_PENALTY_UTILITY = 1.0

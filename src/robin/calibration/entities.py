@@ -6,12 +6,12 @@ import os
 import yaml
 
 from .constants import *
-from .exceptions import InvalidArrivalTimeDistribution
+from .exceptions import InvalidArrivalTimeDistribution, InvalidPenaltyFunction
 from src.robin.kernel.entities import Kernel
 from src.robin.supply.entities import Supply
 
 from sklearn.metrics import mean_squared_error
-from typing import Any, Dict, Union
+from typing import Any, Dict, List, Union
 
 
 class Calibration:
@@ -131,10 +131,7 @@ class Calibration:
     
     def suggest_hyperparameters(self, trial: optuna.Trial, trial_directory: str) -> None:
         """
-        Suggest demand hyperparameters.
-        
-        List of hyperparameters:
-            - {user_pattern}_arrival_time_{hour}: Arrival time for each hour of the day.
+        Suggest demand hyperparameters and save them to a YAML file.
         
         Args:
             trial (optuna.Trial): Optuna trial object.
@@ -212,17 +209,28 @@ class Hyperparameters:
         path_config_demand (str): Path to the demand configuration file.
         demand_yaml (Dict[str, Any]): Demand configuration file content.
         arrival_time_kwargs (Dict[str, Dict[str, Union[float, None]]]): Arrival time hyperparameters per user pattern.
-        seats_utility (Dict[str, float]): Seats utility hyperparameters per user pattern.
+        seats_utility (Dict[str, List[Dict[str, Union[int, None]]]]): Seats utility hyperparameters per user pattern.
+        penalty_arrival_time (Dict[str, Dict[str, Union[float, None]]]): Arrival time penalty hyperparameters per user pattern.
+        penalty_departure_time (Dict[str, Dict[str, Union[float, None]]]): Departure time penalty hyperparameters per user pattern.
+        penalty_cost (Dict[str, Dict[str, Union[float, None]]]): Cost penalty hyperparameters per user pattern.
+        penalty_travel_time (Dict[str, Dict[str, Union[float, None]]]): Travel time penalty hyperparameters per user pattern.
     """
     
     def __init__(self, path_config_demand: str) -> None:
         """
         Initialize a hyperparameters object.
+        
+        Args:
+            path_config_demand (str): Path to the demand configuration file.
         """
         self.path_config_demand = path_config_demand
         self.demand_yaml = self._get_demand_yaml()
         self.arrival_time_kwargs = self._get_arrival_time_kwargs()
         self.seats_utility = self._get_seats_utility()
+        self.penalty_arrival_time_kwargs = self._get_penalty_kwargs(penalty_name='arrival_time')
+        self.penalty_departure_time_kwargs = self._get_penalty_kwargs(penalty_name='departure_time')
+        self.penalty_cost_kwargs = self._get_penalty_kwargs(penalty_name='cost')
+        self.penalty_travel_time_kwargs = self._get_penalty_kwargs(penalty_name='travel_time')
         
     def _get_demand_yaml(self) -> Dict[str, Any]:
         """
@@ -247,7 +255,7 @@ class Hyperparameters:
             arrival_time_kwargs[user_pattern['name']] = user_pattern['arrival_time_kwargs']
         return arrival_time_kwargs
     
-    def _get_seats_utility(self) -> Dict[str, float]:
+    def _get_seats_utility(self) -> Dict[str, List[Dict[str, Union[int, None]]]]:
         """
         Get seats utility hyperparameters from the demand configuration file.
         """
@@ -256,7 +264,21 @@ class Hyperparameters:
             seats_utility[user_pattern['name']] = user_pattern['seats']
         return seats_utility
     
-    def suggest_arrival_time(self, trial: optuna.Trial) -> None:
+    def _get_penalty_kwargs(self, penalty_name: str) -> Dict[str, Dict[str, Union[float, None]]]:
+        """
+        Get penalty hyperparameters from the demand configuration file.
+        
+        Args:
+            penalty_name (str): Name of the penalty. It can be 'arrival_time', 'departure_time', 'cost' or 'travel_time'.
+        """
+        penalty_kwargs = {}
+        for user_pattern in self.demand_yaml['userPattern']:
+            if user_pattern[f'penalty_{penalty_name}'] != 'polynomial':
+                raise InvalidPenaltyFunction(function_name=user_pattern[f'penalty_{penalty_name}'])
+            penalty_kwargs[user_pattern['name']] = user_pattern[f'penalty_{penalty_name}_kwargs']
+        return penalty_kwargs
+    
+    def suggest_arrival_time_kwargs(self, trial: optuna.Trial) -> None:
         """
         Suggest arrival time hyperparameters.
         
@@ -303,6 +325,45 @@ class Hyperparameters:
                         high=HIGH_SEATS_UTILITY
                     )
 
+    def _suggest_penalty_kwargs(
+        self,
+        trial: optuna.Trial,
+        penalty_name: str,
+        penalty_kwargs: Dict[str, Dict[str, Union[float, None]]]
+    ) -> None:
+        """
+        Suggest penalty hyperparameters.
+        
+        Args:
+            trial (optuna.Trial): Optuna trial object.
+            penalty_kwargs (Dict[str, Dict[str, Union[float, None]]]): Penalty hyperparameters.
+        """
+        for user_pattern, penalty_kwargs in penalty_kwargs.items():
+            for beta, value in penalty_kwargs.items():
+                # Suggestions are only made for None values
+                if value is None:
+                    penalty_kwargs[beta] = trial.suggest_float(
+                        name=f'{user_pattern}_penalty_{penalty_name}_{beta}',
+                        low=LOW_PENALTY_UTILITY,
+                        high=HIGH_PENALTY_UTILITY
+                    )
+    
+    def suggest_penalty_kwargs(self, trial: optuna.Trial) -> None:
+        """
+        Suggest penalty hyperparameters.
+        
+        Args:
+            trial (optuna.Trial): Optuna trial object.
+        """
+        penalties = [
+            ('arrival_time', self.penalty_arrival_time_kwargs),
+            ('departure_time', self.penalty_departure_time_kwargs),
+            ('cost', self.penalty_cost_kwargs),
+            ('travel_time', self.penalty_travel_time_kwargs)
+        ]
+        for penalty_name, penalty_kwargs in penalties:
+            self._suggest_penalty_kwargs(trial, penalty_name, penalty_kwargs)
+
     def suggest_hyperparameters(self, trial: optuna.Trial) -> None:
         """
         Suggestions for all hyperparameters.
@@ -310,12 +371,17 @@ class Hyperparameters:
         List of hyperparameters:
             - {user_pattern}_arrival_time_{hour}: Arrival time for each hour of the day.
             - {user_pattern}_seats_utility_{seat_id}: Seats utility for each seat.
+            - {user_pattern}_penalty_arrival_time_{beta}: Arrival time penalty for each beta.
+            - {user_pattern}_penalty_departure_time_{beta}: Departure time penalty for each beta.
+            - {user_pattern}_penalty_cost_{beta}: Cost penalty for each beta.
+            - {user_pattern}_penalty_travel_time_{beta}: Travel time penalty for each beta.
         
         Args:
             trial (optuna.Trial): Optuna trial object.
         """
-        self.suggest_arrival_time(trial)
+        self.suggest_arrival_time_kwargs(trial)
         self.suggest_seats_utility(trial)
+        self.suggest_penalty_kwargs(trial)
     
     def _update_user_patterns(self) -> None:
         """
@@ -324,6 +390,10 @@ class Hyperparameters:
         for user_pattern in self.demand_yaml['userPattern']:
             user_pattern['arrival_time_kwargs'] = self.arrival_time_kwargs[user_pattern['name']]
             user_pattern['seats'] = self.seats_utility[user_pattern['name']]
+            user_pattern['penalty_arrival_time_kwargs'] = self.penalty_arrival_time_kwargs[user_pattern['name']]
+            user_pattern['penalty_departure_time_kwargs'] = self.penalty_departure_time_kwargs[user_pattern['name']]
+            user_pattern['penalty_cost_kwargs'] = self.penalty_cost_kwargs[user_pattern['name']]
+            user_pattern['penalty_travel_time_kwargs'] = self.penalty_travel_time_kwargs[user_pattern['name']]
     
     def _update_demand_patterns(self) -> None:
         pass
