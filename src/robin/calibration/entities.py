@@ -6,12 +6,13 @@ import optuna
 import os
 import yaml
 
-from .constants import HOURS_IN_DAY, LOW_ARRIVAL_TIME, HIGH_ARRIVAL_TIME
+from .constants import LOW_ARRIVAL_TIME, HIGH_ARRIVAL_TIME
+from .exceptions import InvalidArrivalTimeDistribution
 from src.robin.kernel.entities import Kernel
 from src.robin.supply.entities import Supply
 
 from sklearn.metrics import mean_squared_error
-from typing import Union
+from typing import Any, Dict, Union
 
 
 class Calibration:
@@ -22,6 +23,10 @@ class Calibration:
         path_config_supply (str): Path to the supply configuration file.
         path_config_demand (str): Path to the demand configuration file.
         df_target_output (pd.DataFrame): DataFrame with the number of tickets sold for each service.
+        calibration_logs (str): Path to the calibration logs.
+        departure_time_hard_restriction (bool): If True, the passenger will not be assigned to a service
+            with a departure time that is not valid.
+        seed (int): Seed for the random number generator.
     """
     
     def __init__(
@@ -50,7 +55,6 @@ class Calibration:
         self.df_target_output = self._get_df_target_output(target_output_path)
         self.calibration_logs = self._create_directory(calibration_logs)
         self.departure_time_hard_restriction = departure_time_hard_restriction
-        self.arrival_time = np.zeros(HOURS_IN_DAY)
         self.seed = seed
     
     def _create_directory(self, directory: str) -> str:
@@ -84,23 +88,6 @@ class Calibration:
         df_result.columns = ['tickets_sold_target']
         df_target_output.update(df_result)
         return df_target_output
-
-    def _suggest_arrival_time(self, trial: optuna.Trial) -> None:
-        """
-        Suggest arrival time hyperparameters.
-        
-        Arrival time hyperparameters are normalized to sum to 1.
-        
-        Args:
-            trial (optuna.Trial): Optuna trial object.
-        """
-        self.arrival_time = [
-            trial.suggest_float(name=f'arrival_time_{hour}', low=LOW_ARRIVAL_TIME, high=HIGH_ARRIVAL_TIME) for hour in range(HOURS_IN_DAY)
-        ]
-        total_arrival_time = sum(self.arrival_time)
-        for hour in range(HOURS_IN_DAY):
-            self.arrival_time[hour] /= total_arrival_time
-            trial.set_user_attr(key=f'arrival_time_{hour}', value=self.arrival_time[hour])
 
     def create_study(
         self,
@@ -148,29 +135,15 @@ class Calibration:
         Suggest demand hyperparameters.
         
         List of hyperparameters:
-            - arrival_time_{hour}: Arrival time for each hour of the day.
-            - demand_pattern_{day}: Demand pattern for each day of the week.
+            - {user_pattern}_arrival_time_{hour}: Arrival time for each hour of the day.
         
         Args:
             trial (optuna.Trial): Optuna trial object.
             trial_directory (str): Path to the trial directory.
         """
-        self._suggest_arrival_time(trial)
-        # generate yaml file with the suggested hyperparameters
-        with open(self.path_config_demand, 'r') as f:
-            demand_yaml = f.read()
-        data = yaml.load(demand_yaml, Loader=yaml.CSafeLoader)
-        
-        arrival_time = {}
-        for hour in range(HOURS_IN_DAY):
-            arrival_time[str(hour)] = self.arrival_time[hour]
-            
-        for user_pattern in data['userPattern']:
-            user_pattern['arrival_time_kwargs'] = arrival_time
-        
-        yaml_file = f'{trial_directory}/checkpoint_{trial.number}.yaml'
-        with open(yaml_file, 'w') as f:
-            yaml.dump(data, f, sort_keys=False, Dumper=yaml.CSafeDumper)
+        hyperparameters = Hyperparameters(self.path_config_demand)
+        hyperparameters.suggest_hyperparameters(trial)
+        hyperparameters.save_demand_yaml(f'{trial_directory}/checkpoint_{trial.number}.yaml')
 
     def simulate(self, trial: optuna.Trial, trial_directory: str) -> None:
         """
@@ -203,6 +176,16 @@ class Calibration:
         df_checkpoint.columns = ['tickets_sold_prediction']
         self.df_target_output.update(df_checkpoint)
 
+    def _save_df_target_output(self, trial: optuna.Trial, trial_directory: str) -> None:
+        """
+        Save the target output DataFrame.
+        
+        Args:
+            trial (optuna.Trial): Optuna trial object.
+            trial_directory (str): Path to the trial directory.
+        """
+        self.df_target_output.to_csv(f'{trial_directory}/df_target_output_{trial.number}.csv', index_label='service')
+
     def objetive_function(self, trial: optuna.Trial, trial_directory: str) -> float:
         """
         Objective function to optimize.
@@ -215,10 +198,111 @@ class Calibration:
             float: Mean squared error between the target tickets sold and the predicted tickets sold.
         """
         self._update_df_target_output(trial, trial_directory)
+        self._save_df_target_output(trial, trial_directory)
         actual = self.df_target_output['tickets_sold_target'].values
         prediction = self.df_target_output['tickets_sold_prediction'].values
         error = mean_squared_error(actual, prediction)
         return error
+
+
+class Hyperparameters:
+    """
+    Hyperparameters to optimize.
+    
+    Attributes:
+        path_config_demand (str): Path to the demand configuration file.
+        demand_yaml (Dict[str, Any]): Demand configuration file content.
+        arrival_time_kwargs (Dict[str, Dict[str, Union[float, None]]]): Arrival time hyperparameters per user pattern.
+    """
+    
+    def __init__(self, path_config_demand: str) -> None:
+        """
+        Initialize a hyperparameters object.
+        """
+        self.path_config_demand = path_config_demand
+        self.demand_yaml = self._get_demand_yaml()
+        self.arrival_time_kwargs = self._get_arrival_time_kwargs()
+        
+    def _get_demand_yaml(self) -> Dict[str, Any]:
+        """
+        Reads the demand configuration file and returns a string with the content.
+        
+        Returns:
+            str: Demand configuration file content.
+        """
+        with open(self.path_config_demand, 'r') as f:
+            data = f.read()
+        demand_yaml = yaml.load(data, Loader=yaml.CSafeLoader)
+        return demand_yaml
+        
+    def _get_arrival_time_kwargs(self) -> Dict[str, Dict[str, Union[float, None]]]:
+        """
+        Get arrival time hyperparameters from the demand configuration file.
+        """
+        arrival_time_kwargs = {}
+        for user_pattern in self.demand_yaml['userPattern']:
+            if user_pattern['arrival_time'] != 'custom_arrival_time':
+                raise InvalidArrivalTimeDistribution(distribution_name=user_pattern['arrival_time'])
+            arrival_time_kwargs[user_pattern['name']] = user_pattern['arrival_time_kwargs']
+        return arrival_time_kwargs
+    
+    def suggest_arrival_time(self, trial: optuna.Trial) -> None:
+        """
+        Suggest arrival time hyperparameters.
+        
+        Arrival time hyperparameters are normalized to sum to 1.
+        
+        Args:
+            trial (optuna.Trial): Optuna trial object.
+        """
+        for user_pattern, arrival_time_kwargs in self.arrival_time_kwargs.items():
+            for hour, value in arrival_time_kwargs.items():
+                # Suggestions are only made for None values
+                if value is None:
+                    arrival_time_kwargs[hour] = trial.suggest_float(
+                        name=f'{user_pattern}_arrival_time_{hour}',
+                        low=LOW_ARRIVAL_TIME,
+                        high=HIGH_ARRIVAL_TIME
+                    )
+            # Normalize arrival time hyperparameters to sum to 1
+            total_arrival_time = sum(arrival_time_kwargs.values())
+            for hour in range(len(arrival_time_kwargs)):
+                hour = str(hour)
+                arrival_time_kwargs[hour] /= total_arrival_time
+                trial.set_user_attr(
+                    key=f'{user_pattern}_arrival_time_{hour}',
+                    value=arrival_time_kwargs[hour]
+                )
+
+    def suggest_hyperparameters(self, trial: optuna.Trial) -> None:
+        """
+        Suggestions for all hyperparameters.
+        
+        List of hyperparameters:
+            - {user_pattern}_arrival_time_{hour}: Arrival time for each hour of the day.
+        
+        Args:
+            trial (optuna.Trial): Optuna trial object.
+        """
+        self.suggest_arrival_time(trial)
+    
+    def _update_demand_yaml(self) -> None:
+        """
+        Update the demand configuration file with the suggested hyperparameters.
+        """
+        for user_pattern in self.demand_yaml['userPattern']:
+            user_pattern['arrival_time_kwargs'] = self.arrival_time_kwargs[user_pattern['name']]
+    
+    def save_demand_yaml(self, path: str) -> None:
+        """
+        Save the demand configuration file.
+        
+        Args:
+            path (str): Path to the demand configuration file.
+        """
+        self._update_demand_yaml()
+        with open(path, 'w') as f:
+            yaml.dump(self.demand_yaml, f, sort_keys=False, Dumper=yaml.CSafeDumper)
 
 
 if __name__ == '__main__':
@@ -229,8 +313,8 @@ if __name__ == '__main__':
         seed=0
     )
     calibration.create_study(
-        study_name='distributed-example',
-        storage='sqlite:///example.db',
+        study_name='arrival_time_kwargs',
+        storage='sqlite:///arrival_time_kwargs.db',
         n_trials=100,
         show_progress_bar=True
     )
