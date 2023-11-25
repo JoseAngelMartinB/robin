@@ -11,7 +11,7 @@ from src.robin.kernel.entities import Kernel
 from src.robin.supply.entities import Supply
 
 from sklearn.metrics import mean_squared_error
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Tuple, Union
 
 
 class Calibration:
@@ -209,6 +209,8 @@ class Hyperparameters:
         path_config_demand (str): Path to the demand configuration file.
         demand_yaml (Dict[str, Any]): Demand configuration file content.
         arrival_time_kwargs (Dict[str, Dict[str, Union[float, None]]]): Arrival time hyperparameters per user pattern.
+        purchase_day (Dict[str, str]): Purchase distribution name per user pattern.
+        purchase_day_kwargs (Dict[str, Dict[str, Union[float, None]]]): Purchase day hyperparameters per user pattern.
         seats_utility (Dict[str, List[Dict[str, Union[int, None]]]]): Seats utility hyperparameters per user pattern.
         penalty_arrival_time (Dict[str, Dict[str, Union[float, None]]]): Arrival time penalty hyperparameters per user pattern.
         penalty_departure_time (Dict[str, Dict[str, Union[float, None]]]): Departure time penalty hyperparameters per user pattern.
@@ -226,6 +228,7 @@ class Hyperparameters:
         self.path_config_demand = path_config_demand
         self.demand_yaml = self._get_demand_yaml()
         self.arrival_time_kwargs = self._get_arrival_time_kwargs()
+        self.purchase_day, self.purchase_day_kwargs = self._get_purchase_day()
         self.seats_utility = self._get_seats_utility()
         self.penalty_arrival_time_kwargs = self._get_penalty_kwargs(penalty_name='arrival_time')
         self.penalty_departure_time_kwargs = self._get_penalty_kwargs(penalty_name='departure_time')
@@ -255,6 +258,17 @@ class Hyperparameters:
             arrival_time_kwargs[user_pattern['name']] = user_pattern['arrival_time_kwargs']
         return arrival_time_kwargs
     
+    def _get_purchase_day(self) -> Tuple[Dict[str, str], Dict[str, Dict[str, Union[float, None]]]]:
+        """
+        Get purchase day hyperparameters from the demand configuration file.
+        """
+        purchase_day = {}
+        purchase_day_kwargs = {}
+        for user_pattern in self.demand_yaml['userPattern']:
+            purchase_day[user_pattern['name']] = user_pattern['purchase_day']
+            purchase_day_kwargs[user_pattern['name']] = user_pattern['purchase_day_kwargs'] or {}
+        return purchase_day, purchase_day_kwargs
+
     def _get_seats_utility(self) -> Dict[str, List[Dict[str, Union[int, None]]]]:
         """
         Get seats utility hyperparameters from the demand configuration file.
@@ -305,6 +319,144 @@ class Hyperparameters:
                     key=f'{user_pattern}_arrival_time_{hour}',
                     value=arrival_time_kwargs[hour]
                 )
+    
+    def suggest_purchase_day(self, trial: optuna.Trial) -> None:
+        """
+        Suggest purchase day hyperparameters.
+        
+        Args:
+            trial (optuna.Trial): Optuna trial object.
+        """
+        for user_pattern, purchase_day in self.purchase_day.items():
+            # Suggestions are only made for None values
+            if purchase_day is None:
+                self.purchase_day[user_pattern] = trial.suggest_categorical(
+                    name=f'{user_pattern}_purchase_day',
+                    choices=CHOICES_PURCHASE_DAY
+                )
+
+    def _suggest_poisson_kwargs(
+        self,
+        trial: optuna.Trial,
+        user_pattern: str,
+        hyperparameter_name: str,
+        distribution_kwargs: Dict[str, float]
+    ) -> None:
+        """
+        Suggest Poisson distribution hyperparameters.
+        
+        Args:
+            trial (optuna.Trial): Optuna trial object.
+            user_pattern (str): Name of the user pattern.
+            hyperparameter_name (str): Name of the hyperparameter.
+            distribution_kwargs (Dict[str, float]): Poisson distribution hyperparameters.
+        """
+        if distribution_kwargs.get('mu') is None:
+            distribution_kwargs['mu'] = trial.suggest_float(
+                name=f'{user_pattern}_{hyperparameter_name}_mu',
+                low=LOW_POISSON[hyperparameter_name]['mu'],
+                high=HIGH_POISSON[hyperparameter_name]['mu']
+            )
+    
+    def _suggest_norm_kwargs(
+        self,
+        trial: optuna.Trial,
+        user_pattern: str,
+        hyperparameter_name: str,
+        distribution_kwargs: Dict[str, float],
+    ) -> None:
+        """
+        Suggest normal distribution hyperparameters.
+        
+        Args:
+            trial (optuna.Trial): Optuna trial object.
+            user_pattern (str): Name of the user pattern.
+            hyperparameter_name (str): Name of the hyperparameter.
+            distribution_kwargs (Dict[str, float]): Normal distribution hyperparameters.
+        """
+        if distribution_kwargs.get('scale') is None:
+            distribution_kwargs['scale'] = trial.suggest_float(
+                name=f'{user_pattern}_{hyperparameter_name}_scale',
+                low=LOW_NORM[hyperparameter_name]['scale'],
+                high=HIGH_NORM[hyperparameter_name]['scale']
+            )
+        if distribution_kwargs.get('loc') is None:
+            distribution_kwargs['loc'] = trial.suggest_float(
+                name=f'{user_pattern}_{hyperparameter_name}_loc',
+                low=LOW_NORM[hyperparameter_name]['loc'],
+                high=HIGH_NORM[hyperparameter_name]['loc']
+            )
+    
+    def _suggest_randint_kwargs(
+        self,
+        trial: optuna.Trial,
+        user_pattern: str,
+        hyperparameter_name: str,
+        distribution_kwargs: Dict[str, float],
+    ) -> None:
+        """
+        Suggest randint distribution hyperparameters.
+        
+        Args:
+            trial (optuna.Trial): Optuna trial object.
+            user_pattern (str): Name of the user pattern.
+            hyperparameter_name (str): Name of the hyperparameter.
+            distribution_kwargs (Dict[str, float]): Randint distribution hyperparameters.
+        """
+        if distribution_kwargs.get('low') is None:
+            distribution_kwargs['low'] = trial.suggest_int(
+                name=f'{user_pattern}_{hyperparameter_name}_low',
+                low=LOW_RANDINT[hyperparameter_name]['low'],
+                high=HIGH_RANDINT[hyperparameter_name]['low']
+            )
+        if distribution_kwargs.get('high') is None:
+            distribution_kwargs['high'] = trial.suggest_int(
+                name=f'{user_pattern}_{hyperparameter_name}_high',
+                low=LOW_RANDINT[hyperparameter_name]['high'],
+                high=HIGH_RANDINT[hyperparameter_name]['high']
+            )
+    
+    def _suggest_distribution(
+        self,
+        trial: optuna.Trial,
+        distribution_name: str,
+        user_pattern: str,
+        hyperparameter_name: str,
+        distribution_kwargs: Dict[str, float]
+    ) -> None:
+        """
+        Suggest distribution hyperparameters.
+        
+        Args:
+            trial (optuna.Trial): Optuna trial object.
+            distribution_name (str): Name of the distribution.
+            user_pattern (str): Name of the user pattern.
+            hyperparameter_name (str): Name of the hyperparameter.
+            distribution_kwargs (Dict[str, float]): Distribution hyperparameters.
+        """
+        args = (trial, user_pattern, hyperparameter_name, distribution_kwargs)
+        if distribution_name == 'poisson':
+            self._suggest_poisson_kwargs(*args)
+        elif distribution_name == 'norm':
+            self._suggest_norm_kwargs(*args)
+        elif distribution_name == 'randint':
+            self._suggest_randint_kwargs(*args)        
+
+    def suggest_purchase_day_kwargs(self, trial: optuna.Trial) -> None:
+        """
+        Suggest purchase day hyperparameters.
+        
+        Args:
+            trial (optuna.Trial): Optuna trial object.
+        """
+        for user_pattern, purchase_day_kwargs in self.purchase_day_kwargs.items():
+            self._suggest_distribution(
+                trial=trial,
+                distribution_name=self.purchase_day[user_pattern],
+                user_pattern=user_pattern,
+                hyperparameter_name='purchase_day_kwargs',
+                distribution_kwargs=purchase_day_kwargs
+            )
     
     def suggest_seats_utility(self, trial: optuna.Trial) -> None:
         """
@@ -370,6 +522,8 @@ class Hyperparameters:
         
         List of hyperparameters:
             - {user_pattern}_arrival_time_{hour}: Arrival time for each hour of the day.
+            - {user_pattern}_purchase_day: Purchase day distribution name.
+            - {user_pattern}_purchase_day_kwargs: Purchase day distribution hyperparameters.
             - {user_pattern}_seats_utility_{seat_id}: Seats utility for each seat.
             - {user_pattern}_penalty_arrival_time_{beta}: Arrival time penalty for each beta.
             - {user_pattern}_penalty_departure_time_{beta}: Departure time penalty for each beta.
@@ -380,6 +534,8 @@ class Hyperparameters:
             trial (optuna.Trial): Optuna trial object.
         """
         self.suggest_arrival_time_kwargs(trial)
+        self.suggest_purchase_day(trial)
+        self.suggest_purchase_day_kwargs(trial)
         self.suggest_seats_utility(trial)
         self.suggest_penalty_kwargs(trial)
     
@@ -389,6 +545,8 @@ class Hyperparameters:
         """
         for user_pattern in self.demand_yaml['userPattern']:
             user_pattern['arrival_time_kwargs'] = self.arrival_time_kwargs[user_pattern['name']]
+            user_pattern['purchase_day'] = self.purchase_day[user_pattern['name']]
+            user_pattern['purchase_day_kwargs'] = self.purchase_day_kwargs[user_pattern['name']]
             user_pattern['seats'] = self.seats_utility[user_pattern['name']]
             user_pattern['penalty_arrival_time_kwargs'] = self.penalty_arrival_time_kwargs[user_pattern['name']]
             user_pattern['penalty_departure_time_kwargs'] = self.penalty_departure_time_kwargs[user_pattern['name']]
@@ -422,7 +580,7 @@ if __name__ == '__main__':
         path_config_supply='configs/calibration/supply_data.yml',
         path_config_demand='configs/calibration/demand_data.yml',
         target_output_path='data/calibration/target.csv',
-        seed=0
+        seed=300
     )
     calibration.create_study(
         study_name='calibration_test',
@@ -430,5 +588,3 @@ if __name__ == '__main__':
         n_trials=100,
         show_progress_bar=True
     )
-    # purchase day, que es None, pues suggest todo
-    # que nos dan la distrubucion, pues usamos esa, y los parámetros que nos den
