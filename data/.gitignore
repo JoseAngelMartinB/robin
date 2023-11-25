@@ -12,3 +12,9 @@
 !renfe/stop_times/stopTimes_MADRI_BARCE_2023-09-06_2023-09-07.csv
 !renfe/trips
 !renfe/trips/trips_MADRI_BARCE_2023-06-01_2023-06-02.csv
+!renfe_tft
+!renfe_tft/prices
+!renfe_tft/prices/prices_MADRI_BARCE_2023-01-01_2024-01-01.csv
+!renfe_tft/stop_times
+!renfe_tft/stop_times/stopTimes_MADRI_BARCE_2023-01-01_2024-01-01.csv
+
