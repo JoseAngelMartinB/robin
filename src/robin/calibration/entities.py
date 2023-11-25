@@ -1,12 +1,11 @@
 """Entities for the calibration module."""
 
-import numpy as np
 import pandas as pd
 import optuna
 import os
 import yaml
 
-from .constants import LOW_ARRIVAL_TIME, HIGH_ARRIVAL_TIME
+from .constants import *
 from .exceptions import InvalidArrivalTimeDistribution
 from src.robin.kernel.entities import Kernel
 from src.robin.supply.entities import Supply
@@ -213,6 +212,7 @@ class Hyperparameters:
         path_config_demand (str): Path to the demand configuration file.
         demand_yaml (Dict[str, Any]): Demand configuration file content.
         arrival_time_kwargs (Dict[str, Dict[str, Union[float, None]]]): Arrival time hyperparameters per user pattern.
+        seats_utility (Dict[str, float]): Seats utility hyperparameters per user pattern.
     """
     
     def __init__(self, path_config_demand: str) -> None:
@@ -222,6 +222,7 @@ class Hyperparameters:
         self.path_config_demand = path_config_demand
         self.demand_yaml = self._get_demand_yaml()
         self.arrival_time_kwargs = self._get_arrival_time_kwargs()
+        self.seats_utility = self._get_seats_utility()
         
     def _get_demand_yaml(self) -> Dict[str, Any]:
         """
@@ -245,6 +246,15 @@ class Hyperparameters:
                 raise InvalidArrivalTimeDistribution(distribution_name=user_pattern['arrival_time'])
             arrival_time_kwargs[user_pattern['name']] = user_pattern['arrival_time_kwargs']
         return arrival_time_kwargs
+    
+    def _get_seats_utility(self) -> Dict[str, float]:
+        """
+        Get seats utility hyperparameters from the demand configuration file.
+        """
+        seats_utility = {}
+        for user_pattern in self.demand_yaml['userPattern']:
+            seats_utility[user_pattern['name']] = user_pattern['seats']
+        return seats_utility
     
     def suggest_arrival_time(self, trial: optuna.Trial) -> None:
         """
@@ -273,6 +283,25 @@ class Hyperparameters:
                     key=f'{user_pattern}_arrival_time_{hour}',
                     value=arrival_time_kwargs[hour]
                 )
+    
+    def suggest_seats_utility(self, trial: optuna.Trial) -> None:
+        """
+        Suggest seats utility hyperparameters.
+        
+        Args:
+            trial (optuna.Trial): Optuna trial object.
+        """
+        for user_pattern, seats_utility in self.seats_utility.items():
+            for i, seat in enumerate(seats_utility):
+                seat_id = seat['id']
+                value = seat['utility']
+                # Suggestions are only made for None values
+                if value is None:
+                    seats_utility[i]['utility'] = trial.suggest_int(
+                        name=f'{user_pattern}_seats_utility_{seat_id}',
+                        low=LOW_SEATS_UTILITY,
+                        high=HIGH_SEATS_UTILITY
+                    )
 
     def suggest_hyperparameters(self, trial: optuna.Trial) -> None:
         """
@@ -280,18 +309,31 @@ class Hyperparameters:
         
         List of hyperparameters:
             - {user_pattern}_arrival_time_{hour}: Arrival time for each hour of the day.
+            - {user_pattern}_seats_utility_{seat_id}: Seats utility for each seat.
         
         Args:
             trial (optuna.Trial): Optuna trial object.
         """
         self.suggest_arrival_time(trial)
+        self.suggest_seats_utility(trial)
+    
+    def _update_user_patterns(self) -> None:
+        """
+        Update the user patterns with the suggested hyperparameters.
+        """
+        for user_pattern in self.demand_yaml['userPattern']:
+            user_pattern['arrival_time_kwargs'] = self.arrival_time_kwargs[user_pattern['name']]
+            user_pattern['seats'] = self.seats_utility[user_pattern['name']]
+    
+    def _update_demand_patterns(self) -> None:
+        pass
     
     def _update_demand_yaml(self) -> None:
         """
         Update the demand configuration file with the suggested hyperparameters.
         """
-        for user_pattern in self.demand_yaml['userPattern']:
-            user_pattern['arrival_time_kwargs'] = self.arrival_time_kwargs[user_pattern['name']]
+        self._update_user_patterns()
+        self._update_demand_patterns()
     
     def save_demand_yaml(self, path: str) -> None:
         """
@@ -313,8 +355,10 @@ if __name__ == '__main__':
         seed=0
     )
     calibration.create_study(
-        study_name='arrival_time_kwargs',
-        storage='sqlite:///arrival_time_kwargs.db',
+        study_name='calibration_test',
+        storage='sqlite:///calibration_test.db',
         n_trials=100,
         show_progress_bar=True
     )
+    # purchase day, que es None, pues suggest todo
+    # que nos dan la distrubucion, pues usamos esa, y los parámetros que nos den
