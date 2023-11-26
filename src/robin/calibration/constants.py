@@ -11,6 +11,8 @@ HIGH_SEATS_UTILITY = 40
 LOW_PENALTY_UTILITY = 0.0
 HIGH_PENALTY_UTILITY = 1.0
 
+CHOICES_ERROR = ['norm']
+
 LOW_POISSON = {
     'purchase_day_kwargs': {
         'mu': 0.0

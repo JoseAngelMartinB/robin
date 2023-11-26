@@ -216,6 +216,8 @@ class Hyperparameters:
         penalty_departure_time (Dict[str, Dict[str, Union[float, None]]]): Departure time penalty hyperparameters per user pattern.
         penalty_cost (Dict[str, Dict[str, Union[float, None]]]): Cost penalty hyperparameters per user pattern.
         penalty_travel_time (Dict[str, Dict[str, Union[float, None]]]): Travel time penalty hyperparameters per user pattern.
+        error (Dict[str, str]): Error distribution name per user pattern.
+        error_kwargs (Dict[str, Dict[str, Union[float, None]]]): Error hyperparameters per user pattern.
     """
     
     def __init__(self, path_config_demand: str) -> None:
@@ -234,6 +236,7 @@ class Hyperparameters:
         self.penalty_departure_time_kwargs = self._get_penalty_kwargs(penalty_name='departure_time')
         self.penalty_cost_kwargs = self._get_penalty_kwargs(penalty_name='cost')
         self.penalty_travel_time_kwargs = self._get_penalty_kwargs(penalty_name='travel_time')
+        self.error, self.error_kwargs = self._get_error()
         
     def _get_demand_yaml(self) -> Dict[str, Any]:
         """
@@ -291,49 +294,17 @@ class Hyperparameters:
                 raise InvalidPenaltyFunction(function_name=user_pattern[f'penalty_{penalty_name}'])
             penalty_kwargs[user_pattern['name']] = user_pattern[f'penalty_{penalty_name}_kwargs']
         return penalty_kwargs
-    
-    def suggest_arrival_time_kwargs(self, trial: optuna.Trial) -> None:
+
+    def _get_error(self) -> Tuple[Dict[str, str], Dict[str, Dict[str, Union[float, None]]]]:
         """
-        Suggest arrival time hyperparameters.
-        
-        Arrival time hyperparameters are normalized to sum to 1.
-        
-        Args:
-            trial (optuna.Trial): Optuna trial object.
+        Get error hyperparameters from the demand configuration file.
         """
-        for user_pattern, arrival_time_kwargs in self.arrival_time_kwargs.items():
-            for hour, value in arrival_time_kwargs.items():
-                # Suggestions are only made for None values
-                if value is None:
-                    arrival_time_kwargs[hour] = trial.suggest_float(
-                        name=f'{user_pattern}_arrival_time_{hour}',
-                        low=LOW_ARRIVAL_TIME,
-                        high=HIGH_ARRIVAL_TIME
-                    )
-            # Normalize arrival time hyperparameters to sum to 1
-            total_arrival_time = sum(arrival_time_kwargs.values())
-            for hour in range(len(arrival_time_kwargs)):
-                hour = str(hour)
-                arrival_time_kwargs[hour] /= total_arrival_time
-                trial.set_user_attr(
-                    key=f'{user_pattern}_arrival_time_{hour}',
-                    value=arrival_time_kwargs[hour]
-                )
-    
-    def suggest_purchase_day(self, trial: optuna.Trial) -> None:
-        """
-        Suggest purchase day hyperparameters.
-        
-        Args:
-            trial (optuna.Trial): Optuna trial object.
-        """
-        for user_pattern, purchase_day in self.purchase_day.items():
-            # Suggestions are only made for None values
-            if purchase_day is None:
-                self.purchase_day[user_pattern] = trial.suggest_categorical(
-                    name=f'{user_pattern}_purchase_day',
-                    choices=CHOICES_PURCHASE_DAY
-                )
+        error = {}
+        error_kwargs = {}
+        for user_pattern in self.demand_yaml['userPattern']:
+            error[user_pattern['name']] = user_pattern['error']
+            error_kwargs[user_pattern['name']] = user_pattern['error_kwargs'] or {}
+        return error, error_kwargs
 
     def _suggest_poisson_kwargs(
         self,
@@ -440,7 +411,50 @@ class Hyperparameters:
         elif distribution_name == 'norm':
             self._suggest_norm_kwargs(*args)
         elif distribution_name == 'randint':
-            self._suggest_randint_kwargs(*args)        
+            self._suggest_randint_kwargs(*args) 
+ 
+    def suggest_arrival_time_kwargs(self, trial: optuna.Trial) -> None:
+        """
+        Suggest arrival time hyperparameters.
+        
+        Arrival time hyperparameters are normalized to sum to 1.
+        
+        Args:
+            trial (optuna.Trial): Optuna trial object.
+        """
+        for user_pattern, arrival_time_kwargs in self.arrival_time_kwargs.items():
+            for hour, value in arrival_time_kwargs.items():
+                # Suggestions are only made for None values
+                if value is None:
+                    arrival_time_kwargs[hour] = trial.suggest_float(
+                        name=f'{user_pattern}_arrival_time_{hour}',
+                        low=LOW_ARRIVAL_TIME,
+                        high=HIGH_ARRIVAL_TIME
+                    )
+            # Normalize arrival time hyperparameters to sum to 1
+            total_arrival_time = sum(arrival_time_kwargs.values())
+            for hour in range(len(arrival_time_kwargs)):
+                hour = str(hour)
+                arrival_time_kwargs[hour] /= total_arrival_time
+                trial.set_user_attr(
+                    key=f'{user_pattern}_arrival_time_{hour}',
+                    value=arrival_time_kwargs[hour]
+                )
+    
+    def suggest_purchase_day(self, trial: optuna.Trial) -> None:
+        """
+        Suggest purchase day hyperparameters.
+        
+        Args:
+            trial (optuna.Trial): Optuna trial object.
+        """
+        for user_pattern, purchase_day in self.purchase_day.items():
+            # Suggestions are only made for None values
+            if purchase_day is None:
+                self.purchase_day[user_pattern] = trial.suggest_categorical(
+                    name=f'{user_pattern}_purchase_day',
+                    choices=CHOICES_PURCHASE_DAY
+                )       
 
     def suggest_purchase_day_kwargs(self, trial: optuna.Trial) -> None:
         """
@@ -516,6 +530,37 @@ class Hyperparameters:
         for penalty_name, penalty_kwargs in penalties:
             self._suggest_penalty_kwargs(trial, penalty_name, penalty_kwargs)
 
+    def suggest_error(self, trial: optuna.Trial) -> None:
+        """
+        Suggest error hyperparameters.
+        
+        Args:
+            trial (optuna.Trial): Optuna trial object.
+        """
+        for user_pattern, error in self.error.items():
+            # Suggestions are only made for None values
+            if error is None:
+                self.error[user_pattern] = trial.suggest_categorical(
+                    name=f'{user_pattern}_error',
+                    choices=CHOICES_ERROR
+                )
+    
+    def suggest_error_kwargs(self, trial: optuna.Trial) -> None:
+        """
+        Suggest error hyperparameters.
+        
+        Args:
+            trial (optuna.Trial): Optuna trial object.
+        """
+        for user_pattern, error_kwargs in self.error_kwargs.items():
+            self._suggest_distribution(
+                trial=trial,
+                distribution_name=self.error[user_pattern],
+                user_pattern=user_pattern,
+                hyperparameter_name='error_kwargs',
+                distribution_kwargs=error_kwargs
+            )
+
     def suggest_hyperparameters(self, trial: optuna.Trial) -> None:
         """
         Suggestions for all hyperparameters.
@@ -529,6 +574,8 @@ class Hyperparameters:
             - {user_pattern}_penalty_departure_time_{beta}: Departure time penalty for each beta.
             - {user_pattern}_penalty_cost_{beta}: Cost penalty for each beta.
             - {user_pattern}_penalty_travel_time_{beta}: Travel time penalty for each beta.
+            - {user_pattern}_error: Error distribution name.
+            - {user_pattern}_error_kwargs: Error distribution hyperparameters.
         
         Args:
             trial (optuna.Trial): Optuna trial object.
@@ -538,6 +585,8 @@ class Hyperparameters:
         self.suggest_purchase_day_kwargs(trial)
         self.suggest_seats_utility(trial)
         self.suggest_penalty_kwargs(trial)
+        self.suggest_error(trial)
+        self.suggest_error_kwargs(trial)
     
     def _update_user_patterns(self) -> None:
         """
@@ -552,6 +601,8 @@ class Hyperparameters:
             user_pattern['penalty_departure_time_kwargs'] = self.penalty_departure_time_kwargs[user_pattern['name']]
             user_pattern['penalty_cost_kwargs'] = self.penalty_cost_kwargs[user_pattern['name']]
             user_pattern['penalty_travel_time_kwargs'] = self.penalty_travel_time_kwargs[user_pattern['name']]
+            user_pattern['error'] = self.error[user_pattern['name']]
+            user_pattern['error_kwargs'] = self.error_kwargs[user_pattern['name']]
     
     def _update_demand_patterns(self) -> None:
         pass
