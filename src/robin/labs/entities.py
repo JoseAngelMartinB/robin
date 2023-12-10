@@ -6,11 +6,11 @@ import progressbar
 import shutil
 import yaml
 
-from robin.kernel.entities import Kernel
-from robin.supply.entities import Supply
-from robin.demand.entities import Demand
-from robin.labs.utils import *
-from robin.plotter.utils import plot_series
+from src.robin.kernel.entities import Kernel
+from src.robin.supply.entities import Supply
+from src.robin.demand.entities import Demand
+from src.robin.labs.utils import *
+from src.robin.plotter.utils import plot_series
 
 from matplotlib import pyplot as plt
 from pathlib import Path
@@ -168,8 +168,8 @@ class RobinLab:
 
         return tickets_sold
 
-    def plot_elasticity_curve(self, save_path: Path = None) -> None:
-        """Plot the elasticity curve."""
+    def plot_seat_elasticity_curve(self, save_path: Path = None) -> None:
+        """Plot the seat elasticity curve."""
         tickets_sold = self._get_tickets_sold()
 
         # TODO: Temporary fix only to test prices
@@ -185,7 +185,7 @@ class RobinLab:
 
         fig, ax = plot_series(x_data=tuple(x_data),
                               y_data=series,
-                              title="Prices elasticity curve",
+                              title="Prices elasticity curve (seat types)",
                               xlabel="Price increase (%)",
                               ylabel="Tickets sold",
                               xticks=x_data[::3],
@@ -196,6 +196,132 @@ class RobinLab:
 
         if save_path:
             fig.savefig(save_path, format='svg', dpi=300, bbox_inches='tight', transparent=True)
+
+    def plot_demand_status(self, save_path: Path = None) -> None:
+        """Plot the demand status for different user categories over time."""
+        demand_status = self._get_demand_status()
+
+        time_periods = demand_status.keys()
+        user_categories = ["User found \nany service that\nmet his needs\nbut couldn't purchase.",
+                           'User bought\na service which\nwas not the one\nwith the best utility.',
+                           'User bought\nthe ticket with\nbest utility.',
+                           "User didn't find\nany ticket\nthat met his needs."]
+
+        series = {category: [] for category in user_categories}
+
+        for period in time_periods:
+            user_data, _ = demand_status[period]
+            for category in user_categories:
+                series[category].append(user_data.get(user_categories.index(category), 0))
+
+        # TODO: Temporary fix only to test prices
+        supply_lab_config = self.lab_config["supply"]
+        arange_args = supply_lab_config["prices"]
+        x_data = np.arange(**arange_args)
+
+        fig, ax = plot_series(x_data=tuple(x_data),
+                              y_data=series,
+                              title="User Demand Status Over Time",
+                              xlabel="Price increase (%)",
+                              ylabel="Number of Users",
+                              xticks=x_data[::3],
+                              xticks_labels=tuple([f"{x:.0f}%" for x in x_data][::3]),
+                              figsize=(10, 6))
+
+        plt.show()
+
+        if save_path:
+            fig.savefig(save_path, format='svg', dpi=300, bbox_inches='tight', transparent=True)
+
+    def _get_demand_status(self):
+        file_number = lambda file: int(Path(file).stem.split("_")[-1])
+        output_files = sorted(os.listdir(self.tmp_path / "output"), key=file_number)
+        supply_files = sorted(os.listdir(self.tmp_path / "supply"), key=file_number)
+        demand_files = sorted(os.listdir(self.tmp_path / "demand"), key=file_number)
+
+        passenger_status = {}
+        with progressbar.ProgressBar(min_value=1, max_value=len(output_files)) as bar:
+            for i, supply_file, demand_file, output_file in zip(range(1, len(output_files) + 1),
+                                                                supply_files,
+                                                                demand_files,
+                                                                output_files):
+
+                output = pd.read_csv(self.tmp_path / "output" / output_file,
+                                     dtype={'departure_station': str, 'arrival_station': str})
+                output["purchase_date"] = output.apply(
+                    lambda row: get_purchase_date(row['purchase_day'], row['arrival_day']), axis=1
+                )
+
+                passenger_status[i] = get_passenger_status(output)
+                bar.update(i)
+
+        return passenger_status
+
+    def plot_markets(self, save_path: Path = None) -> None:
+        """Plot the sum of tickets sold for different market routes over time."""
+        markets_data = self._get_markets_data()
+
+        series = {}
+        markets = tuple(set(key for value in markets_data.values() for key in value))
+        for period, market_data in markets_data.items():
+            for market in markets:
+                market_values = market_data.get(market)
+                result = sum(market_values.values()) if market_values else 0
+                if market not in series:
+                    series[market] = []
+                series[market].append(result)
+
+        # TODO: Temporary fix only to test prices
+        supply_lab_config = self.lab_config["supply"]
+        arange_args = supply_lab_config["prices"]
+        x_data = np.arange(**arange_args)
+
+        fig, ax = plot_series(x_data=tuple(x_data),
+                              y_data=series,
+                              title="User Demand Status Over Time",
+                              xlabel="Price increase (%)",
+                              ylabel="Number of Users",
+                              xticks=x_data[::3],
+                              xticks_labels=tuple([f"{x:.0f}%" for x in x_data][::3]),
+                              figsize=(10, 6))
+
+        plt.show()
+
+        ax.set_title("Sum of Tickets Sold for Different Market Routes Over Time")
+        ax.set_xlabel("Time Period")
+        ax.set_ylabel("Total Number of Tickets Sold")
+        ax.legend()
+
+        plt.show()
+
+        if save_path:
+            fig.savefig(save_path, format='svg', dpi=300, bbox_inches='tight', transparent=True)
+
+    def _get_markets_data(self):
+        file_number = lambda file: int(Path(file).stem.split("_")[-1])
+        output_files = sorted(os.listdir(self.tmp_path / "output"), key=file_number)
+        supply_files = sorted(os.listdir(self.tmp_path / "supply"), key=file_number)
+        demand_files = sorted(os.listdir(self.tmp_path / "demand"), key=file_number)
+
+        tickets_by_pair_seat = {}
+        pairs_sold = {}
+        with progressbar.ProgressBar(min_value=1, max_value=len(output_files)) as bar:
+            for i, supply_file, demand_file, output_file in zip(range(1, len(output_files)+1),
+                                                                supply_files,
+                                                                demand_files,
+                                                                output_files):
+
+                output = pd.read_csv(self.tmp_path / "output" / output_file,
+                                     dtype={'departure_station': str, 'arrival_station': str})
+                output["purchase_date"] = output.apply(
+                    lambda row: get_purchase_date(row['purchase_day'], row['arrival_day']), axis=1
+                )
+
+                tickets_by_pair_seat[i] = get_tickets_by_pair_seat(output, self.stations_dict)
+                pairs_sold[i] = get_pairs_sold(output, self.stations_dict)
+                bar.update(i)
+
+        return tickets_by_pair_seat
 
     def get_kpis(self):
         file_number = lambda file: int(Path(file).stem.split("_")[-1])
