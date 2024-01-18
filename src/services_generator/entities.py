@@ -1,19 +1,21 @@
-"""Entities for the serivce generator module."""
+"""Entities for the services generator module."""
 
 import ast
 import datetime
 import numpy as np
 import os
 import pandas as pd
+from pathlib import Path
 import random
+import yaml
+
 from src.robin.supply.entities import Station, Corridor, Seat, TimeSlot, TSP, Line, RollingStock, Service
 from src.services_generator.utils import _get_distance
 from src.robin.scraping.utils import station_to_dict, seat_to_dict, corridor_to_dict, line_to_dict, \
     rolling_stock_to_dict, time_slot_to_dict, tsp_to_dict, service_to_dict
 from src.services_generator.utils import _get_end_time, _get_start_time, _to_station, _build_service
-import time
+
 from typing import Tuple, List, Dict
-import yaml
 
 
 class ServiceGenerator:
@@ -36,12 +38,12 @@ class ServiceGenerator:
     """
 
     def __init__(self,
-                 stations: str,
-                 corridors: str,
-                 seats: str,
-                 timetable: str,
-                 rolling_stocks: str,
-                 tsps: str
+                 stations: Path,
+                 corridors: Path,
+                 seats: Path,
+                 timetable: Path,
+                 rolling_stocks: Path,
+                 tsps: Path
         ) -> None:
         self.stations = self._get_stations(stations)
         self.corridors = self._get_corridors(corridors)
@@ -53,13 +55,18 @@ class ServiceGenerator:
         self.time_slots = {}
         self.services = []
 
-    def generate(self, file_name: str, path_config: str, n_services: int = 1, seed: int = None) -> List[Service]:
+    def generate(self,
+                 file_name: Path,
+                 path_config: Path,
+                 n_services: int = 1,
+                 seed: int = None
+        ) -> List[Service]:
         """
         Generate a list of services
 
         Args:
-            file_name (str): Name of the output file
-            path_config (str): Path to the config file
+            file_name (Path): Name of the output file
+            path_config (Path): Path to the config file
             n_services (int, optional): Number of services to generate. Defaults to 1.
             seed (int, optional): Seed for the random number generator. Defaults to None.
 
@@ -78,13 +85,14 @@ class ServiceGenerator:
         self.save_to_yaml(services, file_name)
         return services
 
-    def save_to_yaml(self, services: List[Service], file_name: str) -> None:
+    def save_to_yaml(self, services: List[Service], file_name: Path) -> None:
         """
         Save the data to a yaml file
 
         Args:
-            filename (str): Name of the file
             services (List[Service]): List of Service objects
+            file_name (Path): Name of the output file
+
 
         Returns:
             None
@@ -193,12 +201,12 @@ class ServiceGenerator:
         seconds = int((ref_time - int(ref_time)) * 60)
         return datetime.timedelta(hours=hours, minutes=minutes, seconds=seconds)
 
-    def _set_config(self, path_config: str):
+    def _set_config(self, path_config: Path):
         """
         Set config file
 
         Args:
-            path_config (str): Path to config file
+            path_config (Path): Path to config file
         """
         with open(path_config, 'r') as f:
             config = yaml.safe_load(f)
@@ -382,9 +390,12 @@ class ServiceGenerator:
         self.lines[line.id] = line
         return line
 
-    def _get_tsps(self, tsps_path) -> Dict[int, TSP]:
+    def _get_tsps(self, tsps_path: Path) -> Dict[int, TSP]:
         """
         Load TSPs
+
+        Args:
+            tsps_path (Path): Path to the csv file with TSPs
 
         Returns:
             Dict[int, TSP]: Dictionary of TSPs
@@ -408,9 +419,12 @@ class ServiceGenerator:
 
         return tsp_dict
 
-    def _get_rolling_stocks(self, rolling_stocks_path) -> Dict[int, RollingStock]:
+    def _get_rolling_stocks(self, rolling_stocks_path: Path) -> Dict[int, RollingStock]:
         """
         Load timetable with reference travel times (in minutes) between each pair of stations from csv file
+
+        Args:
+            rolling_stocks_path (Path): Path to the csv file with rolling stocks
 
         Returns:
             Dict[Tuple[str, str], float]: Dict of travel times {(origin_id, destination_id): time}
@@ -436,9 +450,12 @@ class ServiceGenerator:
 
         return rolling_stock_dict
 
-    def _get_timetable(self, timetable_path: str) -> Dict[Tuple[str, str], float]:
+    def _get_timetable(self, timetable_path: Path) -> Dict[Tuple[str, str], float]:
         """
         Load timetable with reference travel times (in minutes) between each pair of stations from csv file
+
+        Args:
+            timetable_path (Path): Path to the csv file with timetable
 
         Returns:
             Dict[Tuple[str, str], float]: Dict of travel times {(origin_id, destination_id): time}
@@ -455,9 +472,12 @@ class ServiceGenerator:
 
         return timetable
 
-    def _get_stations(self, stations_path: str) -> Dict[str, Station]:
+    def _get_stations(self, stations_path: Path) -> Dict[str, Station]:
         """
         Load stations from csv file
+
+        Args:
+            stations_path (Path): Path to the csv file with stations
 
         Returns:
             Dict[str, Station] Dict of Station objects {station_id: Station object}
@@ -476,12 +496,12 @@ class ServiceGenerator:
 
         return stations
 
-    def _get_corridors(self, corridors_path: str) -> Dict[int, Corridor]:
+    def _get_corridors(self, corridors_path: Path) -> Dict[int, Corridor]:
         """
         Load corridors from csv file
 
         Args:
-            stations (Dict[str, Station]): Dict of Station objects {station_id: Station object}
+            corridors_path (Path): Path to the csv file with corridors
 
         Returns:
             Dict[int, Corridor]: Dict of Corridor objects {corridor_id: Corridor object}
@@ -499,9 +519,12 @@ class ServiceGenerator:
 
         return corridors
 
-    def _get_seats(self, seats_path: str) -> Dict[int, Seat]:
+    def _get_seats(self, seats_path: Path) -> Dict[int, Seat]:
         """
         Load seat types from csv file
+
+        Args:
+            seats_path (Path): Path to the csv file with seat types
 
         Returns:
             Dict[int, Seat]: Dict of Seat objects {seat_id: Seat object}
@@ -517,12 +540,12 @@ class ServiceGenerator:
         return seats
 
     @staticmethod
-    def _write_to_yaml(filename: str, objects):
+    def _write_to_yaml(filename: Path, objects):
         """
         Write objects to yaml file
 
         Args:
-            filename (str): Name of the file
+            filename (Path): Name of the file
             objects (Dict): Dict of objects to write
 
         Returns:
@@ -547,15 +570,3 @@ class ServiceGenerator:
         random.seed(seed)
         np.random.seed(seed)
         os.environ['PYTHONHASHSEED'] = str(seed)
-
-
-if __name__ == '__main__':
-    config_path = '../../configs/service_generator_config.yml'
-    init_time = time.time()
-    # r = ServiceGenerator(from_supply=)
-    r = ServiceGenerator(stations="../../data/renfe/renfe_stations.csv")
-    services = r.generate(file_name="../../data/test_new.yml",
-                          path_config=config_path, n_services=200, seed=1)
-    print(services[0])
-    end_time = time.time()
-    print(f'Time elapsed: {end_time - init_time} seconds')
