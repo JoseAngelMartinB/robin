@@ -40,7 +40,8 @@ class KernelPlotter:
             lambda row: get_purchase_date(row['purchase_day'], row['arrival_day']), axis=1
         )
 
-        plt.style.use('seaborn-pastel')
+        # print(plt.style.available)
+        plt.style.use('seaborn-v0_8-poster')
         self.colors = ['lemonchiffon', 'lightsteelblue', 'palegreen', 'lightsalmon', 'lavender', 'lightgray']
         self.stations_dict = self.supply.get_stations_dict()
         locale.setlocale(locale.LC_ALL, 'es_ES.UTF-8')
