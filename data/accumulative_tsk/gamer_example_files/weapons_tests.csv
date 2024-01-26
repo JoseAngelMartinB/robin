@@ -1,0 +1,7 @@
+NAME,cost,range,cadence,sale,damage,consumption,recharge,speed,fire_enhancer,distance_enhancer,proyectile_enhancer
+weapon0,97,29,23,5,15,100,1,10,3,20,21
+weapon20,57,28,9,84,3,99,31,18,21,83,20
+weapon32,30,20,85,25,97,75,82,9,22,33,21
+weapon33,40,67,20,18,100,83,33,34,77,10,89
+weapon42,18,70,0,75,96,80,23,75,5,16,96
+weapon49,9,85,96,78,83,91,79,84,88,80,15

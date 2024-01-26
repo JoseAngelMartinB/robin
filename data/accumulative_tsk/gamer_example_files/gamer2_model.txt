@@ -1,0 +1,5 @@
+R0::: IF ((damage is medium) | (damage is high)) THEN 50.0
+R1::: IF ((cost is cheap) | (cost is accessible)) & (sale is easy) THEN 8.33
+R2::: IF ((cost is cheap) | (cost is accessible)) & ((fire_enhancer is medium) | (fire_enhancer is severe)) THEN 8.33
+R3::: IF (sale is easy) & ((fire_enhancer is medium) | (fire_enhancer is severe)) THEN 8.33
+R4::: IF ((cost is cheap) | (cost is accessible)) & (sale is easy) & ((fire_enhancer is medium) | (fire_enhancer is severe)) THEN 25.0

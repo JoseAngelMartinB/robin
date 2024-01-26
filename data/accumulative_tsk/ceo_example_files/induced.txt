@@ -1,0 +1,7 @@
+R0::: IF (SC is temprano) THEN 10.0
+R1::: IF (SE is importante) THEN 7.0
+R2::: IF (RE is buena) THEN 3.0
+R3::: IF (SC is temprano) & (SE is importante) THEN 31.5
+R4::: IF (SC is temprano) & (RE is buena) THEN 6.75
+R5::: IF (SE is importante) & (RE is buena) THEN 6.75
+R6::: IF (SC is temprano) & (SE is importante) & (RE is buena) THEN 35.0

@@ -1,0 +1,136 @@
+{
+    "variables": [
+        {
+            "name": "C",
+            "support": [0,100],
+            "sets": [
+                "very expensive",
+                "expensive",
+                "accessible",
+                "cheap"
+            ],
+            "very expensive": [0, 0, 10, 30],
+            "expensive": [10, 30, 40, 60],
+            "accessible": [40, 60, 70, 90],
+            "cheap": [70, 90, 100, 100]
+        },
+        {
+            "name": "S",
+            "support": [0,100],
+            "sets": [
+                "difficult",
+                "normal",
+                "easy"
+            ],
+            "difficult": [0, 0, 20, 40],
+            "normal": [20, 40, 60, 80],
+            "easy": [60, 80, 100, 100]
+        },
+        {
+            "name": "D",
+            "support": [0,100],
+            "sets": [
+                "low",
+                "medium",
+                "high"
+            ],
+            "low": [0, 0, 20, 40],
+            "medium": [20, 40, 60, 80],
+            "high": [60, 80, 100, 100]
+        },
+        {
+            "name": "Ca",
+            "support": [0,100],
+            "sets": [
+                "slow",
+                "fast"
+            ],
+            "slow": [0, 0, 40, 60],
+            "fast": [40, 60, 100, 100]
+        },
+        {
+            "name": "Co",
+            "support": [0,100],
+            "sets": [
+                "high",
+                "average",
+                "low"
+            ],
+            "high": [0, 0, 10, 30],
+            "average": [10, 30, 50, 70],
+            "low": [50, 70, 100, 100]
+        },
+        {
+            "name": "R",
+            "support": [0,100],
+            "sets": [
+                "slow",
+                "fast"
+            ],
+            "slow": [0, 0, 50, 70],
+            "fast": [50, 70, 100, 100]
+        },
+        {
+            "name": "Sp",
+            "support": [0,100],
+            "sets": [
+                "very slow",
+                "slow",
+                "medium",
+                "fast"
+            ],
+            "very slow": [0, 0, 0, 30],
+            "slow": [0, 30, 40, 60],
+            "medium": [40, 60, 70, 100],
+            "fast": [70, 100, 100, 100]
+        },
+        {
+            "name": "Ra",
+            "support": [0,100],
+            "sets": [
+                "near",
+                "normal",
+                "far"
+            ],
+            "near": [0, 0, 30, 50],
+            "normal": [30, 50, 70, 90],
+            "far": [70, 90, 100, 100]
+        },
+        {
+            "name": "FE",
+            "support": [0,100],
+            "sets": [
+                "weak",
+                "medium",
+                "severe"
+            ],
+            "weak": [0, 0, 20, 40],
+            "medium": [20, 40, 60, 80],
+            "severe": [60, 80, 100, 100]
+        },
+        {
+            "name": "DE",
+            "support": [0,100],
+            "sets": [
+                "weak",
+                "medium",
+                "severe"
+            ],
+            "weak": [0, 0, 20, 40],
+            "medium": [20, 40, 60, 80],
+            "severe": [60, 80, 100, 100]
+        },
+        {
+            "name": "PE",
+            "support": [0,100],
+            "sets": [
+                "weak",
+                "medium",
+                "severe"
+            ],
+            "weak": [0, 0, 20, 40],
+            "medium": [20, 40, 60, 80],
+            "severe": [60, 80, 100, 100]
+        }
+    ]
+}

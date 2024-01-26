@@ -1,0 +1,7 @@
+R0::: IF (D is high) & (Ca is fast) THEN 6.67
+R1::: IF (Co is low) & (R is fast) THEN 6.67
+R2::: IF (Sp is fast) & (Ra is far) THEN 6.67
+R3::: IF (D is high) & (Ca is fast) & (Co is low) & (R is fast) THEN 10.0
+R4::: IF (D is high) & (Ca is fast) & (Sp is fast) & (Ra is far) THEN 10.0
+R5::: IF (Co is low) & (R is fast) & (Sp is fast) & (Ra is far) THEN 10.0
+R6::: IF (D is high) & (Ca is fast) & (Co is low) & (R is fast) & (Sp is fast) & (Ra is far) THEN 50.0

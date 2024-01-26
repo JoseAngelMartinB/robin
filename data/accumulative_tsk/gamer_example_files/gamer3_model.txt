@@ -1,0 +1,8 @@
+R0::: IF ((cost is accessible) | (cost is expensive)) THEN 28.0
+R1::: IF (damage is high) THEN 4.0
+R2::: IF (speed is fast) THEN 4.0
+R3::: IF (range is far) THEN 4.0
+R4::: IF (damage is high) & (speed is fast) THEN 10.0
+R5::: IF (damage is high) & (range is far) THEN 10.0
+R6::: IF (speed is fast) & (range is far) THEN 10.0
+R7::: IF (damage is high) & (speed is fast) & (range is far) THEN 30.0

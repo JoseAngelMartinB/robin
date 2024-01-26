@@ -1,0 +1,4 @@
+R0::: IF (cost is cheap) THEN 35.0
+R1::: IF (sale is easy) THEN 15.0
+R2::: IF (cost is cheap) & (sale is easy) THEN 15.0
+R3::: IF (recharge is fast) & (consumption is low) THEN 35.0

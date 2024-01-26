@@ -17,4 +17,6 @@
 !renfe_tft/prices/prices_MADRI_BARCE_2023-01-01_2024-01-01.csv
 !renfe_tft/stop_times
 !renfe_tft/stop_times/stopTimes_MADRI_BARCE_2023-01-01_2024-01-01.csv
-
+!accumulative_tsk/
+!accumulative_tsk/ceo_example_files/
+!accumulative_tsk/gamer_example_files/
