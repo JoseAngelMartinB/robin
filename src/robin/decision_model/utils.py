@@ -111,7 +111,19 @@ def read_rules(file_name: str, variables):
     return rules
 
 
-def read_rules_from_yml(data: Mapping[str, str], variables: List[str]):
+def get_rules_from_dict(data: Mapping[str, str],
+                        variables: Mapping[str, MembershipFS]
+    ) -> List[TSKRule]:
+    """
+    Generates a list of TSKRule objects from a dictionary of rules.
+
+    Args:
+        data: A dictionary of rules.
+        variables: A dictionary of variables.
+
+    Returns:
+        A list of TSKRule objects.
+    """
     rules = []
     for rule_id in data:
         name = rule_id
@@ -125,3 +137,34 @@ def read_rules_from_yml(data: Mapping[str, str], variables: List[str]):
                     lambda cons=consequent: cons)
         rules.append(r)
     return rules
+
+
+def get_variables_from_dict(data: List[Mapping]) -> Mapping[str, MembershipFS]:
+    """
+    Generates a dictionary of variables from a list of variables.
+
+    Args:
+        data: A list of variables.
+
+    Returns:
+        A dictionary of variables.
+    """
+    output = {}
+    var_names = [var['name'] for var in data]
+    for i, var in enumerate(data):
+        d = {}
+        d['name'] = var['name']
+        d['type'] = var['type']
+        if d["type"] == "categorical":
+            d['labels'] = var['labels'][0:]
+        elif d["type"] == "fuzzy":
+            d['position'] = var_names.index(d['name'])
+            d['support'] = var['support']
+            sets = {}
+            for name_set in var['sets']:
+                sets[name_set] = MembershipFS(name_set, trapezoidal, var[name_set])
+            d['sets'] = sets
+        else:
+            d['support'] = var['support']
+        output[d['name']] = d
+    return output
