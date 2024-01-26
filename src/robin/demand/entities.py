@@ -4,6 +4,10 @@ import datetime
 import numpy as np
 import yaml
 
+
+from src.robin.decision_model.fuzzy_model import AcumulativeTSKFuzzyModel
+from src.robin.decision_model.fuzzy_rule import TSKRule
+from src.robin.decision_model.utils import read_rules_from_yml
 from .constants import DEFAULT_SEAT_UTILITY, DEFAULT_RVS_SIZE
 from .exceptions import InvalidForbiddenDepartureHoursException
 from .utils import get_function, get_scipy_distribution
@@ -37,10 +41,10 @@ class Market:
     
     def __str__(self) -> str:
         """
-        Returns a human readable string representation of the market.
+        Returns a human-readable string representation of the market.
 
         Returns:
-            str: A human readable string representation of the market.
+            str: A human-readable string representation of the market.
         """
         return f'{self.departure_station} - {self.arrival_station}'
 
@@ -66,6 +70,8 @@ class UserPattern:
     Attributes:
         id (int): The user pattern id.
         name(str): The user pattern name.
+        behaviour_rules (): The rules of the behaviour model.
+        behaviour_variables (): # TODO: TSK Variables
         arrival_time (Callable): The arrival time distribution function.
         arrival_time_kwargs (Mapping[str, Union[int, float]]): The arrival time distribution parameters.
         purchase_day (Callable): The purchase day distribution function.
@@ -97,6 +103,8 @@ class UserPattern:
             self,
             id: int,
             name: str,
+            behaviour_rules: Mapping[str, str],
+            behaviour_variables: Mapping[str, Any],
             arrival_time: str,
             arrival_time_kwargs: Mapping[str, Union[int, float]],
             purchase_day: str,
@@ -114,7 +122,7 @@ class UserPattern:
             error: str,
             error_kwargs: Mapping[str, Union[int, float]],
             default_seat_utility: float = DEFAULT_SEAT_UTILITY,
-            default_rvs_size: int = DEFAULT_RVS_SIZE
+            default_rvs_size: int = DEFAULT_RVS_SIZE,
     ) -> None:
         """
         Initialize a user pattern.
@@ -122,6 +130,8 @@ class UserPattern:
         Args:
             id (int): The user pattern id.
             name(str): The user pattern name.
+            behaviour_rules (Mapping[str, str]): The rules of the behaviour model.
+            behaviour_variables (Mapping[str, Any]): The variables of the behaviour model.
             arrival_time (str): The arrival time distribution name.
             arrival_time_kwargs (Mapping[str, Union[int, float]]): The arrival time distribution named parameters.
             purchase_day (str): The purchase day distribution name.
@@ -150,6 +160,8 @@ class UserPattern:
         """
         self.id = id
         self.name = name
+        self.behaviour_variables = behaviour_variables  # TODO: TSK Variables
+        self.behaviour_rules = read_rules_from_yml(behaviour_rules, behaviour_variables)  # TODO:
         self._arrival_time, self.arrival_time_kwargs = get_scipy_distribution(
             distribution_name=arrival_time, is_discrete=False, **arrival_time_kwargs
         )
@@ -385,7 +397,7 @@ class DemandPattern:
             markets: List[Market],
             potential_demands: List[str],
             potential_demands_kwargs: List[Mapping[str, Union[int, float]]],
-            user_patterns_distribution: List[Mapping[UserPattern, float]]
+            user_patterns_distribution: List[Mapping[UserPattern, float]],
     ) -> None:
         """
         Initializes a demand pattern.
@@ -535,10 +547,10 @@ class Day:
 
     def __str__(self) -> str:
         """
-        Returns a human readable string representation of the day.
+        Returns a human-readable string representation of the day.
 
         Returns:
-            str: A human readable string representation of the day.
+            str: A human-readable string representation of the day.
         """
         return str(self.date)
 
@@ -563,6 +575,7 @@ class Passenger:
         arrival_day (Day): The desired day of arrival.
         arrival_time (float): The desired time of arrival.
         purchase_day (int): The day of purchase of the train ticket.
+        rules (List[TSKRule]): The list of rules of the behaviour model.
         service (Service): The service that this passenger is assigned to.
         service_departure_time (float): The departure time of the service.
         service_arrival_time (float): The arrival time of the service.
@@ -581,14 +594,15 @@ class Passenger:
             market: Market,
             arrival_day: Day,
             arrival_time: float,
-            purchase_day: int
+            purchase_day: int,
+            rules: List[TSKRule]
     ) -> None:
         """
         Initializes a passenger.
 
         Args:
             id (int): The passenger id.
-            user_pattern (UserPattern): The user pattern that this passengers belongs.
+            user_pattern (UserPattern): The user pattern that this passenger belongs.
             market (Market): The market composed by the origin-destination station pair.
             arrival_day (Day): The desired day of arrival.
             arrival_time (float): The desired time of arrival.
@@ -600,6 +614,7 @@ class Passenger:
         self.arrival_day = arrival_day
         self.arrival_time = arrival_time
         self.purchase_day = purchase_day
+        self.behaviour_model = AcumulativeTSKFuzzyModel(rules)
         self.service = None
         self.service_departure_time = None
         self.service_arrival_time = None
@@ -679,6 +694,24 @@ class Passenger:
         """
         return self.user_pattern.penalty_travel_time(service_arrival_time - service_departure_time)
 
+    def behaviour_inference(self, input_values: List) -> Mapping:
+        """
+        Returns the behaviour inference of the passenger given the input values.
+
+        Args:
+            input_values (List): The input values.
+
+        Returns:
+            Mapping: The behaviour inference.
+
+        Output example: {'Input': [1.0, 50.0, 40.0, 50.0],
+                         'actives_rules': ['R0', 'R2'],
+                         'consequents_values_list': [35.0, 15.0],
+                         'rule_membership_value_list': [1, 0.5],
+                         'Output': 42.5}
+        """
+        return self.behaviour_model.tsk_inference(input_values)
+
     def get_utility(
             self,
             seat: int,
@@ -702,7 +735,7 @@ class Passenger:
             float: The utility of the passenger given the seat, the arrival time, the departure time and the price.
         """
         if departure_time_hard_restriction and not self._is_valid_departure_time(service_departure_time):
-            return -np.inf # Minimum utility
+            return -np.inf  # Minimum utility
         seat_utility = self.user_pattern.get_seat_utility(seat)
         arrival_time_utility = self._get_utility_arrival_time(service_arrival_time)
         departure_time_utility = self._get_utility_departure_time(service_departure_time)
@@ -713,10 +746,10 @@ class Passenger:
 
     def __str__(self) -> str:
         """
-        Returns a human readable string representation of the passenger.
+        Returns a human-readable string representation of the passenger.
 
         Returns:
-            str: A human readable string representation of the passenger.
+            str: A human-readable string representation of the passenger.
         """
         return (
             f'Passenger {self.id} from {self.market.departure_station} to {self.market.arrival_station} '
@@ -940,10 +973,10 @@ class Demand:
 
     def __str__(self) -> str:
         """
-        Returns a human readable string representation of the demand.
+        Returns a human-readable string representation of the demand.
 
         Returns:
-            str: A human readable string representation of the demand.
+            str: A human-readable string representation of the demand.
         """
         return str(self.days)
 

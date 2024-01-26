@@ -251,3 +251,20 @@ class AcumulativeTSKFuzzyModel(FuzzyModel):
                     'rule_membership_value_list': rules_membership_value_list,
                     'Output': out_value} )
         return to_return
+
+    def tsk_inference(self, value: list) -> dict:
+        """Realiza la inferencia tipo Mandani sobre esta clase modelo utilizando una
+        única entrada.
+
+        Args:
+            in_values (list): lista que contiene una entrada a testear
+
+        Returns:
+            list[dict]
+        """
+        out_value, rules_membership_value_list, consequents_values_list, names_list = self.model_tsk_inference(value)
+        return {'Input': value,
+                'actives_rules': names_list,
+                'consequents_values_list': consequents_values_list,
+                'rule_membership_value_list': rules_membership_value_list,
+                'Output': out_value}

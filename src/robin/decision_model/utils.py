@@ -1,4 +1,5 @@
 from json import load
+from typing import List, Mapping
 
 from src.robin.decision_model.terms import trapezoidal, MembershipFS
 from src.robin.decision_model.propositions import PDC
@@ -107,4 +108,20 @@ def read_rules(file_name: str, variables):
             )
             rules.append(r)
             # print('LA REGLA:', rules[-1], rules[-1].get_consequent()())
+    return rules
+
+
+def read_rules_from_yml(data: Mapping[str, str], variables: List[str]):
+    rules = []
+    for rule_id in data:
+        name = rule_id
+        rule = data[rule_id]
+        antecedent, consequent = rule.split(' THEN ')
+        consequent = float(consequent)
+        lista = generaLista(antecedent, ['(', ')', '&', '|'], '(', ')', variables)
+
+        r = TSKRule(name,
+                    PDC(lista, funciones),  # antedente
+                    lambda cons=consequent: cons)
+        rules.append(r)
     return rules
