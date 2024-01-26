@@ -115,7 +115,7 @@ class Kernel:
             for service in services:
                 for seat in service.prices[(origin, destination)].keys():
                     # Calculate utility
-                    utility = passenger.get_utility(
+                    utility = passenger.get_fuzzy_utility(
                         seat=int(seat.id),
                         service_departure_time=service.service_departure_time,
                         service_arrival_time=service.service_arrival_time,
