@@ -4,13 +4,13 @@ import datetime
 import numpy as np
 import yaml
 
-
 from src.robin.decision_model.fuzzy_model import AcumulativeTSKFuzzyModel
-from src.robin.decision_model.fuzzy_rule import TSKRule
 from src.robin.decision_model.utils import get_variables_from_dict, get_rules_from_dict
+from src.robin.supply.entities import Seat, Service
+
 from .constants import DEFAULT_SEAT_UTILITY, DEFAULT_RVS_SIZE
 from .exceptions import InvalidForbiddenDepartureHoursException
-from .utils import get_function, get_scipy_distribution
+from .utils import get_function, get_scipy_distribution, get_euclidean_distance
 
 from pathlib import Path
 from typing import Any, List, Mapping, Union, Tuple
@@ -23,21 +23,33 @@ class Market:
     Attributes:
         id (int): The market id.
         departure_station (str): The departure station id.
+        departure_station_coords (Tuple[float, float]): The departure station coordinates.
         arrival_station (str): The arrival station id.
+        arrival_station_coords (Tuple[float, float]): The arrival station coordinates.
     """
 
-    def __init__(self, id: int, departure_station: str, arrival_station: str) -> None:
+    def __init__(self,
+                 id: int,
+                 departure_station: str,
+                 departure_station_coords: Tuple[float, float],
+                 arrival_station: str,
+                 arrival_station_coords: Tuple[float, float]
+        ) -> None:
         """
         Initialize a market.
 
         Args:
             id (int): The market id.
             departure_station (Station): The departure station id.
+            departure_station_coords (Tuple[float, float]): The departure station coordinates.
             arrival_station (Station): The arrival station id.
+            arrival_station_coords (Tuple[float, float]): The arrival station coordinates.
         """
         self.id = id
         self.departure_station = departure_station
+        self.departure_station_coords = departure_station_coords
         self.arrival_station = arrival_station
+        self.arrival_station_coords = arrival_station_coords
     
     def __str__(self) -> str:
         """
@@ -214,23 +226,6 @@ class UserPattern:
         elif forbidden_departure_hours[0] >= forbidden_departure_hours[1]:
             raise InvalidForbiddenDepartureHoursException(forbidden_departure_hours)
         return forbidden_departure_hours
-
-
-
-    @staticmethod
-    def _get_fuzzy_rules(data: Mapping[str, str], variables: Mapping[str, Any]) -> List[TSKRule]:
-        """
-        Returns the fuzzy rules.
-
-        Args:
-            rules (Mapping[str, str]): The rules.
-            variables (Mapping[str, Any]): The variables.
-
-        Returns:
-            List[TSKRule]: The fuzzy rules.
-        """
-        return read_rules_from_yml(data, variables)
-
     
     @property
     def arrival_time(self) -> float:
@@ -730,29 +725,50 @@ class Passenger:
 
     def get_fuzzy_utility(
             self,
-            seat: int,
-            service_departure_time: float,
-            service_arrival_time: float,
-            price: float,
+            seat: Seat,
+            service: Service,
             departure_time_hard_restriction: bool = False
         ) -> float:
         """
         Returns the utility of the passenger given the seat, the arrival time, the departure time and the price.
 
         Args:
-            seat (int): The seat of the service.
-            service_departure_time (float): The departure time of the service.
-            service_arrival_time (float): The arrival time of the service.
-            price (float): The price of the seat.
+            seat (Seat): The seat of the service.
+            service (Service): The service to which the seat belongs.
             departure_time_hard_restriction (bool, optional): If True, the passenger will not be
                 assigned to a service with a departure time that is not valid. Defaults to False.
 
         Returns:
             float: The utility of the passenger given the seat, the arrival time, the departure time and the price.
         """
+        origin = self.market.departure_station
+        destination = self.market.arrival_station
+        origin_coords = self.market.departure_station_coords  # (lat, lon) tuple
+        destination_coords = self.market.arrival_station_coords
+        service_departure_time = service.service_departure_time
+        service_arrival_time = service.service_arrival_time
+        price = service.prices[(origin, destination)][seat]
+
         if departure_time_hard_restriction and not self._is_valid_departure_time(service_departure_time):
             return -np.inf  # Minimum utility
-        return self.behaviour_inference([seat, service_departure_time, service_arrival_time, price])["Output"]
+
+        distance_to_origin = get_euclidean_distance(a=origin_coords,
+                                                    b=service.line.corridor.stations[origin].coords)
+        distance_to_destination = get_euclidean_distance(a=destination_coords,
+                                                         b=service.line.corridor.stations[origin].coords)
+
+        service_vars = {'origin': distance_to_origin,
+                        'destination': distance_to_destination,
+                        'departure_time': service_departure_time,
+                        'arrival_time': service_arrival_time,
+                        'seat': int(seat.id),
+                        'price': price,
+                        'tsp': int(service.tsp.id)}
+
+        user_var_names = tuple(self.user_pattern.behaviour_variables.keys())
+        service_vars = [service_vars[var] for var in user_var_names]
+
+        return self.behaviour_inference(service_vars)["Output"]
 
     def get_utility(
             self,

@@ -3,7 +3,7 @@
 import datetime
 import yaml
 
-from .utils import get_time, get_date, format_td, set_stations_ids, convert_tree_to_dict
+from .utils import get_time, get_date, format_td, set_stations_ids, convert_tree_to_dict, get_euclidean_distance
 
 from copy import deepcopy
 from functools import cache
@@ -721,6 +721,38 @@ class Supply:
         filtered_services = []
         for service in self.services:
             if service.date == date and (origin, destination) in service.prices.keys():
+                filtered_services.append(service)
+        return filtered_services
+
+    @cache
+    def filter_services_by_distance(self,
+                                    origin: str,
+                                    destination: str,
+                                    origin_coords: Tuple[float, float],
+                                    destination_coords: Tuple[float, float],
+                                    max_origin_distance: float,
+                                    max_destination_distance: float
+        ) -> List[Service]:
+        """
+        Filters a List of Services available in the system that meet the users requirements.
+
+        Args:
+            origin (str): Origin Station ID.
+            destination (str): Destination Station ID.
+            date (datetime.date): Date of service (day, month, year, without time).
+
+        Returns:
+            List[Service]: List of Service objects that meet the user requests.
+        """
+        filtered_services = []
+        for service in self.services:
+            distance_to_origin = get_euclidean_distance(a=origin_coords,
+                                                        b=service.line.corridor.stations[origin].coords)
+
+            distance_to_destination = get_euclidean_distance(a=destination_coords,
+                                                             b=service.line.corridor.stations[destination].coords)
+
+            if distance_to_origin < max_origin_distance and distance_to_destination < max_destination_distance:
                 filtered_services.append(service)
         return filtered_services
 

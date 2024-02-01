@@ -5,7 +5,7 @@ import re
 
 from .exceptions import InvalidTimeStringFormat, InvalidDateStringFormat
 
-from typing import Dict, Set
+from typing import Dict, Set, Tuple
 
 
 def get_time(time) -> datetime.timedelta:
@@ -106,3 +106,17 @@ def convert_tree_to_dict(tree: Dict) -> Dict[str, Dict]:
         return {}
 
     return {node['org']: convert_tree_to_dict(node['des']) for node in tree}
+
+
+def get_euclidean_distance(a: Tuple[float, float], b: Tuple[float, float]):
+    """
+    Returns the Euclidean distance between two points.
+
+    Args:
+        a (Tuple[float, float]): The first point.
+        b (Tuple[float, float]): The second point.
+
+    Returns:
+        float: The Euclidean distance between the two points.
+    """
+    return ((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2) ** 0.5

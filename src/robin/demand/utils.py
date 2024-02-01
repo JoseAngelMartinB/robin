@@ -55,3 +55,17 @@ def get_scipy_distribution(distribution_name: str, is_discrete: bool, **kwargs: 
     if not distribution:
         raise InvalidDistributionException(distribution_name)
     return distribution, kwargs
+
+
+def get_euclidean_distance(a: Tuple[float, float], b: Tuple[float, float]):
+    """
+    Returns the Euclidean distance between two points.
+
+    Args:
+        a (Tuple[float, float]): The first point.
+        b (Tuple[float, float]): The second point.
+
+    Returns:
+        float: The Euclidean distance between the two points.
+    """
+    return ((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2) ** 0.5

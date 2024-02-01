@@ -97,6 +97,16 @@ class Kernel:
             # Filter services by passenger's origin-destination and date
             origin = passenger.market.departure_station
             destination = passenger.market.arrival_station
+            """
+            services = self.supply.filter_services_by_distance(
+                origin=passenger.market.departure_station,
+                destination=passenger.market.departure_station,
+                origin_coords=passenger.market.departure_station_coords,
+                destination_coords=passenger.market.arrival_station_coords,
+                max_origin_distance=0, # TODO: 
+                max_destination_distance=0 # TODO:
+            )
+            """
             services = self.supply.filter_services(
                 origin=passenger.market.departure_station,
                 destination=passenger.market.arrival_station,
@@ -116,10 +126,8 @@ class Kernel:
                 for seat in service.prices[(origin, destination)].keys():
                     # Calculate utility
                     utility = passenger.get_fuzzy_utility(
-                        seat=int(seat.id),
-                        service_departure_time=service.service_departure_time,
-                        service_arrival_time=service.service_arrival_time,
-                        price=service.prices[(origin, destination)][seat],
+                        seat=seat,
+                        service=service,
                         departure_time_hard_restriction=departure_time_hard_restriction
                     )
                     # Update global utility
