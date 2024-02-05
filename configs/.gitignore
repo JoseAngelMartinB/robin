@@ -21,7 +21,9 @@
 !renfe_tft/supply_data.yml
 !ewgt23
 !ewgt23/demand_data.yml
+!ewgt23/demand_data_fuzzy.yml
 !ewgt23/supply_data.yml
+!ewgt23/supply_data_fuzzy.yml
 !ewgt23/demand_data_tourist.yml
 !ewgt23/supply_data_doubled_capacities.yml
 !ewgt23/supply_data_increased_prices.yml
