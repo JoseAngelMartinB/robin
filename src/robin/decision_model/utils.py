@@ -6,8 +6,6 @@ from src.robin.decision_model.propositions import PDC
 from src.robin.decision_model.fuzzy_rule import TSKRule
 from src.robin.decision_model.others import funciones
 
-# from greenlet.tests.test_throw import switch
-
 
 def read_json_variables(file_name, var_names):
     with open(file_name) as file:
@@ -113,7 +111,7 @@ def read_rules(file_name: str, variables):
 
 def get_rules_from_dict(data: Mapping[str, str],
                         variables: Mapping[str, MembershipFS]
-    ) -> List[TSKRule]:
+                        ) -> List[TSKRule]:
     """
     Generates a list of TSKRule objects from a dictionary of rules.
 

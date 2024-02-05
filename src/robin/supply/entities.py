@@ -1,6 +1,7 @@
 """Entities for the supply module."""
 
 import datetime
+import geopy.distance
 import yaml
 
 from .utils import get_time, get_date, format_td, set_stations_ids, convert_tree_to_dict, get_euclidean_distance
@@ -513,7 +514,7 @@ class Service:
             Set[Tuple[str, str]]: Set of pairs affected by origin-destination selection.
         """
         pairs = list(self.line.pairs.keys())
-        stations_ids = [station .id for station in self.line.stations]
+        stations_ids = [station.id for station in self.line.stations]
         # Get the index of the first pair which includes the origin station
         start_index = 0
         for i, pair in enumerate(pairs):
@@ -638,6 +639,14 @@ class Supply:
 
     Attributes:
         services List[Service]: List of services available in the system.
+        stations List[Station]: List of stations available in the system.
+        max_distance (float): Maximum distance between two stations in the system.
+        time_slots List[TimeSlot]: List of time slots available in the system.
+        corridors List[Corridor]: List of corridors available in the system.
+        lines List[Line]: List of lines available in the system.
+        seats List[Seat]: List of seats available in the system.
+        rolling_stocks List[RollingStock]: List of rolling stocks available in the system.
+        tsps List[TSP]: List of Train Service Providers available in the system.
     """
 
     def __init__(self, services: List[Service]) -> None:
@@ -649,6 +658,7 @@ class Supply:
         """
         self.services = services
         self.stations = list(set(station for service in services for station in service.line.stations))
+        self.max_distance = max(geopy.distance.geodesic(sta_a.coords, sta_b.coords).km for i, sta_a in enumerate(self.stations) for sta_b in self.stations[i+1:])
         self.time_slots = list(set(service.time_slot for service in services))
         self.corridors = list(set(service.line.corridor for service in services))
         self.lines = list(set(service.line for service in services))
@@ -724,36 +734,54 @@ class Supply:
                 filtered_services.append(service)
         return filtered_services
 
-    @cache
-    def filter_services_by_distance(self,
-                                    origin: str,
-                                    destination: str,
-                                    origin_coords: Tuple[float, float],
-                                    destination_coords: Tuple[float, float],
-                                    max_origin_distance: float,
-                                    max_destination_distance: float
-        ) -> List[Service]:
+    def filter_services_fuzzy(self,
+                              origin: str,
+                              destination: str,
+                              origin_coords: Tuple[float, float],
+                              destination_coords: Tuple[float, float],
+                              max_origin_diff: float,
+                              max_destination_diff: float,
+                              max_date_diff: datetime.date
+                              ) -> List[Service]:
         """
         Filters a List of Services available in the system that meet the users requirements.
 
         Args:
             origin (str): Origin Station ID.
             destination (str): Destination Station ID.
-            date (datetime.date): Date of service (day, month, year, without time).
+            origin_coords (Tuple[float, float]): Origin coordinates (latitude, longitude).
+            destination_coords (Tuple[float, float]): Destination coordinates (latitude, longitude).
+            max_origin_diff (float): Maximum difference between the origin coordinates.
+            max_destination_diff (float): Maximum difference between the destination coordinates.
+            max_date_diff (datetime.date): Maximum difference between the date of service.
 
         Returns:
             List[Service]: List of Service objects that meet the user requests.
         """
+        def get_valid_pairs(line: Line) -> List[bool]:
+            valid_pairs = []
+            for pair in line.pairs.values():
+                pair_origin, pair_destination = pair
+
+                distance_to_origin = get_euclidean_distance(a=origin_coords,
+                                                            b=pair_origin.coords)
+
+                rel_distance_to_origin = (distance_to_origin * 100) / self.max_distance
+
+                distance_to_destination = get_euclidean_distance(a=destination_coords,
+                                                                 b=pair_destination.coords)
+
+                rel_distance_to_destination = (distance_to_destination * 100) / self.max_distance
+
+                if rel_distance_to_origin < max_origin_diff and rel_distance_to_destination < max_destination_diff:
+                    valid_pairs.append(True)
+            return valid_pairs
+
         filtered_services = []
         for service in self.services:
-            distance_to_origin = get_euclidean_distance(a=origin_coords,
-                                                        b=service.line.corridor.stations[origin].coords)
-
-            distance_to_destination = get_euclidean_distance(a=destination_coords,
-                                                             b=service.line.corridor.stations[destination].coords)
-
-            if distance_to_origin < max_origin_distance and distance_to_destination < max_destination_distance:
+            if any(get_valid_pairs(service.line)):
                 filtered_services.append(service)
+
         return filtered_services
 
     @classmethod
@@ -990,7 +1018,8 @@ class Supply:
 
                 for seat in capacity_constraint['seats']:
                     assert all(k in seat for k in ('hard_type', 'quantity')), 'Incomplete seats data for Service'
-                    assert seat['hard_type'] in service_rolling_stock.seats.keys(), 'Invalid hard type in capacity constraints'
+                    assert seat[
+                               'hard_type'] in service_rolling_stock.seats.keys(), 'Invalid hard type in capacity constraints'
 
                 origin_destination_tuple = (capacity_constraint['origin'], capacity_constraint['destination'])
                 pair_constraints = {}
@@ -1024,7 +1053,8 @@ class Supply:
 
             origin = pair['origin']
             destination = pair['destination']
-            assert all(s in service_line.corridor.stations.keys() for s in (origin, destination)), 'Invalid station in Service'
+            assert all(
+                s in service_line.corridor.stations.keys() for s in (origin, destination)), 'Invalid station in Service'
             for seat in pair['seats']:
                 assert all(key in seat for key in ('seat', 'price')), 'Incomplete seats data for Service'
                 assert str(seat['seat']) in seats, 'Invalid seat in Service prices'
