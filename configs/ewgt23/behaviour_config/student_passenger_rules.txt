@@ -1,0 +1,3 @@
+R0::: IF (seat is premium) THEN 35.0
+R1::: IF (service_departure_time is in_time) & (service_arrival_time is in_time) THEN 25.0
+R2::: IF (price is standard) THEN 15.0

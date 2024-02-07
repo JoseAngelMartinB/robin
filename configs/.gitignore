@@ -7,6 +7,7 @@
 !supply_data_error.yml
 !supply_data_example.yml
 !supply_data.yml
+!service_generator_config.yml
 !test_case
 !test_case/demand_data.yml
 !test_case/supply_data.yml
@@ -21,7 +22,10 @@
 !renfe_tft/supply_data.yml
 !ewgt23
 !ewgt23/demand_data.yml
+!ewgt23/demand_data_fuzzy.yml
 !ewgt23/supply_data.yml
+!ewgt23/supply_data_fuzzy.yml
 !ewgt23/demand_data_tourist.yml
 !ewgt23/supply_data_doubled_capacities.yml
 !ewgt23/supply_data_increased_prices.yml
+!ewgt23/behaviour_config/*.txt

@@ -7,6 +7,7 @@ import os
 
 from src.robin.demand.entities import Demand, Passenger
 from src.robin.supply.entities import Service, Supply
+from .utils import get_constrain_value
 
 from pathlib import Path
 from typing import List, Union
@@ -94,23 +95,22 @@ class Kernel:
         passengers = self.demand.generate_passengers()
         
         for passenger in passengers:
-            # Filter services by passenger's origin-destination and date
             origin = passenger.market.departure_station
             destination = passenger.market.arrival_station
-            """
-            services = self.supply.filter_services_by_distance(
-                origin=passenger.market.departure_station,
-                destination=passenger.market.departure_station,
+
+            # Filter services
+            max_origin_diff = get_constrain_value(passenger, 'origin')
+            max_destination_diff = get_constrain_value(passenger, 'destination')
+            max_date_diff = get_constrain_value(passenger, 'date')
+
+            services = self.supply.filter_services_fuzzy(
+                origin=origin,
+                destination=destination,
                 origin_coords=passenger.market.departure_station_coords,
                 destination_coords=passenger.market.arrival_station_coords,
-                max_origin_distance=0, # TODO: 
-                max_destination_distance=0 # TODO:
-            )
-            """
-            services = self.supply.filter_services(
-                origin=passenger.market.departure_station,
-                destination=passenger.market.arrival_station,
-                date=passenger.arrival_day.date
+                max_origin_diff=max_origin_diff,
+                max_destination_diff=max_destination_diff,
+                max_date_diff=max_date_diff
             )
 
             # Calculate utility for each service and seat
@@ -123,7 +123,7 @@ class Kernel:
             seat_utility_global = 0
 
             for service in services:
-                for seat in service.prices[(origin, destination)].keys():
+                for seat in service.prices.get((origin, destination), {}).keys():
                     # Calculate utility
                     utility = passenger.get_fuzzy_utility(
                         seat=seat,
