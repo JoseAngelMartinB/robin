@@ -5,5 +5,5 @@ supply:
   capacities: null
   prices:
     start: 1
-    step: 25.0
+    step: 20.0
     stop: 500
