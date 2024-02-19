@@ -165,13 +165,13 @@ class UserPattern:
         )
         self.seats = seats
         self._penalty_arrival_time = get_function(function_name=penalty_arrival_time)
-        self.penalty_arrival_time_kwargs = penalty_arrival_time_kwargs
+        self.penalty_arrival_time_kwargs = list(penalty_arrival_time_kwargs.values())
         self._penalty_departure_time = get_function(function_name=penalty_departure_time)
-        self.penalty_departure_time_kwargs = penalty_departure_time_kwargs
+        self.penalty_departure_time_kwargs = list(penalty_departure_time_kwargs.values())
         self._penalty_cost = get_function(function_name=penalty_cost)
-        self.penalty_cost_kwargs = penalty_cost_kwargs
+        self.penalty_cost_kwargs = list(penalty_cost_kwargs.values())
         self._penalty_travel_time = get_function(function_name=penalty_travel_time)
-        self.penalty_travel_time_kwargs = penalty_travel_time_kwargs
+        self.penalty_travel_time_kwargs = list(penalty_travel_time_kwargs.values())
         self._error, self.error_kwargs = get_scipy_distribution(
             distribution_name=error, is_discrete=False, **error_kwargs
         )
@@ -215,7 +215,7 @@ class UserPattern:
         Returns:
             float: A random variable sample from the distribution.
         """
-        if self._arrival_time_rvs is None or self._arrival_time_rvs_idx >= len(self._arrival_time_rvs) - 1:
+        if self._arrival_time_rvs is None or self._arrival_time_rvs_idx >= self.default_rvs_size - 1:
             self._arrival_time_rvs = self._arrival_time.rvs(**self.arrival_time_kwargs, size=self.default_rvs_size)
             self._arrival_time_rvs %= 24 # Reduce the arrival time to the range [0, 24) hours
             self._arrival_time_rvs_idx = 0
@@ -233,7 +233,7 @@ class UserPattern:
         Returns:
             float: A random variable sample from the distribution.
         """
-        if self._purchase_day_rvs is None or self._purchase_day_rvs_idx >= len(self._purchase_day_rvs) - 1:
+        if self._purchase_day_rvs is None or self._purchase_day_rvs_idx >= self.default_rvs_size - 1:
             self._purchase_day_rvs = self._purchase_day.rvs(**self.purchase_day_kwargs, size=self.default_rvs_size)
             self._purchase_day_rvs = self._purchase_day_rvs.clip(min=0) # Clip the purchase day to the range [0, inf) days
             self._purchase_day_rvs_idx = 0
@@ -263,7 +263,7 @@ class UserPattern:
         Returns:
             float: The penalty function value for the arrival time.
         """
-        return self._penalty_arrival_time(x=x, **self.penalty_arrival_time_kwargs)
+        return self._penalty_arrival_time(x=x, coeff=self.penalty_arrival_time_kwargs)
     
     def penalty_departure_time(self, x: float) -> float:
         """
@@ -275,7 +275,7 @@ class UserPattern:
         Returns:
             float: The penalty function value for the departure time.
         """
-        return self._penalty_departure_time(x=x, **self.penalty_departure_time_kwargs)
+        return self._penalty_departure_time(x=x, coeff=self.penalty_departure_time_kwargs)
     
     def penalty_cost(self, x: float) -> float:
         """
@@ -287,7 +287,7 @@ class UserPattern:
         Returns:
             float: The penalty function value for the cost.
         """
-        return self._penalty_cost(x=x, **self.penalty_cost_kwargs)
+        return self._penalty_cost(x=x, coeff=self.penalty_cost_kwargs)
     
     def penalty_travel_time(self, x: float) -> float:
         """
@@ -299,7 +299,7 @@ class UserPattern:
         Returns:
             float: The penalty function value for the travel time.
         """
-        return self._penalty_travel_time(x=x, **self.penalty_travel_time_kwargs)
+        return self._penalty_travel_time(x=x, coeff=self.penalty_travel_time_kwargs)
     
     @property
     def error(self) -> float:
@@ -311,7 +311,7 @@ class UserPattern:
         Returns:
             float: A random variable sample from the distribution.
         """
-        if self._error_rvs is None or self._error_rvs_idx >= len(self._error_rvs) - 1:
+        if self._error_rvs is None or self._error_rvs_idx >= self.default_rvs_size - 1:
             self._error_rvs = self._error.rvs(**self.error_kwargs, size=self.default_rvs_size)
             self._error_rvs_idx = 0
         else:
@@ -370,6 +370,7 @@ class DemandPattern:
             for the potential demand distribution for each market.
         user_patterns_distribution (Mapping[Market, Mapping[UserPattern, float]]): The distribution of user patterns
             for each market.
+        default_rvs_size (int): The default size of the random variables sample.
 
     Raises:
         InvalidDistributionException: Raised when the given distribution is not contained in SciPy.
@@ -385,7 +386,8 @@ class DemandPattern:
             markets: List[Market],
             potential_demands: List[str],
             potential_demands_kwargs: List[Mapping[str, Union[int, float]]],
-            user_patterns_distribution: List[Mapping[UserPattern, float]]
+            user_patterns_distribution: List[Mapping[UserPattern, float]],
+            default_rvs_size: int = DEFAULT_RVS_SIZE
     ) -> None:
         """
         Initializes a demand pattern.
@@ -398,6 +400,7 @@ class DemandPattern:
             potential_demands_kwargs (List[Mapping[str, Union[int, float]]]): The list of potential
                 demand distribution named parameters.
             user_patterns_distribution (List[Mapping[UserPattern, float]]): The list of user pattern distributions.
+            default_rvs_size (int, optional): The default size of the random variables sample.
 
         Raises:
             InvalidDistributionException: Raised when the given distribution is not contained in SciPy.
@@ -411,6 +414,8 @@ class DemandPattern:
         self.markets = markets
         self._potential_demands = {}
         self.potential_demands_kwargs = {}
+        self._user_patterns_distribution_rvs = {}
+        self._user_patterns_distribution_rvs_idx = {}
         self.user_patterns_distribution = {}
         for i in range(len(markets)):
             market = markets[i]
@@ -422,7 +427,10 @@ class DemandPattern:
                 is_discrete=True,
                 **potential_demand_kwargs
             )
+            self._user_patterns_distribution_rvs[market] = None
+            self._user_patterns_distribution_rvs_idx[market] = 0
             self.user_patterns_distribution[market] = user_pattern_distribution
+        self.default_rvs_size = default_rvs_size
 
     def potential_demand(self, market: Market) -> int:
         """
@@ -451,10 +459,18 @@ class DemandPattern:
         Raises:
             ValueError: Raised when the user pattern distribution does not sum up to 1.
         """
-        return np.random.choice(
-            list(self.user_patterns_distribution[market].keys()),
-            p=list(self.user_patterns_distribution[market].values())
-        )
+        # NOTE: Vectorize the user pattern distribution.
+        if self._user_patterns_distribution_rvs[market] is None or self._user_patterns_distribution_rvs_idx[market] >= self.default_rvs_size - 1:
+            user_pattern_distribution_market = self.user_patterns_distribution[market]
+            self._user_patterns_distribution_rvs[market] = np.random.choice(
+                a=list(user_pattern_distribution_market.keys()),
+                size=self.default_rvs_size,
+                p=list(user_pattern_distribution_market.values())
+            )
+            self._user_patterns_distribution_rvs_idx[market] = 0
+        else:
+            self._user_patterns_distribution_rvs_idx[market] += 1
+        return self._user_patterns_distribution_rvs[market][self._user_patterns_distribution_rvs_idx[market]]
 
     def __str__(self) -> str:
         """
@@ -635,8 +651,11 @@ class Passenger:
         Returns:
             float: The utility of the passenger given the arrival time.
         """
-        earlier_displacement = max(self.arrival_time - service_arrival_time, 0)
-        later_displacement = max(service_arrival_time - self.arrival_time, 0)
+        # NOTE: Speed up the arrival time utility by avoiding using max function.
+        # earlier_displacement = max(self.arrival_time - service_arrival_time, 0)
+        # later_displacement = max(service_arrival_time - self.arrival_time, 0)
+        earlier_displacement = self.arrival_time - service_arrival_time if self.arrival_time > service_arrival_time else 0
+        later_displacement = service_arrival_time - self.arrival_time if self.arrival_time < service_arrival_time else 0
         return self.user_pattern.penalty_arrival_time(earlier_displacement + later_displacement)
 
     def _get_utility_departure_time(self, service_departure_time: float) -> float:
@@ -651,7 +670,10 @@ class Passenger:
         """
         dt_begin = self.user_pattern.forbidden_departure_hours[0]
         dt_end = self.user_pattern.forbidden_departure_hours[1]
-        departure_time = min(max(dt_end - service_departure_time, 0), dt_end - dt_begin)
+        # NOTE: Speed up the departure time utility by avoiding using min and max functions.
+        # departure_time = min(max(dt_end - service_departure_time, 0), dt_end - dt_begin)
+        _departure_time = dt_end - service_departure_time if dt_end > service_departure_time else 0
+        departure_time = _departure_time if _departure_time < dt_end - dt_begin else dt_end - dt_begin
         return self.user_pattern.penalty_departure_time(departure_time)
 
     def _get_utility_price(self, price: float) -> float:

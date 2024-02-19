@@ -1,9 +1,7 @@
 """Functions for demand module."""
 
-from functools import cache
 from numpy.polynomial.polynomial import polyval
-from typing import Mapping
-
+from typing import List, Union
 
 class Function:
     """
@@ -14,8 +12,7 @@ class Function:
     """
 
     @staticmethod
-    @cache # NOTE: This can grow very large, take care about memory usage. (100 M can be a good limit) USE CONSTANT FILE TO SET IT
-    def polynomial(x: float, **kwargs: Mapping[str, float]) -> float:
+    def polynomial(x: float, coeff: List[Union[int, float]]) -> float:
         """
         Polynomial function.
 
@@ -26,5 +23,10 @@ class Function:
         Returns:
             float: The y value.
         """
-        coeff = list(kwargs.values())
+        # NOTE: Speed up the polynomial function.
+        number_of_coeff = len(coeff)
+        if number_of_coeff == 2:
+            return coeff[0] + coeff[1] * x
+        elif number_of_coeff == 3:
+            return coeff[0] + coeff[1] * x + coeff[2] * x ** 2
         return polyval(x=x, c=coeff)
