@@ -550,8 +550,9 @@ class Service:
         """
         # Check every pair capacity until the destination station is reached
         affected_pairs = self._get_affected_pairs(origin, destination)
+        rolling_stock_seats = self.rolling_stock.seats[seat.hard_type]
         for pair in affected_pairs:
-            if self._pair_capacity[pair][seat.hard_type] >= self.rolling_stock.seats[seat.hard_type]:
+            if self._pair_capacity[pair][seat.hard_type] >= rolling_stock_seats:
                 return False
         return True
 
@@ -571,6 +572,9 @@ class Service:
         if not self.tickets_available(origin, destination, seat, anticipation):
             return False
 
+        # Invalidate memoized tickets_available as the capacity will change
+        self.tickets_available.cache_clear()
+
         # Check every pair capacity until the destination station is reached
         affected_pairs = self._get_affected_pairs(origin, destination)
         for pair in affected_pairs:
@@ -581,6 +585,7 @@ class Service:
         self.tickets_sold_hard_types[seat.hard_type] += 1
         return True
 
+    @cache
     def tickets_available(self, origin: str, destination: str, seat: Seat, anticipation: int) -> bool:
         """
         Check if there are tickets available for the service.
@@ -598,13 +603,12 @@ class Service:
         pair_capacity = self._pair_capacity[(origin, destination)][seat.hard_type]
         tickets_available = self._tickets_available(origin=origin, destination=destination, seat=seat)
         # Check if there are tickets available considering capacity constraints
-        if self.capacity_constraints and anticipation > self.lift_constraints:
-            if (origin, destination) in self.capacity_constraints:
-                constrained_capacity = self.capacity_constraints[(origin, destination)][seat.hard_type]
-                if pair_capacity < constrained_capacity and tickets_available:
-                    return True
+        if self.capacity_constraints and anticipation > self.lift_constraints and (origin, destination) in self.capacity_constraints:
+            constrained_capacity = self.capacity_constraints[(origin, destination)][seat.hard_type]
+            if pair_capacity < constrained_capacity and tickets_available:
+                return True
         return tickets_available
-
+    
     def __str__(self) -> str:
         """
         String representation of the service.
