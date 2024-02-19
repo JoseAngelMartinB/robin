@@ -74,18 +74,21 @@ class Kernel:
     def simulate(
             self,
             output_path: Union[Path, None] = None,
-            departure_time_hard_restriction: bool = True
+            departure_time_hard_restriction: bool = True,
+            calculate_global_utility: bool = False
         ) -> List[Service]:
         """
         Simulate the demand-supply interaction.
 
-        The passengers will maximize the utility for each service and seat,  according to
+        The passengers will maximize the utility for each service and seat, according to
         its origin-destination and date, buying a ticket only if the utility is positive.
 
         Args:
             output_path (Path, optional): Path to the output csv file. Defaults to None.
             departure_time_hard_restriction (bool, optional): If True, the passenger will not
                 be assigned to a service with a departure time that is not valid. Defaults to True.
+            calculate_global_utility (bool, optional): If True, it will be calculated the global utility
+                for each seat, even if no tickets are available. Defaults to False.
 
         Returns:
             List[Service]: List of services with updated tickets.
@@ -114,6 +117,14 @@ class Kernel:
 
             for service in services:
                 for seat in service.prices[(origin, destination)].keys():
+                    # Check if seat is available
+                    anticipation = passenger.purchase_day
+                    tickets_available = service.tickets_available(origin, destination, seat, anticipation)
+                    
+                    # Skip service if no tickets are available and we are not calculating global utility
+                    if not calculate_global_utility and not tickets_available:
+                        continue
+
                     # Calculate utility
                     utility = passenger.get_utility(
                         seat=int(seat.id),
@@ -129,8 +140,7 @@ class Kernel:
                         seat_utility_global = utility
 
                     # Check if seat is available
-                    anticipation = passenger.purchase_day
-                    if not service.tickets_available(origin, destination, seat, anticipation):
+                    if not tickets_available:
                         continue
 
                     # Update service with max utility
