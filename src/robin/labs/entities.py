@@ -2,6 +2,8 @@
 
 import copy
 import os
+import re
+import seaborn as sns
 import shutil
 import yaml
 
@@ -14,7 +16,7 @@ from src.robin.plotter.utils import plot_series
 from matplotlib import pyplot as plt
 from pathlib import Path
 from tqdm import tqdm
-from typing import Mapping
+from typing import Any, Mapping
 
 
 class RobinLab:
@@ -124,7 +126,7 @@ class RobinLab:
 
             shutil.copy(self.path_config_demand, self.tmp_path / "demand" / f"demand_{i}.yml")
 
-    def simulate(self) -> None:
+    def simulate(self, runs: int = 1) -> None:
         """Simulate the experiment."""
 
         def file_number(file) -> int:
@@ -144,19 +146,21 @@ class RobinLab:
         # Run simulation for each supply file
         sorted_supply_files = sorted(os.listdir(self.tmp_path / "supply"), key=file_number)
         sorted_demand_files = sorted(os.listdir(self.tmp_path / "demand"), key=file_number)
-        for i, supply_file, demand_file in zip(tqdm(range(1, len(sorted_supply_files)+1)),
-                                               sorted_supply_files,
-                                               sorted_demand_files):
-            kernel = Kernel(path_config_supply=self.tmp_path / "supply" / supply_file,
-                            path_config_demand=self.tmp_path / "demand" / demand_file,
-                            seed=self.seed)
-            kernel.simulate(output_path=Path(f"{self.tmp_path}/output/output_{i}.csv"))
+        for r in range(runs):
+            for i, supply_file, demand_file in zip(tqdm(range(1, len(sorted_supply_files) + 1)),
+                                                   sorted_supply_files,
+                                                   sorted_demand_files):
+                kernel = Kernel(path_config_supply=self.tmp_path / "supply" / supply_file,
+                                path_config_demand=self.tmp_path / "demand" / demand_file,
+                                seed=self.seed)
+                kernel.simulate(output_path=Path(f"{self.tmp_path}/output/output_{r}_{i}.csv"),
+                                calculate_global_utility=True)
 
     def _get_tickets_sold(self) -> Mapping:
         """Get the number of tickets sold for each supply file."""
         tickets_sold = {}
         output_files = sorted(os.listdir(self.tmp_path / "output"), key=lambda x: int(x.split(".")[0].split("_")[-1]))
-        for _, output_file in zip(tqdm(range(1, len(output_files)+1)), output_files):
+        for _, output_file in zip(tqdm(range(1, len(output_files) + 1)), output_files):
             df = pd.read_csv(self.tmp_path / "output" / output_file)
             buffer_tickets_sold = df.groupby(by=['seat']).size().to_dict()
             buffer_tickets_sold['Total'] = sum(buffer_tickets_sold.values())
@@ -240,7 +244,6 @@ class RobinLab:
                                                             supply_files,
                                                             demand_files,
                                                             output_files):
-
             output = pd.read_csv(self.tmp_path / "output" / output_file,
                                  dtype={'departure_station': str, 'arrival_station': str})
             output["purchase_date"] = output.apply(
@@ -299,11 +302,10 @@ class RobinLab:
 
         tickets_by_pair_seat = {}
         pairs_sold = {}
-        for i, supply_file, demand_file, output_file in zip(tqdm(range(1, len(output_files)+1)),
+        for i, supply_file, demand_file, output_file in zip(tqdm(range(1, len(output_files) + 1)),
                                                             supply_files,
                                                             demand_files,
                                                             output_files):
-
             output = pd.read_csv(self.tmp_path / "output" / output_file,
                                  dtype={'departure_station': str, 'arrival_station': str})
             output["purchase_date"] = output.apply(
@@ -316,34 +318,63 @@ class RobinLab:
         return tickets_by_pair_seat
 
     def get_kpis(self):
-        file_number = lambda file: int(Path(file).stem.split("_")[-1])
-        output_files = sorted(os.listdir(self.tmp_path / "output"), key=file_number)
-        supply_files = sorted(os.listdir(self.tmp_path / "supply"), key=file_number)
-        demand_files = sorted(os.listdir(self.tmp_path / "demand"), key=file_number)
+        def get_file_key(file: str) -> Tuple[int, ...]:
+            """
+            Extract numbers from string and return a tuple of the numeric values.
+
+            Args:
+                file (str): File name.
+
+            Returns:
+                Tuple[int, ...]: Tuple of numeric values extracted from the file name.
+            """
+            file_stem = Path(file).stem
+            # \d+ matches one or more digits. E.g. "42" in "file_42.yml"
+            return tuple(map(int, re.findall(pattern='\d+', string=file_stem)))
+
+        output_files = sorted(os.listdir(self.tmp_path / "output"), key=get_file_key)
+        supply_files = sorted(os.listdir(self.tmp_path / "supply"), key=get_file_key)
+        demand_files = sorted(os.listdir(self.tmp_path / "demand"), key=get_file_key)
 
         passenger_status = {}
-        tickets_by_seat = {}
-        tickets_by_date_seat = {}
         tickets_by_date_user_seat = {}
         tickets_by_pair_seat = {}
         pairs_sold = {}
-        for i, supply_file, demand_file, output_file in zip(tqdm(range(1, len(output_files)+1)),
+
+        df_tickets_sold = pd.DataFrame(columns=['run', 'iter', 'tickets_sold', 'purchase_date', 'user', 'seat_type'])
+        df_demand_status = pd.DataFrame(columns=['run', 'iter', 'users', 'status'])
+
+        for i, supply_file, demand_file, output_file in zip(tqdm(range(1, len(output_files) + 1)),
                                                             supply_files,
                                                             demand_files,
                                                             output_files):
-            # supply = Supply.from_yaml(supply_file)
-            # demand = Demand.from_yaml(demand_file)
+
+            run, iter = get_file_key(output_file)
+
             output = pd.read_csv(self.tmp_path / "output" / output_file,
                                  dtype={'departure_station': str, 'arrival_station': str})
             output["purchase_date"] = output.apply(
                 lambda row: get_purchase_date(row['purchase_day'], row['arrival_day']), axis=1
             )
 
-            passenger_status[i] = get_passenger_status(output)
-            # tickets_by_seat[i] = get_tickets_by_seat(output)
-            # tickets_by_date_seat[i] = get_tickets_by_date_seat(output)
-            tickets_by_date_user_seat[i] = get_tickets_by_date_user_seat(output)
+            demand_status_dict, labels = get_passenger_status(output)
+            for k, v in demand_status_dict.items():
+                df_ds_row = [run, iter, v, labels[k]]
+                df_demand_status.loc[len(df_demand_status)] = df_ds_row
+
+            tickets_by_date_user_seat = get_tickets_by_date_user_seat(output)
+            for purchase_date in tickets_by_date_user_seat:
+                for user in tickets_by_date_user_seat[purchase_date]:
+                    for seat in tickets_by_date_user_seat[purchase_date][user]:
+                        df_ts_row = [run, iter, tickets_by_date_user_seat[purchase_date][user][seat], purchase_date,
+                                     user, seat]
+                        df_tickets_sold.loc[len(df_tickets_sold)] = df_ts_row
+
             tickets_by_pair_seat[i] = get_tickets_by_pair_seat(output, self.stations_dict)
             pairs_sold[i] = get_pairs_sold(output, self.stations_dict)
+
+        print(df_tickets_sold)
+        print(df_demand_status)
+        sns.lineplot(data=df_tickets_sold, x="iter", y="tickets_sold")
 
         return passenger_status, tickets_by_date_user_seat, tickets_by_pair_seat
