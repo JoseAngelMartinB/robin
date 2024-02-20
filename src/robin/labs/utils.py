@@ -3,8 +3,25 @@
 import datetime
 import numpy as np
 import pandas as pd
+import re
 
+from pathlib import Path
 from typing import Dict, List, Mapping, Tuple
+
+
+def get_file_key(file: str) -> Tuple[int, ...]:
+    """
+    Extract numbers from string and return a tuple of the numeric values.
+
+    Args:
+        file (str): File name.
+
+    Returns:
+        Tuple[int, ...]: Tuple of numeric values extracted from the file name.
+    """
+    file_stem = Path(file).stem
+    # \d+ matches one or more digits. E.g. "42" in "file_42.yml"
+    return tuple(map(int, re.findall(pattern='\d+', string=file_stem)))
 
 
 def get_purchase_date(anticipation, arrival_day):
@@ -34,23 +51,17 @@ def get_passenger_status(df: pd.DataFrame) -> Tuple[Mapping[int, int], List[str]
     Returns:
         Mapping[str, int]: Dictionary with the number of passengers attended based on their purchase status.
     """
-    data = dict()
-    # User didn't find a service with the desired characteristics
-    data[3] = df[df.best_service.isnull()].shape[0]
-    # User found a service with the desired characteristics but couldn't buy it
-    data[0] = df[(df.service.isnull()) & (~df.best_service.isnull())].shape[0]
-    df_bought = df[~df.service.isnull()]
-    bought_best = df_bought[df_bought['service'] == df_bought['best_service']].shape[0]
-    # User bought the service with the highest utility
-    data[2] = bought_best
-    # User bought a service that wasn't the one with the highest utility
-    data[1] = df_bought.shape[0] - bought_best
+    data = {
+        3: df[df.best_service.isnull()].shape[0],
+        0: df[(df.service.isnull()) & (~df.best_service.isnull())].shape[0],
+        2: df[df['service'] == df['best_service']].shape[0],
+        1: df[~df.service.isnull()].shape[0] - df[df['service'] == df['best_service']].shape[0]
+    }
 
-    label1 = f"User found \nany service that\nmet his needs\nbut couldn't purchase."
-    label2 = f"User bought\na service which\nwas not the one\nwith the best utility."
-    label3 = f"User bought\nthe ticket with\nbest utility."
-    label4 = f"User didn't find\nany ticket\nthat met his needs."
-    x_labels = [label1, label2, label3, label4]
+    x_labels = ["User found \nany service that\nmet his needs\nbut couldn't purchase.",
+                "User bought\na service which\nwas not the one\nwith the best utility.",
+                "User bought\nthe ticket with\nbest utility.",
+                "User didn't find\nany ticket\nthat met his needs."]
 
     return dict(sorted(data.items(), key=lambda x: x[1], reverse=True)), x_labels
 

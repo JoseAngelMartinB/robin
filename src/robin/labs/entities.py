@@ -2,6 +2,7 @@
 
 import copy
 import os
+import random
 import re
 import seaborn as sns
 import shutil
@@ -15,7 +16,7 @@ from src.robin.plotter.utils import plot_series
 
 from matplotlib import pyplot as plt
 from pathlib import Path
-from tqdm import tqdm
+from tqdm.notebook import tqdm
 from typing import Any, Mapping
 
 
@@ -48,7 +49,6 @@ class RobinLab:
         self.tmp_path = tmp_path
         self.lab_config = None
         self.verbose = verbose
-        self.seed = None
 
     def set_lab_config(self, config: Mapping):
         """
@@ -69,8 +69,6 @@ class RobinLab:
             self._supply_yaml_editor()
         else:
             raise ValueError("At least one of the lab configs must be non-empty.")
-
-        self.seed = self.lab_config.get("seed", None)
 
     def _create_tmp_dir(self):
         """
@@ -146,13 +144,17 @@ class RobinLab:
         # Run simulation for each supply file
         sorted_supply_files = sorted(os.listdir(self.tmp_path / "supply"), key=file_number)
         sorted_demand_files = sorted(os.listdir(self.tmp_path / "demand"), key=file_number)
-        for r in range(runs):
-            for i, supply_file, demand_file in zip(tqdm(range(1, len(sorted_supply_files) + 1)),
+        for r in tqdm(range(runs), desc="Runs: "):
+            seed = random.randint(0, 1000000)
+            print(f"Seed used run {r}: {seed}")
+            for i, supply_file, demand_file in zip(tqdm(range(1, len(sorted_supply_files) + 1),
+                                                        desc="Iters: ",
+                                                        leave=True),
                                                    sorted_supply_files,
                                                    sorted_demand_files):
                 kernel = Kernel(path_config_supply=self.tmp_path / "supply" / supply_file,
                                 path_config_demand=self.tmp_path / "demand" / demand_file,
-                                seed=self.seed)
+                                seed=seed)
                 kernel.simulate(output_path=Path(f"{self.tmp_path}/output/output_{r}_{i}.csv"),
                                 calculate_global_utility=True)
 
@@ -317,40 +319,92 @@ class RobinLab:
 
         return tickets_by_pair_seat
 
-    def get_kpis(self):
-        def get_file_key(file: str) -> Tuple[int, ...]:
-            """
-            Extract numbers from string and return a tuple of the numeric values.
+    def get_markets_df(self, output_files: List[str]):
+        """
+        Get the dataframe for the markets plot.
 
-            Args:
-                file (str): File name.
+        Args:
+            output_files (List[str]): List of output files.
 
-            Returns:
-                Tuple[int, ...]: Tuple of numeric values extracted from the file name.
-            """
-            file_stem = Path(file).stem
-            # \d+ matches one or more digits. E.g. "42" in "file_42.yml"
-            return tuple(map(int, re.findall(pattern='\d+', string=file_stem)))
+        Returns:
+            pd.DataFrame: Dataframe for the markets plot.
+        """
+        df_markets = pd.DataFrame(columns=['run', 'iter', 'tickets_sold', 'trip'])
 
-        output_files = sorted(os.listdir(self.tmp_path / "output"), key=get_file_key)
-        supply_files = sorted(os.listdir(self.tmp_path / "supply"), key=get_file_key)
-        demand_files = sorted(os.listdir(self.tmp_path / "demand"), key=get_file_key)
+        for i, output_file in zip(tqdm(range(1, len(output_files) + 1)), output_files):
+            run, iter_num = get_file_key(output_file)
+            output = pd.read_csv(self.tmp_path / "output" / output_file,
+                                 dtype={'departure_station': str, 'arrival_station': str})
+            output["purchase_date"] = output.apply(
+                lambda row: get_purchase_date(row['purchase_day'], row['arrival_day']), axis=1
+            )
 
-        passenger_status = {}
-        tickets_by_date_user_seat = {}
-        tickets_by_pair_seat = {}
-        pairs_sold = {}
+            tickets_by_pair_seat = get_tickets_by_pair_seat(output, self.stations_dict)
+            total_by_trip = {}
+            for seat in tickets_by_pair_seat:
+                for trip in tickets_by_pair_seat[seat]:
+                    if trip not in total_by_trip:
+                        total_by_trip[trip] = 0
+                    total_by_trip[trip] += tickets_by_pair_seat[seat][trip]
 
-        df_tickets_sold = pd.DataFrame(columns=['run', 'iter', 'tickets_sold', 'purchase_date', 'user', 'seat_type'])
+            pairs_sold = get_pairs_sold(output, self.stations_dict)
+            for trip in pairs_sold:
+                df_m_row = [run, iter_num, pairs_sold[trip], trip]
+                df_markets.loc[len(df_markets)] = df_m_row
+
+        return df_markets
+
+    def get_tickets_seat_df(self, output_files: List[str]):
+        """
+        Get the dataframe for the tickets seat plot.
+
+        Args:
+            output_files (List[str]): List of output files.
+
+        Returns:
+            pd.DataFrame: Dataframe for the tickets seat plot.
+        """
+        df_tickets_seat = pd.DataFrame(columns=['run', 'iter', 'tickets_sold', 'seat_type'])
+
+        for i, output_file in zip(tqdm(range(1, len(output_files) + 1)), output_files):
+            run, iter_num = get_file_key(output_file)
+            output = pd.read_csv(self.tmp_path / "output" / output_file,
+                                 dtype={'departure_station': str, 'arrival_station': str})
+            output["purchase_date"] = output.apply(
+                lambda row: get_purchase_date(row['purchase_day'], row['arrival_day']), axis=1
+            )
+
+            tickets_by_date_user_seat = get_tickets_by_date_user_seat(output)
+
+            total_by_seat = {}
+            for purchase_date in tickets_by_date_user_seat:
+                for user in tickets_by_date_user_seat[purchase_date]:
+                    for seat in tickets_by_date_user_seat[purchase_date][user]:
+                        if seat not in total_by_seat:
+                            total_by_seat[seat] = 0
+                        total_by_seat[seat] += tickets_by_date_user_seat[purchase_date][user][seat]
+
+            total_by_seat['Total'] = sum(total_by_seat.values())
+            for seat in total_by_seat:
+                df_ts_row = [run, iter_num, total_by_seat[seat], seat]
+                df_tickets_seat.loc[len(df_tickets_seat)] = df_ts_row
+
+        return df_tickets_seat
+
+    def get_demand_status_df(self, output_files: List[str]):
+        """
+        Get the dataframe for the demand status plot.
+
+        Args:
+            output_files (List[str]): List of output files.
+
+        Returns:
+            pd.DataFrame: Dataframe for the demand status plot.
+        """
         df_demand_status = pd.DataFrame(columns=['run', 'iter', 'users', 'status'])
 
-        for i, supply_file, demand_file, output_file in zip(tqdm(range(1, len(output_files) + 1)),
-                                                            supply_files,
-                                                            demand_files,
-                                                            output_files):
-
-            run, iter = get_file_key(output_file)
-
+        for i, output_file in zip(tqdm(range(1, len(output_files) + 1)), output_files):
+            run, iter_num = get_file_key(output_file)
             output = pd.read_csv(self.tmp_path / "output" / output_file,
                                  dtype={'departure_station': str, 'arrival_station': str})
             output["purchase_date"] = output.apply(
@@ -359,22 +413,33 @@ class RobinLab:
 
             demand_status_dict, labels = get_passenger_status(output)
             for k, v in demand_status_dict.items():
-                df_ds_row = [run, iter, v, labels[k]]
+                df_ds_row = [run, iter_num, v, labels[k]]
                 df_demand_status.loc[len(df_demand_status)] = df_ds_row
 
-            tickets_by_date_user_seat = get_tickets_by_date_user_seat(output)
-            for purchase_date in tickets_by_date_user_seat:
-                for user in tickets_by_date_user_seat[purchase_date]:
-                    for seat in tickets_by_date_user_seat[purchase_date][user]:
-                        df_ts_row = [run, iter, tickets_by_date_user_seat[purchase_date][user][seat], purchase_date,
-                                     user, seat]
-                        df_tickets_sold.loc[len(df_tickets_sold)] = df_ts_row
+        return df_demand_status
 
-            tickets_by_pair_seat[i] = get_tickets_by_pair_seat(output, self.stations_dict)
-            pairs_sold[i] = get_pairs_sold(output, self.stations_dict)
+    def get_sns_dfs(self):
+        """
+        Get the dataframes for seaborn plots.
 
-        print(df_tickets_sold)
-        print(df_demand_status)
-        sns.lineplot(data=df_tickets_sold, x="iter", y="tickets_sold")
+        Returns:
+            Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]: Dataframes for seaborn plots.
+        """
+        output_files = sorted(os.listdir(self.tmp_path / "output"), key=get_file_key)
 
-        return passenger_status, tickets_by_date_user_seat, tickets_by_pair_seat
+        df_markets = self.get_markets_df(output_files=output_files)
+        df_tickets_seat = self.get_tickets_seat_df(output_files=output_files)
+        df_demand_status = self.get_demand_status_df(output_files=output_files)
+
+        return df_markets, df_tickets_seat, df_demand_status
+
+    def set_seed(self, seed: int) -> None:
+        """
+        Set seed for the random number generator.
+
+        Args:
+            seed (int): Seed for the random number generator.
+        """
+        random.seed(seed)
+        np.random.seed(seed)
+        os.environ['PYTHONHASHSEED'] = str(seed)

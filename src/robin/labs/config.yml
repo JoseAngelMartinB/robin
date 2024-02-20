@@ -1,6 +1,5 @@
 demand:
   passengers: null
-seed: 10
 supply:
   capacities: null
   prices:
