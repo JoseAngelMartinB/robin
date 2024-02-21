@@ -80,6 +80,9 @@ class DriverManager:
         train_type_filter = df['train_type'].str.contains('|'.join(self.allowed_train_types))
         df = df[train_type_filter].reset_index(drop=True)
         print(df.head())
+        if df.empty:
+            df['service_id'] = pd.Series(dtype='str')
+            return df
         df['service_id'] = df.apply(lambda x: x['trip_id'] + '_' + x['departure'].strftime('%d-%m-%Y-%H.%M'), axis=1)
         return df
 
@@ -797,6 +800,9 @@ class RenfeScraper:
                 break
             df_trips = pd.concat([df_trips, new_df_trips], ignore_index=True)
             date += datetime.timedelta(days=1)
+
+        if df_trips.empty:
+            return pd.DataFrame(), pd.DataFrame()
 
         df_stops = self.get_df_stops(df_trips)
 
