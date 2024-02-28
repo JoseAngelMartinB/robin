@@ -293,7 +293,7 @@ class Hyperparameters:
         Reads the demand configuration file and returns a string with the content.
         
         Returns:
-            str: Demand configuration file content.
+            Dict[str, Any]: Demand configuration file content.
         """
         with open(self.path_config_demand, 'r') as f:
             data = f.read()
@@ -303,6 +303,9 @@ class Hyperparameters:
     def _get_arrival_time_kwargs(self) -> Dict[str, Dict[str, Union[float, None]]]:
         """
         Get arrival time hyperparameters from the demand configuration file.
+        
+        Returns:
+            Dict[str, Dict[str, Union[float, None]]]: Arrival time hyperparameters per user pattern.
         """
         arrival_time_kwargs = {}
         for user_pattern in self.demand_yaml['userPattern']:
@@ -314,6 +317,10 @@ class Hyperparameters:
     def _get_purchase_day(self) -> Tuple[Dict[str, str], Dict[str, Dict[str, Union[float, None]]]]:
         """
         Get purchase day hyperparameters from the demand configuration file.
+        
+        Returns:
+            Tuple[Dict[str, str], Dict[str, Dict[str, Union[float, None]]]]:
+                Purchase distribution name and hyperparameters and per purchase day and user pattern.
         """
         purchase_day = {}
         purchase_day_kwargs = {}
@@ -325,6 +332,9 @@ class Hyperparameters:
     def _get_seats_utility(self) -> Dict[str, List[Dict[str, Union[int, None]]]]:
         """
         Get seats utility hyperparameters from the demand configuration file.
+        
+        Returns:
+            Dict[str, List[Dict[str, Union[int, None]]]]: Seats utility hyperparameters per user pattern.
         """
         seats_utility = {}
         for user_pattern in self.demand_yaml['userPattern']:
@@ -337,6 +347,9 @@ class Hyperparameters:
         
         Args:
             penalty_name (str): Name of the penalty. It can be 'arrival_time', 'departure_time', 'cost' or 'travel_time'.
+        
+        Returns:
+            Dict[str, Dict[str, Union[float, None]]]: Penalty hyperparameters per user pattern.
         """
         penalty_kwargs = {}
         for user_pattern in self.demand_yaml['userPattern']:
@@ -348,6 +361,10 @@ class Hyperparameters:
     def _get_error(self) -> Tuple[Dict[str, str], Dict[str, Dict[str, Union[float, None]]]]:
         """
         Get error hyperparameters from the demand configuration file.
+        
+        Returns:
+            Tuple[Dict[str, str], Dict[str, Dict[str, Union[float, None]]]]:
+                Error distribution name and hyperparameters per user pattern.
         """
         error = {}
         error_kwargs = {}
@@ -359,6 +376,10 @@ class Hyperparameters:
     def _get_potential_demand(self) -> Tuple[Dict[str, Dict[int, str]], Dict[str, Dict[int, Dict[str, Union[float, None]]]]]:
         """
         Get potential demand hyperparameters from the demand configuration file.
+        
+        Returns:
+            Tuple[Dict[str, Dict[int, str]], Dict[str, Dict[int, Dict[str, Union[float, None]]]]]:
+                Potential demand distribution name and hyperparameters per market and demand pattern.
         """
         potential_demand = {}
         potential_demand_kwargs = {}
@@ -375,7 +396,7 @@ class Hyperparameters:
         Get user pattern distribution name from the demand configuration file.
         
         Returns:
-            Dict[str, Dict[int, Dict[int, float]]]: User pattern distribution.
+            Dict[str, Dict[int, Dict[int, float]]]: User pattern distribution per demand pattern.
         """
         user_pattern_distribution = {}
         for demand_pattern in self.demand_yaml['demandPattern']:
