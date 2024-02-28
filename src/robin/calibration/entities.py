@@ -1,8 +1,10 @@
 """Entities for the calibration module."""
 
-import pandas as pd
+import numpy as np
 import optuna
 import os
+import pandas as pd
+import shutil
 import yaml
 
 from .constants import *
@@ -25,6 +27,8 @@ class Calibration:
         calibration_logs (str): Path to the calibration logs.
         departure_time_hard_restriction (bool): If True, the passenger will not be assigned to a service
             with a departure time that is not valid.
+        top_k_trials (Dict[int, float]): Top k trials with the lowest error.
+        keep_top_k (int): Number of top k trials to keep.
         seed (int): Seed for the random number generator.
     """
     
@@ -35,6 +39,7 @@ class Calibration:
         target_output_path: str,
         calibration_logs: str = 'calibration_logs',
         departure_time_hard_restriction: bool = True,
+        keep_top_k: int = DEFAULT_KEEP_TOP_K,
         seed: Union[int, None] = None
     ) -> None:
         """
@@ -47,6 +52,7 @@ class Calibration:
             calibration_logs (str): Path to the calibration logs. Defaults to 'calibration_logs'.
             departure_time_hard_restriction (bool, optional): If True, the passenger will not
                 be assigned to a service with a departure time that is not valid. Defaults to True.
+            keep_top_k (int, optional): Number of top k trials to keep. Defaults to 3.
             seed (int, optional): Seed for the random number generator. Defaults to None.
         """
         self.path_config_supply = path_config_supply
@@ -54,6 +60,8 @@ class Calibration:
         self.df_target_output = self._get_df_target_output(target_output_path)
         self.calibration_logs = self._create_directory(calibration_logs)
         self.departure_time_hard_restriction = departure_time_hard_restriction
+        self.top_k_trials = {}
+        self.keep_top_k = keep_top_k
         self.seed = seed
     
     def _create_directory(self, directory: str) -> str:
@@ -127,6 +135,7 @@ class Calibration:
         self.suggest_hyperparameters(trial, trial_directory)
         self.simulate(trial, trial_directory)
         error = self.objetive_function(trial, trial_directory)
+        self.keep_top_k_trials(trial, trial_directory, error)
         return error
     
     def suggest_hyperparameters(self, trial: optuna.Trial, trial_directory: str) -> None:
@@ -200,6 +209,42 @@ class Calibration:
         error = mean_squared_error(actual, prediction)
         return error
 
+    def _replace_highest_error(self, trial: optuna.Trial, trial_directory: str, error: float) -> None:
+        """
+        Replace the trial with the highest error if the error is lower than the highest one.
+        
+        Args:
+            trial (optuna.Trial): Optuna trial object.
+            trial_directory (str): Path to the trial directory.
+            error (float): Error of the trial.
+        """
+        errors = np.array(list(self.top_k_trials.values()))
+        max_index = np.argmax(errors)
+        # Replace if the error is lower than the highest one
+        if error < errors[max_index]:
+            trial_number = list(self.top_k_trials.keys())[max_index]
+            self.top_k_trials[trial.number] = error
+            # Delete previous one
+            del self.top_k_trials[trial_number]
+            shutil.rmtree(f'{self.calibration_logs}/trial_{trial_number}')
+        else:
+            # Delete current one
+            shutil.rmtree(trial_directory)
+
+    def keep_top_k_trials(self, trial: optuna.Trial, trial_directory: str, error: float) -> None:
+        """
+        Keep the top k trials with the lowest error.
+        
+        Args:
+            trial (optuna.Trial): Optuna trial object.
+            trial_directory (str): Path to the trial directory.
+            error (float): Error of the trial.
+        """
+        if len(self.top_k_trials) < self.keep_top_k:
+            self.top_k_trials[trial.number] = error
+        else:
+            self._replace_highest_error(trial, trial_directory, error)
+
 
 class Hyperparameters:
     """
@@ -218,6 +263,9 @@ class Hyperparameters:
         penalty_travel_time (Dict[str, Dict[str, Union[float, None]]]): Travel time penalty hyperparameters per user pattern.
         error (Dict[str, str]): Error distribution name per user pattern.
         error_kwargs (Dict[str, Dict[str, Union[float, None]]]): Error hyperparameters per user pattern.
+        potential_demand (Dict[str, Dict[int, str]]): Potential demand distribution name per demand pattern.
+        potential_demand_kwargs (Dict[str, Dict[int, Dict[str, Union[float, None]]]]): Potential demand hyperparameters per demand pattern.
+        user_pattern_distribution (Dict[str, Dict[int, Dict[int, float]]]): User pattern distribution per demand pattern.
     """
     
     def __init__(self, path_config_demand: str) -> None:
@@ -237,6 +285,8 @@ class Hyperparameters:
         self.penalty_cost_kwargs = self._get_penalty_kwargs(penalty_name='cost')
         self.penalty_travel_time_kwargs = self._get_penalty_kwargs(penalty_name='travel_time')
         self.error, self.error_kwargs = self._get_error()
+        self.potential_demand, self.potential_demand_kwargs = self._get_potential_demand()
+        self.user_pattern_distribution = self._get_user_pattern_distribution()
         
     def _get_demand_yaml(self) -> Dict[str, Any]:
         """
@@ -306,10 +356,42 @@ class Hyperparameters:
             error_kwargs[user_pattern['name']] = user_pattern['error_kwargs'] or {}
         return error, error_kwargs
 
+    def _get_potential_demand(self) -> Tuple[Dict[str, Dict[int, str]], Dict[str, Dict[int, Dict[str, Union[float, None]]]]]:
+        """
+        Get potential demand hyperparameters from the demand configuration file.
+        """
+        potential_demand = {}
+        potential_demand_kwargs = {}
+        for demand_pattern in self.demand_yaml['demandPattern']:
+            potential_demand[demand_pattern['name']] = {}
+            potential_demand_kwargs[demand_pattern['name']] = {}
+            for market in demand_pattern['markets']:
+                potential_demand[demand_pattern['name']][market['market']] = market['potential_demand']
+                potential_demand_kwargs[demand_pattern['name']][market['market']] = market['potential_demand_kwargs'] or {}
+        return potential_demand, potential_demand_kwargs
+    
+    def _get_user_pattern_distribution(self) -> Dict[str, Dict[int, Dict[int, float]]]:
+        """
+        Get user pattern distribution name from the demand configuration file.
+        
+        Returns:
+            Dict[str, Dict[int, Dict[int, float]]]: User pattern distribution.
+        """
+        user_pattern_distribution = {}
+        for demand_pattern in self.demand_yaml['demandPattern']:
+            user_pattern_distribution[demand_pattern['name']] = {}
+            for market in demand_pattern['markets']:
+                user_pattern_distribution[demand_pattern['name']][market['market']] = {}
+                for user_pattern in market['user_pattern_distribution']:
+                    id_user_pattern = user_pattern['id']
+                    percentage = user_pattern['percentage']
+                    user_pattern_distribution[demand_pattern['name']][market['market']][id_user_pattern] = percentage
+        return user_pattern_distribution
+
     def _suggest_poisson_kwargs(
         self,
         trial: optuna.Trial,
-        user_pattern: str,
+        pattern: str,
         hyperparameter_name: str,
         distribution_kwargs: Dict[str, float]
     ) -> None:
@@ -318,13 +400,13 @@ class Hyperparameters:
         
         Args:
             trial (optuna.Trial): Optuna trial object.
-            user_pattern (str): Name of the user pattern.
+            pattern (str): Name of the pattern.
             hyperparameter_name (str): Name of the hyperparameter.
             distribution_kwargs (Dict[str, float]): Poisson distribution hyperparameters.
         """
         if distribution_kwargs.get('mu') is None:
             distribution_kwargs['mu'] = trial.suggest_float(
-                name=f'{user_pattern}_{hyperparameter_name}_mu',
+                name=f'{pattern}_{hyperparameter_name}_mu',
                 low=LOW_POISSON[hyperparameter_name]['mu'],
                 high=HIGH_POISSON[hyperparameter_name]['mu']
             )
@@ -332,7 +414,7 @@ class Hyperparameters:
     def _suggest_norm_kwargs(
         self,
         trial: optuna.Trial,
-        user_pattern: str,
+        pattern: str,
         hyperparameter_name: str,
         distribution_kwargs: Dict[str, float],
     ) -> None:
@@ -341,27 +423,27 @@ class Hyperparameters:
         
         Args:
             trial (optuna.Trial): Optuna trial object.
-            user_pattern (str): Name of the user pattern.
+            pattern (str): Name of the pattern.
             hyperparameter_name (str): Name of the hyperparameter.
             distribution_kwargs (Dict[str, float]): Normal distribution hyperparameters.
         """
-        if distribution_kwargs.get('scale') is None:
-            distribution_kwargs['scale'] = trial.suggest_float(
-                name=f'{user_pattern}_{hyperparameter_name}_scale',
-                low=LOW_NORM[hyperparameter_name]['scale'],
-                high=HIGH_NORM[hyperparameter_name]['scale']
-            )
         if distribution_kwargs.get('loc') is None:
             distribution_kwargs['loc'] = trial.suggest_float(
-                name=f'{user_pattern}_{hyperparameter_name}_loc',
+                name=f'{pattern}_{hyperparameter_name}_loc',
                 low=LOW_NORM[hyperparameter_name]['loc'],
                 high=HIGH_NORM[hyperparameter_name]['loc']
+            )
+        if distribution_kwargs.get('scale') is None:
+            distribution_kwargs['scale'] = trial.suggest_float(
+                name=f'{pattern}_{hyperparameter_name}_scale',
+                low=LOW_NORM[hyperparameter_name]['scale'],
+                high=HIGH_NORM[hyperparameter_name]['scale']
             )
     
     def _suggest_randint_kwargs(
         self,
         trial: optuna.Trial,
-        user_pattern: str,
+        pattern: str,
         hyperparameter_name: str,
         distribution_kwargs: Dict[str, float],
     ) -> None:
@@ -370,19 +452,19 @@ class Hyperparameters:
         
         Args:
             trial (optuna.Trial): Optuna trial object.
-            user_pattern (str): Name of the user pattern.
+            pattern (str): Name of the pattern.
             hyperparameter_name (str): Name of the hyperparameter.
             distribution_kwargs (Dict[str, float]): Randint distribution hyperparameters.
         """
         if distribution_kwargs.get('low') is None:
             distribution_kwargs['low'] = trial.suggest_int(
-                name=f'{user_pattern}_{hyperparameter_name}_low',
+                name=f'{pattern}_{hyperparameter_name}_low',
                 low=LOW_RANDINT[hyperparameter_name]['low'],
                 high=HIGH_RANDINT[hyperparameter_name]['low']
             )
         if distribution_kwargs.get('high') is None:
             distribution_kwargs['high'] = trial.suggest_int(
-                name=f'{user_pattern}_{hyperparameter_name}_high',
+                name=f'{pattern}_{hyperparameter_name}_high',
                 low=LOW_RANDINT[hyperparameter_name]['high'],
                 high=HIGH_RANDINT[hyperparameter_name]['high']
             )
@@ -391,7 +473,7 @@ class Hyperparameters:
         self,
         trial: optuna.Trial,
         distribution_name: str,
-        user_pattern: str,
+        pattern: str,
         hyperparameter_name: str,
         distribution_kwargs: Dict[str, float]
     ) -> None:
@@ -401,11 +483,11 @@ class Hyperparameters:
         Args:
             trial (optuna.Trial): Optuna trial object.
             distribution_name (str): Name of the distribution.
-            user_pattern (str): Name of the user pattern.
+            pattern (str): Name of the pattern.
             hyperparameter_name (str): Name of the hyperparameter.
             distribution_kwargs (Dict[str, float]): Distribution hyperparameters.
         """
-        args = (trial, user_pattern, hyperparameter_name, distribution_kwargs)
+        args = (trial, pattern, hyperparameter_name, distribution_kwargs)
         if distribution_name == 'poisson':
             self._suggest_poisson_kwargs(*args)
         elif distribution_name == 'norm':
@@ -453,7 +535,7 @@ class Hyperparameters:
             if purchase_day is None:
                 self.purchase_day[user_pattern] = trial.suggest_categorical(
                     name=f'{user_pattern}_purchase_day',
-                    choices=CHOICES_PURCHASE_DAY
+                    choices=CHOICES_DISCRETE
                 )       
 
     def suggest_purchase_day_kwargs(self, trial: optuna.Trial) -> None:
@@ -467,7 +549,7 @@ class Hyperparameters:
             self._suggest_distribution(
                 trial=trial,
                 distribution_name=self.purchase_day[user_pattern],
-                user_pattern=user_pattern,
+                pattern=user_pattern,
                 hyperparameter_name='purchase_day_kwargs',
                 distribution_kwargs=purchase_day_kwargs
             )
@@ -542,7 +624,7 @@ class Hyperparameters:
             if error is None:
                 self.error[user_pattern] = trial.suggest_categorical(
                     name=f'{user_pattern}_error',
-                    choices=CHOICES_ERROR
+                    choices=CHOICES_CONTINUOUS
                 )
     
     def suggest_error_kwargs(self, trial: optuna.Trial) -> None:
@@ -556,14 +638,73 @@ class Hyperparameters:
             self._suggest_distribution(
                 trial=trial,
                 distribution_name=self.error[user_pattern],
-                user_pattern=user_pattern,
+                pattern=user_pattern,
                 hyperparameter_name='error_kwargs',
                 distribution_kwargs=error_kwargs
             )
 
-    def suggest_hyperparameters(self, trial: optuna.Trial) -> None:
+    def suggest_potential_demand(self, trial: optuna.Trial) -> None:
         """
-        Suggestions for all hyperparameters.
+        Suggest potential demand hyperparameters.
+        
+        Args:
+            trial (optuna.Trial): Optuna trial object.
+        """
+        for demand_pattern, potential_demand in self.potential_demand.items():
+            for market, value in potential_demand.items():
+                # Suggestions are only made for None values
+                if value is None:
+                    self.potential_demand[demand_pattern][market] = trial.suggest_categorical(
+                        name=f'{demand_pattern}_{market}_potential_demand',
+                        choices=CHOICES_POTENCIAL_DEMAND
+                    )
+    
+    def suggest_potential_demand_kwargs(self, trial: optuna.Trial) -> None:
+        """
+        Suggest potential demand hyperparameters.
+        
+        Args:
+            trial (optuna.Trial): Optuna trial object.
+        """
+        for demand_pattern, potential_demand_kwargs in self.potential_demand_kwargs.items():
+            for market, value in potential_demand_kwargs.items():
+                self._suggest_distribution(
+                    trial=trial,
+                    distribution_name=self.potential_demand[demand_pattern][market],
+                    pattern=demand_pattern,
+                    hyperparameter_name=f'{market}_potential_demand_kwargs',
+                    distribution_kwargs=value
+                )
+
+    def suggest_user_pattern_distribution(self, trial: optuna.Trial) -> None:
+        """
+        Suggest user pattern distribution hyperparameters.
+        
+        Args:
+            trial (optuna.Trial): Optuna trial object.
+        """
+        for demand_pattern, user_pattern_distribution in self.user_pattern_distribution.items():
+            for market, user_pattern_distribution in user_pattern_distribution.items():
+                for user_pattern, percentage in user_pattern_distribution.items():
+                    # Suggestions are only made for None values
+                    if percentage is None:
+                        user_pattern_distribution[user_pattern] = trial.suggest_float(
+                            name=f'{demand_pattern}_{market}_user_pattern_distribution_{user_pattern}',
+                            low=LOW_USER_PATTERN_DISTRIBUTION,
+                            high=HIGH_USER_PATTERN_DISTRIBUTION
+                        )
+                # Normalize user pattern distribution hyperparameters to sum to 1
+                total_percentage = sum(user_pattern_distribution.values())
+                for id_user_pattern in user_pattern_distribution:
+                    user_pattern_distribution[id_user_pattern] /= total_percentage
+                    trial.set_user_attr(
+                        key=f'{demand_pattern}_{market}_user_pattern_distribution_{user_pattern}_{id_user_pattern}',
+                        value=user_pattern_distribution[id_user_pattern]
+                    )
+
+    def _suggest_user_patterns(self, trial: optuna.Trial) -> None:
+        """
+        Suggestions for hyperparameters per user pattern.
         
         List of hyperparameters:
             - {user_pattern}_arrival_time_{hour}: Arrival time for each hour of the day.
@@ -587,6 +728,32 @@ class Hyperparameters:
         self.suggest_penalty_kwargs(trial)
         self.suggest_error(trial)
         self.suggest_error_kwargs(trial)
+
+    def _suggest_demand_patterns(self, trial: optuna.Trial) -> None:
+        """
+        Suggestions for hyperparameters per demand pattern.
+        
+        List of hyperparameters:
+            - {demand_pattern}_{market}_potential_demand: Potential demand distribution name.
+            - {demand_pattern}_{market}_potential_demand_kwargs: Potential demand distribution hyperparameters.
+            - {demand_pattern}_{market}_user_pattern_distribution_{user_pattern}_{id_user_pattern}: User pattern distribution for each user pattern.
+        
+        Args:
+            trial (optuna.Trial): Optuna trial object.
+        """
+        self.suggest_potential_demand(trial)
+        self.suggest_potential_demand_kwargs(trial)
+        self.suggest_user_pattern_distribution(trial)
+
+    def suggest_hyperparameters(self, trial: optuna.Trial) -> None:
+        """
+        Suggestions for all hyperparameters, including user patterns and demand patterns.
+        
+        Args:
+            trial (optuna.Trial): Optuna trial object.
+        """
+        self._suggest_user_patterns(trial)
+        self._suggest_demand_patterns(trial)
     
     def _update_user_patterns(self) -> None:
         """
@@ -605,7 +772,16 @@ class Hyperparameters:
             user_pattern['error_kwargs'] = self.error_kwargs[user_pattern['name']]
     
     def _update_demand_patterns(self) -> None:
-        pass
+        """
+        Update the demand patterns with the suggested hyperparameters.
+        """
+        for demand_pattern in self.demand_yaml['demandPattern']:
+            for market in demand_pattern['markets']:
+                market['potential_demand'] = self.potential_demand[demand_pattern['name']][market['market']]
+                market['potential_demand_kwargs'] = self.potential_demand_kwargs[demand_pattern['name']][market['market']]
+                for user_pattern in market['user_pattern_distribution']:
+                    id_user_pattern = user_pattern['id']
+                    user_pattern['percentage'] = self.user_pattern_distribution[demand_pattern['name']][market['market']][id_user_pattern]
     
     def _update_demand_yaml(self) -> None:
         """
@@ -624,18 +800,3 @@ class Hyperparameters:
         self._update_demand_yaml()
         with open(path, 'w') as f:
             yaml.dump(self.demand_yaml, f, sort_keys=False, Dumper=yaml.CSafeDumper)
-
-
-if __name__ == '__main__':
-    calibration = Calibration(
-        path_config_supply='configs/calibration/supply_data.yml',
-        path_config_demand='configs/calibration/demand_data.yml',
-        target_output_path='data/calibration/target.csv',
-        seed=300
-    )
-    calibration.create_study(
-        study_name='calibration_test',
-        storage='sqlite:///calibration_test.db',
-        n_trials=100,
-        show_progress_bar=True
-    )
