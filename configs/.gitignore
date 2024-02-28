@@ -25,3 +25,6 @@
 !ewgt23/demand_data_tourist.yml
 !ewgt23/supply_data_doubled_capacities.yml
 !ewgt23/supply_data_increased_prices.yml
+!calibration/demand_data_target.yml
+!calibration/demand_data.yml
+!calibration/supply_data.yml

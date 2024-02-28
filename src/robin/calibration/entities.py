@@ -257,6 +257,7 @@ class Hyperparameters:
         purchase_day (Dict[str, str]): Purchase distribution name per user pattern.
         purchase_day_kwargs (Dict[str, Dict[str, Union[float, None]]]): Purchase day hyperparameters per user pattern.
         seats_utility (Dict[str, List[Dict[str, Union[int, None]]]]): Seats utility hyperparameters per user pattern.
+        tsps_utility (Dict[str, List[Dict[str, Union[int, None]]]]): TSPs utility hyperparameters per user pattern.
         penalty_arrival_time (Dict[str, Dict[str, Union[float, None]]]): Arrival time penalty hyperparameters per user pattern.
         penalty_departure_time (Dict[str, Dict[str, Union[float, None]]]): Departure time penalty hyperparameters per user pattern.
         penalty_cost (Dict[str, Dict[str, Union[float, None]]]): Cost penalty hyperparameters per user pattern.
@@ -279,7 +280,8 @@ class Hyperparameters:
         self.demand_yaml = self._get_demand_yaml()
         self.arrival_time_kwargs = self._get_arrival_time_kwargs()
         self.purchase_day, self.purchase_day_kwargs = self._get_purchase_day()
-        self.seats_utility = self._get_seats_utility()
+        self.seats_utility = self._get_utility(key='seats')
+        self.tsps_utility = self._get_utility(key='train_service_providers')
         self.penalty_arrival_time_kwargs = self._get_penalty_kwargs(penalty_name='arrival_time')
         self.penalty_departure_time_kwargs = self._get_penalty_kwargs(penalty_name='departure_time')
         self.penalty_cost_kwargs = self._get_penalty_kwargs(penalty_name='cost')
@@ -329,17 +331,20 @@ class Hyperparameters:
             purchase_day_kwargs[user_pattern['name']] = user_pattern['purchase_day_kwargs'] or {}
         return purchase_day, purchase_day_kwargs
 
-    def _get_seats_utility(self) -> Dict[str, List[Dict[str, Union[int, None]]]]:
+    def _get_utility(self, key: str) -> Dict[str, List[Dict[str, Union[int, None]]]]:
         """
-        Get seats utility hyperparameters from the demand configuration file.
+        Get utility hyperparameters from the demand configuration file.
+        
+        Args:
+            key (str): Key of the utility hyperparameter.
         
         Returns:
-            Dict[str, List[Dict[str, Union[int, None]]]]: Seats utility hyperparameters per user pattern.
+            Dict[str, List[Dict[str, Union[int, None]]]]: Utility hyperparameters per user pattern.
         """
-        seats_utility = {}
+        utility = {}
         for user_pattern in self.demand_yaml['userPattern']:
-            seats_utility[user_pattern['name']] = user_pattern['seats']
-        return seats_utility
+            utility[user_pattern['name']] = user_pattern[key]
+        return utility
     
     def _get_penalty_kwargs(self, penalty_name: str) -> Dict[str, Dict[str, Union[float, None]]]:
         """
@@ -575,24 +580,45 @@ class Hyperparameters:
                 distribution_kwargs=purchase_day_kwargs
             )
     
-    def suggest_seats_utility(self, trial: optuna.Trial) -> None:
+    def _suggest_utility(
+        self,
+        trial: optuna.Trial,
+        hyperparameter_name: str,
+        utility_dict: Dict[str, List[Dict[str, Union[int, None]]]],
+        low: int,
+        high: int
+    ) -> None:
         """
         Suggest seats utility hyperparameters.
         
         Args:
             trial (optuna.Trial): Optuna trial object.
+            hyperparameter_name (str): Name of the hyperparameter.
+            utility_dict (Dict[str, List[Dict[str, Union[int, None]]]]): Utility hyperparameters.
+            low (int): Low value for the utility.
+            high (int): High value for the utility.
         """
-        for user_pattern, seats_utility in self.seats_utility.items():
-            for i, seat in enumerate(seats_utility):
-                seat_id = seat['id']
-                value = seat['utility']
+        for user_pattern, utility in utility_dict.items():
+            for i, key in enumerate(utility):
+                _id = key['id']
+                value = key['utility']
                 # Suggestions are only made for None values
                 if value is None:
-                    seats_utility[i]['utility'] = trial.suggest_int(
-                        name=f'{user_pattern}_seats_utility_{seat_id}',
-                        low=LOW_SEATS_UTILITY,
-                        high=HIGH_SEATS_UTILITY
+                    utility[i]['utility'] = trial.suggest_int(
+                        name=f'{user_pattern}_{hyperparameter_name}_utility_{_id}',
+                        low=low,
+                        high=high
                     )
+
+    def suggest_utility(self, trial: optuna.Trial) -> None:
+        """
+        Suggest utility hyperparameters.
+        
+        Args:
+            trial (optuna.Trial): Optuna trial object.
+        """
+        self._suggest_utility(trial, 'seats', self.seats_utility, LOW_SEATS_UTILITY, HIGH_SEATS_UTILITY)
+        self._suggest_utility(trial, 'train_service_providers', self.tsps_utility, LOW_TSPS_UTILITY, HIGH_TSPS_UTILITY)
 
     def _suggest_penalty_kwargs(
         self,
@@ -732,6 +758,7 @@ class Hyperparameters:
             - {user_pattern}_purchase_day: Purchase day distribution name.
             - {user_pattern}_purchase_day_kwargs: Purchase day distribution hyperparameters.
             - {user_pattern}_seats_utility_{seat_id}: Seats utility for each seat.
+            - {user_pattern}_train_service_providers_utility_{tsp_id}: TSPs utility for each TSP.
             - {user_pattern}_penalty_arrival_time_{beta}: Arrival time penalty for each beta.
             - {user_pattern}_penalty_departure_time_{beta}: Departure time penalty for each beta.
             - {user_pattern}_penalty_cost_{beta}: Cost penalty for each beta.
@@ -745,7 +772,7 @@ class Hyperparameters:
         self.suggest_arrival_time_kwargs(trial)
         self.suggest_purchase_day(trial)
         self.suggest_purchase_day_kwargs(trial)
-        self.suggest_seats_utility(trial)
+        self.suggest_utility(trial)
         self.suggest_penalty_kwargs(trial)
         self.suggest_error(trial)
         self.suggest_error_kwargs(trial)
