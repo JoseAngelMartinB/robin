@@ -4,7 +4,7 @@ import datetime
 import numpy as np
 import yaml
 
-from .constants import DEFAULT_SEAT_UTILITY, DEFAULT_RVS_SIZE
+from .constants import DEFAULT_SEAT_UTILITY, DEFAULT_TSP_UTILITY, DEFAULT_RVS_SIZE
 from .exceptions import InvalidForbiddenDepartureHoursException
 from .utils import get_function, get_scipy_distribution
 
@@ -103,6 +103,7 @@ class UserPattern:
             purchase_day_kwargs: Mapping[str, Union[int, float]],
             forbidden_departure_hours: Tuple[int, int],
             seats: Mapping[int, float],
+            tsps: Mapping[int, float],
             penalty_arrival_time: str,
             penalty_arrival_time_kwargs: Mapping[str, Union[int, float]],
             penalty_departure_time: str,
@@ -114,6 +115,7 @@ class UserPattern:
             error: str,
             error_kwargs: Mapping[str, Union[int, float]],
             default_seat_utility: float = DEFAULT_SEAT_UTILITY,
+            default_tsp_utility: float = DEFAULT_TSP_UTILITY,
             default_rvs_size: int = DEFAULT_RVS_SIZE
     ) -> None:
         """
@@ -128,6 +130,7 @@ class UserPattern:
             purchase_day_kwargs (Mapping[str, Union[int, float]]): The purchase day distribution named parameters.
             forbidden_departure_hours (Tuple[int, int]): The forbidden departure hours.
             seats (Mapping[int, float]): The utility of the seats.
+            tsps (Mapping[int, float]): The utility of the train service providers.
             penalty_arrival_time (str): The penalty function name for the arrival time.
             penalty_arrival_time_kwargs (Mapping[str, Union[int, float]]): The penalty function named parameters.
             penalty_departure_time (str): The penalty function name for the departure time.
@@ -139,6 +142,7 @@ class UserPattern:
             error (str): The error distribution name.
             error_kwargs (Mapping[str, Union[int, float]]): The error distribution named parameters.
             default_seat_utility (float, optional): The default utility of the seats.
+            default_tsp_utility (float, optional): The default utility of the train service providers.
             default_rvs_size (int, optional): The default size of the random variables sample.
         
         Raises:
@@ -164,6 +168,7 @@ class UserPattern:
             forbidden_departure_hours=forbidden_departure_hours
         )
         self.seats = seats
+        self.tsps = tsps
         self._penalty_arrival_time = get_function(function_name=penalty_arrival_time)
         self.penalty_arrival_time_kwargs = list(penalty_arrival_time_kwargs.values())
         self._penalty_departure_time = get_function(function_name=penalty_departure_time)
@@ -178,6 +183,7 @@ class UserPattern:
         self._error_rvs = None
         self._error_rvs_idx = 0
         self.default_seat_utility = default_seat_utility
+        self.default_tsp_utility = default_tsp_utility
         self.default_rvs_size = default_rvs_size
 
     def _check_forbidden_departure_hours(self, forbidden_departure_hours: Tuple[int, int]) -> Tuple[int, int]:
@@ -252,6 +258,18 @@ class UserPattern:
             float: The utility of the given seat.
         """
         return self.seats.get(seat, self.default_seat_utility)
+    
+    def get_tsp_utility(self, tsp: int) -> float:
+        """
+        Returns the utility of the given train service provider.
+
+        Args:
+            tsp (int): The train service provider.
+
+        Returns:
+            float: The utility of the given train service provider.
+        """
+        return self.tsps.get(tsp, self.default_tsp_utility)
     
     def penalty_arrival_time(self, x: float) -> float:
         """
@@ -704,6 +722,7 @@ class Passenger:
     def get_utility(
             self,
             seat: int,
+            tsp: int,
             service_departure_time: float,
             service_arrival_time: float,
             price: float,
@@ -714,6 +733,7 @@ class Passenger:
 
         Args:
             seat (int): The seat of the service.
+            tsp (int): The train service provider of the service.
             service_departure_time (float): The departure time of the service.
             service_arrival_time (float): The arrival time of the service.
             price (float): The price of the seat.
@@ -726,12 +746,13 @@ class Passenger:
         if departure_time_hard_restriction and not self._is_valid_departure_time(service_departure_time):
             return -np.inf # Minimum utility
         seat_utility = self.user_pattern.get_seat_utility(seat)
+        tsp_utility = self.user_pattern.get_tsp_utility(tsp)
         arrival_time_utility = self._get_utility_arrival_time(service_arrival_time)
         departure_time_utility = self._get_utility_departure_time(service_departure_time)
         price_utility = self._get_utility_price(price)
         travel_time_utility = self._get_utility_travel_time(service_arrival_time, service_departure_time)
         error_utility = self.user_pattern.error
-        return seat_utility - arrival_time_utility - departure_time_utility - price_utility - travel_time_utility + error_utility
+        return seat_utility + tsp_utility - arrival_time_utility - departure_time_utility - price_utility - travel_time_utility + error_utility
 
     def __str__(self) -> str:
         """
@@ -807,6 +828,19 @@ class Demand:
         return markets
 
     @classmethod
+    def _utility_list_to_dict(cls, list_: List[Mapping[str, Any]]) -> Mapping[int, float]:
+        """
+        Convert a list of utilities into a dictionary.
+
+        Args:
+            list_ (List[Mapping[str, Any]]): The list of utilities.
+
+        Returns:
+            Mapping[int, float]: The dictionary of utilities.
+        """
+        return {item['id']: item['utility'] for item in list_}
+
+    @classmethod
     def _get_user_patterns(cls, data: Mapping[str, Any]) -> Mapping[int, UserPattern]:
         """
         Returns the user patterns.
@@ -825,18 +859,16 @@ class Demand:
                     forbidden_departure_hours = tuple(user_pattern['forbidden_departure_hours'].values())
                     user_pattern.pop('forbidden_departure_hours', None)
 
-                    # Convert the list of seats into a dictionary {id: utility}
-                    ids = []
-                    utilities = []
-                    for seat in user_pattern['seats']:
-                        ids.append(seat['id'])
-                        utilities.append(seat['utility'])
-                    seats = dict(zip(ids, utilities))
+                    # Convert the list of seats and tsps into a dictionary {id: utility}
+                    seats = Demand._utility_list_to_dict(user_pattern['seats'])
+                    tsps = Demand._utility_list_to_dict(user_pattern['train_service_providers'])
                     user_pattern.pop('seats', None)
+                    user_pattern.pop('train_service_providers', None)
 
                     user_patterns[user_pattern['id']] = UserPattern(
                         forbidden_departure_hours=forbidden_departure_hours,
                         seats=seats,
+                        tsps=tsps,
                         **user_pattern
                     )
         return user_patterns

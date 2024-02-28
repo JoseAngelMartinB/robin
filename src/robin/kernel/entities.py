@@ -128,6 +128,7 @@ class Kernel:
                     # Calculate utility
                     utility = passenger.get_utility(
                         seat=int(seat.id),
+                        tsp=int(service.tsp.id),
                         service_departure_time=service.service_departure_time,
                         service_arrival_time=service.service_arrival_time,
                         price=service.prices[(origin, destination)][seat],

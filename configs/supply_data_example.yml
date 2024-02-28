@@ -159,6 +159,9 @@ trainServiceProvider:
   - id: 1
     name: "Renfe"
     rolling_stock: [1, 2, 3, 4, 5]
+  - id: 2
+    name: "Ouigo"
+    rolling_stock: [1, 2, 3, 4, 5]
 
 # Service
 service:
@@ -206,7 +209,7 @@ service:
   - id: 2
     date: "2023-01-22"
     line: 1
-    train_service_provider: 1
+    train_service_provider: 2
     time_slot: 3
     rolling_stock: 4
     origin_destination_tuples:
