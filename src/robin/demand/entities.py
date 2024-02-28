@@ -821,10 +821,8 @@ class Demand:
             Mapping[int, Market]: The markets.
         """
         markets = {}
-        for key, value in data.items():
-            if key == 'market':
-                for market in value:
-                    markets[market['id']] = Market(**market)
+        for market in data['market']:
+            markets[market['id']] = Market(**market)
         return markets
 
     @classmethod
@@ -852,25 +850,23 @@ class Demand:
             Mapping[int, UserPattern]: The user patterns.
         """
         user_patterns = {}
-        for key, value in data.items():
-            if key == 'userPattern':
-                for user_pattern in value:
-                    # Convert the forbidden departure hours into a tuple (begin, end)
-                    forbidden_departure_hours = tuple(user_pattern['forbidden_departure_hours'].values())
-                    user_pattern.pop('forbidden_departure_hours', None)
+        for user_pattern in data['userPattern']:
+            # Convert the forbidden departure hours into a tuple (begin, end)
+            forbidden_departure_hours = tuple(user_pattern['forbidden_departure_hours'].values())
+            user_pattern.pop('forbidden_departure_hours', None)
 
-                    # Convert the list of seats and tsps into a dictionary {id: utility}
-                    seats = Demand._utility_list_to_dict(user_pattern['seats'])
-                    tsps = Demand._utility_list_to_dict(user_pattern['train_service_providers'])
-                    user_pattern.pop('seats', None)
-                    user_pattern.pop('train_service_providers', None)
+            # Convert the list of seats and tsps into a dictionary {id: utility}
+            seats = Demand._utility_list_to_dict(user_pattern['seats'])
+            tsps = Demand._utility_list_to_dict(user_pattern['train_service_providers'])
+            user_pattern.pop('seats', None)
+            user_pattern.pop('train_service_providers', None)
 
-                    user_patterns[user_pattern['id']] = UserPattern(
-                        forbidden_departure_hours=forbidden_departure_hours,
-                        seats=seats,
-                        tsps=tsps,
-                        **user_pattern
-                    )
+            user_patterns[user_pattern['id']] = UserPattern(
+                forbidden_departure_hours=forbidden_departure_hours,
+                seats=seats,
+                tsps=tsps,
+                **user_pattern
+            )
         return user_patterns
 
     @classmethod
@@ -892,33 +888,31 @@ class Demand:
             Mapping[int, DemandPattern]: The demand patterns.
         """
         demand_patterns = {}
-        for key, value in data.items():
-            if key == 'demandPattern':
-                for demand_pattern in value:
-                    # Get the markets, the potential demands and the user patterns distribution
-                    markets_objects = []
-                    potential_demands = []
-                    potential_demands_kwargs = []
-                    user_patterns_distribution = []
-                    for market in demand_pattern['markets']:
-                        markets_objects.append(markets[market['market']])
-                        potential_demands.append(market['potential_demand'])
-                        potential_demands_kwargs.append(market['potential_demand_kwargs'])
+        for demand_pattern in data['demandPattern']:
+            # Get the markets, the potential demands and the user patterns distribution
+            markets_objects = []
+            potential_demands = []
+            potential_demands_kwargs = []
+            user_patterns_distribution = []
+            for market in demand_pattern['markets']:
+                markets_objects.append(markets[market['market']])
+                potential_demands.append(market['potential_demand'])
+                potential_demands_kwargs.append(market['potential_demand_kwargs'])
 
-                        # Convert the list of user patterns distributions into a dictionary {user_pattern: percentage}
-                        user_pattern_distribution = {}
-                        for demand_upd in market['user_pattern_distribution']:
-                            user_pattern_distribution[user_patterns[demand_upd['id']]] = demand_upd['percentage']
-                        user_patterns_distribution.append(user_pattern_distribution)
-                    
-                    demand_patterns[demand_pattern['id']] = DemandPattern(
-                        id=demand_pattern['id'],
-                        name=demand_pattern['name'],
-                        markets=markets_objects,
-                        potential_demands=potential_demands,
-                        potential_demands_kwargs=potential_demands_kwargs,
-                        user_patterns_distribution=user_patterns_distribution
-                    )
+                # Convert the list of user patterns distributions into a dictionary {user_pattern: percentage}
+                user_pattern_distribution = {}
+                for demand_upd in market['user_pattern_distribution']:
+                    user_pattern_distribution[user_patterns[demand_upd['id']]] = demand_upd['percentage']
+                user_patterns_distribution.append(user_pattern_distribution)
+            
+            demand_patterns[demand_pattern['id']] = DemandPattern(
+                id=demand_pattern['id'],
+                name=demand_pattern['name'],
+                markets=markets_objects,
+                potential_demands=potential_demands,
+                potential_demands_kwargs=potential_demands_kwargs,
+                user_patterns_distribution=user_patterns_distribution
+            )
         return demand_patterns
 
     @classmethod
@@ -938,12 +932,10 @@ class Demand:
             Mapping[int, Day]: The days.
         """
         days = {}
-        for key, value in data.items():
-            if key == 'day':
-                for day in value:
-                    demand_pattern = demand_patterns[day['demandPattern']]
-                    day.pop('demandPattern', None)
-                    days[day['id']] = Day(demand_pattern=demand_pattern, **day)
+        for day in data['day']:
+            demand_pattern = demand_patterns[day['demandPattern']]
+            day.pop('demandPattern', None)
+            days[day['id']] = Day(demand_pattern=demand_pattern, **day)
         return days
 
     @classmethod
