@@ -4,6 +4,10 @@ import datetime
 import numpy as np
 import yaml
 
+from src.robin.decision_model.fuzzy_model import AcumulativeTSKFuzzyModel
+from src.robin.decision_model.utils import get_variables_from_dict, get_rules_from_dict
+from src.robin.supply.entities import Seat, Service
+
 from .constants import DEFAULT_SEAT_UTILITY, DEFAULT_TSP_UTILITY, DEFAULT_RVS_SIZE
 from .exceptions import InvalidForbiddenDepartureHoursException
 from .utils import get_function, get_scipy_distribution
