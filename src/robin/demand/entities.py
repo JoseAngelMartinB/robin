@@ -4,13 +4,9 @@ import datetime
 import numpy as np
 import yaml
 
-from src.robin.decision_model.fuzzy_model import AcumulativeTSKFuzzyModel
-from src.robin.decision_model.utils import get_variables_from_dict, get_rules_from_dict
-from src.robin.supply.entities import Seat, Service
-
-from .constants import DEFAULT_SEAT_UTILITY, DEFAULT_RVS_SIZE
+from .constants import DEFAULT_SEAT_UTILITY, DEFAULT_TSP_UTILITY, DEFAULT_RVS_SIZE
 from .exceptions import InvalidForbiddenDepartureHoursException
-from .utils import get_function, get_scipy_distribution, get_euclidean_distance
+from .utils import get_function, get_scipy_distribution
 
 from pathlib import Path
 from typing import Any, List, Mapping, Union, Tuple
@@ -50,7 +46,7 @@ class Market:
         self.departure_station_coords = departure_station_coords
         self.arrival_station = arrival_station
         self.arrival_station_coords = arrival_station_coords
-    
+
     def __str__(self) -> str:
         """
         Returns a human-readable string representation of the market.
@@ -414,6 +410,7 @@ class DemandPattern:
             for the potential demand distribution for each market.
         user_patterns_distribution (Mapping[Market, Mapping[UserPattern, float]]): The distribution of user patterns
             for each market.
+        default_rvs_size (int): The default size of the random variables sample.
 
     Raises:
         InvalidDistributionException: Raised when the given distribution is not contained in SciPy.
