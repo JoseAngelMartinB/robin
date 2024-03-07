@@ -283,6 +283,9 @@ userPattern:
         utility: 18
       - id: 3
         utility: 20
+    train_service_providers:
+      - id: 1
+        utility: 3
     penalty_arrival_time: polynomial
     penalty_arrival_time_kwargs:
       b_0: 0
