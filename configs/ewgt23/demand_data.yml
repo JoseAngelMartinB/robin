@@ -33,6 +33,9 @@ userPattern:
         utility: 17
       - id: 3
         utility: 22
+    train_service_providers:
+      - id: 1
+        utility: 2
     penalty_arrival_time: polynomial
     penalty_arrival_time_kwargs:
       b_0: 0
@@ -72,6 +75,9 @@ userPattern:
         utility: 14
       - id: 3
         utility: 17
+    train_service_providers:
+      - id: 1
+        utility: 1
     penalty_arrival_time: polynomial
     penalty_arrival_time_kwargs:
       b_0: 0
