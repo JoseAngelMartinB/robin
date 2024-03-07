@@ -10,7 +10,7 @@ from src.robin.supply.entities import Seat, Service
 
 from .constants import DEFAULT_SEAT_UTILITY, DEFAULT_TSP_UTILITY, DEFAULT_RVS_SIZE
 from .exceptions import InvalidForbiddenDepartureHoursException
-from .utils import get_function, get_scipy_distribution
+from .utils import get_function, get_scipy_distribution, get_euclidean_distance
 
 from pathlib import Path
 from typing import Any, List, Mapping, Union, Tuple
