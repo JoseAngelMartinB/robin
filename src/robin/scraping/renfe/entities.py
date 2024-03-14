@@ -79,7 +79,7 @@ class DriverManager:
 
         train_type_filter = df['train_type'].str.contains('|'.join(self.allowed_train_types))
         df = df[train_type_filter].reset_index(drop=True)
-        print(df.head())
+        # print(df.head())
         if df.empty:
             df['service_id'] = pd.Series(dtype='str')
             return df
@@ -99,16 +99,24 @@ class DriverManager:
         # Get Adif station names from df, and convert them to lowercase, without spaces or dashes
         adif_names = [re.sub(r'[-/]', ' ', name.lower()) for name in self.stations_df['stop_name'].tolist()]
 
-        raw_name = re.sub(r'[^a-zA-Z0-9 -]', '', raw_text)  # Remove non-alphanumeric characters
+        text_normalize = ''.join(c for c in unicodedata.normalize('NFD', raw_text) if unicodedata.category(c) != 'Mn')
+        raw_name = re.sub(r'[^a-zA-Z0-9 -]', '', text_normalize)  # Remove non-alphanumeric characters
         name = ' '.join(filter(None, re.split(r'\W+', raw_name))).lower()
 
         best_match = max(adif_names,
                          key=lambda gn: sum(w in gn.split(' ') for w in name.split(' ')),
                          default='Unknown')
 
-        if best_match != 'Unknown':
+        if best_match != 'unknown':
             return self.stations_df.at[adif_names.index(best_match), 'stop_id']
-        print(f'Unknown station: {name}')
+
+        for adif_name in adif_names:
+            if name in adif_name:
+                print(f"GETTING SUBSTRING MATCH, {name} - {adif_name}")
+                return self.stations_df.at[adif_names.index(adif_name), 'stop_id']
+        print("#" * 50)
+        print(f'UNKNOWN STATION: {name}')
+        print("#" * 50)
         return '00000'
 
     def _get_trip_data(
