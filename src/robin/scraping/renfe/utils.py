@@ -52,18 +52,19 @@ def remove_blanks(x: str, replace_by: str = '') -> str:
     return re.sub(r'\s+', replace_by, x)
 
 
-def time_to_minutes(time: str) -> int:
+def time_to_minutes(time: str, separator: str = '.') -> int:
     """
     Convert time string formated as 'HH.MM' to minutes.
 
     Args:
         time (str): Time string formated as 'HH.MM'.
+        separator (str): Separator between hours and minutes.
 
     Returns:
         int: Time in minutes.
     """
     try:
-        h, m = time.split('.')
+        h, m = time.split(separator)
     except ValueError:
         return 0
     return int(h) * 60 + int(m)
