@@ -28,7 +28,7 @@ RENFE_STATIONS_CSV = f'{SAVE_PATH}/renfe_stations.csv'
 LR_RENFE_SERVICES = ('AVE', 'AVLO', 'AVE INT', 'ALVIA', 'AVANT')
 
 # Default values
-DEFAULT_PATIENCE = 25
+DEFAULT_PATIENCE = 10
 
 
 class DriverManager:
@@ -165,7 +165,7 @@ class DriverManager:
         Returns:
             str: URL of the Renfe prices website for the given origin-destination pair of stations and date.
         """
-        date_str = date.strftime('%d/%m/%Y')  # Format date to match Renfe website format
+        date_str = date.strftime('%d/%m/%Y')
         root = 'https://venta.renfe.com/vol/'
         query = f'buscarTren.do?tipoBusqueda=autocomplete&currenLocation=menuBusqueda&vengoderenfecom=SI&cdgoOrigen={origin_id}&cdgoDestino={destination_id}&idiomaBusqueda=s&FechaIdaSel={date_str}&_fechaIdaVisual={date_str}&adultos_=1&ninos_=0&ninosMenores=0&numJoven=0&numDorada=0&codPromocional='
 
@@ -186,7 +186,7 @@ class DriverManager:
         Returns:
             str: URL of the Renfe schedules website for the given origin-destination pair of stations and date.
         """
-        year, month, day = date.strftime('%Y-%m-%d').split("-")
+        year, month, day = date.strftime('%Y-%m-%d').split('-')
         weekday = date.weekday() + 1
         url = f'https://horarios.renfe.com/HIRRenfeWeb/buscar.do?O={origin_id}&D={destination_id}&AF={year}&MF={month}&DF={day}&SF={weekday}&ID=s'
         print('Date: ', date)
@@ -465,7 +465,7 @@ class DriverManager:
         records = []
         for train in trains:
             trip_id, train_type = self._get_trips_trip_id_train_type(train)
-            schedule = self._get_trips_schedule(train, date)
+            schedule = self._get_trips_schedule(train)
             departure = self._get_trips_departure()
             duration = self._get_trips_duration()
             if not self._is_allowed_train_type(train_type):
@@ -510,8 +510,15 @@ class DriverManager:
             Mapping[str, Tuple[int, int]]: Dictionary of stops, where keys are each station as adif ids and values are
                 a tuple of int values with (arrival, departure) times in minutes.
         """
-        self._request_schedule(train)
-
+        # Switch to the schedule window
+        train_info = train.find_element(
+            By.CSS_SELECTOR,
+            '.irf-travellers-table__tbody-lnk.irf-travellers-table__tbody-lnk--icon-left'
+        )
+        train_info.click()
+        self.driver.switch_to.window(self.driver.window_handles[1])
+        
+        # Build the schedule dictionary
         schedule = {}
         schedule_table = self.driver.find_element(By.CLASS_NAME, 'irf-renfe-travel__container-table')
         train_stops = schedule_table.find_elements(By.CSS_SELECTOR, '.irf-renfe-travel__td.txt_gral')
@@ -522,32 +529,17 @@ class DriverManager:
             arrival = time_to_minutes(arrival.text)
             departure = time_to_minutes(departure.text)
             schedule[adif_id] = (arrival, departure)
-
+        
+        # Close the schedule window and switch back to the main window
+        self.driver.close()
+        self.driver.switch_to.window(self.driver.window_handles[0])
         return schedule
 
-    def _request_schedule(self, train: WebElement) -> None:
-        """
-        Requests the schedule of a train.
-
-        Args:
-            train (WebElement): Train element.
-        """
-        train_info = train.find_element(
-            By.CSS_SELECTOR,
-            '.irf-travellers-table__tbody-lnk.irf-travellers-table__tbody-lnk--icon-left'
-        )
-        schedule_link = train_info.get_attribute('href')
-        schedule_link = schedule_link.replace('javascript:abrirNuevaVentana("', '')
-        schedule_link = schedule_link.replace('%22)', '')
-        schedule_link = 'https://horarios.renfe.com/HIRRenfeWeb/' + schedule_link
-        self.driver.get(schedule_link)
-
-
     def _get_trips_departure(self):
-        pass
+        return None
 
     def _get_trips_duration(self):
-        pass
+        return None
 
     @staticmethod
     def _absolute_to_relative(schedule: Dict[str, Tuple[int, int]]) -> Dict[str, Tuple[int, int]]:
