@@ -122,7 +122,7 @@ class DriverManager:
         col_names = ['trip_id', 'origin', 'destination', 'train_type', 'departure', 'arrival', 'duration', 'prices']
         return self._get_prices_dataframe(records=records, col_names=col_names)
 
-    def _get_df_trips(self, trips: WebElement, date: datetime.date) -> pd.DataFrame:
+    def _get_df_trips(self, trips: WebElement) -> pd.DataFrame:
         """
         Returns a DataFrame with the trips information.
 
@@ -160,6 +160,7 @@ class DriverManager:
         Returns:
             pd.DataFrame: DataFrame with the information retrieved from the scraping.
         """
+        # TODO: Set the types of the Lists
         df_prices = self._get_df_from_records(records, col_names)
 
         # Extract the values of the prices dictionary and add them as new columns
@@ -297,10 +298,7 @@ class DriverManager:
         train_type = ' '.join(train_type)
         return trip_id, train_type
 
-    def _get_trips_schedule(
-            self,
-            train: WebElement,
-    ) -> Mapping[str, Tuple[int, int]]:
+    def _get_trips_schedule(self, train: WebElement) -> Mapping[str, Tuple[int, int]]:
         """
         Returns the schedule of a train.
 
@@ -472,7 +470,7 @@ class DriverManager:
         if not trips:
             logger.warning('Error retrieving trips. Skipping...')
             return pd.DataFrame()
-        df_trips = self._get_df_trips(trips, date)
+        df_trips = self._get_df_trips(trips)
         return df_trips
 
 
