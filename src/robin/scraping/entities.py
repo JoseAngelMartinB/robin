@@ -3,9 +3,9 @@
 import numpy as np
 import pandas as pd
 
-from src.robin.supply.entities import Station, TimeSlot, Corridor, Line, Seat, RollingStock, TSP, Service, Supply
-from src.robin.supply.utils import get_time
-from src.robin.scraping.utils import *
+from robin.supply.entities import Station, TimeSlot, Corridor, Line, Seat, RollingStock, TSP, Service, Supply
+from robin.supply.utils import get_time
+from robin.scraping.utils import *
 
 from collections import OrderedDict
 from typing import Dict, List, Tuple
@@ -377,13 +377,12 @@ class SupplySaver(Supply):
         """
         Supply.__init__(self, services)
 
-    def to_yaml(self, filename: str, save_path: str) -> None:
+    def to_yaml(self, output_path: str = 'supply_data.yaml') -> None:
         """
         Save supply entities to yaml file
 
         Args:
-            filename (str): File name for the yaml file
-            save_path (str): Path to save yaml file
+            output_path (str): Path to output yaml file
         """
         data = [
             ('stations', [station_to_dict(stn) for stn in self.stations]),
@@ -397,4 +396,4 @@ class SupplySaver(Supply):
         ]
 
         for key, value in data:
-            write_to_yaml(save_path+filename, {key: value})
+            write_to_yaml(output_path, {key: value})
