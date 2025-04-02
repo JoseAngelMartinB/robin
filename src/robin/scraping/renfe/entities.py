@@ -1,14 +1,13 @@
 """Entities for Renfe scraping."""
 
-import bs4
 import datetime
 import os
 import pandas as pd
-import re
 
-from src.robin.scraping.exceptions import NotAvailableStationsException
-from src.robin.scraping.renfe.utils import format_duration, is_number, time_to_minutes
+from src.robin.scraping.renfe.exceptions import NotAvailableStationsException
+from src.robin.scraping.renfe.utils import time_to_datetime, time_to_minutes
 
+from loguru import logger
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
 from selenium.webdriver.chrome.options import Options
@@ -60,11 +59,7 @@ class DriverManager:
         self.stations_df = stations_df
         self.allowed_train_types = allowed_train_types
 
-    def _get_dataframe_from_records(
-            self,
-            records: List,
-            col_names: List,
-    ) -> pd.DataFrame:
+    def _get_df_from_records(self, records: List, col_names: List) -> pd.DataFrame:
         """
         Returns a DataFrame with the information retrieved from the scraping encoded in a list of lists.
 
@@ -77,8 +72,8 @@ class DriverManager:
         Returns:
             pd.DataFrame: DataFrame with the information retrieved from the scraping.
         """
+        # TODO: Set the types of the Lists
         df = pd.DataFrame(records, columns=col_names)
-
         train_type_filter = df['train_type'].str.contains('|'.join(self.allowed_train_types))
         df = df[train_type_filter].reset_index(drop=True)
         if df.empty:
@@ -86,166 +81,6 @@ class DriverManager:
             return df
         df['service_id'] = df.apply(lambda x: x['trip_id'] + '_' + x['departure'].strftime('%d-%m-%Y-%H.%M'), axis=1)
         return df
-
-    # TODO: REMOVE
-    def _get_trip_data(
-            self,
-            row: bs4.element.ResultSet,
-            date: datetime.date,
-            origin_id: str,
-            destination_id: str
-    ) -> Tuple[str, str, Dict[str, Tuple[int, int]], datetime.datetime, int]:
-        """
-        Returns the data of a trip retrieved from a row from the schedules table.
-
-        Args:
-            row (bs4.element.Tag): Row of the table with the trips information.
-            date (datetime.date): Date of the trip.
-
-        Returns:
-            Tuple[str, str, str, datetime.datetime, float, Dict[str, float]]: Data of the trip from the schedules table.
-        """
-        trip_info = list(filter(None, re.split(r'\s+', row[0].text.strip())))
-        trip_id, *train_type = trip_info
-        train_type = ' '.join(train_type)
-
-        schedule_link = row[0].find('a')['href']
-        trip_url = DriverManager._get_trip_url(schedule_link=schedule_link, schedule_url=SCHEDULE_URL)
-        trip_schedule = self._scrape_trip_schedule(url=trip_url)
-
-        departure = row[1].text.strip()
-        departure = datetime.datetime.strptime(str(date) + '-' + departure, '%Y-%m-%d-%H.%M')
-        duration = format_duration(row[3].text.strip())
-        train = (trip_id, train_type, trip_schedule, departure, duration)
-        assert all(train), f'Error parsing service trips: {train}'  # Assert non empty values
-
-        return train
-
-    def _is_content_row(self, row: bs4.element.ResultSet) -> bool:
-        """
-        Checks if row is a valid row with trip information.
-
-        Args:
-            row (bs4.element.ResultSet): Row of the table with the trips information.
-
-        Returns:
-            bool: True if row is a valid row with trip information, False otherwise.
-        """
-        if not row or len(row) < 6:
-            return False
-        return True
-
-    def _get_prices_dataframe(self, records: List, col_names: List) -> pd.DataFrame:
-        """
-        Returns a DataFrame with the information retrieved from the scraping encoded in a list of lists.
-
-        Args:
-            records (List): List of lists with the information retrieved from the scraping.
-
-        Returns:
-            pd.DataFrame: DataFrame with the information retrieved from the scraping.
-        """
-        df_prices = self._get_dataframe_from_records(records, col_names)
-
-        # Extract the values of the prices dictionary and add them as new columns
-        new_columns = df_prices.apply(lambda row: {k: v for k, v in row['prices'].items()}, axis=1, result_type='expand')
-        df_prices = pd.concat([df_prices, new_columns], axis=1)  # Concatenate the new columns to the dataframe
-        df_prices = df_prices.drop('prices', axis=1)  # Drop the prices column
-        return df_prices
-
-    def _get_renfe_prices_url(self, origin_id: str, destination_id: str, date: datetime.date) -> str:
-        """
-        Returns the URL of the Renfe prices website for a given origin-destination pair of stations and a given date.
-
-        Args:
-            origin_id (str): Renfe id of the origin station.
-            destination_id (str): Renfe id of the destination station.
-            date (datetime.date): Date of the trip.
-
-        Returns:
-            str: URL of the Renfe prices website for the given origin-destination pair of stations and date.
-        """
-        date_str = date.strftime('%d/%m/%Y')
-        root = 'https://venta.renfe.com/vol/'
-        query = f'buscarTren.do?tipoBusqueda=autocomplete&currenLocation=menuBusqueda&vengoderenfecom=SI&cdgoOrigen={origin_id}&cdgoDestino={destination_id}&idiomaBusqueda=s&FechaIdaSel={date_str}&_fechaIdaVisual={date_str}&adultos_=1&ninos_=0&ninosMenores=0&numJoven=0&numDorada=0&codPromocional='
-
-        url = root + query
-        print('Date: ', date)
-        print('Search url: ', url)
-        return url
-
-    def _get_renfe_schedules_url(self, origin_id: str, destination_id: str, date: datetime.date) -> str:
-        """
-        Returns the URL of the Renfe schedules website for a given origin-destination pair of stations and a given date.
-
-        Args:
-            origin_id (str): Renfe id of the origin station.
-            destination_id (str): Renfe id of the destination station.
-            date (datetime.date): Date of the trip.
-
-        Returns:
-            str: URL of the Renfe schedules website for the given origin-destination pair of stations and date.
-        """
-        year, month, day = date.strftime('%Y-%m-%d').split('-')
-        weekday = date.weekday() + 1
-        url = f'https://horarios.renfe.com/HIRRenfeWeb/buscar.do?O={origin_id}&D={destination_id}&AF={year}&MF={month}&DF={day}&SF={weekday}&ID=s'
-        print('Date: ', date)
-        print('Search url: ', url)
-        return url
-
-    def _request_url(
-            self,
-            url: str,
-            find_by: str,
-            find_value: str,
-            patience: int = DEFAULT_PATIENCE
-    ) -> Union[WebElement, None]:
-        """
-        Request a page and wait for the price to load.
-
-        Args:
-            url (str): URL to request.
-            find_by (str): By method to find the element.
-            find_value (str): Value to find the element.
-            patience (int, optional): Patience in seconds. Defaults to 25.
-
-        Return:
-            Union[WebElement, None]: WebElement with the prices or None if the prices are not loaded.
-        """
-        self.driver.get(url)
-        div = self.driver.find_element(find_by, find_value)
-        try:
-            WebDriverWait(self.driver, patience).until(EC.visibility_of_element_located((find_by, find_value)))
-        except TimeoutException:
-            return None
-        return div
-
-    def scrape_prices(
-            self,
-            origin_id: str,
-            destination_id: str,
-            date: datetime.date
-    ) -> Union[None, pd.DataFrame]:
-        """
-        Scrapes prices from Renfe website using selenium and saves retrieved data to a CSV file.
-
-        Args:
-            origin_id (str): Renfe id of the origin station.
-            destination_id (str): Renfe id of the destination station.
-            date (datetime.date): Date of the trip.
-            range_days (int): Number of days to search for trips.
-            save_path (str): Path to save the CSV file.
-
-        Returns:
-            pd.DataFrame: DataFrame with the scraped data.
-        """
-        url = self._get_renfe_prices_url(origin_id, destination_id, date)
-        prices = self._request_url(url=url, find_by=By.ID, find_value='listaTrenesTBodyIda')
-        if not prices:
-            print('Error retrieving prices. Skipping...')
-            return pd.DataFrame()
-        df_prices = self._get_df_prices(prices, origin_id, destination_id, date)
-        return df_prices
 
     def _get_df_prices(
             self,
@@ -287,31 +122,52 @@ class DriverManager:
         col_names = ['trip_id', 'origin', 'destination', 'train_type', 'departure', 'arrival', 'duration', 'prices']
         return self._get_prices_dataframe(records=records, col_names=col_names)
 
-    def get_value_from_stations(self, search_column: str, value: str, objective_column: str) -> str:
+    def _get_df_trips(self, trips: WebElement, date: datetime.date) -> pd.DataFrame:
         """
-        Gets the value of a column given the value of another column.
+        Returns a DataFrame with the trips information.
 
         Args:
-            search_column (str): Column to search for the value.
-            value (str): Value to search for.
-            objective_column (str): Column to get the value from.
+            table (WebElement): WebElement with the trips table.
+            date (datetime.date): Date of the trip.
 
         Returns:
-            str: Value of the objective column.
+            pd.DataFrame: DataFrame with the trips information.
         """
-        return self.stations_df[self.stations_df[search_column] == value][objective_column].values[0]
+        trains = trips.find_elements(By.CSS_SELECTOR, '.odd.irf-travellers-table__tr')
+        records = []
+        for train in trains:
+            trip_id, train_type = self._get_trips_trip_id_train_type(train)
+            schedule = self._get_trips_schedule(train)
+            departure = self._get_trips_departure()
+            duration = self._get_trips_duration()
+            if not self._is_allowed_train_type(train_type):
+                continue
+            trip_record = [trip_id, train_type, schedule, departure, duration]
+            records.append(trip_record)
 
-    def _is_allowed_train_type(self, train_type: str) -> bool:
+        if not records:
+            return pd.DataFrame()
+        col_names = ['trip_id', 'train_type', 'schedule', 'departure', 'duration']
+        return self._get_df_from_records(records=records, col_names=col_names)
+
+    def _get_prices_dataframe(self, records: List, col_names: List) -> pd.DataFrame:
         """
-        Checks if the train type is allowed.
+        Returns a DataFrame with the information retrieved from the scraping encoded in a list of lists.
 
         Args:
-            train_type (str): Train type.
+            records (List): List of lists with the information retrieved from the scraping.
 
         Returns:
-            bool: True if the train type is allowed, False otherwise.
+            pd.DataFrame: DataFrame with the information retrieved from the scraping.
         """
-        return train_type in ' '.join(self.allowed_train_types)
+        df_prices = self._get_df_from_records(records, col_names)
+
+        # Extract the values of the prices dictionary and add them as new columns
+        new_columns = df_prices.apply(lambda row: {k: v for k, v in row['prices'].items()}, axis=1, result_type='expand')
+        df_prices = pd.concat([df_prices, new_columns], axis=1)  # Concatenate the new columns to the dataframe
+        # TODO: Why we drop the prices column if it is the prices df?
+        df_prices = df_prices.drop('prices', axis=1)  # Drop the prices column
+        return df_prices
 
     def _get_prices_trip_id(self, train: WebElement) -> Union[str, None]:
         """
@@ -361,24 +217,10 @@ class DriverManager:
         """
         train_schedule_data = train.find_element(By.CSS_SELECTOR, '.col-md-8.trenes')
         departure_data, arrival_data = train_schedule_data.find_elements(By.TAG_NAME, 'h5')
-        departure = self._time_to_datetime(departure_data.text, date)
-        arrival = self._time_to_datetime(arrival_data.text, date)
+        departure = time_to_datetime(departure_data.text, date)
+        arrival = time_to_datetime(arrival_data.text, date)
         duration = arrival - departure
         return departure, arrival, duration
-
-    def _time_to_datetime(self, time: str, date: datetime.date) -> datetime.datetime:
-        """
-        Converts a time string to a datetime object.
-
-        Args:
-            time (str): Time string.
-            date (datetime.date): Date of the time.
-
-        Returns:
-            datetime.datetime: Datetime object of the time.
-        """
-        time = time.replace(' h', '')
-        return datetime.datetime.strptime(str(date) + ' ' + time, '%Y-%m-%d %H:%M')
 
     def _get_prices_train(self, train: WebElement) -> Dict[str, float]:
         """
@@ -398,85 +240,44 @@ class DriverManager:
             prices[seat_type] = float(price.replace(',', '.'))
         return prices
 
-    def scrape_stations(self, url: str) -> Dict[str, str]:
+    def _get_renfe_prices_url(self, origin_id: str, destination_id: str, date: datetime.date) -> str:
         """
-        Scrapes the stations from the Renfe main menu.
+        Returns the URL of the Renfe prices website for a given origin-destination pair of stations and a given date.
 
         Args:
-            url (str): URL of the Renfe main menu.
-
-        Returns:
-            Dict[str, str]: A dictionary with the Renfe station ids (str) as keys and the station names (str) as values.
-        """
-        menu = self._request_url(url=url, find_by=By.CLASS_NAME, find_value='irf-select')
-        if not menu:
-            raise NotAvailableStationsException
-
-        stations = menu.find_elements(By.TAG_NAME, 'option')
-
-        ids_names = {}
-        for station in stations:
-            station_name = station.text
-            if station_name == 'Estaciones de Origen':
-                continue
-            station_id = station.get_attribute('value')
-            ids_names[station_id] = station_name
-
-        return ids_names
-    
-    def scrape_trips(
-            self,
-            origin_id: str,
-            destination_id: str,
-            date: datetime.date
-    ) -> Union[None, pd.DataFrame]:
-        """
-        Obtains two pandas dataframes from Renfe website, one with the trips information and another with the stops,
-            which are saved to CSV files.
-
-        Args:
-            origin_id (str): Origin station id.
-            destination_id (str): Destination station id.
-            date (datetime.date): Initial date to search for trips.
-
-        Returns:
-            pd.DataFrame: DataFrame with the scraped trips data.
-        """
-        url = self._get_renfe_schedules_url(origin_id, destination_id, date)
-        trips = self._request_url(url=url, find_by=By.CLASS_NAME, find_value='irf-travellers-table__container-table')
-        if not trips:
-            print('Error retrieving trips. Skipping...')
-            return pd.DataFrame()
-        df_trips = self._get_df_trips(trips, date)
-        return df_trips
-
-    def _get_df_trips(self, trips: WebElement, date: datetime.date) -> pd.DataFrame:
-        """
-        Returns a DataFrame with the trips information.
-
-        Args:
-            table (WebElement): WebElement with the trips table.
+            origin_id (str): Renfe id of the origin station.
+            destination_id (str): Renfe id of the destination station.
             date (datetime.date): Date of the trip.
 
         Returns:
-            pd.DataFrame: DataFrame with the trips information.
+            str: URL of the Renfe prices website for the given origin-destination pair of stations and date.
         """
-        trains = trips.find_elements(By.CSS_SELECTOR, '.odd.irf-travellers-table__tr')
-        records = []
-        for train in trains:
-            trip_id, train_type = self._get_trips_trip_id_train_type(train)
-            schedule = self._get_trips_schedule(train)
-            departure = self._get_trips_departure()
-            duration = self._get_trips_duration()
-            if not self._is_allowed_train_type(train_type):
-                continue
-            trip_record = [trip_id, train_type, schedule, departure, duration]
-            records.append(trip_record)
+        date_str = date.strftime('%d/%m/%Y')
+        root = 'https://venta.renfe.com/vol/'
+        query = f'buscarTren.do?tipoBusqueda=autocomplete&currenLocation=menuBusqueda&vengoderenfecom=SI&cdgoOrigen={origin_id}&cdgoDestino={destination_id}&idiomaBusqueda=s&FechaIdaSel={date_str}&_fechaIdaVisual={date_str}&adultos_=1&ninos_=0&ninosMenores=0&numJoven=0&numDorada=0&codPromocional='
+        url = root + query
+        logger.info(f'Date: {date}')
+        logger.info(f'Search url: {url}')
+        return url
 
-        if not records:
-            return pd.DataFrame()
-        col_names = ['trip_id', 'train_type', 'schedule', 'departure', 'duration']
-        return self._get_dataframe_from_records(records=records, col_names=col_names)
+    def _get_renfe_schedules_url(self, origin_id: str, destination_id: str, date: datetime.date) -> str:
+        """
+        Returns the URL of the Renfe schedules website for a given origin-destination pair of stations and a given date.
+
+        Args:
+            origin_id (str): Renfe id of the origin station.
+            destination_id (str): Renfe id of the destination station.
+            date (datetime.date): Date of the trip.
+
+        Returns:
+            str: URL of the Renfe schedules website for the given origin-destination pair of stations and date.
+        """
+        year, month, day = date.strftime('%Y-%m-%d').split('-')
+        weekday = date.weekday() + 1
+        url = f'https://horarios.renfe.com/HIRRenfeWeb/buscar.do?O={origin_id}&D={destination_id}&AF={year}&MF={month}&DF={day}&SF={weekday}&ID=s'
+        logger.info(f'Date: {date}')
+        logger.info(f'Search url: {url}')
+        return url
 
     def _get_trips_trip_id_train_type(self, train: WebElement) -> Tuple[str, str]:
         """
@@ -525,6 +326,7 @@ class DriverManager:
         it = iter(train_stops)
         for train_stop, arrival, departure in zip(it, it, it):
             # TODO: Change to relative times
+            # TODO: In AVE INT there are stations not operated by Renfe
             adif_id = self.get_value_from_stations(search_column='STATION_NAME', value=train_stop.text, objective_column='ADIF_ID')
             arrival = time_to_minutes(arrival.text)
             departure = time_to_minutes(departure.text)
@@ -536,84 +338,142 @@ class DriverManager:
         return schedule
 
     def _get_trips_departure(self):
-        return None
+        # TODO: Implement this method
+        pass
 
     def _get_trips_duration(self):
-        return None
+        # TODO: Implement this method
+        pass
 
-    @staticmethod
-    def _absolute_to_relative(schedule: Dict[str, Tuple[int, int]]) -> Dict[str, Tuple[int, int]]:
+    def _is_allowed_train_type(self, train_type: str) -> bool:
         """
-        Converts absolute times to relative times.
+        Checks if the train type is allowed.
 
         Args:
-            schedule (Dict[str, Tuple[int, int]]): Dictionary of stops, where keys are each station and values are
-                a tuple of floats with (arrival, departure) times in minutes from midnight.
+            train_type (str): Train type.
 
         Returns:
-            Dict[str, Tuple[int, int]]: Same dictionary of stops, where keys are each station and values are a tuple
-                with (arrival, departure) relative time in minutes.
+            bool: True if the train type is allowed, False otherwise.
         """
-        start_time = schedule[tuple(schedule.keys())[0]][0]
+        return train_type in ' '.join(self.allowed_train_types)
 
-        relative_schedule = {}
-        for key, (start, end) in schedule.items():
-            relative_start = start - start_time
-            relative_end = end - start_time
-            relative_schedule[key] = (relative_start, relative_end)
-
-        return relative_schedule
-
-    @staticmethod
-    def _get_prices(cols, seat_types: List) -> Dict[str, float]:
+    def _request_url(
+            self,
+            url: str,
+            find_by: str,
+            find_value: str,
+            patience: int = DEFAULT_PATIENCE
+    ) -> Union[WebElement, None]:
         """
-        Get the prices of the different seat types for a given row (service in Renfe website).
+        Request a page and wait for the price to load.
 
         Args:
-            cols (bs4.element.ResultSet): Columns of the table with the services.
-            seat_types (List): List of the seat types.
+            url (str): URL to request.
+            find_by (str): By method to find the element.
+            find_value (str): Value to find the element.
+            patience (int, optional): Patience in seconds. Defaults to 25.
 
-        Returns:
-            Dict[str, float]: Dictionary with the prices of the different seat types.
+        Return:
+            Union[WebElement, None]: WebElement with the prices or None if the prices are not loaded.
         """
-        if len(cols) == 1:  # Means train is full, so no prices are available
-            return {st: float('NaN') for st in seat_types}
+        self.driver.get(url)
+        div = self.driver.find_element(find_by, find_value)
+        try:
+            WebDriverWait(self.driver, patience).until(EC.visibility_of_element_located((find_by, find_value)))
+        except TimeoutException:
+            return None
+        return div
 
-        prices = {}
-        # If any of the prices is available, number of price cols will be equal to number of seat types
-        for seat, col in zip(seat_types, cols):
-            button_col = col.find('button')  # Button columns contains the prices info
-            price = float('NaN')
-            price_div = button_col.find('div', {'class': 'precio booking-list-element-big-font'})
-            if price_div:
-                price = price_div.text.split(' ')[0].replace(',', '.')
-            assert is_number(price), f'Error parsing price: {price}'
-            prices[seat] = price
-
-        if len(prices) != len(seat_types):
-            return {st: float('NaN') for st in seat_types}
-        return prices
-
-    @staticmethod
-    def _get_trip_url(schedule_link: str, schedule_url: str) -> str:
+    def get_value_from_stations(self, search_column: str, value: str, objective_column: str) -> str:
         """
-        Returns the URL of the trip schedule given the schedule link and the schedule URL.
+        Gets the value of a column given the value of another column.
 
         Args:
-            schedule_link (str): URL with stops information from Renfe.
-            schedule_url (str): Root URL of Renfe website for trip schedules.
+            search_column (str): Column to search for the value.
+            value (str): Value to search for.
+            objective_column (str): Column to get the value from.
 
         Returns:
-            str: URL of the trip schedule.
+            str: Value of the objective column.
         """
-        query = str(schedule_link).replace("\n", "").replace("\t", "").replace(" ", "%20")
-        pattern = r'\("(.+)"\)'  # Pattern to capture everything between parenthesis in a raw string
-        match = re.search(pattern, query)
-        if not match:
-            raise ValueError('Invalid schedule link')
+        return self.stations_df[self.stations_df[search_column] == value][objective_column].values[0]
 
-        query = match.group(1)
-        return schedule_url + query
+    def scrape_prices(
+            self,
+            origin_id: str,
+            destination_id: str,
+            date: datetime.date
+    ) -> Union[None, pd.DataFrame]:
+        """
+        Scrapes prices from Renfe website using selenium and saves retrieved data to a CSV file.
+
+        Args:
+            origin_id (str): Renfe id of the origin station.
+            destination_id (str): Renfe id of the destination station.
+            date (datetime.date): Date of the trip.
+            range_days (int): Number of days to search for trips.
+            save_path (str): Path to save the CSV file.
+
+        Returns:
+            pd.DataFrame: DataFrame with the scraped data.
+        """
+        url = self._get_renfe_prices_url(origin_id, destination_id, date)
+        prices = self._request_url(url=url, find_by=By.ID, find_value='listaTrenesTBodyIda')
+        if not prices:
+            logger.warning('Error retrieving prices. Skipping...')
+            return pd.DataFrame()
+        df_prices = self._get_df_prices(prices, origin_id, destination_id, date)
+        return df_prices
+
+    def scrape_stations(self, url: str) -> Dict[str, str]:
+        """
+        Scrapes the stations from the Renfe main menu.
+
+        Args:
+            url (str): URL of the Renfe main menu.
+
+        Returns:
+            Dict[str, str]: A dictionary with the Renfe station ids (str) as keys and the station names (str) as values.
+        """
+        menu = self._request_url(url=url, find_by=By.CLASS_NAME, find_value='irf-select')
+        if not menu:
+            raise NotAvailableStationsException
+
+        stations = menu.find_elements(By.TAG_NAME, 'option')
+        ids_names = {}
+        for station in stations:
+            station_name = station.text
+            if station_name == 'Estaciones de Origen':
+                continue
+            station_id = station.get_attribute('value')
+            ids_names[station_id] = station_name
+        return ids_names
+    
+    def scrape_trips(
+            self,
+            origin_id: str,
+            destination_id: str,
+            date: datetime.date
+    ) -> Union[None, pd.DataFrame]:
+        """
+        Obtains two pandas dataframes from Renfe website, one with the trips information and another with the stops,
+            which are saved to CSV files.
+
+        Args:
+            origin_id (str): Origin station id.
+            destination_id (str): Destination station id.
+            date (datetime.date): Initial date to search for trips.
+
+        Returns:
+            pd.DataFrame: DataFrame with the scraped trips data.
+        """
+        url = self._get_renfe_schedules_url(origin_id, destination_id, date)
+        trips = self._request_url(url=url, find_by=By.CLASS_NAME, find_value='irf-travellers-table__container-table')
+        if not trips:
+            logger.warning('Error retrieving trips. Skipping...')
+            return pd.DataFrame()
+        df_trips = self._get_df_trips(trips, date)
+        return df_trips
 
 
 class RenfeScraper:
@@ -622,8 +482,8 @@ class RenfeScraper:
 
     Attributes:
         stations_df (pd.DataFrame): A pandas DataFrame to parse stations data.
-        available_stations (List[str]): A list with the available stations in the Renfe website.
         driver (DriverManager): A DriverManager object to manage the browser.
+        available_stations (List[str]): A list with the available stations in the Renfe website.
     """
 
     def __init__(
@@ -672,10 +532,18 @@ class RenfeScraper:
                         # If station is not the last one, insert it in the corridor before the next station
                         index = corridor_stations.index(trip[i + 1])
                         corridor_stations.insert(index, station)
-
         return corridor_stations
 
-    def get_df_stops(self, df_trips: pd.DataFrame):
+    def _get_df_stops(self, df_trips: pd.DataFrame) -> pd.DataFrame:
+        """
+        Returns a DataFrame with the stops information.
+        
+        Args:
+            df_trips (pd.DataFrame): DataFrame with the trips information.
+        
+        Returns:
+            pd.DataFrame: DataFrame with the stops information.
+        """
         # Create a dictionary with the service_id as key and the schedule as value
         schedules_dict = dict(zip(df_trips.service_id, df_trips.schedule))
 
@@ -684,7 +552,6 @@ class RenfeScraper:
         for service_id, schedule in schedules_dict.items():
             for stop_id, (arrival, departure) in schedule.items():
                 rows.append({'service_id': service_id, 'stop_id': stop_id, 'arrival': arrival, 'departure': departure})
-
         return pd.DataFrame(rows)
 
     def _save_df_stops(
@@ -752,8 +619,8 @@ class RenfeScraper:
             save_path=save_path
         )
         end_date = init_date + datetime.timedelta(days=range_days)
-        print(f'Scraped {len(df_trips)} trips between {origin_id} and {destination_id} from {init_date} to {end_date}')
-        print(df_trips.head())
+        logger.info(f'Scraped {len(df_trips)} trips between {origin_id} and {destination_id} from {init_date} to {end_date}')
+        logger.info(df_trips.head())
 
         # Scrape prices
         df_prices = self.scrape_prices(
@@ -764,8 +631,8 @@ class RenfeScraper:
             df_trips=df_trips,
             save_path=save_path
         )
-        print(f'Scraped prices between {origin_id} and {destination_id} from {init_date} to {end_date}')
-        print(df_prices.head())
+        logger.info(f'Scraped prices between {origin_id} and {destination_id} from {init_date} to {end_date}')
+        logger.info(df_prices.head())
 
     def scrape_prices(
             self,
@@ -805,7 +672,7 @@ class RenfeScraper:
                     des_id = self.driver.get_value_from_stations(search_column='RENFE_ID', value=des, objective_column='ADIF_ID')
                     new_df_prices = self.driver.scrape_prices(origin_id=org_id, destination_id=des_id, date=date)
                     if new_df_prices.empty:
-                        print(f'No prices found for {org_id} - {des_id} on {date}. Exiting...')
+                        logger.warning(f'No prices found for {org_id} - {des_id} on {date}. Exiting...')
                         continue
                     df_prices = pd.concat([df_prices, new_df_prices], ignore_index=True)
                     date += datetime.timedelta(days=1)
@@ -846,7 +713,7 @@ class RenfeScraper:
         for _ in range(range_days):
             new_df_trips = self.driver.scrape_trips(origin_id=origin_id, destination_id=destination_id, date=date)
             if new_df_trips is None:
-                print(f'No trips found for {origin_id} - {destination_id} on {date}. Exiting...')
+                logger.warning(f'No trips found for {origin_id} - {destination_id} on {date}. Exiting...')
                 continue
             df_trips = pd.concat([df_trips, new_df_trips], ignore_index=True)
             date += datetime.timedelta(days=1)
@@ -854,8 +721,7 @@ class RenfeScraper:
         if df_trips.empty:
             return pd.DataFrame()
 
-        df_stops = self.get_df_stops(df_trips)
-
+        df_stops = self._get_df_stops(df_trips)
         self._save_df_stops(
             df_stops=df_stops,
             origin_id=origin_id,

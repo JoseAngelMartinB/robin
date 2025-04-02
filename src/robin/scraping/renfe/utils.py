@@ -1,55 +1,21 @@
 """ Utility functions for scraping module"""
 
-import re
+import datetime
 
 
-def format_duration(x: str) -> int:
+def time_to_datetime(time: str, date: datetime.date) -> datetime.datetime:
     """
-    Convert string duration to minutes.
+    Converts a time string with format 'HH:MM h' to a datetime object with format '%Y-%m-%d %H:%M'.
 
     Args:
-        x (str): String duration.
+        time (str): Time string.
+        date (datetime.date): Date of the time.
 
     Returns:
-        int: Duration in minutes.
+        datetime.datetime: Datetime object of the time formatted as '%Y-%m-%d %H:%M'.
     """
-    tuple_hour_min = tuple(filter(lambda t: is_number(t), x.split(' ')))
-    if len(tuple_hour_min) == 1:
-        m = tuple_hour_min[0]
-        return int(m)
-    h, m = tuple_hour_min
-    return int(h) * 60 + int(m)
-
-
-def is_number(x: str) -> bool:
-    """
-    Function to check if a string is a number.
-
-    Args:
-        x (str): String to check.
-
-    Returns:
-        bool: True if x is a number, False otherwise.
-    """
-    try:
-        float(x)
-        return True
-    except ValueError:
-        return False
-
-
-def remove_blanks(x: str, replace_by: str = '') -> str:
-    """
-    Removes blank spaces (tabs, newlines, etc.) from a string.
-
-    Args:
-        x (str): String to remove blank spaces from.
-        replace_by (str): String to replace the blank spaces with.
-
-    Returns:
-        str: String without blank spaces.
-    """
-    return re.sub(r'\s+', replace_by, x)
+    time = time.replace(' h', '')
+    return datetime.datetime.strptime(str(date) + ' ' + time, '%Y-%m-%d %H:%M')
 
 
 def time_to_minutes(time: str, separator: str = '.') -> int:
