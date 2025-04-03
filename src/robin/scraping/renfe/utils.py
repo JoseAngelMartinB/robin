@@ -3,6 +3,34 @@
 import datetime
 
 
+def time_str_to_minutes(duration_str: str) -> int:
+    """
+    Convert a duration string formatted as 'X h. Y min.' to total minutes.
+
+    Args:
+        duration_str (str): Duration string formatted as 'X h. Y min.'.
+
+    Returns:
+        int: Total duration in minutes.
+    """
+    # Split the string into parts.
+    parts = duration_str.strip().split()
+
+    hours = 0
+    minutes = 0
+
+    # Loop through the parts to find hours and minutes.
+    for i, token in enumerate(parts):
+        if token == "h.":
+            if i > 0:
+                hours = int(parts[i - 1])
+        elif token == "min.":
+            if i > 0:
+                minutes = int(parts[i - 1])
+
+    return hours * 60 + minutes
+
+
 def time_to_datetime(time: str, date: datetime.date) -> datetime.datetime:
     """
     Converts a time string with format 'HH:MM h' to a datetime object with format '%Y-%m-%d %H:%M'.
@@ -34,3 +62,5 @@ def time_to_minutes(time: str, separator: str = '.') -> int:
     except ValueError:
         return 0
     return int(h) * 60 + int(m)
+
+
