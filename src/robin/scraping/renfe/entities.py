@@ -28,6 +28,7 @@ LR_RENFE_SERVICES = ('AVE', 'AVLO', 'AVE INT', 'ALVIA', 'AVANT')
 
 # Default values
 DEFAULT_PATIENCE = 10
+ONE_DAY = 24 * 60
 
 
 class DriverManager:
@@ -54,7 +55,7 @@ class DriverManager:
         """
         driver_options = Options()
         driver_options.add_argument('--disable-extensions')
-        # driver_options.add_argument('--headless')
+        driver_options.add_argument('--headless')
         self.driver = webdriver.Chrome(options=driver_options)
         self.stations_df = stations_df
         self.allowed_train_types = allowed_train_types
@@ -137,6 +138,8 @@ class DriverManager:
         records = []
         for train in trains:
             trip_id, train_type = self._get_trips_trip_id_train_type(train)
+            if not trip_id:
+                continue
             schedule = self._get_trips_schedule(train)
             departure = self._get_trips_departure()
             duration = self._get_trips_duration()
@@ -241,6 +244,55 @@ class DriverManager:
             prices[seat_type] = float(price.replace(',', '.'))
         return prices
 
+    def _get_relative_schedule(
+            self,
+            train_stops: List[WebElement],
+    ) -> Mapping[str, Tuple[int, int]]:
+        """
+        Converts absolute schedule times to relative times.
+
+        Args:
+            train_stops (List[WebElement]): List of WebElements with the schedule times.
+
+        Returns:
+            Mapping[str, Tuple[int, int]]: Dictionary of stops, where keys are each station as adif ids and values are
+                a tuple of int values with (arrival, departure) relative times in minutes.
+        """
+        schedule = {}
+        it = iter(train_stops)
+        total_stations = len(train_stops) // 3
+        init_time = 0
+        init_minutes = 0
+        prev_departure = 0
+
+        for current_station, (train_stop, arrival, departure) in enumerate(zip(it, it, it)):
+            adif_id = self.get_value_from_stations(search_column='STATION_NAME', value=train_stop.text,
+                                                   objective_column='ADIF_ID')
+            arrival_absolute = time_to_minutes(arrival.text)
+            departure_absolute = time_to_minutes(departure.text)
+
+            # If the train arrives before the previous departure, it means that the train has passed midnight
+            if arrival_absolute < prev_departure:
+                init_minutes += ONE_DAY
+            prev_departure = departure_absolute
+            arrival_absolute += init_minutes
+            departure_absolute += init_minutes
+
+            # Convert absolute times to relative times
+            if current_station == 0:
+                init_time = departure_absolute
+                arrival_relative = 0
+                departure_relative = 0
+            elif current_station == total_stations - 1:
+                arrival_relative = arrival_absolute - init_time
+                departure_relative = arrival_relative
+            else:
+                arrival_relative = arrival_absolute - init_time
+                departure_relative = departure_absolute - init_time
+
+            schedule[adif_id] = (arrival_relative, departure_relative)
+        return schedule
+
     def _get_renfe_prices_url(self, origin_id: str, destination_id: str, date: datetime.date) -> str:
         """
         Returns the URL of the Renfe prices website for a given origin-destination pair of stations and a given date.
@@ -290,10 +342,13 @@ class DriverManager:
         Returns:
             Tuple[str, str]: Trip id and train type of the trip.
         """
-        train_info = train.find_element(
-            By.CSS_SELECTOR,
-            '.irf-travellers-table__tbody-lnk.irf-travellers-table__tbody-lnk--icon-left'
-        )
+        try:
+            train_info = train.find_element(
+                By.CSS_SELECTOR,
+                '.irf-travellers-table__tbody-lnk.irf-travellers-table__tbody-lnk--icon-left'
+            )
+        except NoSuchElementException:
+            return None, None
         trip_id, *train_type = train_info.text.split(' ')
         train_type = ' '.join(train_type)
         return trip_id, train_type
@@ -315,23 +370,18 @@ class DriverManager:
             '.irf-travellers-table__tbody-lnk.irf-travellers-table__tbody-lnk--icon-left'
         )
         train_info.click()
+        wait = WebDriverWait(self.driver, 10)
+        wait.until(lambda driver: len(driver.window_handles) > 1)
         self.driver.switch_to.window(self.driver.window_handles[1])
-        
+
         # Build the schedule dictionary
-        schedule = {}
         schedule_table = self.driver.find_element(By.CLASS_NAME, 'irf-renfe-travel__container-table')
         train_stops = schedule_table.find_elements(By.CSS_SELECTOR, '.irf-renfe-travel__td.txt_gral')
-        it = iter(train_stops)
-        for train_stop, arrival, departure in zip(it, it, it):
-            # TODO: Change to relative times
-            # TODO: In AVE INT there are stations not operated by Renfe
-            adif_id = self.get_value_from_stations(search_column='STATION_NAME', value=train_stop.text, objective_column='ADIF_ID')
-            arrival = time_to_minutes(arrival.text)
-            departure = time_to_minutes(departure.text)
-            schedule[adif_id] = (arrival, departure)
-        
+        schedule = self._get_relative_schedule(train_stops)
+
         # Close the schedule window and switch back to the main window
         self.driver.close()
+        wait.until(lambda driver: len(driver.window_handles) == 1)
         self.driver.switch_to.window(self.driver.window_handles[0])
         return schedule
 
