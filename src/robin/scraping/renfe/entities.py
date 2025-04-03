@@ -143,7 +143,7 @@ class DriverManager:
                 continue
             schedule = self._get_trips_schedule(train)
             departure = self._get_trips_departure(train, date)
-            duration = self._get_trips_duration()
+            duration = self._get_trips_duration(train)
             if not self._is_allowed_train_type(train_type):
                 continue
             trip_record = [trip_id, train_type, schedule, departure, duration]
@@ -399,8 +399,21 @@ class DriverManager:
         departure = datetime.datetime(year=date.year, month=date.month, day=date.day) + datetime.timedelta(minutes=departure_minutes)
         return departure
 
-    def _get_trips_duration(self):
-        pass
+    def _get_trips_duration(self, train: WebElement) -> int:
+        """
+        Returns the departure time of a train.
+
+        Args:
+            train (WebElement): Train element.
+
+        Returns:
+            int: Duration of the service in minutes.
+        """
+        # TODO: Check if the duration is correct. Check duration strings in the website 2 h. 58 min., 26 min. , 2 h. Implement in utils?
+        train_info = train.find_elements(By.CSS_SELECTOR, '.txt_borde1.irf-travellers-table__td')
+        duration_minutes = time_to_minutes(train_info[3].text)
+        print(f'duration minutes: {duration_minutes}')
+        return duration_minutes
 
     def _is_allowed_train_type(self, train_type: str) -> bool:
         """
