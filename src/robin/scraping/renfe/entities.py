@@ -123,12 +123,12 @@ class DriverManager:
         col_names = ['trip_id', 'origin', 'destination', 'train_type', 'departure', 'arrival', 'duration', 'prices']
         return self._get_prices_dataframe(records=records, col_names=col_names)
 
-    def _get_df_trips(self, trips: WebElement) -> pd.DataFrame:
+    def _get_df_trips(self, trips: WebElement, date: datetime.date) -> pd.DataFrame:
         """
         Returns a DataFrame with the trips information.
 
         Args:
-            table (WebElement): WebElement with the trips table.
+            trips (WebElement): WebElement with the trips table.
             date (datetime.date): Date of the trip.
 
         Returns:
@@ -139,9 +139,10 @@ class DriverManager:
         for train in trains:
             trip_id, train_type = self._get_trips_trip_id_train_type(train)
             if not trip_id:
+                logger.warning('No trip id found. Skipping...')
                 continue
             schedule = self._get_trips_schedule(train)
-            departure = self._get_trips_departure()
+            departure = self._get_trips_departure(train, date)
             duration = self._get_trips_duration()
             if not self._is_allowed_train_type(train_type):
                 continue
@@ -244,10 +245,7 @@ class DriverManager:
             prices[seat_type] = float(price.replace(',', '.'))
         return prices
 
-    def _get_relative_schedule(
-            self,
-            train_stops: List[WebElement],
-    ) -> Mapping[str, Tuple[int, int]]:
+    def _get_relative_schedule(self, train_stops: List[WebElement]) -> Mapping[str, Tuple[int, int]]:
         """
         Converts absolute schedule times to relative times.
 
@@ -255,8 +253,8 @@ class DriverManager:
             train_stops (List[WebElement]): List of WebElements with the schedule times.
 
         Returns:
-            Mapping[str, Tuple[int, int]]: Dictionary of stops, where keys are each station as adif ids and values are
-                a tuple of int values with (arrival, departure) relative times in minutes.
+            Mapping[str, Tuple[int, int]]: Dictionary of stops, where keys are each station as
+                adif ids and values are a tuple of relative times in minutes.
         """
         schedule = {}
         it = iter(train_stops)
@@ -361,8 +359,8 @@ class DriverManager:
             train (WebElement): Train element.
 
         Returns:
-            Mapping[str, Tuple[int, int]]: Dictionary of stops, where keys are each station as adif ids and values are
-                a tuple of int values with (arrival, departure) times in minutes.
+            Mapping[str, Tuple[int, int]]: Dictionary of stops, where keys are each station as
+                adif ids and values are a tuple of relative times in minutes.
         """
         # Switch to the schedule window
         train_info = train.find_element(
@@ -370,7 +368,7 @@ class DriverManager:
             '.irf-travellers-table__tbody-lnk.irf-travellers-table__tbody-lnk--icon-left'
         )
         train_info.click()
-        wait = WebDriverWait(self.driver, 10)
+        wait = WebDriverWait(self.driver, DEFAULT_PATIENCE)
         wait.until(lambda driver: len(driver.window_handles) > 1)
         self.driver.switch_to.window(self.driver.window_handles[1])
 
@@ -385,12 +383,23 @@ class DriverManager:
         self.driver.switch_to.window(self.driver.window_handles[0])
         return schedule
 
-    def _get_trips_departure(self):
-        # TODO: Implement this method
-        pass
+    def _get_trips_departure(self, train: WebElement, date: datetime.date) -> datetime.datetime:
+        """
+        Returns the departure time of a train.
+
+        Args:
+            train (WebElement): Train element.
+            date (datetime.date): Date of the trip.
+
+        Returns:
+            datetime.datetime: Departure time of the train.
+        """
+        train_info = train.find_elements(By.CSS_SELECTOR, '.txt_borde1.irf-travellers-table__td')
+        departure_minutes = time_to_minutes(train_info[1].text)
+        departure = datetime.datetime(year=date.year, month=date.month, day=date.day) + datetime.timedelta(minutes=departure_minutes)
+        return departure
 
     def _get_trips_duration(self):
-        # TODO: Implement this method
         pass
 
     def _is_allowed_train_type(self, train_type: str) -> bool:
@@ -459,8 +468,6 @@ class DriverManager:
             origin_id (str): Renfe id of the origin station.
             destination_id (str): Renfe id of the destination station.
             date (datetime.date): Date of the trip.
-            range_days (int): Number of days to search for trips.
-            save_path (str): Path to save the CSV file.
 
         Returns:
             pd.DataFrame: DataFrame with the scraped data.
@@ -520,7 +527,7 @@ class DriverManager:
         if not trips:
             logger.warning('Error retrieving trips. Skipping...')
             return pd.DataFrame()
-        df_trips = self._get_df_trips(trips)
+        df_trips = self._get_df_trips(trips, date)
         return df_trips
 
 
@@ -584,13 +591,13 @@ class RenfeScraper:
 
     def _get_df_stops(self, df_trips: pd.DataFrame) -> pd.DataFrame:
         """
-        Returns a DataFrame with the stops information.
+        Returns a DataFrame with the stops' information.
         
         Args:
             df_trips (pd.DataFrame): DataFrame with the trips information.
         
         Returns:
-            pd.DataFrame: DataFrame with the stops information.
+            pd.DataFrame: DataFrame with the stops' information.
         """
         # Create a dictionary with the service_id as key and the schedule as value
         schedules_dict = dict(zip(df_trips.service_id, df_trips.schedule))
