@@ -15,7 +15,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
-from typing import Dict, List, Mapping, Tuple, Union
+from typing import Dict, List, Mapping, Set, Tuple, Union
 
 # Renfe URL's
 MAIN_MENU_URL = 'https://www.renfe.com/content/renfe/es/es/viajar/informacion-util/horarios/app-horarios.html'
@@ -330,7 +330,7 @@ class DriverManager:
         logger.info(f'Search url: {url}')
         return url
 
-    def _get_trips_trip_id_train_type(self, train: WebElement) -> Tuple[str, str]:
+    def _get_trips_trip_id_train_type(self, train: WebElement) -> Tuple[Union[str, None], Union[str, None]]:
         """
         Returns the trip id and train type of the train.
 
@@ -338,7 +338,8 @@ class DriverManager:
             train (WebElement): Trip element.
 
         Returns:
-            Tuple[str, str]: Trip id and train type of the trip.
+            Tuple[Union[str, None], Union[str, None]]: Trip id and train type of the trip. Both values are None if
+                elements are not found.
         """
         try:
             train_info = train.find_element(
@@ -573,33 +574,6 @@ class RenfeScraper:
         )
         self.available_stations = self.driver.scrape_stations(menu_url)
 
-    def _get_corridor_stations(self, trips_df: pd.DataFrame) -> List[str]:
-        """
-        Get the stations of the corridor from the trips DataFrame.
-
-        Args:
-            trips_df (pd.DataFrame): DataFrame with the trips information.
-
-        Returns:
-            List[str]: List with the stations of the corridor.
-        """
-        # Initialize corridor with max length trip
-        schedules = trips_df['schedule'].values.tolist()
-        corridor_stations = list(schedules.pop(schedules.index(max(schedules, key=len))))
-
-        # Complete corridor with other stops that are not in the initial defined corridor
-        for trip in schedules:
-            for i, station in enumerate(trip):
-                if station not in corridor_stations:
-                    # If station is the last one, append it to the end of the corridor
-                    if i == len(trip) - 1:
-                        corridor_stations.append(station)
-                    else:
-                        # If station is not the last one, insert it in the corridor before the next station
-                        index = corridor_stations.index(trip[i + 1])
-                        corridor_stations.insert(index, station)
-        return corridor_stations
-
     def _get_df_stops(self, df_trips: pd.DataFrame) -> pd.DataFrame:
         """
         Returns a DataFrame with the stops' information.
@@ -619,6 +593,18 @@ class RenfeScraper:
             for stop_id, (arrival, departure) in schedule.items():
                 rows.append({'service_id': service_id, 'stop_id': stop_id, 'arrival': arrival, 'departure': departure})
         return pd.DataFrame(rows)
+
+    def _od_pairs_from_trip(self, trip: Tuple[str, ...]) -> Set[Tuple[str, str]]:
+        """
+        Returns a set of origin-destination pairs from a trip.
+
+        Args:
+            trip (Tuple[str, ...]): Tuple with the trip information.
+
+        Returns:
+            Set[Tuple(str, str)]: Set of origin-destination pairs.
+        """
+        return {(trip[i], trip[j]) for i in range(len(trip)) for j in range(i + 1, len(trip))}
 
     def _save_df_stops(
             self,
@@ -723,25 +709,26 @@ class RenfeScraper:
         Returns:
             pd.DataFrame: DataFrame containing the scraped prices.
         """
-        # Get corridor stations
-        corridor_stations = self._get_corridor_stations(df_trips)
+        # Get set of trips from the trips dataframe
+        trips = set(df_trips.groupby('service_id')['stop_id'].apply(tuple))
 
-        # Scrape prices
+        # Get the origin-destination pairs from the trips dataframe
+        od_pairs = {pair for trip in trips for pair in self._od_pairs_from_trip(trip)}
+
         end_date = init_date + datetime.timedelta(days=range_days)
         df_prices = pd.DataFrame()
-        for org in corridor_stations:
-            # If the origin station is the same as the destination station, skip it
-            for des in corridor_stations[corridor_stations.index(org) + 1:]:
-                date = init_date
-                for _ in range(range_days):
-                    org_id = self.driver.get_value_from_stations(search_column='RENFE_ID', value=org, objective_column='ADIF_ID')
-                    des_id = self.driver.get_value_from_stations(search_column='RENFE_ID', value=des, objective_column='ADIF_ID')
-                    new_df_prices = self.driver.scrape_prices(origin_id=org_id, destination_id=des_id, date=date)
-                    if new_df_prices.empty:
-                        logger.warning(f'No prices found for {org_id} - {des_id} on {date}. Exiting...')
-                        continue
-                    df_prices = pd.concat([df_prices, new_df_prices], ignore_index=True)
-                    date += datetime.timedelta(days=1)
+        for origin, destination in od_pairs:
+            date = init_date
+            for _ in range(range_days):
+                print(origin, destination)
+                org_id = self.driver.get_value_from_stations(search_column='ADIF_ID', value=origin, objective_column='RENFE_ID')
+                des_id = self.driver.get_value_from_stations(search_column='ADIF_ID', value=destination, objective_column='RENFE_ID')
+                new_df_prices = self.driver.scrape_prices(origin_id=org_id, destination_id=des_id, date=date)
+                if new_df_prices.empty:
+                    logger.warning(f'No prices found for {org_id} - {des_id} on {date}. Exiting...')
+                    continue
+                df_prices = pd.concat([df_prices, new_df_prices], ignore_index=True)
+                date += datetime.timedelta(days=1)
 
         # Save prices
         os.makedirs(f'{save_path}/prices/', exist_ok=True)
