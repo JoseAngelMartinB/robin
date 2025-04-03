@@ -5,7 +5,7 @@ import os
 import pandas as pd
 
 from src.robin.scraping.renfe.exceptions import NotAvailableStationsException
-from src.robin.scraping.renfe.utils import time_to_datetime, time_to_minutes
+from src.robin.scraping.renfe.utils import time_str_to_minutes, time_to_datetime, time_to_minutes
 
 from loguru import logger
 from selenium import webdriver
@@ -409,10 +409,8 @@ class DriverManager:
         Returns:
             int: Duration of the service in minutes.
         """
-        # TODO: Check if the duration is correct. Check duration strings in the website 2 h. 58 min., 26 min. , 2 h. Implement in utils?
         train_info = train.find_elements(By.CSS_SELECTOR, '.txt_borde1.irf-travellers-table__td')
-        duration_minutes = time_to_minutes(train_info[3].text)
-        print(f'duration minutes: {duration_minutes}')
+        duration_minutes = time_str_to_minutes(train_info[3].text)
         return duration_minutes
 
     def _is_allowed_train_type(self, train_type: str) -> bool:
@@ -679,7 +677,7 @@ class RenfeScraper:
             init_date = datetime.date.today()
 
         # Scrape trips
-        df_trips, _ = self.scrape_trips(
+        df_trips = self.scrape_trips(
             origin_id=origin_id,
             destination_id=destination_id,
             init_date=init_date,
