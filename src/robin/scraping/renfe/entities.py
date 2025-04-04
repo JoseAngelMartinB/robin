@@ -307,8 +307,7 @@ class DriverManager:
         root = 'https://venta.renfe.com/vol/'
         query = f'buscarTren.do?tipoBusqueda=autocomplete&currenLocation=menuBusqueda&vengoderenfecom=SI&cdgoOrigen={origin_id}&cdgoDestino={destination_id}&idiomaBusqueda=s&FechaIdaSel={date_str}&_fechaIdaVisual={date_str}&adultos_=1&ninos_=0&ninosMenores=0&numJoven=0&numDorada=0&codPromocional='
         url = root + query
-        logger.info(f'Date: {date}')
-        logger.info(f'Search url: {url}')
+        logger.info(url)
         return url
 
     def _get_renfe_schedules_url(self, origin_id: str, destination_id: str, date: datetime.date) -> str:
@@ -326,8 +325,7 @@ class DriverManager:
         year, month, day = date.strftime('%Y-%m-%d').split('-')
         weekday = date.weekday() + 1
         url = f'https://horarios.renfe.com/HIRRenfeWeb/buscar.do?O={origin_id}&D={destination_id}&AF={year}&MF={month}&DF={day}&SF={weekday}&ID=s'
-        logger.info(f'Date: {date}')
-        logger.info(f'Search url: {url}')
+        logger.info(url)
         return url
 
     def _get_trips_trip_id_train_type(self, train: WebElement) -> Tuple[Union[str, None], Union[str, None]]:
@@ -671,8 +669,8 @@ class RenfeScraper:
             save_path=save_path
         )
         end_date = init_date + datetime.timedelta(days=range_days)
-        logger.info(f'Scraped {len(df_trips)} trips between {origin_id} and {destination_id} from {init_date} to {end_date}')
-        logger.info(df_trips.head())
+        logger.success(f'Scraped {len(df_trips)} trips between {origin_id} and {destination_id} from {init_date} to {end_date}')
+        logger.info(f'First 5 rows of trips:\n{df_trips.head()}')
 
         # Scrape prices
         df_prices = self.scrape_prices(
@@ -683,8 +681,8 @@ class RenfeScraper:
             df_trips=df_trips,
             save_path=save_path
         )
-        logger.info(f'Scraped prices between {origin_id} and {destination_id} from {init_date} to {end_date}')
-        logger.info(df_prices.head())
+        logger.success(f'Scraped prices between {origin_id} and {destination_id} from {init_date} to {end_date}')
+        logger.info(f'First 5 rows of prices:\n{df_prices.head()}')
 
     def scrape_prices(
             self,
@@ -720,12 +718,12 @@ class RenfeScraper:
         for origin, destination in od_pairs:
             date = init_date
             for _ in range(range_days):
-                print(origin, destination)
                 org_id = self.driver.get_value_from_stations(search_column='ADIF_ID', value=origin, objective_column='RENFE_ID')
                 des_id = self.driver.get_value_from_stations(search_column='ADIF_ID', value=destination, objective_column='RENFE_ID')
+                logger.info(f'Scraping prices for {org_id} - {des_id} on {date}')
                 new_df_prices = self.driver.scrape_prices(origin_id=org_id, destination_id=des_id, date=date)
                 if new_df_prices.empty:
-                    logger.warning(f'No prices found for {org_id} - {des_id} on {date}. Exiting...')
+                    logger.warning(f'No prices found for {org_id} - {des_id} on {date}. Skipping...')
                     continue
                 df_prices = pd.concat([df_prices, new_df_prices], ignore_index=True)
                 date += datetime.timedelta(days=1)
@@ -764,9 +762,10 @@ class RenfeScraper:
         end_date = init_date + datetime.timedelta(days=range_days)
         df_trips = pd.DataFrame()
         for _ in range(range_days):
+            logger.info(f'Scraping trips for {origin_id} - {destination_id} on {date}')
             new_df_trips = self.driver.scrape_trips(origin_id=origin_id, destination_id=destination_id, date=date)
             if new_df_trips is None:
-                logger.warning(f'No trips found for {origin_id} - {destination_id} on {date}. Exiting...')
+                logger.warning(f'No trips found for {origin_id} - {destination_id} on {date}. Skipping...')
                 continue
             df_trips = pd.concat([df_trips, new_df_trips], ignore_index=True)
             date += datetime.timedelta(days=1)
