@@ -4,6 +4,7 @@ import datetime
 import os
 import pandas as pd
 
+from src.robin.scraping.renfe.constants import *
 from src.robin.scraping.renfe.exceptions import NotAvailableStationsException
 from src.robin.scraping.renfe.utils import time_str_to_minutes, time_to_datetime, time_to_minutes
 
@@ -16,19 +17,6 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 from typing import Dict, List, Mapping, Set, Tuple, Union
-
-# Renfe URL's
-MAIN_MENU_URL = 'https://www.renfe.com/content/renfe/es/es/viajar/informacion-util/horarios/app-horarios.html'
-SCHEDULE_URL = 'https://horarios.renfe.com/HIRRenfeWeb/'
-
-# Renfe stations CSV path
-SAVE_PATH = 'data/renfe'
-RENFE_STATIONS_CSV = f'{SAVE_PATH}/renfe_stations.csv'
-LR_RENFE_SERVICES = ('AVE', 'AVLO', 'AVE INT', 'ALVIA', 'AVANT')
-
-# Default values
-DEFAULT_PATIENCE = 10
-ONE_DAY = 24 * 60
 
 
 class DriverManager:
@@ -485,7 +473,6 @@ class DriverManager:
         url = self._get_renfe_prices_url(origin_id, destination_id, date)
         prices = self._request_url(url=url, find_by=By.ID, find_value='listaTrenesTBodyIda')
         if not prices:
-            logger.warning('Error retrieving prices. Skipping...')
             return pd.DataFrame()
         df_prices = self._get_df_prices(prices, origin_id, destination_id, date)
         return df_prices
@@ -535,7 +522,6 @@ class DriverManager:
         url = self._get_renfe_schedules_url(origin_id, destination_id, date)
         trips = self._request_url(url=url, find_by=By.CLASS_NAME, find_value='irf-travellers-table__container-table')
         if not trips:
-            logger.warning('Error retrieving trips. Skipping...')
             return pd.DataFrame()
         df_trips = self._get_df_trips(trips, date)
         return df_trips
