@@ -48,15 +48,25 @@ class DataLoader:
         self._prices_path = f"{self._path_root}/prices/prices_{self._scraping_id}.csv"
         self.origin_id, self.destination_id, self.start_date, self.end_date = self._scraping_id.split('_')
 
-        self.prices = self._load_dataframe(path=self._prices_path, data_type={'origin': str, 'destination': str})
+        self.prices = self._load_dataframe(path=self._prices_path, data_type={
+            'origin': str,
+            'destination': str,
+            'Básica': float,
+            'Básico': float,
+            'Elige':float,
+            'Elige Confort': float,
+            'Prémium': float,
+            'Adulto ida': float
+        })
+
         self.stops = self._load_dataframe(path=self._stops_path, data_type={'stop_id': str})
         self.renfe_stations = pd.read_csv(filepath_or_buffer=renfe_stations_path,
-                                          delimiter=',',
-                                          dtype={'stop_id': str})
+                                          delimiter=';',
+                                          dtype={'ADIF_ID': str, 'RENFE_ID': str})
 
         self.trips = pd.DataFrame({'service_id': list(OrderedDict.fromkeys(self.stops['service_id']))})
 
-        self._seat_names = self.prices.columns[-3:]
+        self._seat_names = self.prices.columns[8:]
         self.seats = {}
         self.stations = {}
         self.corridors = {}
@@ -133,11 +143,11 @@ class DataLoader:
         """
         for station in corridor_stations:
             # Retrieve station info from dataframe using the station id
-            station_row = self.renfe_stations[self.renfe_stations['stop_id'] == station]
-            name = station_row['stop_name'].values[0]
-            city = station_row['stop_name'].values[0].replace('-', ' ').split(' ')[0]
-            shortname = str(station_row['stop_name'].values[0])[:3].upper()
-            coords = tuple(station_row[['stop_lat', 'stop_lon']].values[0])
+            station_row = self.renfe_stations[self.renfe_stations['ADIF_ID'] == station]
+            name = station_row['STATION_NAME'].values[0]
+            city = station_row['POBLACION'].values[0].replace('-', ' ').split(' ')[0]
+            shortname = str(station_row['RENFE_ID'].values[0])
+            coords = tuple(station_row[['LATITUD', 'LONGITUD']].values[0])
             self.stations[station] = Station(station, name, city, shortname, coords)
 
     def _get_corridor_stations(self) -> List[str]:
@@ -358,7 +368,7 @@ class DataLoader:
         Returns:
             pd.dataframe
         """
-        return pd.read_csv(path, delimiter=',', dtype=data_type)
+        return pd.read_csv(path, delimiter=',', dtype=data_type, engine="python", skip_blank_lines=False)
 
 
 class SupplySaver(Supply):
