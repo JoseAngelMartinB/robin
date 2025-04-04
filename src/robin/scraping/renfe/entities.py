@@ -595,7 +595,13 @@ class RenfeScraper:
         Returns:
             Set[Tuple(str, str)]: Set of origin-destination pairs.
         """
-        return {(trip[i], trip[j]) for i in range(len(trip)) for j in range(i + 1, len(trip))}
+        od_pairs = set()
+        for i in range(len(trip)):
+            for j in range(i + 1, len(trip)):
+                origin = self.driver.get_value_from_stations(search_column='ADIF_ID', value=trip[i], objective_column='RENFE_ID')
+                destination = self.driver.get_value_from_stations(search_column='ADIF_ID', value=trip[j], objective_column='RENFE_ID')
+                od_pairs.add((origin, destination))
+        return od_pairs
 
     def _save_df_stops(
             self,
@@ -629,6 +635,7 @@ class RenfeScraper:
             destination: str,
             init_date: datetime.date = None,
             range_days: int = 1,
+            all_pairs: bool = False,
             save_path: str = SAVE_PATH
     ) -> None:
         """
@@ -639,6 +646,7 @@ class RenfeScraper:
             destination (str): Adif station id of the destination station.
             init_date (datetime.date): Initial date to start scraping.
             range_days (int): Number of days to scrape.
+            all_pairs (bool): If True, scrape prices for all origin-destination pairs in the trips dataframe.
             save_path (str): Path to save the csv files.
         """
         # Convert Adif station ids to Renfe station ids
@@ -671,7 +679,7 @@ class RenfeScraper:
             destination_id=destination_id,
             init_date=init_date,
             range_days=range_days,
-            df_trips=df_trips,
+            df_trips=df_trips if all_pairs else None,
             save_path=save_path
         )
         logger.success(f'Scraped prices between {origin_id} and {destination_id} from {init_date} to {end_date}')
@@ -694,29 +702,31 @@ class RenfeScraper:
             destination_id (str): Renfe station id of the destination station.
             init_date (datetime.date): Initial date to start scraping.
             range_days (int): Number of days to scrape.
-            df_trips (pd.DataFrame): DataFrame containing the scraped trips.
+            df_trips (pd.DataFrame): DataFrame containing the scraped trips. If None, it will scrape only the prices
+                between the origin and destination stations.
             save_path (str): Path to save the scraped data.
         
         Returns:
             pd.DataFrame: DataFrame containing the scraped prices.
         """
-        # Get set of trips from the trips dataframe
-        trips = set(df_trips.groupby('service_id')['stop_id'].apply(tuple))
+        if df_trips:
+            # Get set of trips from the trips dataframe
+            trips = set(df_trips.groupby('service_id')['stop_id'].apply(tuple))
 
-        # Get the origin-destination pairs from the trips dataframe
-        od_pairs = {pair for trip in trips for pair in self._od_pairs_from_trip(trip)}
+            # Get the origin-destination pairs from the trips dataframe
+            od_pairs = {pair for trip in trips for pair in self._od_pairs_from_trip(trip)}
+        else:
+            od_pairs = {(origin_id, destination_id)}
 
         end_date = init_date + datetime.timedelta(days=range_days)
         df_prices = pd.DataFrame()
         for origin, destination in od_pairs:
             date = init_date
             for _ in range(range_days):
-                org_id = self.driver.get_value_from_stations(search_column='ADIF_ID', value=origin, objective_column='RENFE_ID')
-                des_id = self.driver.get_value_from_stations(search_column='ADIF_ID', value=destination, objective_column='RENFE_ID')
-                logger.info(f'Scraping prices for {org_id} - {des_id} on {date}')
-                new_df_prices = self.driver.scrape_prices(origin_id=org_id, destination_id=des_id, date=date)
+                logger.info(f'Scraping prices for {origin} - {destination} on {date}')
+                new_df_prices = self.driver.scrape_prices(origin_id=origin, destination_id=destination, date=date)
                 if new_df_prices.empty:
-                    logger.warning(f'No prices found for {org_id} - {des_id} on {date}. Skipping...')
+                    logger.warning(f'No prices found for {origin} - {destination} on {date}. Skipping...')
                     continue
                 df_prices = pd.concat([df_prices, new_df_prices], ignore_index=True)
                 date += datetime.timedelta(days=1)
