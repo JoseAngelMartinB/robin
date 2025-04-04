@@ -4,7 +4,16 @@ import datetime
 import os
 import pandas as pd
 
-from src.robin.scraping.renfe.constants import *
+from src.robin.scraping.renfe.constants import (
+    MAIN_MENU_URL,
+    PRICES_URL,
+    SCHEDULE_URL,
+    SAVE_PATH,
+    RENFE_STATIONS_CSV,
+    LR_RENFE_SERVICES,
+    DEFAULT_PATIENCE,
+    ONE_DAY
+)
 from src.robin.scraping.renfe.exceptions import NotAvailableStationsException
 from src.robin.scraping.renfe.utils import time_str_to_minutes, time_to_datetime, time_to_minutes
 
@@ -292,9 +301,7 @@ class DriverManager:
             str: URL of the Renfe prices website for the given origin-destination pair of stations and date.
         """
         date_str = date.strftime('%d/%m/%Y')
-        root = 'https://venta.renfe.com/vol/'
-        query = f'buscarTren.do?tipoBusqueda=autocomplete&currenLocation=menuBusqueda&vengoderenfecom=SI&cdgoOrigen={origin_id}&cdgoDestino={destination_id}&idiomaBusqueda=s&FechaIdaSel={date_str}&_fechaIdaVisual={date_str}&adultos_=1&ninos_=0&ninosMenores=0&numJoven=0&numDorada=0&codPromocional='
-        url = root + query
+        url = PRICES_URL.format(origin_id=origin_id, destination_id=destination_id, date_str=date_str)
         logger.info(url)
         return url
 
@@ -312,7 +319,7 @@ class DriverManager:
         """
         year, month, day = date.strftime('%Y-%m-%d').split('-')
         weekday = date.weekday() + 1
-        url = f'https://horarios.renfe.com/HIRRenfeWeb/buscar.do?O={origin_id}&D={destination_id}&AF={year}&MF={month}&DF={day}&SF={weekday}&ID=s'
+        url = SCHEDULE_URL.format(origin_id=origin_id, destination_id=destination_id, year=year, month=month, day=day, weekday=weekday)
         logger.info(url)
         return url
 

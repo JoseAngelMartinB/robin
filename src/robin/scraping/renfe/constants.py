@@ -2,7 +2,8 @@
 
 # Renfe URL's
 MAIN_MENU_URL = 'https://www.renfe.com/content/renfe/es/es/viajar/informacion-util/horarios/app-horarios.html'
-SCHEDULE_URL = 'https://horarios.renfe.com/HIRRenfeWeb/'
+PRICES_URL = 'https://venta.renfe.com/vol/buscarTren.do?tipoBusqueda=autocomplete&currenLocation=menuBusqueda&vengoderenfecom=SI&cdgoOrigen={origin_id}&cdgoDestino={destination_id}&idiomaBusqueda=s&FechaIdaSel={date_str}&_fechaIdaVisual={date_str}&adultos_=1&ninos_=0&ninosMenores=0&numJoven=0&numDorada=0&codPromocional='
+SCHEDULE_URL = 'https://horarios.renfe.com/HIRRenfeWeb/buscar.do?O={origin_id}&D={destination_id}&AF={year}&MF={month}&DF={day}&SF={weekday}&ID=s'
 
 # Renfe stations CSV path
 SAVE_PATH = 'data/renfe'
