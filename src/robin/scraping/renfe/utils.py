@@ -13,21 +13,17 @@ def time_str_to_minutes(duration_str: str) -> int:
     Returns:
         int: Total duration in minutes.
     """
-    # Split the string into parts.
+    # Split the string into parts
     parts = duration_str.strip().split()
 
+    # Loop through the parts to find hours and minutes
     hours = 0
     minutes = 0
-
-    # Loop through the parts to find hours and minutes.
     for i, token in enumerate(parts):
-        if token == "h.":
-            if i > 0:
-                hours = int(parts[i - 1])
-        elif token == "min.":
-            if i > 0:
-                minutes = int(parts[i - 1])
-
+        if token == 'h.' and i > 0:
+            hours = int(parts[i - 1])
+        elif token == 'min.' and i > 0:
+            minutes = int(parts[i - 1])
     return hours * 60 + minutes
 
 
@@ -62,5 +58,3 @@ def time_to_minutes(time: str, separator: str = '.') -> int:
     except ValueError:
         return 0
     return int(h) * 60 + int(m)
-
-
