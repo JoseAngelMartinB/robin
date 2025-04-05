@@ -3,9 +3,9 @@
 import numpy as np
 import pandas as pd
 
-from robin.supply.entities import Station, TimeSlot, Corridor, Line, Seat, RollingStock, TSP, Service, Supply
-from robin.supply.utils import get_time
-from robin.scraping.utils import *
+from src.robin.supply.entities import Station, TimeSlot, Corridor, Line, Seat, RollingStock, TSP, Service, Supply
+from src.robin.supply.utils import get_time
+from src.robin.scraping.utils import *
 
 from collections import OrderedDict
 from typing import Dict, List, Tuple
@@ -45,10 +45,10 @@ class DataLoader:
         self._stops_path = stops_path
         self._path_root = os.path.dirname(os.path.dirname(self._stops_path))
         self._scraping_id = self._get_scraping_id()
-        self._prices_path = f"{self._path_root}/prices/prices_{self._scraping_id}.csv"
+        self._prices_path = f'{self._path_root}/prices/prices_{self._scraping_id}.csv'
         self.origin_id, self.destination_id, self.start_date, self.end_date = self._scraping_id.split('_')
 
-        self.prices = self._load_dataframe(path=self._prices_path, data_type={
+        self.prices = pd.read_csv(self._prices_path, dtype={
             'origin': str,
             'destination': str,
             'Básica': float,
@@ -58,54 +58,82 @@ class DataLoader:
             'Prémium': float,
             'Adulto ida': float
         })
-
-        self.stops = self._load_dataframe(path=self._stops_path, data_type={'stop_id': str})
-        self.renfe_stations = pd.read_csv(filepath_or_buffer=renfe_stations_path,
-                                          delimiter=';',
-                                          dtype={'ADIF_ID': str, 'RENFE_ID': str})
-
+        self.stops = pd.read_csv(self._stops_path, dtype={'stop_id': str})
+        self.renfe_stations = pd.read_csv(renfe_stations_path, delimiter=';', dtype={'ADIF_ID': str, 'RENFE_ID': str})
         self.trips = pd.DataFrame({'service_id': list(OrderedDict.fromkeys(self.stops['service_id']))})
-
         self._seat_names = self.prices.columns[8:]
-        self.seats = {}
+
         self.stations = {}
+        self.time_slots = {}
         self.corridors = {}
         self.lines = {}
+        self.seats = {}
         self.rolling_stock = {}
         self.tsps = {}
-        self.time_slots = {}
         self.services = []
 
-    def build_supply_entities(self, seat_quantity: Mapping[int, int] = DEFAULT_SEAT_QUANTITY) -> None:
+    def _build_stations(self, corridor_stations: List[str]) -> None:
         """
-        Build supply entities from scraping data
-        """
-        self._build_seat_types()
-        self._build_corridor()
-        self._build_lines()
-        self._build_rolling_stock(seat_quantity=seat_quantity)
-        self._build_tsp()
-        self._build_services()
+        Build Station() objects from corridor stations list of station ids
 
-    def show_metadata(self) -> None:
+        Args:
+            corridor_stations (List[str]): list of strings with the station ids
         """
-        Print metadata of the retrieved scraping files
-        """
-        print(f"Origin:{self.origin_id} - Destination:{self.destination_id}")
-        print(f"Since: {self.start_date}, Until: {self.end_date}")
+        for station in corridor_stations:
+            # Retrieve station info from dataframe using the station id
+            station_row = self.renfe_stations[self.renfe_stations['ADIF_ID'] == station]
+            name = station_row['STATION_NAME'].values[0]
+            city = station_row['POBLACION'].values[0].replace('-', ' ').split(' ')[0]
+            shortname = str(station_row['RENFE_ID'].values[0])
+            coords = tuple(station_row[['LATITUD', 'LONGITUD']].values[0])
+            self.stations[station] = Station(station, name, city, shortname, coords)
 
-    def _get_scraping_id(self) -> str:
+    def _build_time_slots(self, start_time: datetime.timedelta, ts_size: int = 10) -> TimeSlot:
         """
-        Get scraping id from trips path specified by user
+        Build TimeSlot objects from start time
+
+        Args:
+            start_time: string with start time
+            ts_size: int with time slot size in minutes
+        """
+        ts_end = start_time + datetime.timedelta(minutes=ts_size)
+        delta = datetime.timedelta(minutes=10)
+        ts_id = str(start_time.seconds // 60) + str(delta.seconds // 60)
+        time_slot = TimeSlot(ts_id, start_time, ts_end)
+        self.time_slots[time_slot.id] = time_slot
+        return time_slot
+
+    def _build_corridors(self) -> None:
+        """
+        Get corridor from stops dataframe
 
         Returns:
-            string with scraping id
+            corridor: list of Station() objects
         """
-        # E.g file_name = 'trips_MADRI_BARCE_2022-12-30_2023-01-03'
-        file_name = self._stops_path.split('/')[-1].split(".")[0]
+        # Get list of stations in corridor
+        corridor_stations = self._get_corridor_stations()
+        self._build_stations(corridor_stations)  # Station objects get stored in self.stations dictionary
 
-        # E.g. 'MADRI_BARCE_2022-12-30_2023-01-03'
-        return "_".join(file_name.split("_")[1:])
+        # Build corridor name using first and last station names
+        first_station, last_station = tuple(self.stations.values())[::len(self.stations) - 1]
+        corridor_name = first_station.shortname + '-' + last_station.shortname
+
+        def corridor_tree(station: List[Station]) -> Dict[Station, Dict[Station, Dict]]:
+            """
+            Build corridor tree from list of stations
+
+            Args:
+                station: list of Station() objects
+
+            Returns:
+                corridor_tree: dictionary with Station() objects as keys and dictionaries as values
+            """
+            if len(station) == 1:
+                return {station[0]: {}}
+            return {station[0]: corridor_tree(station[1:])}
+
+        corridor_tree = corridor_tree(list(self.stations.values()))
+        self.corridors[1] = Corridor('1', corridor_name, corridor_tree)
 
     def _build_lines(self) -> None:
         """
@@ -113,11 +141,15 @@ class DataLoader:
         """
         grouped_df = self.stops.groupby('service_id')  # Get all stops for each service_id
         routes_lines = grouped_df.apply(lambda row: self._get_line(row, list(self.corridors.values())[0]))
-
         for line in list(set(routes_lines.values.tolist())):
             self.lines[line.id] = line
-
         self.trips['lines'] = self.trips['service_id'].apply(lambda x: self._get_trip_line(x))
+
+    def _build_rolling_stocks(self, seat_quantity: Mapping[int, int]) -> None:
+        """
+        Build RollingStock objects
+        """
+        self.rolling_stock[1] = RollingStock('1', 'S-114', seat_quantity)
 
     def _build_seat_types(self) -> Dict[str, Seat]:
         """
@@ -134,21 +166,38 @@ class DataLoader:
             else:
                 hard_type += 1
 
-    def _build_station_objects(self, corridor_stations: List[str]) -> None:
+    def _build_tsp(self) -> None:
         """
-        Build Station() objects from corridor stations list of station ids
+        Build TSP objects
+        """
+        self.tsps[1] = TSP('1', 'Renfe', [rs for rs in self.rolling_stock.values()])
 
-        Args:
-            corridor_stations (List[str]): list of strings with the station ids
+    def _build_services(self) -> None:
         """
-        for station in corridor_stations:
-            # Retrieve station info from dataframe using the station id
-            station_row = self.renfe_stations[self.renfe_stations['ADIF_ID'] == station]
-            name = station_row['STATION_NAME'].values[0]
-            city = station_row['POBLACION'].values[0].replace('-', ' ').split(' ')[0]
-            shortname = str(station_row['RENFE_ID'].values[0])
-            coords = tuple(station_row[['LATITUD', 'LONGITUD']].values[0])
-            self.stations[station] = Station(station, name, city, shortname, coords)
+        Build Service objects
+        """
+        self.trips['service'] = self.trips.apply(
+            lambda x: self._get_service(
+                x['service_id'], x['lines'], tuple(self.tsps.values())[0], tuple(self.rolling_stock.values())[0]
+            ),
+            axis=1
+        )
+        services = self.trips['service'].values.tolist()
+        for service in services:
+            self.services.append(service)
+
+    def _get_scraping_id(self) -> str:
+        """
+        Get scraping id from trips path specified by user
+
+        Returns:
+            string with scraping id
+        """
+        # E.g file_name = 'trips_MADRI_BARCE_2022-12-30_2023-01-03'
+        file_name = self._stops_path.split('/')[-1].split('.')[0]
+
+        # E.g. 'MADRI_BARCE_2022-12-30_2023-01-03'
+        return '_'.join(file_name.split('_')[1:])
 
     def _get_corridor_stations(self) -> List[str]:
         """
@@ -173,56 +222,6 @@ class DataLoader:
 
         return corridor_stations
 
-    def _get_trip_line(self, service_id: str) -> Line:
-        """
-        Get trip line from set_lines dictionary
-
-        Args:
-            service_id: string.
-            lines: dictionary with lines.
-
-        Returns:
-            line (Line): Line object for the specified service_id
-        """
-        try:
-            line = self.lines[service_id.split("_")[0]]
-        except KeyError:
-            raise KeyError(f"Line not found for service_id: {service_id}")
-
-        return line
-
-    def _build_corridor(self) -> None:
-        """
-        Get corridor from stops dataframe
-
-        Returns:
-            corridor: list of Station() objects
-        """
-        # Get list of stations in corridor
-        corridor_stations = self._get_corridor_stations()
-        self._build_station_objects(corridor_stations)  # Station objects get stored in self.stations dictionary
-
-        # Build corridor name using first and last station names
-        first_station, last_station = tuple(self.stations.values())[::len(self.stations) - 1]
-        corridor_name = first_station.shortname + "-" + last_station.shortname
-
-        def corridor_tree(station: List[Station]) -> Dict[Station, Dict[Station, Dict]]:
-            """
-            Build corridor tree from list of stations
-
-            Args:
-                station: list of Station() objects
-
-            Returns:
-                corridor_tree: dictionary with Station() objects as keys and dictionaries as values
-            """
-            if len(station) == 1:
-                return {station[0]: {}}
-            return {station[0]: corridor_tree(station[1:])}
-
-        corridor_tree = corridor_tree(list(self.stations.values()))
-        self.corridors[1] = Corridor("1", corridor_name, corridor_tree)
-
     def _get_line(self, stops: pd.DataFrame, corridor: Corridor) -> Line:
         """
         Get line from stops dataframe
@@ -235,50 +234,26 @@ class DataLoader:
         line_data = {}
         for id_, arrival, departure in zip(stops['stop_id'], stops['arrival'], stops['departure']):
             line_data[id_] = (arrival, departure)
-        line_id = stops['service_id'].values[0].split("_")[0]
-        return Line(line_id, f"Line {line_id}", corridor, line_data)
+        line_id = stops['service_id'].values[0].split('_')[0]
+        return Line(line_id, f'Line {line_id}', corridor, line_data)
 
-    def _build_rolling_stock(self, seat_quantity: Mapping[int, int]) -> None:
+    def _get_trip_line(self, service_id: str) -> Line:
         """
-        Build RollingStock objects
-        """
-        self.rolling_stock[1] = RollingStock("1", "S-114", seat_quantity)
-
-    def _build_tsp(self) -> None:
-        """
-        Build TSP objects
-        """
-        self.tsps[1] = TSP("1", "Renfe", [rs for rs in self.rolling_stock.values()])
-
-    def _build_services(self) -> None:
-        """
-        Build Service objects
-        """
-        self.trips['service'] = self.trips.apply(lambda x: self._get_service(x['service_id'],
-                                                                             x['lines'],
-                                                                             tuple(self.tsps.values())[0],
-                                                                             tuple(self.rolling_stock.values())[0]),
-                                                 axis=1)
-
-        my_services = self.trips['service'].values.tolist()
-        for service in my_services:
-            self.services.append(service)
-
-    def _build_time_slot(self, start_time: datetime.timedelta, ts_size: int = 10) -> TimeSlot:
-        """
-        Build TimeSlot objects from start time
+        Get trip line from set_lines dictionary
 
         Args:
-            start_time: string with start time
-            ts_size: int with time slot size in minutes
-        """
-        ts_end = start_time + datetime.timedelta(minutes=ts_size)
-        delta = datetime.timedelta(minutes=10)
-        ts_id = str(start_time.seconds // 60) + str(delta.seconds // 60)
-        time_slot = TimeSlot(ts_id, start_time, ts_end)
-        self.time_slots[time_slot.id] = time_slot
+            service_id: string.
+            lines: dictionary with lines.
 
-        return time_slot
+        Returns:
+            line (Line): Line object for the specified service_id
+        """
+        try:
+            line = self.lines[service_id.split('_')[0]]
+        except KeyError:
+            # TODO: Custom exception
+            raise KeyError(f'Line not found for service_id: {service_id}')
+        return line
 
     def _get_trip_prices(
             self,
@@ -301,11 +276,11 @@ class DataLoader:
         total_prices = {}
         for pair in line.pairs:
             origin, destination = pair
-            trip_id = service_id.split("_")[0]
-            date = "-".join(service_id.split("_")[1].split("-")[:-1])
+            trip_id = service_id.split('_')[0]
+            date = '-'.join(service_id.split('_')[1].split('-')[:-1])
             departure_time = start_time + datetime.timedelta(minutes=line.timetable[origin][1])
             departure_time = time_delta_to_time_string(departure_time)
-            sub_service_id = f"{trip_id}_{date}-{departure_time}"
+            sub_service_id = f'{trip_id}_{date}-{departure_time}'
             match_service = self.prices['service_id'] == sub_service_id
             match_origin = self.prices['origin'] == origin
             match_destination = self.prices['destination'] == destination
@@ -322,12 +297,13 @@ class DataLoader:
         filtered_prices = {pair: {st: p for st, p in total_prices[pair].items() if not np.isnan(p)} for pair in total_prices}
         return filtered_prices
 
-    def _get_service(self,
-                     service_id: str,
-                     line: Line,
-                     tsp: TSP,
-                     rs: RollingStock
-                     ) -> Service:
+    def _get_service(
+            self,
+            service_id: str,
+            line: Line,
+            tsp: TSP,
+            rs: RollingStock
+    ) -> Service:
         """
         Get Service object from Renfe data
 
@@ -343,32 +319,31 @@ class DataLoader:
             Service() object
         """
         id_ = service_id
-        date = datetime.datetime.strptime(service_id.split("_")[1], "%d-%m-%Y-%H.%M").date()
-        departure_str = service_id.split("-")[-1].replace(".", ":") + ":00"
+        date = datetime.datetime.strptime(service_id.split('_')[1], '%d-%m-%Y-%H.%M').date()
+        departure_str = service_id.split('-')[-1].replace('.', ':') + ':00'
         start_time = get_time(departure_str)
-        time_slot = self._build_time_slot(start_time=start_time)
+        time_slot = self._build_time_slots(start_time=start_time)
         total_prices = self._get_trip_prices(line=line, service_id=service_id, start_time=start_time)
+        service = Service(id_=id_, date=date, line=line, tsp=tsp, time_slot=time_slot, rolling_stock=rs, prices=total_prices)
+        return service
 
-        return Service(id_=id_,
-                       date=date,
-                       line=line,
-                       tsp=tsp,
-                       time_slot=time_slot,
-                       rolling_stock=rs,
-                       prices=total_prices)
-
-    def _load_dataframe(self, path: str, data_type: Dict = None) -> pd.DataFrame:
+    def build_supply_entities(self, seat_quantity: Mapping[int, int] = DEFAULT_SEAT_QUANTITY) -> None:
         """
-        Load dataframe from csv file
-
-        Args:
-            path (str): String with path to csv file
-            data_type (Dict): Dictionary with column names and data types
-
-        Returns:
-            pd.dataframe
+        Build supply entities from scraping data
         """
-        return pd.read_csv(path, delimiter=',', dtype=data_type, engine="python", skip_blank_lines=False)
+        self._build_corridors()
+        self._build_lines()
+        self._build_rolling_stocks(seat_quantity=seat_quantity)
+        self._build_seat_types()
+        self._build_tsp()
+        self._build_services()
+
+    def show_metadata(self) -> None:
+        """
+        Print metadata of the retrieved scraping files
+        """
+        print(f'Origin: {self.origin_id} - Destination: {self.destination_id}')
+        print(f'Since: {self.start_date} - Until: {self.end_date}')
 
 
 class SupplySaver(Supply):
