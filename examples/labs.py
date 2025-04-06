@@ -1,4 +1,4 @@
-from src.robin.labs.entities import RobinLab
+from robin.labs.entities import RobinLab
 
 config = {"supply": {"start": 0.0, "stop": 10.0, "step": 1.0},
           "demand": ()}

@@ -1,6 +1,6 @@
 import datetime
 
-from src.robin.scraping.renfe.entities import RenfeScraper
+from robin.scraping.renfe.entities import RenfeScraper
 
 scraper = RenfeScraper()
 

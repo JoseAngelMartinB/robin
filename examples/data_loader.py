@@ -1,4 +1,4 @@
-from src.robin.scraping.entities import DataLoader, SupplySaver
+from robin.scraping.entities import DataLoader, SupplySaver
 
 import_path = 'data/renfe'
 trips_path = f'{import_path}/stop_times/stopTimes_MADRI_BARCE_2023-09-06_2023-09-07.csv'

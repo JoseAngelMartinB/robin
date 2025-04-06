@@ -1,4 +1,4 @@
-from src.robin.calibration.entities import Calibration
+from robin.calibration.entities import Calibration
 
 calibration = Calibration(
     path_config_supply='configs/calibration/supply_data.yml',

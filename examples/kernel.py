@@ -1,6 +1,6 @@
 import os
 
-from src.robin.kernel.entities import Kernel
+from robin.kernel.entities import Kernel
 
 os.makedirs('data/kernel_output', exist_ok=True)
 
