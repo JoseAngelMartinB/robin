@@ -7,10 +7,31 @@ import pandas as pd
 import shutil
 import yaml
 
-from .constants import *
-from .exceptions import InvalidArrivalTimeDistribution, InvalidPenaltyFunction
-from src.robin.kernel.entities import Kernel
-from src.robin.supply.entities import Supply
+from robin.calibration.constants import (
+    DEFAULT_KEEP_TOP_K,
+    LOW_ARRIVAL_TIME,
+    HIGH_ARRIVAL_TIME,
+    LOW_SEATS_UTILITY,
+    HIGH_SEATS_UTILITY,
+    LOW_TSPS_UTILITY,
+    HIGH_TSPS_UTILITY,
+    LOW_PENALTY_UTILITY,
+    HIGH_PENALTY_UTILITY,
+    LOW_USER_PATTERN_DISTRIBUTION,
+    HIGH_USER_PATTERN_DISTRIBUTION,
+    CHOICES_DISCRETE,
+    CHOICES_CONTINUOUS,
+    CHOICES_POTENCIAL_DEMAND,
+    LOW_POISSON,
+    HIGH_POISSON,
+    LOW_NORM,
+    HIGH_NORM,
+    LOW_RANDINT,
+    HIGH_RANDINT
+)
+from robin.calibration.exceptions import InvalidArrivalTimeDistribution, InvalidPenaltyFunction
+from robin.kernel.entities import Kernel
+from robin.supply.entities import Supply
 
 from sklearn.metrics import mean_squared_error
 from typing import Any, Dict, List, Tuple, Union

@@ -1,7 +1,8 @@
-"""Functions for demand module."""
+"""Functions for the demand module."""
 
 from numpy.polynomial.polynomial import polyval
 from typing import List, Union
+
 
 class Function:
     """
@@ -23,7 +24,7 @@ class Function:
         Returns:
             float: The y value.
         """
-        # NOTE: Speed up the polynomial function.
+        # NOTE: This speed up the polynomial function for 2nd and 3rd degree polynomials.
         number_of_coeff = len(coeff)
         if number_of_coeff == 2:
             return coeff[0] + coeff[1] * x

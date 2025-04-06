@@ -1,18 +1,16 @@
 """Entities for the plotter module."""
 
-import datetime
 import locale
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from src.robin.supply.entities import Supply
-from src.robin.labs.utils import *
+from robin.labs.utils import *
+from robin.plotter.constants import WHITE_SMOKE
+from robin.supply.entities import Supply
+
 from calendar import month_name
 from typing import Mapping, Tuple, Union
-
-# Colors
-WHITE_SMOKE = '#F5F5F5'
 
 
 class KernelPlotter:
@@ -36,7 +34,7 @@ class KernelPlotter:
         """
         self.df = pd.read_csv(path_output_csv, dtype={'departure_station': str, 'arrival_station': str})
         self.supply = Supply.from_yaml(path_config_supply)
-        self.df["purchase_date"] = self.df.apply(
+        self.df['purchase_date'] = self.df.apply(
             lambda row: get_purchase_date(row['purchase_day'], row['arrival_day']), axis=1
         )
 
@@ -143,7 +141,7 @@ class KernelPlotter:
                    linewidth=0.5,
                    zorder=2)
             status_perc = round(demand_data[status] / passengers * 100, 2)
-            ax.bar_label(ax.containers[i], labels=[f"{demand_data[status]} ({status_perc}%)"], padding=3)
+            ax.bar_label(ax.containers[i], labels=[f'{demand_data[status]} ({status_perc}%)'], padding=3)
 
         ax.grid(axis='y', color='#A9A9A9', alpha=0.3, zorder=1)
         plt.show()
@@ -439,43 +437,43 @@ class KernelPlotter:
             fig.savefig(save_path, format='pdf', dpi=300, bbox_inches='tight', transparent=True)
 
     def plotter_data_analysis(self):
-        print("Data from demand plot: ")
+        print('Data from demand plot: ')
         demand_data, x_labels = get_passenger_status(self.df)
         for status, passenger in demand_data.items():
-            status_str = x_labels[int(status)].replace("\n", " ")
+            status_str = x_labels[int(status)].replace('\n', ' ')
             print(f'\tStatus: {status_str} - Passengers: {passenger}')
         print()
-        print("Data from pie chart: ")
+        print('Data from pie chart: ')
         tickets_sold_by_seat = get_tickets_by_seat(self.df)
         total_tickets = sum(tickets_sold_by_seat.values())
-        print("\tTotal tickets sold: ", total_tickets)
+        print('\tTotal tickets sold: ', total_tickets)
         tickets_by_seat_perc = {seat: tickets_sold_by_seat[seat] / total_tickets * 100 for seat in tickets_sold_by_seat}
-        print("\tPercentage of tickets sold by seat type: ")
+        print('\tPercentage of tickets sold by seat type: ')
         for seat in tickets_by_seat_perc:
             print(f'\t\tSeat: {seat} - Passengers: {tickets_sold_by_seat[seat]} - Percentage: {round(tickets_by_seat_perc[seat], 2)} %')
         print()
-        print("Data from plot tickets sold by purchase day: ")
+        print('Data from plot tickets sold by purchase day: ')
         tickets_sold_by_date_seat = get_tickets_by_date_seat(self.df)
         total_tickets = 0
         for date in tickets_sold_by_date_seat:
             for seat in tickets_sold_by_date_seat[date]:
                 total_tickets += tickets_sold_by_date_seat[date][seat]
-        print("\tTotal tickets sold: ", total_tickets)
-        print("\tTickets sold by purchase date and seat type: ")
+        print('\tTotal tickets sold: ', total_tickets)
+        print('\tTickets sold by purchase date and seat type: ')
         for date in tickets_sold_by_date_seat:
             print(f'\t\tDate: {date}')
             for seat in tickets_sold_by_date_seat[date]:
                 print(f'\t\t\tSeat: {seat} - Number of tickets sold: {tickets_sold_by_date_seat[date][seat]}')
         print()
-        print("Data from plot tickets sold by purchase date, user and seat type: ")
+        print('Data from plot tickets sold by purchase date, user and seat type: ')
         tickets_sold_date_user_seat = get_tickets_by_date_user_seat(self.df)
         total_tickets = 0
         for date in tickets_sold_date_user_seat:
             for user in tickets_sold_date_user_seat[date]:
                 for seat in tickets_sold_date_user_seat[date][user]:
                     total_tickets += tickets_sold_date_user_seat[date][user][seat]
-        print("\tTotal tickets sold: ", total_tickets)
-        print("\tTickets sold by purchase date, user and seat type: ")
+        print('\tTotal tickets sold: ', total_tickets)
+        print('\tTickets sold by purchase date, user and seat type: ')
         for date in tickets_sold_date_user_seat:
             print(f'\t\tDate: {date}')
             for user in tickets_sold_date_user_seat[date]:
@@ -483,11 +481,11 @@ class KernelPlotter:
                 for seat in tickets_sold_date_user_seat[date][user]:
                     print(f'\t\t\t\tSeat: {seat} - Tickets sold: {tickets_sold_date_user_seat[date][user][seat]}')
         print()
-        print("Data from plot tickets sold by pair of stations")
+        print('Data from plot tickets sold by pair of stations')
         tickets_sold_by_pair = get_pairs_sold(self.df, self.stations_dict)
         total_tickets = sum(tickets_sold_by_pair.values())
-        print("\tTotal tickets sold: ", total_tickets)
-        print("\tTickets sold by pair of stations: ")
+        print('\tTotal tickets sold: ', total_tickets)
+        print('\tTickets sold by pair of stations: ')
         for pair in tickets_sold_by_pair:
-            str_pair = pair.replace("\n", " - ")
+            str_pair = pair.replace('\n', ' - ')
             print(f'\t\tPair: {str_pair} - Tickets: {tickets_sold_by_pair[pair]}')

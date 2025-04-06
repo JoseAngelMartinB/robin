@@ -1,4 +1,4 @@
-"""Custom distributions for demand module."""
+"""Custom distributions for the demand module."""
 
 from scipy import stats
 from typing import Callable, Mapping
@@ -6,7 +6,7 @@ from typing import Callable, Mapping
 
 class Distribution:
     """
-    Custom distributions for demand module.
+    Custom distributions for the demand module.
 
     Attributes:
         custom_arrival_time (staticmethod): Custom arrival time discrete distribution given the probability of each hour.

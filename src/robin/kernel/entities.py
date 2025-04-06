@@ -5,8 +5,8 @@ import pandas as pd
 import random
 import os
 
-from src.robin.demand.entities import Demand, Passenger
-from src.robin.supply.entities import Service, Supply
+from robin.demand.entities import Demand, Passenger
+from robin.supply.entities import Service, Supply
 
 from pathlib import Path
 from typing import List, Union
@@ -72,11 +72,11 @@ class Kernel:
         df.to_csv(output_path, index=False)
 
     def simulate(
-            self,
-            output_path: Union[Path, None] = None,
-            departure_time_hard_restriction: bool = True,
-            calculate_global_utility: bool = False
-        ) -> List[Service]:
+        self,
+        output_path: Union[Path, None] = None,
+        departure_time_hard_restriction: bool = True,
+        calculate_global_utility: bool = False
+    ) -> List[Service]:
         """
         Simulate the demand-supply interaction.
 

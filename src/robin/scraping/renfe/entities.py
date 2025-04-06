@@ -1,10 +1,10 @@
-"""Entities for Renfe scraping."""
+"""Entities for the scraping Renfe module."""
 
 import datetime
 import os
 import pandas as pd
 
-from src.robin.scraping.renfe.constants import (
+from robin.scraping.renfe.constants import (
     MAIN_MENU_URL,
     PRICES_URL,
     SCHEDULE_URL,
@@ -14,17 +14,17 @@ from src.robin.scraping.renfe.constants import (
     DEFAULT_PATIENCE,
     ONE_DAY
 )
-from src.robin.scraping.renfe.exceptions import NotAvailableStationsException
-from src.robin.scraping.renfe.utils import time_str_to_minutes, time_to_datetime, time_to_minutes
+from robin.scraping.renfe.exceptions import NotAvailableStationsException
+from robin.scraping.renfe.utils import time_str_to_minutes, time_to_datetime, time_to_minutes
 
 from loguru import logger
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
 from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
 from typing import Dict, List, Mapping, Set, Tuple, Union
 
 
@@ -39,9 +39,9 @@ class DriverManager:
     """
 
     def __init__(
-            self,
-            stations_df: pd.DataFrame,
-            allowed_train_types: List[str] = LR_RENFE_SERVICES
+        self,
+        stations_df: pd.DataFrame,
+        allowed_train_types: List[str] = LR_RENFE_SERVICES
     ) -> None:
         """
         Initializes the DriverManager object.
@@ -81,11 +81,11 @@ class DriverManager:
         return df
 
     def _get_df_prices(
-            self,
-            prices: WebElement,
-            origin_id: str,
-            destination_id: str,
-            date: datetime.date
+        self,
+        prices: WebElement,
+        origin_id: str,
+        destination_id: str,
+        date: datetime.date
     ) -> pd.DataFrame:
         """
         Returns a DataFrame with the prices of the trains.
@@ -166,9 +166,9 @@ class DriverManager:
 
         # Extract the values of the prices dictionary and add them as new columns
         new_columns = df_prices.apply(lambda row: {k: v for k, v in row['prices'].items()}, axis=1, result_type='expand')
-        df_prices = pd.concat([df_prices, new_columns], axis=1)  # Concatenate the new columns to the dataframe
+        df_prices = pd.concat([df_prices, new_columns], axis=1)
         # TODO: Why we drop the prices column if it is the prices df?
-        df_prices = df_prices.drop('prices', axis=1)  # Drop the prices column
+        df_prices = df_prices.drop('prices', axis=1)
         return df_prices
 
     def _get_prices_trip_id(self, train: WebElement) -> Union[str, None]:
@@ -202,9 +202,9 @@ class DriverManager:
         return train_type
 
     def _get_prices_train_schedule(
-            self,
-            train: WebElement,
-            date: datetime.date
+        self,
+        train: WebElement,
+        date: datetime.date
     ) -> Tuple[datetime.datetime, datetime.datetime, datetime.timedelta]:
         """
         Returns the schedule of a train, with departure, arrival and duration in minutes.
@@ -420,11 +420,11 @@ class DriverManager:
         return train_type in ' '.join(self.allowed_train_types)
 
     def _request_url(
-            self,
-            url: str,
-            find_by: str,
-            find_value: str,
-            patience: int = DEFAULT_PATIENCE
+        self,
+        url: str,
+        find_by: str,
+        find_value: str,
+        patience: int = DEFAULT_PATIENCE
     ) -> Union[WebElement, None]:
         """
         Request a page and wait for the price to load.
@@ -461,10 +461,10 @@ class DriverManager:
         return self.stations_df[self.stations_df[search_column] == value][objective_column].values[0]
 
     def scrape_prices(
-            self,
-            origin_id: str,
-            destination_id: str,
-            date: datetime.date
+        self,
+        origin_id: str,
+        destination_id: str,
+        date: datetime.date
     ) -> Union[None, pd.DataFrame]:
         """
         Scrapes prices from Renfe website using selenium and saves retrieved data to a CSV file.
@@ -509,10 +509,10 @@ class DriverManager:
         return ids_names
     
     def scrape_trips(
-            self,
-            origin_id: str,
-            destination_id: str,
-            date: datetime.date
+        self,
+        origin_id: str,
+        destination_id: str,
+        date: datetime.date
     ) -> Union[None, pd.DataFrame]:
         """
         Obtains two pandas dataframes from Renfe website, one with the trips information and another with the stops,
@@ -604,13 +604,13 @@ class RenfeScraper:
         return od_pairs
 
     def _save_df_stops(
-            self,
-            df_stops: pd.DataFrame,
-            origin_id: str,
-            destination_id: str,
-            init_date: datetime.date,
-            end_date: datetime.date,
-            save_path: str
+        self,
+        df_stops: pd.DataFrame,
+        origin_id: str,
+        destination_id: str,
+        init_date: datetime.date,
+        end_date: datetime.date,
+        save_path: str
     ) -> None:
         """
         Saves the dataframe with the stops information to a CSV file.
@@ -686,13 +686,13 @@ class RenfeScraper:
         logger.info(f'First 5 rows of prices:\n{df_prices.head()}')
 
     def scrape_prices(
-            self,
-            origin_id: str,
-            destination_id: str,
-            init_date: datetime.date = None,
-            range_days: int = 1,
-            df_trips: pd.DataFrame = None,
-            save_path: str = SAVE_PATH
+        self,
+        origin_id: str,
+        destination_id: str,
+        init_date: datetime.date = None,
+        range_days: int = 1,
+        df_trips: pd.DataFrame = None,
+        save_path: str = SAVE_PATH
     ) -> pd.DataFrame:
         """
         Scrapes the Renfe website for the prices of services between two stations.
@@ -740,12 +740,12 @@ class RenfeScraper:
         return df_prices
 
     def scrape_trips(
-            self,
-            origin_id: str,
-            destination_id: str,
-            init_date: datetime.date = None,
-            range_days: int = 1,
-            save_path: str = SAVE_PATH
+        self,
+        origin_id: str,
+        destination_id: str,
+        init_date: datetime.date,
+        range_days: int = 1,
+        save_path: str = SAVE_PATH
     ) -> pd.DataFrame:
         """
         Scrapes the Renfe website for the trips between two stations.

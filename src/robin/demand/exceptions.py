@@ -1,6 +1,6 @@
 """Exceptions for the demand module."""
 
-from .functions import Function
+from robin.demand.functions import Function
 
 
 class InvalidDistributionException(Exception):

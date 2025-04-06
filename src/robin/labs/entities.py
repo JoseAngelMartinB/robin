@@ -1,23 +1,21 @@
-"""Entities for Robin Labs."""
+"""Entities for the labs module."""
 
 import copy
 import os
 import random
-import re
-import seaborn as sns
 import shutil
 import yaml
 
-from src.robin.kernel.entities import Kernel
-from src.robin.supply.entities import Supply
-from src.robin.demand.entities import Demand
-from src.robin.labs.utils import *
-from src.robin.plotter.utils import plot_series
+from robin.kernel.entities import Kernel
+from robin.supply.entities import Supply
+from robin.demand.entities import Demand
+from robin.labs.utils import *
+from robin.plotter.utils import plot_series
 
 from matplotlib import pyplot as plt
 from pathlib import Path
 from tqdm.notebook import tqdm
-from typing import Any, Mapping
+from typing import Mapping
 
 
 class RobinLab:
@@ -27,11 +25,13 @@ class RobinLab:
     This class is intended to run Robin simulation experiments.
     """
 
-    def __init__(self,
-                 path_config_supply: Path,
-                 path_config_demand: Path,
-                 tmp_path: Path,
-                 verbose=0):
+    def __init__(
+        self,
+        path_config_supply: Path,
+        path_config_demand: Path,
+        tmp_path: Path,
+        verbose=0
+    ) -> None:
         """
         Initialize Robin Lab experiment.
 
@@ -63,12 +63,12 @@ class RobinLab:
         self.lab_config = config
 
         if not any(self.lab_config.values()):
-            raise ValueError("At least one of the lab configs must be non-empty.")
+            raise ValueError('At least one of the lab configs must be non-empty.')
 
-        if self.lab_config["supply"]:  # Check if it's a supply or demand experiment
+        if self.lab_config['supply']:  # Check if it's a supply or demand experiment
             self._supply_yaml_editor()
         else:
-            raise ValueError("At least one of the lab configs must be non-empty.")
+            raise ValueError('At least one of the lab configs must be non-empty.')
 
     def _create_tmp_dir(self):
         """
@@ -77,14 +77,14 @@ class RobinLab:
         if not self.tmp_path.exists():
             os.makedirs(self.tmp_path)
 
-        if not os.path.exists(self.tmp_path / "supply"):
-            os.makedirs(self.tmp_path / "supply")
+        if not os.path.exists(self.tmp_path / 'supply'):
+            os.makedirs(self.tmp_path / 'supply')
 
-        if not os.path.exists(self.tmp_path / "demand"):
-            os.makedirs(self.tmp_path / "demand")
+        if not os.path.exists(self.tmp_path / 'demand'):
+            os.makedirs(self.tmp_path / 'demand')
 
-        if not os.path.exists(self.tmp_path / "output"):
-            os.makedirs(self.tmp_path / "output")
+        if not os.path.exists(self.tmp_path / 'output'):
+            os.makedirs(self.tmp_path / 'output')
 
     def _supply_yaml_editor(self) -> None:
         """
@@ -106,23 +106,23 @@ class RobinLab:
             original_data = yaml.load(file, Loader=yaml.CSafeLoader)
 
         # TODO: Temporary fix only to test prices
-        supply_lab_config = self.lab_config["supply"]
-        arange_args = supply_lab_config["prices"]
+        supply_lab_config = self.lab_config['supply']
+        arange_args = supply_lab_config['prices']
         for i, factor in enumerate(tqdm(np.arange(**arange_args)), start=1):
             modified_data = copy.deepcopy(original_data)
             modified_services = modified_data.get('service')
-            assert modified_services, "No services found in the supply config."
+            assert modified_services, 'No services found in the supply config.'
             for service in modified_services:
                 modify_prices(service['origin_destination_tuples'], factor)
 
             modified_data['service'] = modified_services
-            supply_file_name = f"supply_{i}.yml"
-            save_path_supply = f"{self.tmp_path}/supply/{supply_file_name}"
+            supply_file_name = f'supply_{i}.yml'
+            save_path_supply = f'{self.tmp_path}/supply/{supply_file_name}'
 
             with open(save_path_supply, 'w') as file:
                 yaml.safe_dump(modified_data, file)
 
-            shutil.copy(self.path_config_demand, self.tmp_path / "demand" / f"demand_{i}.yml")
+            shutil.copy(self.path_config_demand, self.tmp_path / 'demand' / f'demand_{i}.yml')
 
     def simulate(self, runs: int = 1) -> None:
         """Simulate the experiment."""
@@ -139,34 +139,34 @@ class RobinLab:
             """
             file = Path(file)
             file_name = file.stem
-            return int(file_name.split("_")[-1])
+            return int(file_name.split('_')[-1])
 
         # Run simulation for each supply file
-        sorted_supply_files = sorted(os.listdir(self.tmp_path / "supply"), key=file_number)
-        sorted_demand_files = sorted(os.listdir(self.tmp_path / "demand"), key=file_number)
-        for r in tqdm(range(runs), desc="Runs: "):
+        sorted_supply_files = sorted(os.listdir(self.tmp_path / 'supply'), key=file_number)
+        sorted_demand_files = sorted(os.listdir(self.tmp_path / 'demand'), key=file_number)
+        for r in tqdm(range(runs), desc='Runs: '):
             seed = random.randint(0, 1000000)
-            print(f"Seed used run {r}: {seed}")
+            print(f'Seed used run {r}: {seed}')
             for i, supply_file, demand_file in zip(tqdm(range(1, len(sorted_supply_files) + 1),
-                                                        desc="Iters: ",
+                                                        desc='Iters: ',
                                                         leave=True),
                                                    sorted_supply_files,
                                                    sorted_demand_files):
-                kernel = Kernel(path_config_supply=self.tmp_path / "supply" / supply_file,
-                                path_config_demand=self.tmp_path / "demand" / demand_file,
+                kernel = Kernel(path_config_supply=self.tmp_path / 'supply' / supply_file,
+                                path_config_demand=self.tmp_path / 'demand' / demand_file,
                                 seed=seed)
-                kernel.simulate(output_path=Path(f"{self.tmp_path}/output/output_{r}_{i}.csv"),
+                kernel.simulate(output_path=Path(f'{self.tmp_path}/output/output_{r}_{i}.csv'),
                                 calculate_global_utility=True)
 
     def _get_tickets_sold(self) -> Mapping:
         """Get the number of tickets sold for each supply file."""
         tickets_sold = {}
-        output_files = sorted(os.listdir(self.tmp_path / "output"), key=lambda x: int(x.split(".")[0].split("_")[-1]))
+        output_files = sorted(os.listdir(self.tmp_path / 'output'), key=lambda x: int(x.split('.')[0].split('_')[-1]))
         for _, output_file in zip(tqdm(range(1, len(output_files) + 1)), output_files):
-            df = pd.read_csv(self.tmp_path / "output" / output_file)
+            df = pd.read_csv(self.tmp_path / 'output' / output_file)
             buffer_tickets_sold = df.groupby(by=['seat']).size().to_dict()
             buffer_tickets_sold['Total'] = sum(buffer_tickets_sold.values())
-            tickets_sold[output_file.split(".")[0].split("_")[-1]] = buffer_tickets_sold
+            tickets_sold[output_file.split('.')[0].split('_')[-1]] = buffer_tickets_sold
 
         return tickets_sold
 
@@ -175,8 +175,8 @@ class RobinLab:
         tickets_sold = self._get_tickets_sold()
 
         # TODO: Temporary fix only to test prices
-        supply_lab_config = self.lab_config["supply"]
-        arange_args = supply_lab_config["prices"]
+        supply_lab_config = self.lab_config['supply']
+        arange_args = supply_lab_config['prices']
         x_data = np.arange(**arange_args)
         series_keys = set(key for value in tickets_sold.values() for key in value)
         series = {key: [] for key in series_keys}
@@ -187,11 +187,11 @@ class RobinLab:
 
         fig, ax = plot_series(x_data=tuple(x_data),
                               y_data=series,
-                              title="Prices elasticity curve (seat types)",
-                              xlabel="Price increase (%)",
-                              ylabel="Tickets sold",
+                              title='Prices elasticity curve (seat types)',
+                              xlabel='Price increase (%)',
+                              ylabel='Tickets sold',
                               xticks=x_data[::3],
-                              xticks_labels=tuple([f"{x:.0f}%" for x in x_data][::3]),
+                              xticks_labels=tuple([f'{x:.0f}%' for x in x_data][::3]),
                               figsize=(10, 6))
 
         plt.show()
@@ -223,11 +223,11 @@ class RobinLab:
 
         fig, ax = plot_series(x_data=tuple(x_data),
                               y_data=series,
-                              title="User Demand Status Over Time",
-                              xlabel="Price increase (%)",
-                              ylabel="Number of Users",
+                              title='User Demand Status Over Time',
+                              xlabel='Price increase (%)',
+                              ylabel='Number of Users',
                               xticks=x_data[::3],
-                              xticks_labels=tuple([f"{x:.0f}%" for x in x_data][::3]),
+                              xticks_labels=tuple([f'{x:.0f}%' for x in x_data][::3]),
                               figsize=(10, 6))
 
         plt.show()
@@ -236,19 +236,19 @@ class RobinLab:
             fig.savefig(save_path, format='svg', dpi=300, bbox_inches='tight', transparent=True)
 
     def _get_demand_status(self):
-        file_number = lambda file: int(Path(file).stem.split("_")[-1])
-        output_files = sorted(os.listdir(self.tmp_path / "output"), key=file_number)
-        supply_files = sorted(os.listdir(self.tmp_path / "supply"), key=file_number)
-        demand_files = sorted(os.listdir(self.tmp_path / "demand"), key=file_number)
+        file_number = lambda file: int(Path(file).stem.split('_')[-1])
+        output_files = sorted(os.listdir(self.tmp_path / 'output'), key=file_number)
+        supply_files = sorted(os.listdir(self.tmp_path / 'supply'), key=file_number)
+        demand_files = sorted(os.listdir(self.tmp_path / 'demand'), key=file_number)
 
         passenger_status = {}
         for i, supply_file, demand_file, output_file in zip(tqdm(range(1, len(output_files) + 1)),
                                                             supply_files,
                                                             demand_files,
                                                             output_files):
-            output = pd.read_csv(self.tmp_path / "output" / output_file,
+            output = pd.read_csv(self.tmp_path / 'output' / output_file,
                                  dtype={'departure_station': str, 'arrival_station': str})
-            output["purchase_date"] = output.apply(
+            output['purchase_date'] = output.apply(
                 lambda row: get_purchase_date(row['purchase_day'], row['arrival_day']), axis=1
             )
 
@@ -271,24 +271,24 @@ class RobinLab:
                 series[market].append(result)
 
         # TODO: Temporary fix only to test prices
-        supply_lab_config = self.lab_config["supply"]
-        arange_args = supply_lab_config["prices"]
+        supply_lab_config = self.lab_config['supply']
+        arange_args = supply_lab_config['prices']
         x_data = np.arange(**arange_args)
 
         fig, ax = plot_series(x_data=tuple(x_data),
                               y_data=series,
-                              title="User Demand Status Over Time",
-                              xlabel="Price increase (%)",
-                              ylabel="Number of Users",
+                              title='User Demand Status Over Time',
+                              xlabel='Price increase (%)',
+                              ylabel='Number of Users',
                               xticks=x_data[::3],
-                              xticks_labels=tuple([f"{x:.0f}%" for x in x_data][::3]),
+                              xticks_labels=tuple([f'{x:.0f}%' for x in x_data][::3]),
                               figsize=(10, 6))
 
         plt.show()
 
-        ax.set_title("Sum of Tickets Sold for Different Market Routes Over Time")
-        ax.set_xlabel("Time Period")
-        ax.set_ylabel("Total Number of Tickets Sold")
+        ax.set_title('Sum of Tickets Sold for Different Market Routes Over Time')
+        ax.set_xlabel('Time Period')
+        ax.set_ylabel('Total Number of Tickets Sold')
         ax.legend()
 
         plt.show()
@@ -297,10 +297,10 @@ class RobinLab:
             fig.savefig(save_path, format='svg', dpi=300, bbox_inches='tight', transparent=True)
 
     def _get_markets_data(self):
-        file_number = lambda file: int(Path(file).stem.split("_")[-1])
-        output_files = sorted(os.listdir(self.tmp_path / "output"), key=file_number)
-        supply_files = sorted(os.listdir(self.tmp_path / "supply"), key=file_number)
-        demand_files = sorted(os.listdir(self.tmp_path / "demand"), key=file_number)
+        file_number = lambda file: int(Path(file).stem.split('_')[-1])
+        output_files = sorted(os.listdir(self.tmp_path / 'output'), key=file_number)
+        supply_files = sorted(os.listdir(self.tmp_path / 'supply'), key=file_number)
+        demand_files = sorted(os.listdir(self.tmp_path / 'demand'), key=file_number)
 
         tickets_by_pair_seat = {}
         pairs_sold = {}
@@ -308,9 +308,9 @@ class RobinLab:
                                                             supply_files,
                                                             demand_files,
                                                             output_files):
-            output = pd.read_csv(self.tmp_path / "output" / output_file,
+            output = pd.read_csv(self.tmp_path / 'output' / output_file,
                                  dtype={'departure_station': str, 'arrival_station': str})
-            output["purchase_date"] = output.apply(
+            output['purchase_date'] = output.apply(
                 lambda row: get_purchase_date(row['purchase_day'], row['arrival_day']), axis=1
             )
 
@@ -333,9 +333,9 @@ class RobinLab:
 
         for i, output_file in zip(tqdm(range(1, len(output_files) + 1)), output_files):
             run, iter_num = get_file_key(output_file)
-            output = pd.read_csv(self.tmp_path / "output" / output_file,
+            output = pd.read_csv(self.tmp_path / 'output' / output_file,
                                  dtype={'departure_station': str, 'arrival_station': str})
-            output["purchase_date"] = output.apply(
+            output['purchase_date'] = output.apply(
                 lambda row: get_purchase_date(row['purchase_day'], row['arrival_day']), axis=1
             )
 
@@ -368,9 +368,9 @@ class RobinLab:
 
         for i, output_file in zip(tqdm(range(1, len(output_files) + 1)), output_files):
             run, iter_num = get_file_key(output_file)
-            output = pd.read_csv(self.tmp_path / "output" / output_file,
+            output = pd.read_csv(self.tmp_path / 'output' / output_file,
                                  dtype={'departure_station': str, 'arrival_station': str})
-            output["purchase_date"] = output.apply(
+            output['purchase_date'] = output.apply(
                 lambda row: get_purchase_date(row['purchase_day'], row['arrival_day']), axis=1
             )
 
@@ -405,9 +405,9 @@ class RobinLab:
 
         for i, output_file in zip(tqdm(range(1, len(output_files) + 1)), output_files):
             run, iter_num = get_file_key(output_file)
-            output = pd.read_csv(self.tmp_path / "output" / output_file,
+            output = pd.read_csv(self.tmp_path / 'output' / output_file,
                                  dtype={'departure_station': str, 'arrival_station': str})
-            output["purchase_date"] = output.apply(
+            output['purchase_date'] = output.apply(
                 lambda row: get_purchase_date(row['purchase_day'], row['arrival_day']), axis=1
             )
 
@@ -425,7 +425,7 @@ class RobinLab:
         Returns:
             Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]: Dataframes for seaborn plots.
         """
-        output_files = sorted(os.listdir(self.tmp_path / "output"), key=get_file_key)
+        output_files = sorted(os.listdir(self.tmp_path / 'output'), key=get_file_key)
 
         df_markets = self.get_markets_df(output_files=output_files)
         df_tickets_seat = self.get_tickets_seat_df(output_files=output_files)

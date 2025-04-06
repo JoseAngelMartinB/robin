@@ -1,14 +1,27 @@
-"""Entities to be used in the data loader module."""
+"""Entities for the scraping module."""
 
+import datetime
+import os
 import numpy as np
 import pandas as pd
 
-from src.robin.supply.entities import Station, TimeSlot, Corridor, Line, Seat, RollingStock, TSP, Service, Supply
-from src.robin.supply.utils import get_time
-from src.robin.scraping.utils import *
+from robin.scraping.utils import (
+    station_to_dict,
+    time_slot_to_dict,
+    corridor_to_dict,
+    line_to_dict,
+    seat_to_dict,
+    rolling_stock_to_dict,
+    tsp_to_dict,
+    service_to_dict,
+    write_to_yaml,
+    time_delta_to_time_string
+)
+from robin.supply.entities import Station, TimeSlot, Corridor, Line, Seat, RollingStock, TSP, Service, Supply
+from robin.supply.utils import get_time
 
 from collections import OrderedDict
-from typing import Dict, List, Tuple
+from typing import Dict, List, Mapping, Tuple
 
 RENFE_STATIONS_PATH = f'data/renfe/renfe_stations.csv'
 DEFAULT_SEAT_QUANTITY = {1: 250, 2: 50}

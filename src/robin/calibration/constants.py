@@ -1,4 +1,4 @@
-"""Constants for the ROBIN calibration module."""
+"""Constants for the calibration module."""
 
 DEFAULT_KEEP_TOP_K = 3
 

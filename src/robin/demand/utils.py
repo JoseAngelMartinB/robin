@@ -1,8 +1,8 @@
-"""Utils for demand module."""
+"""Utils for the demand module."""
 
-from .distributions import Distribution
-from .exceptions import InvalidDistributionException, InvalidContinuousDistributionException, InvalidDiscreteDistributionException, InvalidFunctionException
-from .functions import Function
+from robin.demand.distributions import Distribution
+from robin.demand.exceptions import InvalidDistributionException, InvalidContinuousDistributionException, InvalidDiscreteDistributionException, InvalidFunctionException
+from robin.demand.functions import Function
 
 from scipy import stats
 from typing import Callable, Dict, Mapping, Tuple

@@ -1,4 +1,4 @@
-"""Exceptions for the scraping module."""
+"""Exceptions for the scraping Renfe module."""
 
 
 class NotAvailableStationsException(Exception):

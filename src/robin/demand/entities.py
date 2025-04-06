@@ -4,9 +4,9 @@ import datetime
 import numpy as np
 import yaml
 
-from .constants import DEFAULT_SEAT_UTILITY, DEFAULT_TSP_UTILITY, DEFAULT_RVS_SIZE
-from .exceptions import InvalidForbiddenDepartureHoursException
-from .utils import get_function, get_scipy_distribution
+from robin.demand.constants import DEFAULT_SEAT_UTILITY, DEFAULT_TSP_UTILITY, DEFAULT_RVS_SIZE
+from robin.demand.exceptions import InvalidForbiddenDepartureHoursException
+from robin.demand.utils import get_function, get_scipy_distribution
 
 from pathlib import Path
 from typing import Any, List, Mapping, Union, Tuple
@@ -94,29 +94,29 @@ class UserPattern:
     """
     
     def __init__(
-            self,
-            id: int,
-            name: str,
-            arrival_time: str,
-            arrival_time_kwargs: Mapping[str, Union[int, float]],
-            purchase_day: str,
-            purchase_day_kwargs: Mapping[str, Union[int, float]],
-            forbidden_departure_hours: Tuple[int, int],
-            seats: Mapping[int, float],
-            tsps: Mapping[int, float],
-            penalty_arrival_time: str,
-            penalty_arrival_time_kwargs: Mapping[str, Union[int, float]],
-            penalty_departure_time: str,
-            penalty_departure_time_kwargs: Mapping[str, Union[int, float]],
-            penalty_cost: str,
-            penalty_cost_kwargs: Mapping[str, Union[int, float]],
-            penalty_travel_time: str,
-            penalty_travel_time_kwargs: Mapping[str, Union[int, float]],
-            error: str,
-            error_kwargs: Mapping[str, Union[int, float]],
-            default_seat_utility: float = DEFAULT_SEAT_UTILITY,
-            default_tsp_utility: float = DEFAULT_TSP_UTILITY,
-            default_rvs_size: int = DEFAULT_RVS_SIZE
+        self,
+        id: int,
+        name: str,
+        arrival_time: str,
+        arrival_time_kwargs: Mapping[str, Union[int, float]],
+        purchase_day: str,
+        purchase_day_kwargs: Mapping[str, Union[int, float]],
+        forbidden_departure_hours: Tuple[int, int],
+        seats: Mapping[int, float],
+        tsps: Mapping[int, float],
+        penalty_arrival_time: str,
+        penalty_arrival_time_kwargs: Mapping[str, Union[int, float]],
+        penalty_departure_time: str,
+        penalty_departure_time_kwargs: Mapping[str, Union[int, float]],
+        penalty_cost: str,
+        penalty_cost_kwargs: Mapping[str, Union[int, float]],
+        penalty_travel_time: str,
+        penalty_travel_time_kwargs: Mapping[str, Union[int, float]],
+        error: str,
+        error_kwargs: Mapping[str, Union[int, float]],
+        default_seat_utility: float = DEFAULT_SEAT_UTILITY,
+        default_tsp_utility: float = DEFAULT_TSP_UTILITY,
+        default_rvs_size: int = DEFAULT_RVS_SIZE
     ) -> None:
         """
         Initialize a user pattern.
@@ -398,14 +398,14 @@ class DemandPattern:
     """
     
     def __init__(
-            self,
-            id: int,
-            name: str,
-            markets: List[Market],
-            potential_demands: List[str],
-            potential_demands_kwargs: List[Mapping[str, Union[int, float]]],
-            user_patterns_distribution: List[Mapping[UserPattern, float]],
-            default_rvs_size: int = DEFAULT_RVS_SIZE
+        self,
+        id: int,
+        name: str,
+        markets: List[Market],
+        potential_demands: List[str],
+        potential_demands_kwargs: List[Mapping[str, Union[int, float]]],
+        user_patterns_distribution: List[Mapping[UserPattern, float]],
+        default_rvs_size: int = DEFAULT_RVS_SIZE
     ) -> None:
         """
         Initializes a demand pattern.
@@ -609,13 +609,13 @@ class Passenger:
     """
     
     def __init__(
-            self,
-            id: int,
-            user_pattern: UserPattern,
-            market: Market,
-            arrival_day: Day,
-            arrival_time: float,
-            purchase_day: int
+        self,
+        id: int,
+        user_pattern: UserPattern,
+        market: Market,
+        arrival_day: Day,
+        arrival_time: float,
+        purchase_day: int
     ) -> None:
         """
         Initializes a passenger.
@@ -669,7 +669,7 @@ class Passenger:
         Returns:
             float: The utility of the passenger given the arrival time.
         """
-        # NOTE: Speed up the arrival time utility by avoiding using max function.
+        # NOTE: This speed up the arrival time utility by avoiding using max function.
         # earlier_displacement = max(self.arrival_time - service_arrival_time, 0)
         # later_displacement = max(service_arrival_time - self.arrival_time, 0)
         earlier_displacement = self.arrival_time - service_arrival_time if self.arrival_time > service_arrival_time else 0
@@ -688,7 +688,7 @@ class Passenger:
         """
         dt_begin = self.user_pattern.forbidden_departure_hours[0]
         dt_end = self.user_pattern.forbidden_departure_hours[1]
-        # NOTE: Speed up the departure time utility by avoiding using min and max functions.
+        # NOTE: This speed up the departure time utility by avoiding using min and max functions.
         # departure_time = min(max(dt_end - service_departure_time, 0), dt_end - dt_begin)
         _departure_time = dt_end - service_departure_time if dt_end > service_departure_time else 0
         departure_time = _departure_time if _departure_time < dt_end - dt_begin else dt_end - dt_begin
@@ -720,14 +720,14 @@ class Passenger:
         return self.user_pattern.penalty_travel_time(service_arrival_time - service_departure_time)
 
     def get_utility(
-            self,
-            seat: int,
-            tsp: int,
-            service_departure_time: float,
-            service_arrival_time: float,
-            price: float,
-            departure_time_hard_restriction: bool = False
-        ) -> float:
+        self,
+        seat: int,
+        tsp: int,
+        service_departure_time: float,
+        service_arrival_time: float,
+        price: float,
+        departure_time_hard_restriction: bool = False
+    ) -> float:
         """
         Returns the utility of the passenger given the seat, the arrival time, the departure time and the price.
 
@@ -871,10 +871,10 @@ class Demand:
 
     @classmethod
     def _get_demand_patterns(
-            cls,
-            data: Mapping[str, Any],
-            markets: Mapping[int, Market],
-            user_patterns: Mapping[int, UserPattern]
+        cls,
+        data: Mapping[str, Any],
+        markets: Mapping[int, Market],
+        user_patterns: Mapping[int, UserPattern]
     ) -> Mapping[int, DemandPattern]:
         """
         Returns the demand patterns.
@@ -917,9 +917,9 @@ class Demand:
 
     @classmethod
     def _get_days(
-            cls,
-            data: Mapping[str, Any],
-            demand_patterns: Mapping[int, DemandPattern]
+        cls,
+        data: Mapping[str, Any],
+        demand_patterns: Mapping[int, DemandPattern]
     ) -> Mapping[int, Day]:
         """
         Returns the days.

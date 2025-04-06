@@ -1,4 +1,4 @@
-"""Utils for the Robin Labs module."""
+"""Utils for the labs module."""
 
 import datetime
 import numpy as np
@@ -20,7 +20,7 @@ def get_file_key(file: str) -> Tuple[int, ...]:
         Tuple[int, ...]: Tuple of numeric values extracted from the file name.
     """
     file_stem = Path(file).stem
-    # \d+ matches one or more digits. E.g. "42" in "file_42.yml"
+    # \d+ matches one or more digits. E.g. '42' in 'file_42.yml'
     return tuple(map(int, re.findall(pattern='\d+', string=file_stem)))
 
 
@@ -36,7 +36,7 @@ def get_purchase_date(anticipation, arrival_day):
         datetime.date: Purchase day of the passenger.
     """
     anticipation = datetime.timedelta(days=anticipation)
-    arrival_day = datetime.datetime.strptime(arrival_day, "%Y-%m-%d")
+    arrival_day = datetime.datetime.strptime(arrival_day, '%Y-%m-%d')
     purchase_day = arrival_day - anticipation
     return purchase_day.date()
 
@@ -59,8 +59,8 @@ def get_passenger_status(df: pd.DataFrame) -> Tuple[Mapping[int, int], List[str]
     }
 
     x_labels = ["User found \nany service that\nmet his needs\nbut couldn't purchase.",
-                "User bought\na service which\nwas not the one\nwith the best utility.",
-                "User bought\nthe ticket with\nbest utility.",
+                'User bought\na service which\nwas not the one\nwith the best utility.',
+                'User bought\nthe ticket with\nbest utility.',
                 "User didn't find\nany ticket\nthat met his needs."]
 
     return dict(sorted(data.items(), key=lambda x: x[1], reverse=True)), x_labels
@@ -119,7 +119,7 @@ def get_tickets_by_date_user_seat(df: pd.DataFrame) -> Dict[str, Dict[str, Dict[
     """
     data = {}
     for row in df.iterrows():
-        day, user, seat = tuple(row[1][["purchase_date", "user_pattern", "seat"]])
+        day, user, seat = tuple(row[1][['purchase_date', 'user_pattern', 'seat']])
 
         if day not in data:
             data[day] = {}

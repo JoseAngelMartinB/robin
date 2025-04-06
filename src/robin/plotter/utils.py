@@ -1,19 +1,20 @@
-"""Utils for plotter module."""
+"""Utils for the plotter module."""
 
 import matplotlib.pyplot as plt
 
 from typing import Mapping, Tuple
 
 
-def plot_series(x_data: Tuple,
-                y_data: Mapping,
-                title: str,
-                xlabel: str,
-                ylabel: str,
-                xticks: Tuple,
-                xticks_labels: Tuple,
-                figsize: Tuple[int, int] = (10, 8),
-    ) -> Tuple[plt.Figure, plt.Axes]:
+def plot_series(
+    x_data: Tuple,
+    y_data: Mapping,
+    title: str,
+    xlabel: str,
+    ylabel: str,
+    xticks: Tuple,
+    xticks_labels: Tuple,
+    figsize: Tuple[int, int] = (10, 8),
+) -> Tuple[plt.Figure, plt.Axes]:
     """
     Generic plot for series.
 

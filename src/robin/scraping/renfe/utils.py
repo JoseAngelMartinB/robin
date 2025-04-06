@@ -1,4 +1,4 @@
-""" Utility functions for scraping module"""
+"""Utils functions for the scraping Renfe module"""
 
 import datetime
 

@@ -3,7 +3,7 @@
 import datetime
 import yaml
 
-from .utils import get_time, get_date, format_td, set_stations_ids, convert_tree_to_dict
+from robin.supply.utils import get_time, get_date, format_td, set_stations_ids, convert_tree_to_dict
 
 from copy import deepcopy
 from functools import cache
@@ -773,10 +773,10 @@ class Supply:
 
     @classmethod
     def _get_corridors(
-            cls,
-            data: Mapping[Any, Any],
-            stations: (Mapping[str, Station]),
-            key: str = 'corridor'
+        cls,
+        data: Mapping[Any, Any],
+        stations: (Mapping[str, Station]),
+        key: str = 'corridor'
     ) -> Dict[str, Corridor]:
         """
         Private method to build a dict of Corridor objects from YAML data.
@@ -874,10 +874,10 @@ class Supply:
 
     @classmethod
     def _get_rolling_stock(
-            cls,
-            data: Mapping[Any, Any],
-            seats: Mapping[str, Seat],
-            key: str = 'rollingStock'
+        cls,
+        data: Mapping[Any, Any],
+        seats: Mapping[str, Seat],
+        key: str = 'rollingStock'
     ) -> Dict[str, RollingStock]:
         """
         Private method to build a dict of RollingStock objects from YAML data.
@@ -910,10 +910,10 @@ class Supply:
 
     @classmethod
     def _get_tsps(
-            cls,
-            data: Mapping[Any, Any],
-            rolling_stock: Mapping[str, RollingStock],
-            key: str = 'trainServiceProvider'
+        cls,
+        data: Mapping[Any, Any],
+        rolling_stock: Mapping[str, RollingStock],
+        key: str = 'trainServiceProvider'
     ) -> Dict[str, TSP]:
         """
         Private method to build a dict of TSP objects from YAML data.
@@ -936,10 +936,10 @@ class Supply:
 
     @classmethod
     def _get_capacity_constraints(
-            cls,
-            service_line: Line,
-            service_rolling_stock: RollingStock,
-            yaml_capacity_constraints: Mapping
+        cls,
+        service_line: Line,
+        service_rolling_stock: RollingStock,
+        yaml_capacity_constraints: Mapping
     ) -> Union[Dict, None]:
         """
         Private method to build a dict of capacity constraints from YAML data.
@@ -974,10 +974,10 @@ class Supply:
 
     @classmethod
     def _get_service_prices(
-            cls,
-            service_line: Line,
-            seats: Mapping[str, Seat],
-            yaml_service_prices: Mapping
+        cls,
+        service_line: Line,
+        seats: Mapping[str, Seat],
+        yaml_service_prices: Mapping
     ) -> Dict[Tuple[str, str], Dict[Seat, float]]:
         """
         Private method to build a dict of service prices from YAML data.
@@ -1008,14 +1008,14 @@ class Supply:
 
     @classmethod
     def _get_services(
-            cls,
-            data: Mapping[Any, Any],
-            lines: Mapping[str, Line],
-            tsps: Mapping[str, TSP],
-            time_slots: Mapping[str, TimeSlot],
-            seats: Mapping[str, Seat],
-            rolling_stock: Mapping[str, RollingStock],
-            key: str = 'service'
+        cls,
+        data: Mapping[Any, Any],
+        lines: Mapping[str, Line],
+        tsps: Mapping[str, TSP],
+        time_slots: Mapping[str, TimeSlot],
+        seats: Mapping[str, Seat],
+        rolling_stock: Mapping[str, RollingStock],
+        key: str = 'service'
     ) -> Dict[str, Service]:
         """
         Private method to build a dict of Service objects from YAML data.
