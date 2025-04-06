@@ -7,7 +7,7 @@ SCHEDULE_URL = 'https://horarios.renfe.com/HIRRenfeWeb/buscar.do?O={origin_id}&D
 
 # Renfe stations CSV path
 SAVE_PATH = 'data/renfe'
-RENFE_STATIONS_CSV = f'{SAVE_PATH}/renfe_stations.csv'
+RENFE_STATIONS_CSV = f'{SAVE_PATH}/adif_renfe_stations.csv'
 
 # Allowed Renfe services for scraping
 LR_RENFE_SERVICES = ('AVE', 'AVLO', 'AVE INT', 'ALVIA', 'AVANT')
