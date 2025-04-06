@@ -198,7 +198,7 @@ class DriverManager:
             str: Train type of the train.
         """
         train_type_img = train.find_element(By.CLASS_NAME, 'img-fluid')
-        train_type = train_type_img.get_attribute('alt').split('Tipo de tren')[-1]
+        train_type = train_type_img.get_attribute('alt').split('Tipo de tren ')[-1]
         return train_type
 
     def _get_prices_train_schedule(
@@ -671,7 +671,7 @@ class RenfeScraper:
         )
         end_date = init_date + datetime.timedelta(days=range_days)
         logger.success(f'Scraped {len(df_trips)} trips between {origin_id} and {destination_id} from {init_date} to {end_date}')
-        logger.info(f'First 5 rows of trips:\n{df_trips.head()}')
+        logger.info(f'First five trips:\n{df_trips.head()}')
 
         # Scrape prices
         df_prices = self.scrape_prices(
@@ -682,8 +682,8 @@ class RenfeScraper:
             df_trips=df_trips if all_pairs else None,
             save_path=save_path
         )
-        logger.success(f'Scraped prices between {origin_id} and {destination_id} from {init_date} to {end_date}')
-        logger.info(f'First 5 rows of prices:\n{df_prices.head()}')
+        logger.success(f'Scraped {len(df_prices)} services between {origin_id} and {destination_id} from {init_date} to {end_date}')
+        logger.info(f'First five services:\n{df_prices.head()}')
 
     def scrape_prices(
         self,
