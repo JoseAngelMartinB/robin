@@ -1,10 +1,10 @@
 """Entities for the scraping module."""
 
 import datetime
-import os
 import numpy as np
 import pandas as pd
 
+from robin.scraping.constants import RENFE_STATIONS_PATH, DEFAULT_SEAT_QUANTITY, INFLATION
 from robin.scraping.utils import (
     station_to_dict,
     time_slot_to_dict,
@@ -22,10 +22,6 @@ from robin.supply.utils import get_time
 
 from collections import OrderedDict
 from typing import Dict, List, Mapping, Tuple
-
-RENFE_STATIONS_PATH = f'data/renfe/renfe_stations.csv'
-DEFAULT_SEAT_QUANTITY = {1: 250, 2: 50}
-INFLATION = 1.0
 
 
 class DataLoader:
@@ -47,21 +43,17 @@ class DataLoader:
         services (Dict[str, Service]): Dictionary with services
     """
 
-    def __init__(self, stops_path: str, renfe_stations_path: str = RENFE_STATIONS_PATH):
+    def __init__(self, stops_path: str, prices_path: str, renfe_stations_path: str = RENFE_STATIONS_PATH):
         """
         Constructor of the class
 
         Args:
-            stops_path (str): Path to the trips csv file
-            renfe_stations_path (str, optional): Path to the renfe stations csv file.
+            stops_path (str): Path to the trips CSV file.
+            prices_path (str): Path to the prices CSV file.
+            renfe_stations_path (str, optional): Path to the Renfe stations CSV file.
         """
-        self._stops_path = stops_path
-        self._path_root = os.path.dirname(os.path.dirname(self._stops_path))
-        self._scraping_id = self._get_scraping_id()
-        self._prices_path = f'{self._path_root}/prices/prices_{self._scraping_id}.csv'
-        self.origin_id, self.destination_id, self.start_date, self.end_date = self._scraping_id.split('_')
-
-        self.prices = pd.read_csv(self._prices_path, dtype={
+        self.stops = pd.read_csv(stops_path, dtype={'stop_id': str})
+        self.prices = pd.read_csv(prices_path, dtype={
             'origin': str,
             'destination': str,
             'Básica': float,
@@ -71,7 +63,6 @@ class DataLoader:
             'Prémium': float,
             'Adulto ida': float
         })
-        self.stops = pd.read_csv(self._stops_path, dtype={'stop_id': str})
         self.renfe_stations = pd.read_csv(renfe_stations_path, delimiter=';', dtype={'ADIF_ID': str, 'RENFE_ID': str})
         self.trips = pd.DataFrame({'service_id': list(OrderedDict.fromkeys(self.stops['service_id']))})
         self._seat_names = self.prices.columns[8:]
@@ -199,19 +190,6 @@ class DataLoader:
         for service in services:
             self.services.append(service)
 
-    def _get_scraping_id(self) -> str:
-        """
-        Get scraping id from trips path specified by user
-
-        Returns:
-            string with scraping id
-        """
-        # E.g file_name = 'trips_MADRI_BARCE_2022-12-30_2023-01-03'
-        file_name = self._stops_path.split('/')[-1].split('.')[0]
-
-        # E.g. 'MADRI_BARCE_2022-12-30_2023-01-03'
-        return '_'.join(file_name.split('_')[1:])
-
     def _get_corridor_stations(self) -> List[str]:
         """
         Get list of stations that are part of the corridor
@@ -311,11 +289,11 @@ class DataLoader:
         return filtered_prices
 
     def _get_service(
-            self,
-            service_id: str,
-            line: Line,
-            tsp: TSP,
-            rs: RollingStock
+        self,
+        service_id: str,
+        line: Line,
+        tsp: TSP,
+        rs: RollingStock
     ) -> Service:
         """
         Get Service object from Renfe data
@@ -350,13 +328,6 @@ class DataLoader:
         self._build_seat_types()
         self._build_tsp()
         self._build_services()
-
-    def show_metadata(self) -> None:
-        """
-        Print metadata of the retrieved scraping files
-        """
-        print(f'Origin: {self.origin_id} - Destination: {self.destination_id}')
-        print(f'Since: {self.start_date} - Until: {self.end_date}')
 
 
 class SupplySaver(Supply):
