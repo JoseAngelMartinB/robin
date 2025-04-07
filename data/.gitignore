@@ -5,6 +5,7 @@
 !renfe/
 !renfe/renfe_stations.csv
 !renfe/adif_renfe_stations.csv
+!renfe/maxi_corridor.yaml
 !renfe/prices
 !renfe/prices/prices_MADRI_BARCE_2023-06-01_2023-06-02.csv
 !renfe/prices/prices_MADRI_BARCE_2023-09-06_2023-09-07.csv

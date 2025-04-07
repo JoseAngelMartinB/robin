@@ -1,0 +1,64 @@
+corridor:
+- id: '1'
+  name: 'MAXI CORRIDOR'
+  stations:
+  - org: '60000'  # MADRID PTA. ATOCHA - ALMUDENA GRANDES
+    des:
+    - org: '70200'  # GUADALAJARA
+      des:
+        - org: '04040'  # ZARAGOZA-DELICIAS
+          des:
+            - org: '78400'  # LLEIDA-PIRINEUS
+              des:
+                - org: '04104'  # CAMP TARRAGONA
+                  des:
+                    - org: '71801'  # BARCELONA-SANTS
+                      des:
+                        - org: '79206'  # GIRONA
+                          des:
+                            - org: '04307'  # FIGUERES VILAFANT
+                              des: []
+    - org: '66100'  # CUENCA
+      des:
+        - org: '03216'  # VALENCIA JOAQUÍN SOROLLA
+          des:
+            - org: '65300'  # CASTELLÓ
+              des: []
+        - org: '60600'  # ALBACETE-LOS LLANOS
+          des:
+            - org: '60911'  # ALICANTE/ALACANT
+              des:
+                - org: '61200'  # MURCIA
+                  des: []
+    - org: '37200'  # CIUDAD REAL
+      des:
+        - org: '50500'  # CÓRDOBA
+          des:
+            - org: '51003'  # SEVILLA-SANTA JUSTA
+              des: []
+            - org: '54413'  # MÁLAGA MARÍA ZAMBRANO
+              des: []
+            - org: '05000'  # GRANADA
+              des: []
+    - org: '12100'  # SEGOVIA
+      des:
+        - org: '30200'  # ZAMORA
+          des:
+            - org: '22100'  # OURENSE
+              des:
+                - org: '23004'  # PONTEVEDRA
+                  des: []
+                - org: '31412'  # A CORUÑA
+                  des: []
+        - org: '10600'  # VALLADOLID
+          des:
+            - org: '14100'  # PALENCIA
+              des:
+                - org: '15100'  # LEÓN
+                  des:
+                    - org: '15211'  # OVIEDO/UVIÉU
+                      des:
+                        - org: '15410'  # GIJÓN/XIXÓN
+                          des: []
+                - org: '11014'  # BURGOS ROSA MANZANO
+                  des: []
