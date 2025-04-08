@@ -150,10 +150,10 @@ class Corridor:
         self.stations = self._dict_stations(self.tree)
 
     def _get_paths(
-            self,
-            tree: Mapping[Station, Mapping],
-            path: List[Station] = None,
-            paths: List[List[Station]] = None
+        self,
+        tree: Mapping[Station, Mapping],
+        path: List[Station] = None,
+        paths: List[List[Station]] = None
     ) -> List[List[Station]]:
         """
         Get all paths from a tree of stations.
@@ -422,16 +422,16 @@ class Service:
     """
 
     def __init__(
-            self,
-            id_: str,
-            date: datetime.date,
-            line: Line,
-            tsp: TSP,
-            time_slot: TimeSlot,
-            rolling_stock: RollingStock,
-            prices: Mapping[Tuple[str, str], Mapping[Seat, float]],
-            capacity_constraints: Mapping[Tuple[str, str], Mapping[int, int]] = None,
-            lift_constraints: int = 1
+        self,
+        id_: str,
+        date: datetime.date,
+        line: Line,
+        tsp: TSP,
+        time_slot: TimeSlot,
+        rolling_stock: RollingStock,
+        prices: Mapping[Tuple[str, str], Mapping[Seat, float]],
+        capacity_constraints: Mapping[Tuple[str, str], Mapping[int, int]] = None,
+        lift_constraints: int = 1
     ) -> None:
         """
         Initialize a Service object.

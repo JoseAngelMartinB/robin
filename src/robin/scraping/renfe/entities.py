@@ -545,10 +545,10 @@ class RenfeScraper:
     """
 
     def __init__(
-            self,
-            stations_csv_path: str = RENFE_STATIONS_CSV,
-            menu_url: str = MAIN_MENU_URL,
-            allowed_train_types: List[str] = LR_RENFE_SERVICES
+        self,
+        stations_csv_path: str = RENFE_STATIONS_CSV,
+        menu_url: str = MAIN_MENU_URL,
+        allowed_train_types: List[str] = LR_RENFE_SERVICES
     ) -> None:
         """
         Initialize a RenfeScraper object.
@@ -630,13 +630,13 @@ class RenfeScraper:
         )
 
     def scrape(
-            self,
-            origin: str,
-            destination: str,
-            init_date: datetime.date = None,
-            range_days: int = 1,
-            all_pairs: bool = False,
-            save_path: str = SAVE_PATH
+        self,
+        origin: str,
+        destination: str,
+        init_date: datetime.date = None,
+        range_days: int = 1,
+        all_pairs: bool = False,
+        save_path: str = SAVE_PATH
     ) -> None:
         """
         Scrapes the Renfe website for the trips and prices of services between two stations.
@@ -647,7 +647,7 @@ class RenfeScraper:
             init_date (datetime.date): Initial date to start scraping.
             range_days (int): Number of days to scrape.
             all_pairs (bool): If True, scrape prices for all origin-destination pairs in the trips dataframe.
-            save_path (str): Path to save the csv files.
+            save_path (str): Path to save the CSV files.
         """
         # Convert Adif station ids to Renfe station ids
         origin_id = self.driver.get_value_from_stations(search_column='ADIF_ID', value=origin, objective_column='RENFE_ID')

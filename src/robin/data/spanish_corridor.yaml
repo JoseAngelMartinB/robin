@@ -1,6 +1,6 @@
 corridor:
 - id: '1'
-  name: 'MAXI CORRIDOR'
+  name: 'Spanish Corridor'
   stations:
   - org: '60000'  # MADRID PTA. ATOCHA - ALMUDENA GRANDES
     des:

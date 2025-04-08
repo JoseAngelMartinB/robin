@@ -20,7 +20,6 @@ from robin.scraping.utils import (
 from robin.supply.entities import Station, TimeSlot, Corridor, Line, Seat, RollingStock, TSP, Service, Supply
 from robin.supply.utils import get_time
 
-from collections import OrderedDict
 from typing import Dict, List, Mapping, Tuple
 
 
@@ -58,13 +57,13 @@ class DataLoader:
             'destination': str,
             'Básica': float,
             'Básico': float,
-            'Elige':float,
+            'Elige': float,
             'Elige Confort': float,
             'Prémium': float,
             'Adulto ida': float
         })
         self.renfe_stations = pd.read_csv(renfe_stations_path, delimiter=';', dtype={'ADIF_ID': str, 'RENFE_ID': str})
-        self.trips = pd.DataFrame({'service_id': list(OrderedDict.fromkeys(self.stops['service_id']))})
+        self.trips = pd.DataFrame({'service_id': list(dict.fromkeys(self.stops['service_id']))})
         self._seat_names = self.prices.columns[8:]
 
         self.stations = {}
