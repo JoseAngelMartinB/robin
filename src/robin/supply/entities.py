@@ -663,10 +663,10 @@ class Supply:
     @classmethod
     def from_yaml(cls, path: Path) -> 'Supply':
         """
-        Class method to create a Supply object (List[Service]) from a yaml file.
+        Class method to create a Supply object (List[Service]) from a YAML file.
 
         Args:
-            path (Path): Path to the yaml file.
+            path (Path): Path to the YAML file.
 
         Returns:
             Supply: Supply object.

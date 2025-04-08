@@ -8,7 +8,7 @@ from robin.supply.exceptions import InvalidTimeStringFormat, InvalidDateStringFo
 from typing import Dict, Set
 
 
-def get_time(time) -> datetime.timedelta:
+def get_time(time: str) -> datetime.timedelta:
     """
     Function which returns a datetime.timedelta object from a string time in format HH:MM:SS.
 
@@ -30,7 +30,7 @@ def get_time(time) -> datetime.timedelta:
     return datetime.timedelta(hours=int(h), minutes=int(m), seconds=int(s))
 
 
-def get_date(date) -> datetime.date:
+def get_date(date: str) -> datetime.date:
     """
     Function which returns a datetime.date object from a string date in format YYYYY-mm-dd.
 
