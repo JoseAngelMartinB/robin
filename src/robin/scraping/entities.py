@@ -6,7 +6,9 @@ import pandas as pd
 import yaml
 
 from robin.scraping.exceptions import InvalidHardTypesException
-from robin.scraping.constants import OUTPUT_SUPPLY_PATH, RENFE_STATIONS_PATH, TIME_SLOT_SIZE, SPANISH_CORRIDOR_PATH
+from robin.scraping.constants import (
+    OUTPUT_SUPPLY_PATH, PRICES_COLUMNS, RENFE_STATIONS_PATH, TIME_SLOT_SIZE, SPANISH_CORRIDOR_PATH
+)
 from robin.scraping.utils import (
     station_to_dict,
     time_slot_to_dict,
@@ -66,20 +68,11 @@ class DataLoader:
             ts_size (int, optional): Time slot size in minutes.
         """
         self.stops = pd.read_csv(stops_path, dtype={'stop_id': str})
-        self.prices = pd.read_csv(prices_path, dtype={
-            'origin': str,
-            'destination': str,
-            'Básica': float,
-            'Básico': float,
-            'Elige': float,
-            'Elige Confort': float,
-            'Prémium': float,
-            'Adulto ida': float
-        })
+        self.prices = pd.read_csv(prices_path, dtype={'origin': str, 'destination': str})
         self.renfe_stations = pd.read_csv(renfe_stations_path, delimiter=';', dtype={'ADIF_ID': str, 'RENFE_ID': str})
         self.trips = pd.DataFrame({'service_id': list(dict.fromkeys(self.stops['service_id']))})
         self.seat_components, self.seat_quantity = self._check_hard_types(seat_components, seat_quantity)
-        self.seat_names = self.prices.columns[8:]
+        self.seat_names = self.prices.columns[PRICES_COLUMNS:]
         self.spanish_corridor = self._read_yaml(path=spanish_corridor_path)
         self.ts_size = ts_size
 
