@@ -46,10 +46,10 @@ class Market:
 
     def __repr__(self) -> str:
         """
-        Returns the debuggable string representation of the market.
+        Returns a debuggable string representation of the market.
 
         Returns:
-            str: The debuggable string representation of the market.
+            str: A debuggable string representation of the market.
         """
         return (
             f'{self.__class__.__name__}('
@@ -347,10 +347,10 @@ class UserPattern:
     
     def __repr__(self) -> str:
         """
-        Returns the debuggable representation of the user pattern.
+        Returns a debuggable representation of the user pattern.
 
         Returns:
-            str: The debuggable representation of the user pattern.
+            str: A debuggable representation of the user pattern.
         """
         return (
             f'{self.__class__.__name__}('
@@ -501,13 +501,14 @@ class DemandPattern:
     
     def __repr__(self) -> str:
         """
-        Returns the debuggable string representation of the demand pattern.
+        Returns a debuggable string representation of the demand pattern.
 
         Returns:
-            str: The debuggable string representation of the demand pattern.
+            str: A debuggable string representation of the demand pattern.
         """
         return (
-            f'DemandPattern(id={self.id}, '
+            f'{self.__class__.__name__}('
+            f'id={self.id}, '
             f'name={self.name}, '
             f'markets={self.markets}, '
             f'potential_demands={self._potential_demands}, '
@@ -578,12 +579,12 @@ class Day:
 
     def __repr__(self) -> str:
         """
-        Returns the debuggable string representation of the day.
+        Returns a debuggable string representation of the day.
 
         Returns:
-            str: The debuggable string representation of the day.
+            str: A debuggable string representation of the day.
         """
-        return f'Day(id={self.id}, date={self.date}, demand_pattern={self.demand_pattern})'
+        return f'{self.__class__.__name__}(id={self.id}, date={self.date}, demand_pattern={self.demand_pattern})'
 
 
 class Passenger:
@@ -770,10 +771,10 @@ class Passenger:
 
     def __repr__(self) -> str:
         """
-        Returns the debuggable string representation of the passenger.
+        Returns a debuggable string representation of the passenger.
 
         Returns:
-            str: The debuggable string representation of the passenger.
+            str: A debuggable string representation of the passenger.
         """
         return (
             f'{self.__class__.__name__}('
@@ -995,10 +996,10 @@ class Demand:
 
     def __repr__(self) -> str:
         """
-        Returns the debuggable string representation of the demand.
+        Returns a debuggable string representation of the demand.
 
         Returns:
-            str: The debuggable string representation of the demand.
+            str: A debuggable string representation of the demand.
         """
         return (
             f'{self.__class__.__name__}('

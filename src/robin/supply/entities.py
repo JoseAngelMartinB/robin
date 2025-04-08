@@ -3,10 +3,11 @@
 import datetime
 import yaml
 
+from robin.supply.constants import DEFAULT_LIFT_CONSTRAINTS
 from robin.supply.utils import get_time, get_date, format_td, set_stations_ids, convert_tree_to_dict
 
 from copy import deepcopy
-from functools import cache
+from functools import cache, cached_property
 from pathlib import Path
 from typing import Any, Dict, List, Mapping, Set, Tuple, Union
 
@@ -25,7 +26,7 @@ class Station:
 
     def __init__(self, id_: str, name: str, city: str, shortname: str, coords: Tuple[float, float] = None) -> None:
         """
-        Initialize a Station object.
+        Initialize a Station with name, city, short name and coordinates.
 
         Args:
             id_ (str): Station ID.
@@ -42,12 +43,28 @@ class Station:
 
     def __str__(self) -> str:
         """
-        String representation of a Station object.
+        Returns a human readable string representation of the station.
 
         Returns:
-            str: String representation of a Station object.
+            str: A human readable string representation of the station.
         """
-        return f'[{self.id}, {self.name}, {self.shortname}, {self.coords}]'
+        return self.name
+
+    def __repr__(self) -> str:
+        """
+        Returns a debuggable string representation of the station.
+
+        Returns:
+            str: A debuggable string representation of the station.
+        """
+        return (
+            f'{self.__class__.__name__}('
+            f'id={self.id}, '
+            f'name={self.name}, '
+            f'city={self.city}, '
+            f'shortname={self.shortname}, '
+            f'coords={self.coords})'
+        )
 
 
 class TimeSlot:
@@ -64,7 +81,7 @@ class TimeSlot:
 
     def __init__(self, id_: str, start: datetime.timedelta, end: datetime.timedelta) -> None:
         """
-        Initialize a TimeSlot object.
+        Initialize a TimeSlot with start and end time.
 
         Args:
             id_ (str): Time slot ID.
@@ -74,10 +91,9 @@ class TimeSlot:
         self.id = id_
         self.start = start
         self.end = end
-        self.class_mark = self._get_class_mark()
-        self.size = self._get_size()
 
-    def _get_class_mark(self) -> datetime.timedelta:
+    @cached_property
+    def class_mark(self) -> datetime.timedelta:
         """
         Get class mark of time slot.
 
@@ -88,7 +104,8 @@ class TimeSlot:
             return (self.start + self.end + datetime.timedelta(days=1)) / 2 - datetime.timedelta(days=1)
         return (self.start + self.end) / 2
 
-    def _get_size(self) -> datetime.timedelta:
+    @cached_property
+    def size(self) -> datetime.timedelta:
         """
         Get size of time slot.
 
@@ -101,12 +118,21 @@ class TimeSlot:
 
     def __str__(self) -> str:
         """
-        String representation of a TimeSlot object.
+        A human readable string representation of the time slot.
 
         Returns:
-            str: String representation of a TimeSlot object.
+            str: A human readable string representation of the time slot.
         """
-        return f'[{self.id}, {self.start}, {self.end}, {self.class_mark}, {self.size}]'
+        return self.id
+    
+    def __repr__(self) -> str:
+        """
+        A debuggable string representation of the time slot.
+
+        Returns:
+            str: A debuggable string representation of the time slot.
+        """
+        return f'{self.__class__.__name__}(id={self.id}, start={self.start}, end={self.end})'
 
 
 class Corridor:
@@ -127,7 +153,7 @@ class Corridor:
 
     def __init__(self, id_: str, name: str, tree: Mapping[Station, Mapping]) -> None:
         """
-        Initialize a Corridor object.
+        Initialize a Corridor with a tree of stations.
 
         Args:
             id_ (str): Corridor ID.
@@ -173,34 +199,55 @@ class Corridor:
 
         return paths
 
-    def _dict_stations(self, tree: Mapping[Station, Mapping], sta=None) -> Dict[str, Station]:
+    def _dict_stations(
+        self,
+        tree: Mapping[Station, Mapping],
+        stations: Mapping[str, Station] = None
+    ) -> Dict[str, Station]:
         """
         Get dictionary of stations (with Station IDs as keys).
 
         Args:
             tree (List[Mapping]): Tree of stations.
+            stations (Mapping[str, Station]): Dictionary of stations (with Station IDs as keys).
 
         Returns:
             Dict[str, Station]: Dictionary of stations, with Station IDs as keys, and Station objects as values.
         """
-        if sta is None:
-            sta = {}
+        if stations is None:
+            stations = {}
 
         for node in tree:
             org = node
-            sta[org.id] = org
-            self._dict_stations(tree[node], sta)
+            stations[org.id] = org
+            self._dict_stations(tree[node], stations)
 
-        return sta
+        return stations
 
     def __str__(self) -> str:
         """
-        String representation of a Corridor object.
+        A human readable string representation of the corridor.
 
         Returns:
-            str: String representation of a Corridor object.
+            str: A human readable string representation of the corridor.
         """
-        return f'[{self.id}, {self.name}, {self.stations}]'
+        return self.name
+    
+    def __repr__(self) -> str:
+        """
+        A debuggable string representation of the corridor.
+
+        Returns:
+            str: A debuggable string representation of the corridor.
+        """
+        return (
+            f'{self.__class__.__name__}('
+            f'id={self.id}, '
+            f'name={self.name}, '
+            f'tree={self.tree}, '
+            f'paths={self.paths}, '
+            f'stations={self.stations})'
+        )
 
 
 class Line:
@@ -234,30 +281,47 @@ class Line:
         self.corridor = corridor
         self.timetable = timetable
         self.stations = list(map(lambda sid: self.corridor.stations[sid], list(self.timetable.keys())))
-        self.pairs = self._get_pairs()
 
-    def _get_pairs(self) -> Dict[Tuple[str, str], Tuple[Station, Station]]:
+    @cached_property
+    def pairs(self) -> Dict[Tuple[str, str], Tuple[Station, Station]]:
         """
-        Private method to get each pair of stations of the Line, using the station list.
-
+        Returns a dictionary with pairs of stations.
+        
         Returns:
-            Dict[Tuple[str, str], Tuple[Station, Station]]: Dict with pairs of stations (origin, destination).
+            Dict[Tuple[str, str], Tuple[Station, Station]]: Dictionary with pairs of stations (origin, destination)
+                with (origin ID, destination ID) as keys, and (origin Station, destination Station) as values.
         """
         return {(a.id, b.id): (a, b) for i, a in enumerate(self.stations) for b in self.stations[i + 1:]}
 
     def __str__(self) -> str:
         """
-        String representation of the Line object.
+        A human readable string representation of the line.
 
         Returns:
-            str: String representation of the Line object.
+            str: A human readable string representation of the line.
         """
-        return f'[{self.id}, {self.name}, Corridor id: {self.corridor}, {self.timetable}]'
+        return self.name
+    
+    def __repr__(self) -> str:
+        """
+        A debuggable string representation of the line.
+
+        Returns:
+            str: A debuggable string representation of the line.
+        """
+        return (
+            f'{self.__class__.__name__}('
+            f'id={self.id}, '
+            f'name={self.name}, '
+            f'corridor={self.corridor}, '
+            f'timetable={self.timetable}, '
+            f'stations={self.stations})'
+        )
 
 
 class Seat:
     """
-    Seat type of train.
+    Seat type of a train.
 
     Attributes:
         id (str): Seat ID.
@@ -283,30 +347,32 @@ class Seat:
 
     def __str__(self) -> str:
         """
-        Returns a human readable string representation of the Seat object.
-
-        TODO: __str__ and __repr__ are mixed up. __str__ should be human readable, __repr__ should be debuggable.
+        A human readable string representation of the seat.
 
         Returns:
-            str: Human readable string representation of the Seat object.
-        """
-        return f'[{self.id}, {self.name}, {self.hard_type}, {self.soft_type}]'
-
-    def __repr__(self) -> str:
-        """
-        Returns the debuggable string representation of the Seat object.
-
-        TODO: __str__ and __repr__ are mixed up. __str__ should be human readable, __repr__ should be debuggable.
-
-        Returns:
-            str: Debuggable string representation of the Seat object.
+            str: A human readable string representation of the seat.
         """
         return self.name
+    
+    def __repr__(self) -> str:
+        """
+        A debuggable string representation of the seat.
+
+        Returns:
+            str: A debuggable string representation of the seat.
+        """
+        return (
+            f'{self.__class__.__name__}('
+            f'id={self.id}, '
+            f'name={self.name}, '
+            f'hard_type={self.hard_type}, '
+            f'soft_type={self.soft_type})'
+        )
 
 
 class RollingStock(object):
     """
-    Locomotives, Carriages, Wagons, or other vehicles used on a railway.
+    Locomotives, carriages, wagons, or other vehicles used on a railway.
 
     Attributes:
         id (str): Rolling Stock ID.
@@ -331,12 +397,27 @@ class RollingStock(object):
 
     def __str__(self) -> str:
         """
-        String representation of the RollingStock object.
+        A human readable string representation of the rolling stock.
 
         Returns:
-            str: String representation of the RollingStock object.
+            str: A human readable string representation of the rolling stock.
         """
-        return f'[{self.id}, {self.name}, {self.seats}]'
+        return self.name
+    
+    def __repr__(self) -> str:
+        """
+        A debuggable string representation of the rolling stock.
+
+        Returns:
+            str: A debuggable string representation of the rolling stock.
+        """
+        return (
+            f'{self.__class__.__name__}('
+            f'id={self.id}, '
+            f'name={self.name}, '
+            f'seats={self.seats}, '
+            f'total_capacity={self.total_capacity})'
+        )
 
 
 class TSP:
@@ -373,12 +454,26 @@ class TSP:
 
     def __str__(self) -> str:
         """
-        String representation of the TSP object.
+        A human readable string representation of the TSP.
 
         Returns:
-            str: String representation of the TSP object.
+            str: A human readable string representation of the TSP.
         """
-        return f'[{self.id}, {self.name}, {[rolling_stock.id for rolling_stock in self.rolling_stock]}]'
+        return self.name
+    
+    def __repr__(self) -> str:
+        """
+        A debuggable string representation of the TSP.
+
+        Returns:
+            str: A debuggable string representation of the TSP.
+        """
+        return (
+            f'{self.__class__.__name__}('
+            f'id={self.id}, '
+            f'name={self.name}, '
+            f'rolling_stock={self.rolling_stock})'
+        )
 
 
 class Service:
@@ -422,10 +517,10 @@ class Service:
         rolling_stock: RollingStock,
         prices: Mapping[Tuple[str, str], Mapping[Seat, float]],
         capacity_constraints: Mapping[Tuple[str, str], Mapping[int, int]] = None,
-        lift_constraints: int = 1
+        lift_constraints: int = DEFAULT_LIFT_CONSTRAINTS
     ) -> None:
         """
-        Initialize a Service object.
+        Initialize a Service with a date, line, TSP, time slot, rolling stock and prices.
 
         Args:
             id_ (str): Service ID.
@@ -457,8 +552,9 @@ class Service:
         self.tickets_sold_hard_types = {hard_type: 0 for hard_type in self.rolling_stock.seats.keys()}
         self.tickets_sold_pair_seats = {pair: {seat: 0 for seat in self._seat_types} for pair in self.line.pairs}
         self.tickets_sold_pair_hard_types = self._get_tickets_sold_pair_hard_type()
-        self._pair_capacity = {pair: {hard_type: 0 for hard_type in self.rolling_stock.seats.keys()} for pair in
-                               self.line.pairs}
+        self._pair_capacity = {
+            pair: {hard_type: 0 for hard_type in self.rolling_stock.seats.keys()} for pair in self.line.pairs
+        }
 
     def _get_tickets_sold_pair_hard_type(self) -> Mapping[Tuple[str, str], Mapping[int, int]]:
         """
@@ -602,10 +698,10 @@ class Service:
     
     def __str__(self) -> str:
         """
-        String representation of the service.
+        A human readable string representation of the service.
 
         Returns:
-            str: String representation of the service.
+            str: A human readable string representation of the service.
         """
         new_line = '\n\t\t'
         return (
@@ -617,13 +713,31 @@ class Service:
             f'\tTrain Service Provider: {self.tsp} \n'
             f'\tTime Slot: {self.time_slot} \n'
             f'\tRolling Stock: {self.rolling_stock} \n'
-            f'\tPrices: \n'
-            f'\t\t{new_line.join(f"{key}: {value}" for key, value in self.prices.items())} \n'
-            f'\tTickets sold (seats): {self.tickets_sold_seats} \n'
-            f'\tTickets sold (hard type): {self.tickets_sold_hard_types} \n'
-            f'\tTickets sold per each pair (seats): {self.tickets_sold_pair_seats} \n'
-            f'\tTickets sold per each pair (hard type): {self.tickets_sold_pair_hard_types} \n'
+            f'\tPrices: \n\t\t{new_line.join(f"{pair}: {{{seat}: {price}}}" for pair, seats in self.prices.items() for seat, price in seats.items())} \n'
+            f'\tTickets sold (seats): \n\t\t{new_line.join(f"{seat}: {count}" for seat, count in self.tickets_sold_seats.items())} \n'
+            f'\tTickets sold (hard type): \n\t\t{new_line.join(f"{hard_type}: {count}" for hard_type, count in self.tickets_sold_hard_types.items())} \n'
+            f'\tTickets sold per each pair (seats): \n\t\t{new_line.join(f"{pair}: {{{seat}: {count}}}" for pair, seats in self.tickets_sold_pair_seats.items() for seat, count in seats.items())} \n'
             f'\tCapacity constraints: {self.capacity_constraints} \n'
+        )
+    
+    def __repr__(self) -> str:
+        """
+        A debuggable string representation of the service.
+
+        Returns:
+            str: A debuggable string representation of the service.
+        """
+        return (
+            f'{self.__class__.__name__}('
+            f'id={self.id}, '
+            f'date={self.date}, '
+            f'line={self.line}, '
+            f'tsp={self.tsp}, '
+            f'time_slot={self.time_slot}, '
+            f'rolling_stock={self.rolling_stock}, '
+            f'capacity_constraints={self.capacity_constraints}, '
+            f'lift_constraints={self.lift_constraints}, '
+            f'prices={self.prices})'
         )
 
 
@@ -637,7 +751,7 @@ class Supply:
 
     def __init__(self, services: List[Service]) -> None:
         """
-        Initialize a Supply object.
+        Initialize a Supply with a list of services.
 
         Args:
             services (List[Service]): List of services available in the system.
