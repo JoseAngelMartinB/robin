@@ -1,13 +1,11 @@
 """Utils for the scraping module."""
 
 import datetime
-import os
-import yaml
 
 from robin.supply.entities import Station, TimeSlot, Corridor, Line, Seat, RollingStock, TSP, Service
 
 from copy import deepcopy
-from typing import Dict, List, Mapping
+from typing import Dict, List
 
 
 def station_to_dict(obj: Station) -> Dict:
@@ -168,40 +166,15 @@ def service_to_dict(obj: Service) -> Dict:
             'capacity_constraints': obj.capacity_constraints}
 
 
-def write_to_yaml(filename: str, objects: Mapping[str, List]) -> None:
+def timedelta_to_str(time_delta: datetime.timedelta) -> str:
     """
-    Write the given objects to the given YAML file.
+    Convert a timedelta to a string formated 'HH.MM'.
 
     Args:
-        filename (str): The name of the YAML file.
-        objects (list): The objects to write to the YAML file.
-    """
-    if not os.path.isfile(filename):
-        with open(filename, 'w') as yaml_file:
-            yaml.safe_dump(objects, yaml_file, sort_keys=False, allow_unicode=True)
-            return
-
-    with open(filename, 'r') as yaml_file:
-        yaml_file_mod = yaml.safe_load(yaml_file)
-        try:
-            yaml_file_mod.update(objects)
-        except AttributeError:
-            yaml_file_mod = objects
-
-    if yaml_file_mod:
-        with open(filename, 'w') as yaml_file:
-            yaml.safe_dump(yaml_file_mod, yaml_file, sort_keys=False, allow_unicode=True)
-
-
-def time_delta_to_time_string(time_delta: datetime.timedelta) -> str:
-    """
-    Convert time delta to string HH.MM
-
-    Args:
-        time_delta: datetime.timedelta object
+        time_delta: The timedelta object to convert.
 
     Returns:
-        string with time delta in format HH.MM
+        str: A string representation of the timedelta in 'HH.MM' format.
     """
     hours = time_delta.total_seconds() // 3600
     minutes = (time_delta.total_seconds() % 3600) / 60
