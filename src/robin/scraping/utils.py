@@ -175,7 +175,6 @@ def write_to_yaml(filename: str, objects: Mapping[str, List]) -> None:
     Args:
         filename (str): The name of the YAML file.
         objects (list): The objects to write to the YAML file.
-        key (str): The key to use for the objects.
     """
     if not os.path.isfile(filename):
         with open(filename, 'w') as yaml_file:
@@ -206,4 +205,4 @@ def time_delta_to_time_string(time_delta: datetime.timedelta) -> str:
     """
     hours = time_delta.total_seconds() // 3600
     minutes = (time_delta.total_seconds() % 3600) / 60
-    return f"{int(hours):02d}.{int(minutes):02d}"
+    return f'{int(hours):02d}.{int(minutes):02d}'

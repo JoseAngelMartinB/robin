@@ -652,13 +652,13 @@ class Supply:
             services (List[Service]): List of services available in the system.
         """
         self.services = services
-        self.stations = list(set(station for service in services for station in service.line.stations))
-        self.time_slots = list(set(service.time_slot for service in services))
-        self.corridors = list(set(service.line.corridor for service in services))
-        self.lines = list(set(service.line for service in services))
-        self.seats = list(set(seat for service in services for t in service.prices.values() for seat in t.keys()))
-        self.rolling_stocks = list(set(service.rolling_stock for service in services))
-        self.tsps = list(set(service.tsp for service in services))
+        self.stations = list(dict.fromkeys(station for service in services for station in service.line.stations))
+        self.time_slots = list(dict.fromkeys(service.time_slot for service in services))
+        self.corridors = list(dict.fromkeys(service.line.corridor for service in services))
+        self.lines = list(dict.fromkeys(service.line for service in services))
+        self.seats = list(dict.fromkeys(seat for service in services for t in service.prices.values() for seat in t.keys()))
+        self.rolling_stocks = list(dict.fromkeys(service.rolling_stock for service in services))
+        self.tsps = list(dict.fromkeys(service.tsp for service in services))
 
     @classmethod
     def from_yaml(cls, path: Path) -> 'Supply':

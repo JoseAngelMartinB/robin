@@ -10,16 +10,8 @@ from robin.scraping.constants import (
     OUTPUT_SUPPLY_PATH, PRICES_COLUMNS, RENFE_STATIONS_PATH, TIME_SLOT_SIZE, SPANISH_CORRIDOR_PATH
 )
 from robin.scraping.utils import (
-    station_to_dict,
-    time_slot_to_dict,
-    corridor_to_dict,
-    line_to_dict,
-    seat_to_dict,
-    rolling_stock_to_dict,
-    tsp_to_dict,
-    service_to_dict,
-    write_to_yaml,
-    time_delta_to_time_string
+    station_to_dict, time_slot_to_dict, corridor_to_dict, line_to_dict, seat_to_dict, rolling_stock_to_dict,
+    tsp_to_dict, service_to_dict, write_to_yaml, time_delta_to_time_string
 )
 from robin.supply.entities import Station, TimeSlot, Corridor, Line, Seat, RollingStock, TSP, Service, Supply
 from robin.supply.utils import get_time
@@ -318,12 +310,12 @@ class SupplySaver(Supply):
         """
         data = [
             ('stations', [station_to_dict(stn) for stn in self.stations]),
+            ('timeSlot', [time_slot_to_dict(s) for s in self.time_slots]),
+            ('corridor', [corridor_to_dict(corr) for corr in self.corridors]),     
+            ('line', [line_to_dict(ln) for ln in self.lines]),            
             ('seat', [seat_to_dict(s) for s in self.seats]),
-            ('corridor', [corridor_to_dict(corr) for corr in self.corridors]),
-            ('line', [line_to_dict(ln) for ln in self.lines]),
             ('rollingStock', [rolling_stock_to_dict(rs) for rs in self.rolling_stocks]),
             ('trainServiceProvider', [tsp_to_dict(tsp) for tsp in self.tsps]),
-            ('timeSlot', [time_slot_to_dict(s) for s in self.time_slots]),
             ('service', [service_to_dict(s) for s in self.services])
         ]
 
