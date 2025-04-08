@@ -40,15 +40,6 @@ class Station:
         self.shortname = shortname
         self.coords = coords
 
-    def add_coords(self, coords: Tuple[float, float]) -> None:
-        """
-        Add coordinates to a Station object.
-
-        Args:
-            coords (Tuple[float, float]): Station coordinates (latitude, longitude).
-        """
-        self.coords = coords
-
     def __str__(self) -> str:
         """
         String representation of a Station object.
