@@ -38,11 +38,11 @@ class Kernel:
 
     def _to_csv(self, passengers: List[Passenger], output_path: Path = OUTPUT_PATH) -> None:
         """
-        Save passengers data to csv file.
+        Save passengers data to CSV file.
 
         Args:
             passengers (List[Passenger]): List of passengers.
-            output_path (Path, optional): Path to the output csv file. Defaults to 'output.csv'.
+            output_path (Path, optional): Path to the output CSV file. Defaults to 'output.csv'.
         """
         column_names = [
             'id', 'user_pattern', 'departure_station', 'arrival_station',
