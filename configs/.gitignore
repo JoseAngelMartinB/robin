@@ -8,19 +8,11 @@
 !supply_data_example.yml
 !supply_data.yml
 
-!test_case
-!test_case/demand_data.yml
-!test_case/supply_data.yml
-!test_case/demand_data_tourist.yml
-!test_case/supply_data_doubled_capacities.yml
-!test_case/supply_data_increased_prices.yml
-!test_case/supply_data_removed_full_service.yml
-
-!renfe_tft
-!renfe_tft/demand_data_2_weeks.yml
-!renfe_tft/demand_data_base.yml
-!renfe_tft/demand_data.yml
-!renfe_tft/supply_data.yml
+!calibration
+!calibration/demand_data_target.yml
+!calibration/demand_data.yml
+!calibration/supply_data.yml
+!calibration/target.csv
 
 !ewgt23
 !ewgt23/demand_data.yml
@@ -29,7 +21,16 @@
 !ewgt23/supply_data_doubled_capacities.yml
 !ewgt23/supply_data_increased_prices.yml
 
-!calibration
-!calibration/demand_data_target.yml
-!calibration/demand_data.yml
-!calibration/supply_data.yml
+!renfe_tft
+!renfe_tft/demand_data_2_weeks.yml
+!renfe_tft/demand_data_base.yml
+!renfe_tft/demand_data.yml
+!renfe_tft/supply_data.yml
+
+!test_case
+!test_case/demand_data.yml
+!test_case/supply_data.yml
+!test_case/demand_data_tourist.yml
+!test_case/supply_data_doubled_capacities.yml
+!test_case/supply_data_increased_prices.yml
+!test_case/supply_data_removed_full_service.yml
