@@ -20,7 +20,7 @@ def get_file_key(file: str) -> Tuple[int, ...]:
         Tuple[int, ...]: Tuple of numeric values extracted from the file name.
     """
     file_stem = Path(file).stem
-    # \d+ matches one or more digits. E.g. '42' in 'file_42.yml'
+    # \d+ matches one or more digits. E.g. '42' in 'file_42.yaml'
     return tuple(map(int, re.findall(pattern='\d+', string=file_stem)))
 
 

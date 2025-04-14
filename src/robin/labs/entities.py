@@ -121,13 +121,13 @@ class RobinLab:
                 modify_prices(service['origin_destination_tuples'], factor)
 
             modified_data['service'] = modified_services
-            supply_file_name = f'supply_{i}.yml'
+            supply_file_name = f'supply_{i}.yaml'
             save_path_supply = f'{self.tmp_path}/supply/{supply_file_name}'
 
             with open(save_path_supply, 'w') as file:
                 yaml.safe_dump(modified_data, file)
 
-            shutil.copy(self.path_config_demand, self.tmp_path / 'demand' / f'demand_{i}.yml')
+            shutil.copy(self.path_config_demand, self.tmp_path / 'demand' / f'demand_{i}.yaml')
 
     def simulate(self, runs: int = 1) -> None:
         """Simulate the experiment."""
