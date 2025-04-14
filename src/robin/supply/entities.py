@@ -38,6 +38,7 @@ class Station:
         self.id = id_
         self.name = name
         self.city = city
+        # NOTE: In the YAML file, the shortname is called 'short_name'
         self.shortname = shortname
         self.coords = coords
 
@@ -196,7 +197,6 @@ class Corridor:
             path.append(org)
             self._get_paths(tree[node], path, paths)
             path.pop()
-
         return paths
 
     def _dict_stations(
@@ -221,7 +221,6 @@ class Corridor:
             org = node
             stations[org.id] = org
             self._dict_stations(tree[node], stations)
-
         return stations
 
     def __str__(self) -> str:
@@ -443,15 +442,6 @@ class TSP:
         self.name = name
         self.rolling_stock = rolling_stock if rolling_stock is not None else []
 
-    def add_rolling_stock(self, rolling_stock: RollingStock) -> None:
-        """
-        Add a RollingStock object to the TSP.
-
-        Args:
-            rolling_stock (RollingStock): RollingStock object to add.
-        """
-        self.rolling_stock.append(rolling_stock)
-
     def __str__(self) -> str:
         """
         A human readable string representation of the TSP.
@@ -564,13 +554,13 @@ class Service:
             Mapping[Tuple[str, str], Mapping[int, int]]: Hard type tickets sold of the service.
         """
         tickets_sold_pair_hard_type = {}
-        for p in self.tickets_sold_pair_seats:
-            tickets_sold_pair_hard_type[p] = {}
-            for s in self.tickets_sold_pair_seats[p].keys():
-                if s.hard_type not in tickets_sold_pair_hard_type[p]:
-                    tickets_sold_pair_hard_type[p][s.hard_type] = 0
+        for pair in self.tickets_sold_pair_seats:
+            tickets_sold_pair_hard_type[pair] = {}
+            for seat in self.tickets_sold_pair_seats[pair].keys():
+                if seat.hard_type not in tickets_sold_pair_hard_type[pair]:
+                    tickets_sold_pair_hard_type[pair][seat.hard_type] = 0
                 else:
-                    tickets_sold_pair_hard_type[p][s.hard_type] += self.tickets_sold_pair_seats[p][s]
+                    tickets_sold_pair_hard_type[pair][seat.hard_type] += self.tickets_sold_pair_seats[pair][seat]
         return tickets_sold_pair_hard_type
 
     def _get_absolute_schedule(self) -> List[Tuple[datetime.timedelta, datetime.timedelta]]:
@@ -581,10 +571,10 @@ class Service:
             List[Tuple[datetime.timedelta, datetime.timedelta]]: Absolute schedule of the service.
         """
         absolute_schedule = []
-        for dt, at in list(self.line.timetable.values()):
-            abs_dt = datetime.timedelta(seconds=dt * 60) + self.time_slot.start
-            abs_at = datetime.timedelta(seconds=at * 60) + self.time_slot.start
-            absolute_schedule.append((abs_dt, abs_at))
+        for departure_time, arrival_time in list(self.line.timetable.values()):
+            abs_departure_time = datetime.timedelta(seconds=departure_time * 60) + self.time_slot.start
+            abs_arrival_time = datetime.timedelta(seconds=arrival_time * 60) + self.time_slot.start
+            absolute_schedule.append((abs_departure_time, abs_arrival_time))
         return absolute_schedule
 
     @cache
@@ -600,7 +590,7 @@ class Service:
             Set[Tuple[str, str]]: Set of pairs affected by origin-destination selection.
         """
         pairs = list(self.line.pairs.keys())
-        stations_ids = [station .id for station in self.line.stations]
+        stations_ids = [station.id for station in self.line.stations]
         # Get the index of the first pair which includes the origin station
         start_index = 0
         for i, pair in enumerate(pairs):
