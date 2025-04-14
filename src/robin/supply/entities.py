@@ -707,7 +707,7 @@ class Service:
             f'\tDate of service: {self.date} \n'
             f'\tStops: {[sta.id for sta in self.line.stations]} \n'
             f'\tLine times (relative): {list(self.line.timetable.values())} \n'
-            f'\tLine times (absolute): {[(format_td(at), format_td(dt)) for at, dt in self.schedule]} \n'
+            f'\tLine times (absolute): {[(format_td(at), format_td(dt)) for at, dt in list(self.schedule.values())]} \n'
             f'\tTrain Service Provider: {self.tsp} \n'
             f'\tTime Slot: {self.time_slot} \n'
             f'\tRolling Stock: {self.rolling_stock} \n'
