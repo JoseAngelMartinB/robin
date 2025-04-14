@@ -702,6 +702,10 @@ class Service:
             str: A human readable string representation of the service.
         """
         new_line = '\n\t\t'
+        prices = ''.join(f'{new_line}{pair}: {{{", ".join(f"{seat}: {price}" for seat, price in seats.items())}}}' for pair, seats in self.prices.items())
+        tickets_sold_seats = ''.join(f'{new_line}{seat}: {count}' for seat, count in self.tickets_sold_seats.items())
+        tickets_sold_hard_types = ''.join(f'{new_line}{hard_type}: {count}' for hard_type, count in self.tickets_sold_hard_types.items())
+        tickets_sold_pair_seats = ''.join(f'{new_line}{pair}: {{{", ".join(f"{seat}: {count}" for seat, count in seats.items())}}}' for pair, seats in self.tickets_sold_pair_seats.items())
         return (
             f'Service id: {self.id} \n'
             f'\tDate of service: {self.date} \n'
@@ -711,10 +715,10 @@ class Service:
             f'\tTrain Service Provider: {self.tsp} \n'
             f'\tTime Slot: {self.time_slot} \n'
             f'\tRolling Stock: {self.rolling_stock} \n'
-            f'\tPrices: \n\t\t{new_line.join(f"{pair}: {{{seat}: {price}}}" for pair, seats in self.prices.items() for seat, price in seats.items())} \n'
-            f'\tTickets sold (seats): \n\t\t{new_line.join(f"{seat}: {count}" for seat, count in self.tickets_sold_seats.items())} \n'
-            f'\tTickets sold (hard type): \n\t\t{new_line.join(f"{hard_type}: {count}" for hard_type, count in self.tickets_sold_hard_types.items())} \n'
-            f'\tTickets sold per each pair (seats): \n\t\t{new_line.join(f"{pair}: {{{seat}: {count}}}" for pair, seats in self.tickets_sold_pair_seats.items() for seat, count in seats.items())} \n'
+            f'\tPrices: {prices} \n'
+            f'\tTickets sold (seats): {tickets_sold_seats} \n'
+            f'\tTickets sold (hard type): {tickets_sold_hard_types} \n'
+            f'\tTickets sold per each pair (seats): {tickets_sold_pair_seats} \n'
             f'\tCapacity constraints: {self.capacity_constraints} \n'
         )
     
