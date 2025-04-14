@@ -1,8 +1,27 @@
-[build-system]
-# AVOID CHANGING REQUIRES: IT WILL BE UPDATED BY PYSCAFFOLD!
-requires = ["setuptools>=46.1.0", "setuptools_scm[toml]>=5", "wheel"]
-build-backend = "setuptools.build_meta"
+[project]
+name = "robin"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "Kinrre", email = "enriqueadrian.villarrubia@alu.uclm.es"},
+    {name = "DavidMunozValero", email = "david.munoz@uclm.es"}
+]
+license = "MIT"
+readme = "README.md"
+requires-python = ">=3.11,<4.0"
+dependencies = [
+    "numpy (>=2.2.4,<3.0.0)",
+    "optuna (>=4.2.1,<5.0.0)",
+    "pandas (>=2.2.3,<3.0.0)",
+    "scikit-learn (>=1.6.1,<2.0.0)",
+    "matplotlib (>=3.10.1,<4.0.0)",
+    "loguru (>=0.7.3,<0.8.0)",
+    "selenium (>=4.31.0,<5.0.0)",
+    "ipykernel (>=6.29.5,<7.0.0)",
+    "optuna-dashboard (>=0.18.0,<0.19.0)"
+]
 
-[tool.setuptools_scm]
-# See configuration details in https://github.com/pypa/setuptools_scm
-version_scheme = "no-guess-dev"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"

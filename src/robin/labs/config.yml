@@ -1,0 +1,8 @@
+demand:
+  passengers: null
+supply:
+  capacities: null
+  prices:
+    start: 1
+    step: 20.0
+    stop: 500

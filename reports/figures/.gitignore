@@ -1,2 +1,13 @@
 # Ignore everything in this directory
 *
+# Except these file
+!test_case
+!test_case/*
+!test_case_doubled_capacities
+!test_case_doubled_capacities/*
+!test_case_increased_prices
+!test_case_increased_prices/*
+!test_case_removed_full_service
+!test_case_removed_full_service/*
+!test_case_tourist
+!test_case_tourist/*

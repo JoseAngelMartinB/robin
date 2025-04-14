@@ -1,0 +1,158 @@
+# Yaml datafile for demand data. Example data for testing.
+
+# Market
+market:
+  - id: 1
+    departure_station: MAD
+    arrival_station: ZAZ
+  - id: 2
+    departure_station: ZAZ
+    arrival_station: BCN
+  - id: 3
+    departure_station: MAD
+    arrival_station: BCN
+
+# User Pattern
+userPattern:
+  - id: 1
+    name: Business
+    arrival_time: norm
+    arrival_time_kwargs:
+      loc: 8
+      scale: 1
+    purchase_day: randint
+    purchase_day_kwargs:
+      low: 2
+      high: 7
+    forbidden_departure_hours:
+      start: 9
+      end: 24
+    seats:
+      - id: 1
+        utility: 20
+      - id: 2
+        utility: 10
+      - id: 3
+        utility: 15
+      - id: 4
+        utility: 5
+    train_service_providers:
+      - id: 1
+        utility: 2
+      - id: 2
+        utility: 1
+    penalty_arrival_time: polynomial
+    penalty_arrival_time_kwargs:
+      b_0: 0
+      b_1: 1
+    penalty_departure_time: polynomial
+    penalty_departure_time_kwargs:
+      b_0: 0
+      b_1: 0.7
+    penalty_cost: polynomial
+    penalty_cost_kwargs:
+      b_0: 0
+      b_1: 0.05
+    penalty_travel_time: polynomial
+    penalty_travel_time_kwargs:
+      b_0: 0
+      b_1: 0.4
+    error: norm
+    error_kwargs:
+      loc: 2
+      scale: 1
+  - id: 2
+    name: Student
+    arrival_time: norm
+    arrival_time_kwargs:
+      loc: 18
+      scale: 3
+    purchase_day: randint
+    purchase_day_kwargs:
+      low: 0
+      high: 4
+    forbidden_departure_hours:
+      start: 6
+      end: 14
+    seats:
+      - id: 1
+        utility: 15
+      - id: 2
+        utility: 12
+      - id: 3
+        utility: 10
+      - id: 4
+        utility: 8
+    train_service_providers:
+      - id: 1
+        utility: 2
+      - id: 2
+        utility: 1
+    penalty_arrival_time: polynomial
+    penalty_arrival_time_kwargs:
+      b_0: 0
+      b_1: 0.1
+    penalty_departure_time: polynomial
+    penalty_departure_time_kwargs:
+      b_0: 0
+      b_1: 0.2
+    penalty_cost: polynomial
+    penalty_cost_kwargs:
+      b_0: 0
+      b_1: 0.4
+    penalty_travel_time: polynomial
+    penalty_travel_time_kwargs:
+      b_0: 0
+      b_1: 0.3
+    error: norm
+    error_kwargs:
+      loc: 1
+      scale: 0.5
+
+# Demand Pattern
+demandPattern:
+  - id: 1
+    name: Monday-Thursday
+    markets:
+      - market: 3
+        potential_demand: randint
+        potential_demand_kwargs:
+          low: 600
+          high: 1000
+        user_pattern_distribution:
+          - id: 1
+            percentage: 0.7
+          - id: 2
+            percentage: 0.3
+  - id: 2
+    name: Sunday
+    markets:
+      - market: 1
+        potential_demand: randint
+        potential_demand_kwargs:
+          low: 140
+          high: 220
+        user_pattern_distribution:
+          - id: 1
+            percentage: 0.2
+          - id: 2
+            percentage: 0.8
+      - market: 3
+        potential_demand: randint
+        potential_demand_kwargs:
+          low: 700
+          high: 900
+        user_pattern_distribution:
+          - id: 1
+            percentage: 0.2
+          - id: 2
+            percentage: 0.8
+
+# Day
+day:
+  - id: 1
+    date: 2023-01-18
+    demandPattern: 1
+  - id: 2
+    date: 2023-01-22
+    demandPattern: 2
