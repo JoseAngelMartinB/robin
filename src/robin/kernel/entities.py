@@ -6,6 +6,7 @@ import random
 import os
 
 from robin.demand.entities import Demand, Passenger
+from robin.kernel.constants import OUTPUT_PATH
 from robin.supply.entities import Service, Supply
 
 from pathlib import Path
@@ -35,7 +36,7 @@ class Kernel:
         self.supply = Supply.from_yaml(path_config_supply)
         self.demand = Demand.from_yaml(path_config_demand)
 
-    def _to_csv(self, passengers: List[Passenger], output_path: Path = Path('output.csv')) -> None:
+    def _to_csv(self, passengers: List[Passenger], output_path: Path = OUTPUT_PATH) -> None:
         """
         Save passengers data to csv file.
 
