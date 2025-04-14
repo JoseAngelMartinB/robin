@@ -119,8 +119,8 @@ class Kernel:
             for service in services:
                 for seat in service.prices[(origin, destination)].keys():
                     # Check if seat is available
-                    anticipation = passenger.purchase_day
-                    tickets_available = service.tickets_available(origin, destination, seat, anticipation)
+                    purchase_day = passenger.purchase_day
+                    tickets_available = service.tickets_available(origin, destination, seat, purchase_day)
                     
                     # Skip service if no tickets are available and we are not calculating global utility
                     if not calculate_global_utility and not tickets_available:

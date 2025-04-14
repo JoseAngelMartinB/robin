@@ -260,6 +260,7 @@ class Line:
         timetable (Mapping[str, Tuple[float, float]]): Dict with pairs of stations (origin, destination)
             with (origin ID, destination ID) as keys, and (origin time, destination time) as values.
         stations (List[Station]): List of Stations being served by the Line.
+        stations_ids (List[str]): List of Station IDs being served by the Line.
         pairs (Mapping[Tuple[str, str], Tuple[Station, Station]]): Dict with pairs of stations (origin, destination)
             with (origin ID, destination ID) as keys, and (origin Station, destination Station) as values.
     """
@@ -280,6 +281,7 @@ class Line:
         self.corridor = corridor
         self.timetable = timetable
         self.stations = list(map(lambda sid: self.corridor.stations[sid], list(self.timetable.keys())))
+        self.stations_ids = [station.id for station in self.stations]
 
     @cached_property
     def pairs(self) -> Dict[Tuple[str, str], Tuple[Station, Station]]:
@@ -480,13 +482,13 @@ class Service:
         line (Line): Line in which the service is provided.
         tsp (TSP): Train Service Provider which provides the service.
         time_slot (TimeSlot): Time Slot. Defines the start time of the service.
-        schedule (List[Tuple[datetime.timedelta, datetime.timedelta]]): List of tuples with arrival-departure times.
-        service_departure_time (float): Service departure time in hours.
-        service_arrival_time (float): Service arrival time in hours.
+        schedule (Mapping[str, Tuple[datetime.timedelta, datetime.timedelta]]): Absolute schedule of the service per station.
+        departure_time (Mapping[str, float]): Service departure time in hours per station.
+        arrival_time (Mapping[str, float]): Service arrival time in hours per station.
         rolling_stock (RollingStock): Rolling Stock used in the service.
         capacity_constraints (Mapping[Tuple[str, str], Mapping[int, int]]): Constrained capacity (limit seats available
             between a specific pair of stations).
-        lift_constraints (int): Minimum anticipation (days) to lift capacity constraints.
+        lift_constraints (datetime.date): Date when capacity constraints are lifted.
         prices (Mapping[Tuple[str, str], Mapping[Seat, float]]): Prices for each pair of stations and each Seat type.
         seat_types (Mapping[str, Seat]): Seat types available in the service.
         tickets_sold_seats (Mapping[Seat, int]): Number of seats sold for each Seat type.
@@ -495,6 +497,8 @@ class Service:
             and each Seat types.
         tickets_sold_pair_hard_types (Mapping[Tuple[str, str], Mapping[int, int]]): Number of seats sold for each pair of
             stations and each hard types.
+        total_profit (float): Total profit of the service.
+        profit_pair_seats (Mapping[Tuple[str, str], Mapping[Seat, float]]): Profit per pair of stations and each Seat type.
     """
 
     def __init__(
@@ -530,18 +534,20 @@ class Service:
         self.tsp = tsp
         self.time_slot = time_slot
         self.schedule = self._get_absolute_schedule()
-        self.service_departure_time = self.schedule[0][0].seconds / 3600  # Service departure time in hours
-        self.service_arrival_time = self.schedule[-1][0].seconds / 3600  # Service arrival time in hours
+        self.arrival_time = {station.id: self.schedule[station.id][0].seconds / 3600 for station in self.line.stations}
+        self.departure_time = {station.id: self.schedule[station.id][1].seconds / 3600 for station in self.line.stations}
         self.rolling_stock = rolling_stock
         self.capacity_constraints = capacity_constraints
-        self.lift_constraints = lift_constraints
+        self.lift_constraints = self.date - datetime.timedelta(days=lift_constraints)
         self.prices = prices
-        self._seat_types = set([seat for seat_price in self.prices.values() for seat in seat_price.keys()])
+        self._seat_types = tuple(dict.fromkeys([seat for seat_price in self.prices.values() for seat in seat_price.keys()]))
         self.seat_types = {seat.name: seat for seat in self._seat_types}
         self.tickets_sold_seats = {seat: 0 for seat in self._seat_types}
         self.tickets_sold_hard_types = {hard_type: 0 for hard_type in self.rolling_stock.seats.keys()}
         self.tickets_sold_pair_seats = {pair: {seat: 0 for seat in self._seat_types} for pair in self.line.pairs}
         self.tickets_sold_pair_hard_types = self._get_tickets_sold_pair_hard_type()
+        self.total_profit = 0
+        self.profit_pair_seats = {pair: {seat: 0 for seat in self._seat_types} for pair in self.line.pairs}
         self._pair_capacity = {
             pair: {hard_type: 0 for hard_type in self.rolling_stock.seats.keys()} for pair in self.line.pairs
         }
@@ -563,18 +569,18 @@ class Service:
                     tickets_sold_pair_hard_type[pair][seat.hard_type] += self.tickets_sold_pair_seats[pair][seat]
         return tickets_sold_pair_hard_type
 
-    def _get_absolute_schedule(self) -> List[Tuple[datetime.timedelta, datetime.timedelta]]:
+    def _get_absolute_schedule(self) -> Mapping[str, Tuple[datetime.timedelta, datetime.timedelta]]:
         """
-        Private method to get the absolute schedule of the service, using the relative schedule and the time slot start time.
+        Private method to get the absolute schedule of the service per station.
 
         Returns:
-            List[Tuple[datetime.timedelta, datetime.timedelta]]: Absolute schedule of the service.
+            Mapping[str, Tuple[datetime.timedelta, datetime.timedelta]]: Absolute schedule of the service per station.
         """
-        absolute_schedule = []
-        for departure_time, arrival_time in list(self.line.timetable.values()):
+        absolute_schedule = {}
+        for station, (departure_time, arrival_time) in self.line.timetable.items():
             abs_departure_time = datetime.timedelta(seconds=departure_time * 60) + self.time_slot.start
             abs_arrival_time = datetime.timedelta(seconds=arrival_time * 60) + self.time_slot.start
-            absolute_schedule.append((abs_departure_time, abs_arrival_time))
+            absolute_schedule[station] = (abs_departure_time, abs_arrival_time)
         return absolute_schedule
 
     @cache
@@ -590,7 +596,7 @@ class Service:
             Set[Tuple[str, str]]: Set of pairs affected by origin-destination selection.
         """
         pairs = list(self.line.pairs.keys())
-        stations_ids = [station.id for station in self.line.stations]
+
         # Get the index of the first pair which includes the origin station
         start_index = 0
         for i, pair in enumerate(pairs):
@@ -606,9 +612,9 @@ class Service:
 
         affected_pairs = pairs[start_index:end_index]
         # Get stations between selected origin-destination
-        origin_index = stations_ids.index(origin) + 1
-        destination_index = stations_ids.index(destination)
-        intermediate_stations = stations_ids[origin_index:destination_index]
+        origin_index = self.line.stations_ids.index(origin) + 1
+        destination_index = self.line.stations_ids.index(destination)
+        intermediate_stations = self.line.stations_ids[origin_index:destination_index]
         # Include pairs which depart between selected origin-destination
         affected_pairs.extend([pair for pair in pairs if pair[0] in intermediate_stations])
         return set(affected_pairs)
@@ -633,7 +639,7 @@ class Service:
                 return False
         return True
 
-    def buy_ticket(self, origin: str, destination: str, seat: Seat, anticipation: int) -> bool:
+    def buy_ticket(self, origin: str, destination: str, seat: Seat, purchase_day: datetime.date) -> bool:
         """
         Buy a ticket for the service.
 
@@ -641,12 +647,12 @@ class Service:
             origin (str): Origin station ID.
             destination (str): Destination station ID.
             seat (Seat): Seat type.
-            anticipation (int): Days of anticipation in the purchase of the ticket.
+            purchase_day (datetime.date): Day of purchase of the ticket.
 
         Returns:
             bool: True if the ticket was bought, False otherwise.
         """
-        if not self.tickets_available(origin, destination, seat, anticipation):
+        if not self.tickets_available(origin, destination, seat, purchase_day):
             return False
 
         # Invalidate memoized tickets_available as the capacity will change
@@ -660,10 +666,12 @@ class Service:
         self.tickets_sold_pair_seats[(origin, destination)][seat] += 1
         self.tickets_sold_seats[seat] += 1
         self.tickets_sold_hard_types[seat.hard_type] += 1
+        self.total_profit += self.prices[(origin, destination)][seat]
+        self.profit_pair_seats[(origin, destination)][seat] += self.prices[(origin, destination)][seat]
         return True
 
     @cache
-    def tickets_available(self, origin: str, destination: str, seat: Seat, anticipation: int) -> bool:
+    def tickets_available(self, origin: str, destination: str, seat: Seat, purchase_day: datetime.date) -> bool:
         """
         Check if there are tickets available for the service.
 
@@ -671,7 +679,7 @@ class Service:
             origin (str): Origin station ID.
             destination (str): Destination station ID.
             seat (Seat): Seat type.
-            anticipation (int): Days of anticipation in the purchase of the ticket.
+            purchase_day (datetime.date): Day of purchase of the ticket.
 
         Returns:
             bool: True if there are tickets available, False otherwise.
@@ -680,7 +688,7 @@ class Service:
         pair_capacity = self._pair_capacity[(origin, destination)][seat.hard_type]
         tickets_available = self._tickets_available(origin=origin, destination=destination, seat=seat)
         # Check if there are tickets available considering capacity constraints
-        if self.capacity_constraints and anticipation > self.lift_constraints and (origin, destination) in self.capacity_constraints:
+        if self.capacity_constraints and purchase_day < self.lift_constraints and (origin, destination) in self.capacity_constraints:
             constrained_capacity = self.capacity_constraints[(origin, destination)][seat.hard_type]
             if pair_capacity < constrained_capacity and tickets_available:
                 return True
@@ -747,13 +755,13 @@ class Supply:
             services (List[Service]): List of services available in the system.
         """
         self.services = services
-        self.stations = list(dict.fromkeys(station for service in services for station in service.line.stations))
-        self.time_slots = list(dict.fromkeys(service.time_slot for service in services))
-        self.corridors = list(dict.fromkeys(service.line.corridor for service in services))
-        self.lines = list(dict.fromkeys(service.line for service in services))
-        self.seats = list(dict.fromkeys(seat for service in services for t in service.prices.values() for seat in t.keys()))
-        self.rolling_stocks = list(dict.fromkeys(service.rolling_stock for service in services))
-        self.tsps = list(dict.fromkeys(service.tsp for service in services))
+        self.stations = tuple(dict.fromkeys(station for service in services for station in service.line.stations))
+        self.time_slots = tuple(dict.fromkeys(service.time_slot for service in services))
+        self.corridors = tuple(dict.fromkeys(service.line.corridor for service in services))
+        self.lines = tuple(dict.fromkeys(service.line for service in services))
+        self.seats = tuple(dict.fromkeys(seat for service in services for pair in service.prices.values() for seat in pair.keys()))
+        self.rolling_stocks = tuple(dict.fromkeys(service.rolling_stock for service in services))
+        self.tsps = tuple(dict.fromkeys(service.tsp for service in services))
 
     @classmethod
     def from_yaml(cls, path: Path) -> 'Supply':

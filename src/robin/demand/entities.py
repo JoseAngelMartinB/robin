@@ -28,8 +28,8 @@ class Market:
 
         Args:
             id (int): The market id.
-            departure_station (Station): The departure station id.
-            arrival_station (Station): The arrival station id.
+            departure_station (str): The departure station id.
+            arrival_station (str): The arrival station id.
         """
         self.id = id
         self.departure_station = departure_station
@@ -555,6 +555,7 @@ class Day:
             potential_demand = self.demand_pattern.potential_demand(market)
             for i in range(potential_demand):
                 user_pattern = self.demand_pattern.get_user_pattern(market)
+                purchase_day = self.date - datetime.timedelta(days=int(user_pattern.purchase_day))
                 passengers.append(
                     Passenger(
                         id=i + id_offset,
@@ -562,7 +563,7 @@ class Day:
                         market=market,
                         arrival_day=self,
                         arrival_time=user_pattern.arrival_time,
-                        purchase_day=user_pattern.purchase_day,
+                        purchase_day=purchase_day
                     )
                 )
             id_offset += potential_demand
@@ -595,9 +596,9 @@ class Passenger:
         id (int): The passenger id.
         user_pattern (UserPattern): The user pattern that this passengers belongs.
         market (Market): The market composed by the origin-destination station pair.
-        arrival_day (Day): The desired day of arrival.
+        arrival_day (Day): The desired Day of arrival.
         arrival_time (float): The desired time of arrival.
-        purchase_day (int): The day of purchase of the train ticket.
+        purchase_day (datetime.date): The day of purchase of the train ticket.
         service (Service): The service that this passenger is assigned to.
         service_departure_time (float): The departure time of the service.
         service_arrival_time (float): The arrival time of the service.
@@ -616,7 +617,7 @@ class Passenger:
         market: Market,
         arrival_day: Day,
         arrival_time: float,
-        purchase_day: int
+        purchase_day: datetime.date
     ) -> None:
         """
         Initializes a passenger.
@@ -625,9 +626,9 @@ class Passenger:
             id (int): The passenger id.
             user_pattern (UserPattern): The user pattern that this passengers belongs.
             market (Market): The market composed by the origin-destination station pair.
-            arrival_day (Day): The desired day of arrival.
+            arrival_day (Day): The desired Day of arrival.
             arrival_time (float): The desired time of arrival.
-            purchase_day (int): The day of purchase of the train ticket.
+            purchase_day (datetime.date): The day of purchase of the train ticket.
         """
         self.id = id
         self.user_pattern = user_pattern
@@ -765,7 +766,7 @@ class Passenger:
         return (
             f'Passenger {self.id} from {self.market.departure_station} to {self.market.arrival_station} '
             f'desired to arrive at {self.arrival_day} {self.arrival_time} '
-            f'purchasing with {self.purchase_day} antelation days '
+            f'purchasing at date {self.purchase_day} '
             f'with utility {self.utility}'
         )
 
@@ -971,10 +972,10 @@ class Demand:
     
     def generate_passengers(self) -> List[Passenger]:
         """
-        Generates the passengers for all days sorted by purchase day (descending).
+        Generates the passengers for all days sorted by purchase day.
 
         Returns:
-            List[Passenger]: The generated passengers sorted by purchase day (descending).
+            List[Passenger]: The generated passengers sorted by purchase day.
         """
         passengers = []
         id_offset = 1
@@ -982,7 +983,7 @@ class Demand:
             passengers_day = day.generate_passengers(id_offset)
             passengers += passengers_day
             id_offset += len(passengers_day)
-        passengers.sort(key=lambda x: x.purchase_day, reverse=True)
+        passengers.sort(key=lambda x: x.purchase_day)
         return passengers
 
     def __str__(self) -> str:
