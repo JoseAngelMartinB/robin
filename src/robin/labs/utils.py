@@ -66,46 +66,6 @@ def get_passenger_status(df: pd.DataFrame) -> Tuple[Mapping[int, int], List[str]
     return dict(sorted(data.items(), key=lambda x: x[1], reverse=True)), x_labels
 
 
-def get_tickets_by_seat(df: pd.DataFrame) -> Mapping[str, int]:
-    """
-    Get the percentage of tickets sold for each seat type.
-
-    Args:
-        df (pd.DataFrame): Dataframe with the information of the passengers.
-
-    Returns:
-        Mapping[str, int]: Dictionary with the percentage of tickets sold per seat type.
-    """
-    tickets_sold = df.groupby(by=['seat']).size()
-    return tickets_sold.to_dict()
-
-
-def get_tickets_by_date_seat(df: pd.DataFrame) -> Mapping[str, Mapping[str, int]]:
-    """
-    Get the total number of tickets sold per day and seat type.
-
-    Args:
-        df (pd.DataFrame): Dataframe with the information of the passengers.
-
-    Returns:
-        Mapping[str, Mapping[str, int]]: Dictionary with the total number of tickets sold per day and seat type.
-    """
-    grouped_data = df[~df.service.isnull()]
-    grouped_data = grouped_data.groupby(by=['purchase_date', 'seat'], as_index=False).size()
-
-    # Create a dictionary with the total number of tickets sold per day and seat type
-    result_dict = {}
-    for date, group in grouped_data.groupby('purchase_date'):
-        seats_dict = {}
-        for seat, count in zip(group['seat'], group['size']):
-            seats_dict[seat] = count
-        result_dict[date] = seats_dict
-
-    # Sort the data by day in descending order
-    sorted_data = dict(sorted(result_dict.items(), key=lambda x: x[0]))
-    return sorted_data
-
-
 def get_tickets_by_date_user_seat(df: pd.DataFrame) -> Dict[str, Dict[str, Dict[str, int]]]:
     """
     Get number of tickets sold by purchase date, user and seat type.

@@ -2,6 +2,8 @@
 
 import copy
 import os
+import numpy as np
+import pandas as pd
 import random
 import shutil
 import yaml
@@ -9,13 +11,16 @@ import yaml
 from robin.kernel.entities import Kernel
 from robin.supply.entities import Supply
 from robin.demand.entities import Demand
-from robin.labs.utils import *
+from robin.labs.utils import (
+    get_file_key, get_purchase_date, get_passenger_status, get_tickets_by_date_user_seat,
+    get_tickets_by_pair_seat, get_pairs_sold
+)
 from robin.plotter.utils import plot_series
 
 from matplotlib import pyplot as plt
 from pathlib import Path
 from tqdm.notebook import tqdm
-from typing import Mapping
+from typing import List, Mapping
 
 
 class RobinLab:
