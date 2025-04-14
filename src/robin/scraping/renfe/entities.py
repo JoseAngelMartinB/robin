@@ -25,7 +25,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
-from typing import Dict, List, Mapping, Set, Tuple, Union
+from typing import Any, Dict, List, Mapping, Set, Tuple, Union
 
 
 class DriverManager:
@@ -57,20 +57,19 @@ class DriverManager:
         self.stations_df = stations_df
         self.allowed_train_types = allowed_train_types
 
-    def _get_df_from_records(self, records: List, col_names: List) -> pd.DataFrame:
+    def _get_df_from_records(self, records: List[List[Any]], col_names: List[str]) -> pd.DataFrame:
         """
         Returns a DataFrame with the information retrieved from the scraping encoded in a list of lists.
 
         Each list in the list of lists represents the data of a service, and it becomes a row in the DataFrame.
 
         Args:
-            records (List): List of lists with the information retrieved from the scraping.
-            col_names (List): List of column names for the DataFrame.
+            records (List[List[Any]]): List of lists with the information retrieved from the scraping.
+            col_names (List[str]): List of column names for the DataFrame.
 
         Returns:
             pd.DataFrame: DataFrame with the information retrieved from the scraping.
         """
-        # TODO: Set the types of the Lists
         df = pd.DataFrame(records, columns=col_names)
         train_type_filter = df['train_type'].str.contains('|'.join(self.allowed_train_types))
         df = df[train_type_filter].reset_index(drop=True)
@@ -151,23 +150,24 @@ class DriverManager:
         col_names = ['trip_id', 'train_type', 'schedule', 'departure', 'duration']
         return self._get_df_from_records(records=records, col_names=col_names)
 
-    def _get_prices_dataframe(self, records: List, col_names: List) -> pd.DataFrame:
+    def _get_prices_dataframe(self, records: List[List[Any]], col_names: List[str]) -> pd.DataFrame:
         """
         Returns a DataFrame with the information retrieved from the scraping encoded in a list of lists.
 
         Args:
-            records (List): List of lists with the information retrieved from the scraping.
+            records (List[List[Any]]): List of lists with the information retrieved from the scraping.
+            col_names (List[str]): List of column names for the DataFrame.
 
         Returns:
             pd.DataFrame: DataFrame with the information retrieved from the scraping.
         """
-        # TODO: Set the types of the Lists
         df_prices = self._get_df_from_records(records, col_names)
 
         # Extract the values of the prices dictionary and add them as new columns
         new_columns = df_prices.apply(lambda row: {k: v for k, v in row['prices'].items()}, axis=1, result_type='expand')
         df_prices = pd.concat([df_prices, new_columns], axis=1)
-        # TODO: Why we drop the prices column if it is the prices df?
+
+        # Drop the prices column as it is no longer needed
         df_prices = df_prices.drop('prices', axis=1)
         return df_prices
 
@@ -261,8 +261,9 @@ class DriverManager:
         prev_departure = 0
 
         for current_station, (train_stop, arrival, departure) in enumerate(zip(it, it, it)):
-            adif_id = self.get_value_from_stations(search_column='STATION_NAME', value=train_stop.text,
-                                                   objective_column='ADIF_ID')
+            adif_id = self.get_value_from_stations(
+                search_column='STATION_NAME', value=train_stop.text, objective_column='ADIF_ID'
+            )
             arrival_absolute = time_to_minutes(arrival.text)
             departure_absolute = time_to_minutes(departure.text)
 
@@ -284,7 +285,6 @@ class DriverManager:
             else:
                 arrival_relative = arrival_absolute - init_time
                 departure_relative = departure_absolute - init_time
-
             schedule[adif_id] = (arrival_relative, departure_relative)
         return schedule
 
@@ -709,7 +709,7 @@ class RenfeScraper:
         Returns:
             pd.DataFrame: DataFrame containing the scraped prices.
         """
-        if df_trips:
+        if df_trips is not None:
             # Get set of trips from the trips dataframe
             trips = set(df_trips.groupby('service_id')['stop_id'].apply(tuple))
 
