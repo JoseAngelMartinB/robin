@@ -867,5 +867,5 @@ class Hyperparameters:
             path (str): Path to the demand configuration file.
         """
         self._update_demand_yaml()
-        with open(path, 'w') as f:
-            yaml.dump(self.demand_yaml, f, sort_keys=False, Dumper=yaml.CSafeDumper)
+        with open(path, 'w') as file:
+            yaml.dump(self.demand_yaml, file, Dumper=yaml.CSafeDumper, sort_keys=False, allow_unicode=True)

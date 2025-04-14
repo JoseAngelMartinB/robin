@@ -9,16 +9,14 @@ from robin.scraping.exceptions import InvalidHardTypesException
 from robin.scraping.constants import (
     OUTPUT_SUPPLY_PATH, PRICES_COLUMNS, RENFE_STATIONS_PATH, TIME_SLOT_SIZE, SPANISH_CORRIDOR_PATH
 )
-from robin.scraping.utils import (
-    station_to_dict, time_slot_to_dict, corridor_to_dict, line_to_dict, seat_to_dict,
-    rolling_stock_to_dict, tsp_to_dict, service_to_dict, timedelta_to_str
-)
+from robin.scraping.utils import timedelta_to_str
 from robin.supply.entities import Station, TimeSlot, Corridor, Line, Seat, RollingStock, TSP, Service, Supply
 from robin.supply.utils import get_time
 
+from copy import deepcopy
 from functools import cached_property
 from pathlib import Path
-from typing import Dict, List, Mapping, Tuple
+from typing import Any, Dict, List, Mapping, Tuple
 
 
 class DataLoader:
@@ -34,7 +32,7 @@ class DataLoader:
         seat_quantity (Mapping[int, int]): Dictionary with seat quantity.
         seat_names (List[str]): List of seat names.
         spanish_corridor (Dict[str, List[str]]): Dictionary with Spanish corridor data.
-        ts_size (int): Time slot size in minutes.
+        time_slot_size (int): Time slot size in minutes.
     """
 
     def __init__(
@@ -45,7 +43,7 @@ class DataLoader:
         seat_quantity: Mapping[int, int],
         renfe_stations_path: str = RENFE_STATIONS_PATH,
         spanish_corridor_path: str = SPANISH_CORRIDOR_PATH,
-        ts_size: int = TIME_SLOT_SIZE
+        time_slot_size: int = TIME_SLOT_SIZE
     ) -> None:
         """
         Initialize a DataLoader with the given paths to the CSV files.
@@ -57,7 +55,7 @@ class DataLoader:
             seat_quantity (Mapping[int, int]): Dictionary with seat quantity.
             renfe_stations_path (str, optional): Path to the Renfe stations CSV file.
             spanish_corridor_path (str, optional): Path to the Spanish corridor YAML file.
-            ts_size (int, optional): Time slot size in minutes.
+            time_slot_size (int, optional): Time slot size in minutes.
         """
         self.stops = pd.read_csv(stops_path, dtype={'stop_id': str})
         self.prices = pd.read_csv(prices_path, dtype={'origin': str, 'destination': str})
@@ -66,7 +64,7 @@ class DataLoader:
         self.seat_components, self.seat_quantity = self._check_hard_types(seat_components, seat_quantity)
         self.seat_names = self.prices.columns[PRICES_COLUMNS:]
         self.spanish_corridor = self._read_yaml(path=spanish_corridor_path)
-        self.ts_size = ts_size
+        self.time_slot_size = time_slot_size
 
     def _check_hard_types(
         self,
@@ -180,12 +178,12 @@ class DataLoader:
         time_slots_dict = {}
         for service_id in self.trips['service_id']:
             departure_str = service_id.split('-')[-1].replace('.', ':') + ':00'
-            ts_start = get_time(departure_str)
-            delta = datetime.timedelta(minutes=self.ts_size)
-            ts_end = ts_start + delta
-            ts_id = str(ts_start.seconds // 60) + str(delta.seconds // 60)
+            time_slot_start = get_time(departure_str)
+            delta = datetime.timedelta(minutes=self.time_slot_size)
+            time_slot_end = time_slot_start + delta
+            time_slot_id = str(time_slot_start.seconds // 60) + str(delta.seconds // 60)
             # NOTE: Use the service_id as the key for the time slot as then it is possible to index by it
-            time_slots_dict[service_id] = TimeSlot(ts_id, ts_start, ts_end)
+            time_slots_dict[service_id] = TimeSlot(time_slot_id, time_slot_start, time_slot_end)
         return time_slots_dict
 
     @cached_property
@@ -249,7 +247,7 @@ class DataLoader:
         Returns:
             Dict[str, TSP]: Dictionary of train service providers with their IDs as keys.
         """
-        return {1: TSP('1', 'Renfe', [rs for rs in self.rolling_stocks.values()])}
+        return {1: TSP('1', 'Renfe', [rolling_stock for rolling_stock in self.rolling_stocks.values()])}
 
     @cached_property
     def services(self) -> List[Service]:
@@ -301,6 +299,150 @@ class SupplySaver(Supply):
         """
         Supply.__init__(self, services)
 
+    def station_to_dict(self, station: Station) -> Dict[str, Any]:
+        """
+        Convert a Station object to a dictionary.
+
+        Args:
+            station (Station): Station object to convert.
+        
+        Returns:
+            Dict[str, Any]: Dictionary representation of the Station object.
+        """
+        station_dict = {
+            'id': station.id, 'name': station.name, 'city': station.city, 'short_name': station.shortname,
+            'coordinates': {'latitude': float(station.coords[0]), 'longitude': float(station.coords[1])}
+        }
+        return station_dict
+
+    def time_slot_to_dict(self, time_slot: TimeSlot) -> Dict[str, Any]:
+        """
+        Convert a TimeSlot object to a dictionary.
+
+        Args:
+            time_slot (TimeSlot): TimeSlot object to convert.
+        
+        Returns:
+            Dict[str, Any]: Dictionary representation of the TimeSlot object.
+        """
+        time_slot_dict = {'id': time_slot.id, 'start': str(time_slot.start), 'end': str(time_slot.end)}
+        return time_slot_dict
+
+    def corridor_to_dict(self, corridor: Corridor) -> Dict[str, Any]:
+        """
+        Convert a Corridor object to a dictionary.
+
+        Args:
+            corridor (Corridor): Corridor object to convert.
+        
+        Returns:
+            Dict[str, Any]: Dictionary representation of the Corridor object.
+        """
+        def yaml_tree(tree: Dict[str, Any]) -> List[Dict[str, Any]]:
+            """
+            Convert a tree structure to a YAML-compatible format.
+
+            Args:
+                tree (Dict[str, Any]): Tree structure to convert.
+            
+            Returns:
+                List[Dict[str, Any]]: YAML-compatible format of the tree structure.
+            """
+            if not tree:
+                return []
+            else:
+                node = [{'org': k.id, 'des': yaml_tree(v)} for k, v in tree.items()]
+                return node
+
+        tree_ids = yaml_tree(deepcopy(corridor.tree))
+        corridor_dict = {'id': corridor.id, 'name': corridor.name, 'stations': tree_ids}
+        return corridor_dict
+
+    def line_to_dict(self, line: Line) -> Dict[str, Any]:
+        """
+        Convert a Line object to a dictionary.
+
+        Args:
+            line (Line): Line object to convert.
+        
+        Returns:
+            Dict[str, Any]: Dictionary representation of the Line object.
+        """
+        stops = []
+        for station in line.timetable:
+            arrival, departure = line.timetable[station]
+            stops.append({'station': station, 'arrival_time': arrival, 'departure_time': departure})
+        line_dict = {'id': line.id, 'name': line.name, 'corridor': line.corridor.id, 'stops': stops}
+        return line_dict
+
+    def seat_to_dict(self, seat: Seat) -> Dict[str, Any]:
+        """
+        Convert a Seat object to a dictionary.
+
+        Args:
+            seat (Seat): Seat object to convert.
+        
+        Returns:
+            Dict[str, Any]: Dictionary representation of the Seat object.
+        """
+        seat_dict = {'id': seat.id, 'name': seat.name, 'hard_type': seat.hard_type, 'soft_type': seat.soft_type}
+        return seat_dict
+
+    def rolling_stock_to_dict(self, rolling_stock: RollingStock) -> Dict[str, Any]:
+        """
+        Convert a RollingStock object to a dictionary.
+
+        Args:
+            rolling_stock (RollingStock): RollingStock object to convert.
+        
+        Returns:
+            Dict[str, Any]: Dictionary representation of the RollingStock object.
+        """
+        rolling_stock_dict = {
+            'id': rolling_stock.id, 'name': rolling_stock.name,
+            'seats': [{'hard_type': seat, 'quantity': rolling_stock.seats[seat]} for seat in rolling_stock.seats]
+        }
+        return rolling_stock_dict
+
+    def tsp_to_dict(self, tsp: TSP) -> Dict[str, Any]:
+        """
+        Convert a TSP object to a dictionary.
+
+        Args:
+            tsp (TSP): TSP object to convert.
+        
+        Returns:
+            Dict[str, Any]: Dictionary representation of the TSP object.
+        """
+        tsp_dict = {
+            'id': tsp.id, 'name': tsp.name, 'rolling_stock': [rolling_stock.id for rolling_stock in tsp.rolling_stock]
+        }
+        return tsp_dict
+
+    def service_to_dict(self, service: Service) -> Dict[str, Any]:
+        """
+        Convert a Service object to a dictionary.
+
+        Args:
+            service (Service): Service object to convert.
+        
+        Returns:
+            Dict[str, Any]: Dictionary representation of the Service object.
+        """
+        prices = []
+        for pair, seats in service.prices.items():
+            prices.append({
+                'origin': pair[0], 'destination': pair[1],
+                'seats': [{'seat': seat.id, 'price': price} for seat, price in seats.items()]
+            })
+        service_dict = {
+            'id': service.id, 'date': str(service.date), 'line': service.line.id,
+            'train_service_provider': service.tsp.id, 'time_slot': service.time_slot.id,
+            'rolling_stock': service.rolling_stock.id, 'origin_destination_tuples': prices,
+            'capacity_constraints': service.capacity_constraints
+        }
+        return service_dict
+
     def to_yaml(self, output_path: Path = OUTPUT_SUPPLY_PATH) -> None:
         """
         Save the supply entities to a YAML file.
@@ -309,14 +451,14 @@ class SupplySaver(Supply):
             output_path (Path, optional): Path to the output YAML file. Defaults to 'supply_data.yaml'.
         """
         data = {
-            'stations': [station_to_dict(stn) for stn in self.stations],
-            'timeSlot': [time_slot_to_dict(s) for s in self.time_slots],
-            'corridor': [corridor_to_dict(corr) for corr in self.corridors],
-            'line': [line_to_dict(ln) for ln in self.lines],
-            'seat': [seat_to_dict(s) for s in self.seats],
-            'rollingStock': [rolling_stock_to_dict(rs) for rs in self.rolling_stocks],
-            'trainServiceProvider': [tsp_to_dict(tsp) for tsp in self.tsps],
-            'service': [service_to_dict(s) for s in self.services]
+            'stations': [self.station_to_dict(station) for station in self.stations],
+            'timeSlot': [self.time_slot_to_dict(tsp) for tsp in self.time_slots],
+            'corridor': [self.corridor_to_dict(corridor) for corridor in self.corridors],
+            'line': [self.line_to_dict(line) for line in self.lines],
+            'seat': [self.seat_to_dict(seat) for seat in self.seats],
+            'rollingStock': [self.rolling_stock_to_dict(rolling_stock) for rolling_stock in self.rolling_stocks],
+            'trainServiceProvider': [self.tsp_to_dict(tsp) for tsp in self.tsps],
+            'service': [self.service_to_dict(s) for s in self.services]
         }
         with open(output_path, 'w') as file:
             yaml.dump(data, file, Dumper=yaml.CSafeDumper, sort_keys=False, allow_unicode=True)
