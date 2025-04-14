@@ -19,7 +19,7 @@ class Function:
 
         Args:
             x (float): The x value.
-            **kwargs (Mapping[str, float]): The coefficients of the polynomial.
+            coeff (List[Union[int, float]]): The coefficients of the polynomial.
 
         Returns:
             float: The y value.
