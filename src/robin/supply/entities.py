@@ -748,7 +748,7 @@ class Supply:
     List of Service's available in the system.
 
     Attributes:
-        services List[Service]: List of services available in the system.
+        services (List[Service]): List of services available in the system.
     """
 
     def __init__(self, services: List[Service]) -> None:
