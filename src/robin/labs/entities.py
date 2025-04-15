@@ -12,8 +12,7 @@ from robin.kernel.entities import Kernel
 from robin.supply.entities import Supply
 from robin.demand.entities import Demand
 from robin.labs.utils import (
-    get_file_key, get_purchase_date, get_passenger_status, get_tickets_by_date_user_seat,
-    get_tickets_by_pair_seat, get_pairs_sold
+    get_file_key, get_passenger_status, get_tickets_by_date_user_seat, get_tickets_by_pair_seat, get_pairs_sold
 )
 from robin.plotter.utils import plot_series
 
@@ -253,10 +252,6 @@ class RobinLab:
                                                             output_files):
             output = pd.read_csv(self.tmp_path / 'output' / output_file,
                                  dtype={'departure_station': str, 'arrival_station': str})
-            output['purchase_date'] = output.apply(
-                lambda row: get_purchase_date(row['purchase_day'], row['arrival_day']), axis=1
-            )
-
             passenger_status[i] = get_passenger_status(output)
 
         return passenger_status
@@ -315,10 +310,6 @@ class RobinLab:
                                                             output_files):
             output = pd.read_csv(self.tmp_path / 'output' / output_file,
                                  dtype={'departure_station': str, 'arrival_station': str})
-            output['purchase_date'] = output.apply(
-                lambda row: get_purchase_date(row['purchase_day'], row['arrival_day']), axis=1
-            )
-
             tickets_by_pair_seat[i] = get_tickets_by_pair_seat(output, self.stations_dict)
             pairs_sold[i] = get_pairs_sold(output, self.stations_dict)
 
@@ -340,10 +331,6 @@ class RobinLab:
             run, iter_num = get_file_key(output_file)
             output = pd.read_csv(self.tmp_path / 'output' / output_file,
                                  dtype={'departure_station': str, 'arrival_station': str})
-            output['purchase_date'] = output.apply(
-                lambda row: get_purchase_date(row['purchase_day'], row['arrival_day']), axis=1
-            )
-
             tickets_by_pair_seat = get_tickets_by_pair_seat(output, self.stations_dict)
             total_by_trip = {}
             for seat in tickets_by_pair_seat:
@@ -375,10 +362,6 @@ class RobinLab:
             run, iter_num = get_file_key(output_file)
             output = pd.read_csv(self.tmp_path / 'output' / output_file,
                                  dtype={'departure_station': str, 'arrival_station': str})
-            output['purchase_date'] = output.apply(
-                lambda row: get_purchase_date(row['purchase_day'], row['arrival_day']), axis=1
-            )
-
             tickets_by_date_user_seat = get_tickets_by_date_user_seat(output)
 
             total_by_seat = {}
@@ -412,10 +395,6 @@ class RobinLab:
             run, iter_num = get_file_key(output_file)
             output = pd.read_csv(self.tmp_path / 'output' / output_file,
                                  dtype={'departure_station': str, 'arrival_station': str})
-            output['purchase_date'] = output.apply(
-                lambda row: get_purchase_date(row['purchase_day'], row['arrival_day']), axis=1
-            )
-
             demand_status_dict, labels = get_passenger_status(output)
             for k, v in demand_status_dict.items():
                 df_ds_row = [run, iter_num, v, labels[k]]

@@ -46,7 +46,7 @@ class Kernel:
         """
         column_names = [
             'id', 'user_pattern', 'departure_station', 'arrival_station',
-            'arrival_day', 'arrival_time', 'purchase_day', 'service', 'service_departure_time',
+            'arrival_day', 'arrival_time', 'purchase_date', 'service', 'service_departure_time',
             'service_arrival_time', 'seat', 'price', 'utility', 'best_service', 'best_seat', 'best_utility'
         ]
         data = []
@@ -58,7 +58,7 @@ class Kernel:
                 passenger.market.arrival_station,
                 passenger.arrival_day,
                 passenger.arrival_time,
-                passenger.purchase_day,
+                passenger.purchase_date,
                 passenger.service,
                 passenger.service_departure_time,
                 passenger.service_arrival_time,
@@ -119,8 +119,8 @@ class Kernel:
             for service in services:
                 for seat in service.prices[(origin, destination)].keys():
                     # Check if seat is available
-                    purchase_day = passenger.purchase_day
-                    tickets_available = service.tickets_available(origin, destination, seat, purchase_day)
+                    purchase_date = passenger.purchase_date
+                    tickets_available = service.tickets_available(origin, destination, seat, purchase_date)
                     
                     # Skip service if no tickets are available and we are not calculating global utility
                     if not calculate_global_utility and not tickets_available:
@@ -160,7 +160,7 @@ class Kernel:
                     origin=passenger.market.departure_station,
                     destination=passenger.market.arrival_station,
                     seat=seat_arg_max,
-                    purchase_day=passenger.purchase_day,
+                    purchase_date=passenger.purchase_date,
                 )
                 if ticket_bought:
                     passenger.service = service_arg_max.id

@@ -639,7 +639,7 @@ class Service:
                 return False
         return True
 
-    def buy_ticket(self, origin: str, destination: str, seat: Seat, purchase_day: datetime.date) -> bool:
+    def buy_ticket(self, origin: str, destination: str, seat: Seat, purchase_date: datetime.date) -> bool:
         """
         Buy a ticket for the service.
 
@@ -647,12 +647,12 @@ class Service:
             origin (str): Origin station ID.
             destination (str): Destination station ID.
             seat (Seat): Seat type.
-            purchase_day (datetime.date): Day of purchase of the ticket.
+            purchase_date (datetime.date): Day of purchase of the ticket.
 
         Returns:
             bool: True if the ticket was bought, False otherwise.
         """
-        if not self.tickets_available(origin, destination, seat, purchase_day):
+        if not self.tickets_available(origin, destination, seat, purchase_date):
             return False
 
         # Invalidate memoized tickets_available as the capacity will change
@@ -671,7 +671,7 @@ class Service:
         return True
 
     @cache
-    def tickets_available(self, origin: str, destination: str, seat: Seat, purchase_day: datetime.date) -> bool:
+    def tickets_available(self, origin: str, destination: str, seat: Seat, purchase_date: datetime.date) -> bool:
         """
         Check if there are tickets available for the service.
 
@@ -679,7 +679,7 @@ class Service:
             origin (str): Origin station ID.
             destination (str): Destination station ID.
             seat (Seat): Seat type.
-            purchase_day (datetime.date): Day of purchase of the ticket.
+            purchase_date (datetime.date): Day of purchase of the ticket.
 
         Returns:
             bool: True if there are tickets available, False otherwise.
@@ -688,7 +688,7 @@ class Service:
         pair_capacity = self._pair_capacity[(origin, destination)][seat.hard_type]
         tickets_available = self._tickets_available(origin=origin, destination=destination, seat=seat)
         # Check if there are tickets available considering capacity constraints
-        if self.capacity_constraints and purchase_day < self.lift_constraints and (origin, destination) in self.capacity_constraints:
+        if self.capacity_constraints and purchase_date < self.lift_constraints and (origin, destination) in self.capacity_constraints:
             constrained_capacity = self.capacity_constraints[(origin, destination)][seat.hard_type]
             if pair_capacity < constrained_capacity and tickets_available:
                 return True

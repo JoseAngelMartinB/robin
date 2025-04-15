@@ -555,7 +555,7 @@ class Day:
             potential_demand = self.demand_pattern.potential_demand(market)
             for i in range(potential_demand):
                 user_pattern = self.demand_pattern.get_user_pattern(market)
-                purchase_day = self.date - datetime.timedelta(days=int(user_pattern.purchase_day))
+                purchase_date = self.date - datetime.timedelta(days=int(user_pattern.purchase_day))
                 passengers.append(
                     Passenger(
                         id=i + id_offset,
@@ -563,7 +563,7 @@ class Day:
                         market=market,
                         arrival_day=self,
                         arrival_time=user_pattern.arrival_time,
-                        purchase_day=purchase_day
+                        purchase_date=purchase_date
                     )
                 )
             id_offset += potential_demand
@@ -598,7 +598,7 @@ class Passenger:
         market (Market): The market composed by the origin-destination station pair.
         arrival_day (Day): The desired Day of arrival.
         arrival_time (float): The desired time of arrival.
-        purchase_day (datetime.date): The day of purchase of the train ticket.
+        purchase_date (datetime.date): The date of purchase of the train ticket.
         service (Service): The service that this passenger is assigned to.
         service_departure_time (float): The departure time of the service.
         service_arrival_time (float): The arrival time of the service.
@@ -617,7 +617,7 @@ class Passenger:
         market: Market,
         arrival_day: Day,
         arrival_time: float,
-        purchase_day: datetime.date
+        purchase_date: datetime.date
     ) -> None:
         """
         Initializes a passenger.
@@ -628,14 +628,14 @@ class Passenger:
             market (Market): The market composed by the origin-destination station pair.
             arrival_day (Day): The desired Day of arrival.
             arrival_time (float): The desired time of arrival.
-            purchase_day (datetime.date): The day of purchase of the train ticket.
+            purchase_date (datetime.date): The date of purchase of the train ticket.
         """
         self.id = id
         self.user_pattern = user_pattern
         self.market = market
         self.arrival_day = arrival_day
         self.arrival_time = arrival_time
-        self.purchase_day = purchase_day
+        self.purchase_date = purchase_date
         self.service = None
         self.service_departure_time = None
         self.service_arrival_time = None
@@ -766,7 +766,7 @@ class Passenger:
         return (
             f'Passenger {self.id} from {self.market.departure_station} to {self.market.arrival_station} '
             f'desired to arrive at {self.arrival_day} {self.arrival_time} '
-            f'purchasing at date {self.purchase_day} '
+            f'purchasing at date {self.purchase_date} '
             f'with utility {self.utility}'
         )
 
@@ -784,7 +784,7 @@ class Passenger:
             f'market={self.market}, '
             f'arrival_day={self.arrival_day}, '
             f'arrival_time={self.arrival_time}, '
-            f'purchase_day={self.purchase_day}, '
+            f'purchase_date={self.purchase_date}, '
             f'service={self.service}, '
             f'service_departure_time={self.service_departure_time}, '
             f'service_arrival_time={self.service_arrival_time}, '
@@ -983,7 +983,7 @@ class Demand:
             passengers_day = day.generate_passengers(id_offset)
             passengers += passengers_day
             id_offset += len(passengers_day)
-        passengers.sort(key=lambda x: x.purchase_day)
+        passengers.sort(key=lambda x: x.purchase_date)
         return passengers
 
     def __str__(self) -> str:

@@ -24,23 +24,6 @@ def get_file_key(file: str) -> Tuple[int, ...]:
     return tuple(map(int, re.findall(pattern='\d+', string=file_stem)))
 
 
-def get_purchase_date(anticipation, arrival_day):
-    """
-    Get purchase date using the anticipation and arrival day of the passenger.
-
-    Args:
-        anticipation (int): Anticipation of the passenger.
-        arrival_day (str): Arrival day of the passenger.
-
-    Returns:
-        datetime.date: Purchase day of the passenger.
-    """
-    anticipation = datetime.timedelta(days=anticipation)
-    arrival_day = datetime.datetime.strptime(arrival_day, '%Y-%m-%d')
-    purchase_day = arrival_day - anticipation
-    return purchase_day.date()
-
-
 def get_passenger_status(df: pd.DataFrame) -> Tuple[Mapping[int, int], List[str]]:
     """
     Get number of attended passenger based on their purchase status.
