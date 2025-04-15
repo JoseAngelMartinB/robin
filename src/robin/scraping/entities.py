@@ -288,16 +288,20 @@ class SupplySaver(Supply):
 
     Attributes:
         services (List[Service]): List of services.
+        stations (List[Station]): List of stations.
     """
 
-    def __init__(self, services: List[Service]) -> None:
+    def __init__(self, services: List[Service], stations: List[Station]) -> None:
         """
-        Initialize a SupplySaver with the given services.
+        Initialize a SupplySaver with the given services and stations.
+
+        The stations list is needed to create the corridor as not all stations may be present in the services.
 
         Args:
             services (List[Service]): List of services.
         """
         Supply.__init__(self, services)
+        self.stations = stations
 
     def station_to_dict(self, station: Station) -> Dict[str, Any]:
         """

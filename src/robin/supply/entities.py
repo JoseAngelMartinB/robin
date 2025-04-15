@@ -914,11 +914,11 @@ class Supply:
 
         corridors = {}
         for c in data[key]:
-            assert all(k in c.keys() for k in ('id', 'name', 'stations')), "Incomplete Corridor data"
+            assert all(k in c.keys() for k in ('id', 'name', 'stations')), 'Incomplete Corridor data'
 
             tree_dictionary = convert_tree_to_dict(c['stations'])
             corr_stations_ids = set_stations_ids(tree_dictionary)
-            assert all(s in stations.keys() for s in corr_stations_ids), "Station not found in Station list"
+            assert all(s in stations.keys() for s in corr_stations_ids), 'Station not found in Station list'
 
             stations_tree = to_station(deepcopy(tree_dictionary), stations)
             corridor_id = str(c['id'])
