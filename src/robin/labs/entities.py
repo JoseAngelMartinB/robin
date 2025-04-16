@@ -22,7 +22,8 @@ from tqdm.notebook import tqdm
 from typing import List, Mapping
 
 
-class RobinLab:
+# TODO: Inherit from KernelPlotter and delete utils methods
+class Labs:
     """
     Robin Lab class.
 
