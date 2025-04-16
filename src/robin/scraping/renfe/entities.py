@@ -623,9 +623,9 @@ class RenfeScraper:
             end_date (datetime.date): end date of the trip.
             save_path (str): Path to save the CSV file.
         """
-        os.makedirs(f'{save_path}/stop_times/', exist_ok=True)
+        os.makedirs(f'{save_path}/stopTimes/', exist_ok=True)
         df_stops.to_csv(
-            f'{save_path}/stop_times/stopTimes_{origin_id}_{destination_id}_{init_date}_{end_date}.csv',
+            f'{save_path}/stopTimes/stopTimes_{origin_id}_{destination_id}_{init_date}_{end_date}.csv',
             index=False
         )
 
