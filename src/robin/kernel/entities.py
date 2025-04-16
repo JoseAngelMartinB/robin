@@ -22,13 +22,13 @@ class Kernel:
         demand (Demand): Demand object.
     """
     
-    def __init__(self, path_config_supply: Path, path_config_demand: Path, seed: Union[int, None] = None) -> None:
+    def __init__(self, path_config_supply: str, path_config_demand: str, seed: Union[int, None] = None) -> None:
         """
         Initialize a kernel object.
 
         Args:
-            path_config_supply (Path): Path to the supply configuration file.
-            path_config_demand (Path): Path to the demand configuration file.
+            path_config_supply (str): Path to the supply configuration file.
+            path_config_demand (str): Path to the demand configuration file.
             seed (int, optional): Seed for the random number generator. Defaults to None.
         """
         if seed is not None:
@@ -36,13 +36,13 @@ class Kernel:
         self.supply = Supply.from_yaml(path_config_supply)
         self.demand = Demand.from_yaml(path_config_demand)
 
-    def _to_csv(self, passengers: List[Passenger], output_path: Path = OUTPUT_PATH) -> None:
+    def _to_csv(self, passengers: List[Passenger], output_path: str = OUTPUT_PATH) -> None:
         """
         Save passengers data to CSV file.
 
         Args:
             passengers (List[Passenger]): List of passengers.
-            output_path (Path, optional): Path to the output CSV file. Defaults to 'output.csv'.
+            output_path (str, optional): Path to the output CSV file. Defaults to 'output.csv'.
         """
         column_names = [
             'id', 'user_pattern', 'departure_station', 'arrival_station',
@@ -70,6 +70,8 @@ class Kernel:
                 passenger.best_utility
             ])
         df = pd.DataFrame(data=data, columns=column_names)
+        output_dir = Path(output_path).parent
+        output_dir.mkdir(parents=True, exist_ok=True)
         df.to_csv(output_path, index=False)
 
     def simulate(
@@ -177,7 +179,7 @@ class Kernel:
                 passenger.best_utility = seat_utility_global
 
         # Save passengers data to csv file
-        if output_path is not None:
+        if output_path:
             self._to_csv(passengers, output_path)
 
         return self.supply.services

@@ -32,9 +32,9 @@ class Labs:
 
     def __init__(
         self,
-        path_config_supply: Path,
-        path_config_demand: Path,
-        tmp_path: Path,
+        path_config_supply: str,
+        path_config_demand: str,
+        tmp_path: str,
         verbose=0
     ) -> None:
         """
@@ -175,7 +175,7 @@ class Labs:
 
         return tickets_sold
 
-    def plot_seat_elasticity_curve(self, save_path: Path = None) -> None:
+    def plot_seat_elasticity_curve(self, save_path: str = None) -> None:
         """Plot the seat elasticity curve."""
         tickets_sold = self._get_tickets_sold()
 
@@ -204,7 +204,7 @@ class Labs:
         if save_path:
             fig.savefig(save_path, format='svg', dpi=300, bbox_inches='tight', transparent=True)
 
-    def plot_demand_status(self, save_path: Path = None) -> None:
+    def plot_demand_status(self, save_path: str = None) -> None:
         """Plot the demand status for different user categories over time."""
         demand_status = self._get_demand_status()
 
@@ -257,7 +257,7 @@ class Labs:
 
         return passenger_status
 
-    def plot_markets(self, save_path: Path = None) -> None:
+    def plot_markets(self, save_path: str = None) -> None:
         """Plot the sum of tickets sold for different market routes over time."""
         markets_data = self._get_markets_data()
 

@@ -37,8 +37,8 @@ class DataLoader:
 
     def __init__(
         self,
-        stops_path: Path,
-        prices_path: Path,
+        stops_path: str,
+        prices_path: str,
         seat_components: Mapping[int, int],
         seat_quantity: Mapping[int, int],
         renfe_stations_path: str = RENFE_STATIONS_PATH,
@@ -49,8 +49,8 @@ class DataLoader:
         Initialize a DataLoader with the given paths to the CSV files.
 
         Args:
-            stops_path (Path): Path to the stops CSV file.
-            prices_path (Path): Path to the prices CSV file.
+            stops_path (str): Path to the stops CSV file.
+            prices_path (str): Path to the prices CSV file.
             seat_components (Mapping[int, int]): Dictionary with seat components.
             seat_quantity (Mapping[int, int]): Dictionary with seat quantity.
             renfe_stations_path (str, optional): Path to the Renfe stations CSV file.
@@ -447,12 +447,12 @@ class SupplySaver(Supply):
         }
         return service_dict
 
-    def to_yaml(self, output_path: Path = OUTPUT_SUPPLY_PATH) -> None:
+    def to_yaml(self, output_path: str = OUTPUT_SUPPLY_PATH) -> None:
         """
         Save the supply entities to a YAML file.
 
         Args:
-            output_path (Path, optional): Path to the output YAML file. Defaults to 'supply_data.yaml'.
+            output_path (str, optional): Path to the output YAML file. Defaults to 'supply_data.yaml'.
         """
         data = {
             'stations': [self.station_to_dict(station) for station in self.stations],

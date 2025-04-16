@@ -24,7 +24,7 @@ class KernelPlotter:
         stations_dict (Mapping[str, str]): Dictionary from station IDs to their names.
         colors (List[str]): List of plot colors.
     """
-    def __init__(self, path_output_csv: Path, path_config_supply: Path) -> None:
+    def __init__(self, path_output_csv: str, path_config_supply: str) -> None:
         """
         Initialize KernelPlotter with CSV and supply configuration paths.
 
@@ -284,10 +284,7 @@ class KernelPlotter:
         ax.axhline(y=0, color='black', linewidth=0.5, zorder=1)
         ax.axhline(y=service_max_capacity, color='lightcoral', linewidth=2, zorder=1)
         ax.axhline(y=-service_max_capacity, color='lightcoral', linewidth=2, zorder=1)
-
-        if save_path:
-            fig.savefig(save_path, format='pdf', dpi=300, bbox_inches='tight', transparent=True)
-        plt.show()
+        self._show_plot(fig=fig, save_path=save_path)
 
     def _plot_tickets_by_trip_aggregated(self, ax: Axes, ylim: Tuple[float, float] = None) -> None:
         """
@@ -398,13 +395,27 @@ class KernelPlotter:
         ax.set_ylim(ylim)
         ax.grid(axis='y', color=DARK_GRAY, alpha=0.3, zorder=1)
 
+    def _show_plot(self, fig: plt.Figure, save_path: str = None) -> None:
+        """
+        Show the plot and save it to a file if a path is provided.
+
+        Args:
+            fig (plt.Figure): Figure to show.
+            save_path (str, optional): Path to save the plot in PDF format. Defaults to None.
+        """
+        plt.show()
+        if save_path:
+            save_path_dir = Path(save_path).parent
+            save_path_dir.mkdir(parents=True, exist_ok=True)
+            fig.savefig(save_path, format='pdf', dpi=300, bbox_inches='tight', transparent=True)
+
     def plot_demand_status(self, ylim: Tuple[float, float] = None, save_path: str = None) -> None:
         """
         Plot the number of passengers attended based on their purchase status.
 
         Args:
             ylim (Tuple[float, float], optional): Bounds of the y-axis. Defaults to None.
-            save_path (str): Path to save the plot.
+            save_path (str, optional): Path to save the plot in PDF format. Defaults to None.
         """
         demand_data, x_labels = self._get_passenger_status()
         demand_served = sum([demand_data[1], demand_data[2]])
@@ -435,10 +446,7 @@ class KernelPlotter:
             )
             status_perc = round(demand_data[status] / passengers * 100, 2)
             ax.bar_label(ax.containers[i], labels=[f'{demand_data[status]} ({status_perc}%)'], padding=3)
-        plt.show()
-
-        if save_path is not None:
-            fig.savefig(save_path, format='pdf', dpi=300, bbox_inches='tight', transparent=True)
+        self._show_plot(fig=fig, save_path=save_path)
 
     def plot_seat_distribution(self, save_path: str = None) -> None:
         """
@@ -457,10 +465,7 @@ class KernelPlotter:
         colors = [self.colors[i % len(self.colors)] for i, _ in enumerate(tickets_sold_by_seat.keys())]
         ax.pie(tickets_sold_by_seat.values(), labels=tickets_sold_by_seat.keys(), colors=colors, autopct='%1.1f%%')
         ax.legend(bbox_to_anchor=(0.2, 0.2))
-        plt.show()
-
-        if save_path is not None:
-            fig.savefig(save_path, format='pdf', dpi=300, bbox_inches='tight', transparent=True)
+        self._show_plot(fig=fig, save_path=save_path)
 
     def plot_service_capacity(self, service_id: str, save_path: str = None) -> None:
         """
@@ -519,10 +524,7 @@ class KernelPlotter:
             bottom += values
 
         ax.legend()
-        plt.show()
-
-        if save_path is not None:
-            fig.savefig(save_path, format='pdf', dpi=300, bbox_inches='tight', transparent=True)
+        self._show_plot(fig=fig, save_path=save_path)
 
     def plot_tickets_by_trip(
         self,
@@ -547,10 +549,7 @@ class KernelPlotter:
             self._plot_tickets_by_trip_aggregated(ax=ax, ylim=ylim)
 
         ax.legend()
-        plt.show()
-
-        if save_path is not None:
-            fig.savefig(save_path, format='pdf', dpi=300, bbox_inches='tight', transparent=True)
+        self._show_plot(fig=fig, save_path=save_path)
 
     def plot_tickets_by_user(self, save_path: str = None) -> None:
         """
@@ -593,7 +592,4 @@ class KernelPlotter:
 
             ax.grid(axis='y', color=DARK_GRAY, alpha=0.3, zorder=1)
             ax.legend()
-        plt.show()
-
-        if save_path is not None:
-            fig.savefig(save_path, dpi=300, bbox_inches='tight')
+        self._show_plot(fig=fig, save_path=save_path)

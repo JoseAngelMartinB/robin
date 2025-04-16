@@ -8,7 +8,6 @@ from robin.supply.utils import get_time, get_date, format_td, set_stations_ids, 
 
 from copy import deepcopy
 from functools import cache, cached_property
-from pathlib import Path
 from typing import Any, Dict, List, Mapping, Set, Tuple, Union
 
 
@@ -767,12 +766,12 @@ class Supply:
         self.tsps = tuple(dict.fromkeys(service.tsp for service in services))
 
     @classmethod
-    def from_yaml(cls, path: Path) -> 'Supply':
+    def from_yaml(cls, path: str) -> 'Supply':
         """
         Class method to create a Supply object (List[Service]) from a YAML file.
 
         Args:
-            path (Path): Path to the YAML file.
+            path (str): Path to the YAML file.
 
         Returns:
             Supply: Supply object.

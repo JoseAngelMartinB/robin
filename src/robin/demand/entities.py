@@ -8,7 +8,6 @@ from robin.demand.constants import DEFAULT_SEAT_UTILITY, DEFAULT_TSP_UTILITY, DE
 from robin.demand.exceptions import InvalidForbiddenDepartureHoursException
 from robin.demand.utils import get_function, get_scipy_distribution
 
-from pathlib import Path
 from typing import Any, List, Mapping, Union, Tuple
 
 
@@ -941,7 +940,7 @@ class Demand:
         return days
 
     @classmethod
-    def from_yaml(cls, path: Path) -> 'Demand':
+    def from_yaml(cls, path: str) -> 'Demand':
         """
         Creates a demand from a YAML file.
 
@@ -954,7 +953,7 @@ class Demand:
         See data/demand_data_example.yaml for an example.
 
         Args:
-            path (Path): The path to the YAML file.
+            path (str): The path to the YAML file.
 
         Returns:
             Demand: The demand created from the YAML file.
