@@ -299,7 +299,7 @@ class KernelPlotter:
         """
         trips_sold = self._get_trips_sold()
         total_tickets_sold = sum(trips_sold.values())
-        trips = sorted(trips_sold.keys())
+        trips = list(trips_sold.keys())
 
         self._set_ax_properties(
             ax=ax,
@@ -329,7 +329,7 @@ class KernelPlotter:
         """
         trip_seat_sold = self._get_tickets_by_trip_seat()
         total_tickets_sold = sum(sum(v.values()) for v in trip_seat_sold.values())
-        trips = sorted(trip_seat_sold.keys())
+        trips = list(trip_seat_sold.keys())
         seats = sorted(set(seat for trip in trip_seat_sold.values() for seat in trip.keys()))
 
         ylim=ylim if ylim else (0, max(sum(seat_sold.values()) for seat_sold in trip_seat_sold.values()) * 1.1)
