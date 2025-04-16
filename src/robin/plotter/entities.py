@@ -11,7 +11,7 @@ from loguru import logger
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
 from pathlib import Path
-from typing import List, Mapping, Tuple, Union
+from typing import Any, List, Mapping, Tuple, Union
 
 
 class KernelPlotter:
@@ -46,32 +46,6 @@ class KernelPlotter:
             Mapping[str, str]: Dictionary mapping station IDs to names.
         """
         return {str(station.id): station.name for service in self.supply.services for station in service.line.stations}
-
-    def _get_trips_sold(self) -> Mapping[str, Mapping[str, int]]:
-        """
-        Get the total number of tickets sold per day and per each trip of stations.
-
-        Returns:
-            Mapping[str, Mapping[str, int]]: Dictionary with the total number of tickets sold per day
-                and per each trip (pair of stations).
-        """
-
-        def _get_trip_name(row: pd.Series) -> str:
-            """
-            Get the name of the trip.
-
-            Returns:
-                str: Name of the trip.
-            """
-            departure, arrival = tuple(row[['departure_station', 'arrival_station']])
-            return f'{self.stations_dict[departure]}\n{self.stations_dict[arrival]}'
-
-        # Add new column to the dataframe with the name of the trip of stations
-        self.output['trip'] = self.output.apply(_get_trip_name, axis=1)
-        grouped_df_by_trip = self.output.groupby(by=['trip']).size()
-        trip_data = grouped_df_by_trip.to_dict()
-        # Sort the data by number of tickets sold in descending order
-        return dict(sorted(trip_data.items(), key=lambda x: x[1], reverse=True))
 
     def _get_passenger_status(self) -> Tuple[Mapping[int, int], List[str]]:
         """
@@ -243,6 +217,24 @@ class KernelPlotter:
         sorted_data = dict(sorted(data.items(), key=lambda x: x[0]))
         return sorted_data
 
+    def _get_trips_sold(self) -> Mapping[str, Mapping[str, int]]:
+        """
+        Get number of tickets sold by trip of stations.
+
+        Returns:
+            Mapping[str, Mapping[str, int]]: Dictionary with number of tickets sold by trip of stations.
+        """
+        passengers_with_ticket = self.output[~self.output.service.isnull()]
+        tickets_sold = passengers_with_ticket.groupby(by=['departure_station', 'arrival_station']).size()
+        tickets_sold = tickets_sold.reset_index(name='count')
+
+        result = {}
+        for (departure, arrival), group in tickets_sold.groupby(['departure_station', 'arrival_station']):
+            origin_destination = f'{self.stations_dict[departure]}\n{self.stations_dict[arrival]}'
+            result[origin_destination] = group['count'].values[0]
+        sorted_count_trip_sold = dict(sorted(result.items(), key=lambda x: x[1], reverse=True))
+        return sorted_count_trip_sold
+
     def _plot_service_capacity(
         self,
         data: Mapping[str, Tuple[int, int, int]],
@@ -262,7 +254,7 @@ class KernelPlotter:
             xlabel (str, optional): Label of the x-axis. Defaults to None.
             ylabel (str, optional): Label of the y-axis. Defaults to None.
             rotation (int, optional): Rotation of the x-axis labels. Defaults to 0.
-            save_path (str, optional): Path to save the plot. Defaults to None.
+            save_path (str, optional): Path to save the plot in PDF format. Defaults to None.
         """
         fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(7, 4))
         self._set_ax_properties(
@@ -297,6 +289,36 @@ class KernelPlotter:
             fig.savefig(save_path, format='pdf', dpi=300, bbox_inches='tight', transparent=True)
         plt.show()
 
+    def _plot_tickets_by_trip_aggregated(self, ax: Axes, ylim: Tuple[float, float] = None) -> None:
+        """
+        Plot the number of tickets sold by trip of stations.
+
+        Args:
+            ax (Axes): Axes to plot the data.
+            ylim (Tuple[float, float], optional): Bounds of the y-axis. Defaults to None.
+        """
+        trips_sold = self._get_trips_sold()
+        total_tickets_sold = sum(trips_sold.values())
+        trips = sorted(trips_sold.keys())
+
+        self._set_ax_properties(
+            ax=ax,
+            data=trips_sold,
+            title=f'Tickets sold by trip (Total tickets sold: {total_tickets_sold})',
+            ylabel='Tickets sold',
+            xlabel='Trip',
+            xticklabels=trips,
+            ylim=ylim if ylim else (0, max(trips_sold.values()) * 1.1)
+        )
+
+        colors = {trip: color for trip, color in zip(trips, self.colors)}
+        for i, trip in enumerate(trips):
+            ax.bar(
+                x=i, height=trips_sold[trip], bottom=0, color=colors[trip],
+                label=trip, edgecolor='black', linewidth=0.5, zorder=2
+            )
+            ax.bar_label(ax.containers[i], padding=3)
+    
     def _plot_tickets_by_trip_disaggregated(self, ax: Axes, ylim: Tuple[float, float] = None) -> None:
         """
         Plot the number of tickets sold by trip of stations and seat type.
@@ -307,16 +329,14 @@ class KernelPlotter:
         """
         trip_seat_sold = self._get_tickets_by_trip_seat()
         total_tickets_sold = sum(sum(v.values()) for v in trip_seat_sold.values())
-
         trips = sorted(trip_seat_sold.keys())
         seats = sorted(set(seat for trip in trip_seat_sold.values() for seat in trip.keys()))
-        colors = {seat: color for seat, color in zip(seats, self.colors)}
-        ylim = ylim if ylim is not None else (0, max(sum(v.values()) for v in trip_seat_sold.values()) * 1.1)
 
+        ylim=ylim if ylim else (0, max(sum(seat_sold.values()) for seat_sold in trip_seat_sold.values()) * 1.1)
         self._set_ax_properties(
             ax=ax,
             data=trip_seat_sold,
-            title=f'Tickes sold by trip (Total tickets sold: {total_tickets_sold})',
+            title=f'Tickets sold by trip (Total tickets sold: {total_tickets_sold})',
             ylabel='Tickets sold',
             xlabel='Trip',
             xticklabels=trips,
@@ -324,22 +344,24 @@ class KernelPlotter:
         )
 
         bottom = np.zeros(len(trip_seat_sold))
-        total_values = np.zeros(len(trip_seat_sold))
+        total_values = np.zeros(len(trip_seat_sold), dtype=int)
+        colors = {seat: color for seat, color in zip(seats, self.colors)}
         for seat_type in seats:
             values = [trip_seat_sold[trip].get(seat_type, 0) for trip in trip_seat_sold.keys()]
-            print(values, bottom)
-            ax.bar(np.arange(len(trip_seat_sold)), values, bottom=bottom, color=colors[seat_type],
-                    label=seat_type, edgecolor='black', linewidth=0.5, zorder=2)
+            ax.bar(
+                x=np.arange(len(trip_seat_sold)), height=values, bottom=bottom, color=colors[seat_type],
+                label=seat_type, edgecolor='black', linewidth=0.5, zorder=2
+            )
             bottom += values
             total_values += values
 
         for i, total_value in enumerate(total_values):
-            ax.text(i, total_value + 0.01 * ylim, str(total_value), ha='center', va='bottom')
+            ax.text(i, total_value + 0.01 * ylim[1], str(total_value), ha='center', va='bottom')
 
     def _set_ax_properties(
         self,
         ax: Axes,
-        data: Mapping,
+        data: Mapping[Any, Any],
         title: str,
         ylabel: str,
         xlabel: str,
@@ -355,7 +377,7 @@ class KernelPlotter:
 
         Args:
             ax (Axes): Axes to set the properties.
-            data (Mapping): Data to plot.
+            data (Mapping[Any, Any]): Data to plot.
             title (str): Title of the plot.
             ylabel (str): Label of the y-axis.
             xlabel (str): Label of the x-axis.
@@ -423,7 +445,7 @@ class KernelPlotter:
         Plot a pie chart with the distribution of tickets sold by seat type.
 
         Args:
-            save_path (str, optional): Path to save the plot. Defaults to None.
+            save_path (str, optional): Path to save the plot in PDF format. Defaults to None.
         """
         tickets_sold_by_seat = self._get_tickets_by_seat()
         total_tickets = sum(tickets_sold_by_seat.values())
@@ -446,7 +468,7 @@ class KernelPlotter:
 
         Args:
             service_id (str): Id of the service.
-            save_path (str, optional): Path to save the plot. Defaults to None.
+            save_path (str, optional): Path to save the plot in PDF format. Defaults to None.
         """
         if not service_id in (service.id for service in self.supply.services):
             logger.error(f'Service {service_id} not found in the provided supply data.')
@@ -469,15 +491,13 @@ class KernelPlotter:
 
         Args:
             ylim (Tuple[float, float], optional): Bounds of the y-axis. Defaults to None.
-            save_path (str, optional): Path to save the plot. Defaults to None.
+            save_path (str, optional): Path to save the plot in PDF format. Defaults to None.
         """
         tickets_by_date_seat = self._get_tickets_by_date_seat()
         seat_types = sorted(set(seat_type for date in tickets_by_date_seat for seat_type in tickets_by_date_seat[date]))
 
         fig, ax = plt.subplots(1, 1, figsize=(7, 4))
         fig.subplots_adjust(hspace=0.75, bottom=0.2, top=0.9)
-
-        ylim = ylim if ylim else (0, max(sum(tickets_by_date_seat[d].values()) for d in tickets_by_date_seat) * 1.1)
         self._set_ax_properties(
             ax=ax,
             data=tickets_by_date_seat,
@@ -485,7 +505,7 @@ class KernelPlotter:
             ylabel='Tickets sold',
             xlabel='Purchase date',
             xticklabels=list(tickets_by_date_seat.keys()),
-            ylim=ylim,
+            ylim=ylim if ylim else (0, max(sum(tickets_by_date_seat[date].values()) for date in tickets_by_date_seat) * 1.1),
             xticklabels_kwargs={'rotation': 60, 'fontsize': 8, 'ha': 'right'}
         )
 
@@ -493,8 +513,8 @@ class KernelPlotter:
         for j, seat_type in enumerate(seat_types):
             values = [tickets_by_date_seat[date].get(seat_type, 0) for date in tickets_by_date_seat.keys()]
             ax.bar(
-                x=np.arange(len(tickets_by_date_seat)), height=values, width=0.5, bottom=bottom, color=self.colors[j % len(self.colors)],
-                label=seat_type, edgecolor='black', linewidth=0.5, zorder=2
+                x=np.arange(len(tickets_by_date_seat)), height=values, width=0.5, bottom=bottom,
+                color=self.colors[j % len(self.colors)], label=seat_type, edgecolor='black', linewidth=0.5, zorder=2
             )
             bottom += values
 
@@ -504,13 +524,18 @@ class KernelPlotter:
         if save_path is not None:
             fig.savefig(save_path, format='pdf', dpi=300, bbox_inches='tight', transparent=True)
 
-    def plot_tickets_by_trip(self, ylim: Tuple[float, float] = None, save_path: str = None, seat_disaggregation: bool = False) -> None:
+    def plot_tickets_by_trip(
+        self,
+        ylim: Tuple[float, float] = None,
+        save_path: str = None,
+        seat_disaggregation: bool = False
+    ) -> None:
         """
         Plot the number of tickets sold by trip of stations.
 
         Args:
             ylim (Tuple[float, float], optional): Bounds of the y-axis. Defaults to None.
-            save_path (str, optional): Path to save the plot. Defaults to None.
+            save_path (str, optional): Path to save the plot in PDF format. Defaults to None.
             seat_disaggregation (bool, optional): If True, disaggregate by seat type. Defaults to False.
         """
         fig, ax = plt.subplots(1, 1, figsize=(7, 4))
@@ -519,24 +544,7 @@ class KernelPlotter:
         if seat_disaggregation:
             self._plot_tickets_by_trip_disaggregated(ax=ax, ylim=ylim)
         else:
-            self._plot_tickets_by_trip_aggregated()
-
-            trips_sold = self._get_trips_sold()
-            total_tickets_sold = sum(trips_sold.values())
-
-            trips = sorted(trips_sold.keys())
-
-            colors = {trip: color for trip, color in zip(trips, self.colors)}
-
-            ylim = ylim if ylim is not None else (0, max(trips_sold.values()) * 1.1)
-            self._set_ax_properties(ax, trips_sold, ylim,
-                              f'Billetes vendidos por mercado ({total_tickets_sold} billetes vendidos)',
-                              trips)
-
-            for i, trip in enumerate(trips):
-                ax.bar(i, trips_sold[trip], bottom=0, color=colors[trip], label=trip, edgecolor='black', linewidth=0.5,
-                       zorder=2)
-                ax.bar_label(ax.containers[i], padding=3)
+            self._plot_tickets_by_trip_aggregated(ax=ax, ylim=ylim)
 
         ax.legend()
         plt.show()
@@ -549,7 +557,7 @@ class KernelPlotter:
         Plot the number of tickets sold by user type.
 
         Args:
-            save_path (str, optional): Path to save the plot. Defaults to None.
+            save_path (str, optional): Path to save the plot in PDF format. Defaults to None.
         """
         data = self._get_tickets_sold_by_user()
         user_types = sorted(set(user_type for date in data for user_type in data[date]))
@@ -559,22 +567,24 @@ class KernelPlotter:
         fig.subplots_adjust(hspace=0.75, bottom=0.2, top=0.9)
 
         for i, user_type in enumerate(user_types):
-            # TODO: set_ax_properties
             ax: Axes = axs[i]
-            ax.set_facecolor(WHITE_SMOKE)
-            ax.set_title(f'Tickets sold for user type "{user_type}"', fontweight='bold')
-            ax.set_ylabel('Tickets sold')
-            ax.set_xlabel('Purchase date', labelpad=10)
-            ax.set_xticks(np.arange(len(data)))
-            ax.set_xticklabels(data.keys(), rotation=60, fontsize=8, ha='right')
-            ax.set_xlim([-0.5, len(data)])
+            self._set_ax_properties(
+                ax=ax,
+                data=data,
+                title=f'Tickets sold for user type "{user_type}"',
+                ylabel='Tickets sold',
+                xlabel='Purchase date',
+                xticklabels=list(data.keys()),
+                ylim=(0, max(sum(data[date].get(user_type, {}).values()) for date in data) * 1.1),
+                xticklabels_kwargs={'rotation': 60, 'fontsize': 8, 'ha': 'right'}
+            )
 
             bottom = np.zeros(len(data))
             for j, seat_type in enumerate(seat_types):
                 values = [data[date].get(user_type, {}).get(seat_type, 0) for date in data.keys()]
                 ax.bar(
-                    x=np.arange(len(data)), height=values, width=0.5, bottom=bottom, color=self.colors[j % len(self.colors)],
-                    label=seat_type, edgecolor='black', linewidth=0.5, zorder=2
+                    x=np.arange(len(data)), height=values, width=0.5, bottom=bottom,
+                    color=self.colors[j % len(self.colors)], label=seat_type, edgecolor='black', linewidth=0.5, zorder=2
                 )
                 bottom += values
 
