@@ -567,7 +567,10 @@ class KernelPlotter:
         fig.subplots_adjust(hspace=0.75, bottom=0.2, top=0.9)
 
         for i, user_type in enumerate(user_types):
-            ax: Axes = axs[i]
+            if len(user_types) == 1:
+                ax: Axes = axs
+            else:
+                ax: Axes = axs[i]
             self._set_ax_properties(
                 ax=ax,
                 data=data,
