@@ -314,8 +314,8 @@ class SupplySaver(Supply):
             Dict[str, Any]: Dictionary representation of the Station object.
         """
         station_dict = {
-            'id': station.id, 'name': station.name, 'city': station.city, 'short_name': station.shortname,
-            'coordinates': {'latitude': float(station.coords[0]), 'longitude': float(station.coords[1])}
+            'id': station.id, 'name': station.name, 'city': station.city, 'short_name': station.short_name,
+            'coordinates': {'latitude': float(station.coordinates[0]), 'longitude': float(station.coordinates[1])}
         }
         return station_dict
 

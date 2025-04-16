@@ -20,11 +20,11 @@ class Station:
         id (str): Station ID.
         name (str): Station name.
         city (str): Station city.
-        shortname (str): Station short name.
-        coords (Tuple[float, float]): Station coordinates (latitude, longitude).
+        short_name (str): Station short name.
+        coordinates (Tuple[float, float]): Station coordinates (latitude, longitude).
     """
 
-    def __init__(self, id_: str, name: str, city: str, shortname: str, coords: Tuple[float, float] = None) -> None:
+    def __init__(self, id_: str, name: str, city: str, short_name: str, coordinates: Tuple[float, float] = None) -> None:
         """
         Initialize a Station with name, city, short name and coordinates.
 
@@ -32,15 +32,14 @@ class Station:
             id_ (str): Station ID.
             name (str): Station name.
             city (str): Station city.
-            shortname (str): Station short name.
-            coords (Tuple[float, float]): Station coordinates (latitude, longitude).
+            short_name (str): Station short name.
+            coordinates (Tuple[float, float]): Station coordinates (latitude, longitude).
         """
         self.id = id_
         self.name = name
         self.city = city
-        # NOTE: In the YAML file, the shortname is called 'short_name'
-        self.shortname = shortname
-        self.coords = coords
+        self.short_name = short_name
+        self.coordinates = coordinates
 
     def __str__(self) -> str:
         """
@@ -63,8 +62,8 @@ class Station:
             f'id={self.id}, '
             f'name={self.name}, '
             f'city={self.city}, '
-            f'shortname={self.shortname}, '
-            f'coords={self.coords})'
+            f'short_name={self.short_name}, '
+            f'coordinates={self.coordinates})'
         )
 
 
@@ -848,15 +847,15 @@ class Supply:
             Dict[str, Station]: Dict of Station objects.
         """
         stations = {}
-        for s in data[key]:
-            assert all(k in s.keys() for k in ('id', 'name', 'short_name', 'city')), "Incomplete Station data"
-            lat, lon = tuple(s.get('coordinates', {'lat': None, 'lon': None}).values())
+        for station in data[key]:
+            assert all(station_fields in station.keys() for station_fields in ('id', 'name', 'short_name', 'city')), 'Incomplete Station data'
+            lat, lon = tuple(station.get('coordinates', {'lat': None, 'lon': None}).values())
             if not lat or not lon:
-                station_id = str(s['id'])
-                stations[station_id] = Station(station_id, s['name'], s['city'], s['short_name'])
+                station_id = str(station['id'])
+                stations[station_id] = Station(station_id, station['name'], station['city'], station['short_name'])
             else:
-                coords = (float(lat), float(lon))
-                stations[str(s['id'])] = Station(str(s['id']), s['name'], s['city'], s['short_name'], coords)
+                coordinates = (float(lat), float(lon))
+                stations[str(station['id'])] = Station(str(station['id']), station['name'], station['city'], station['short_name'], coordinates)
         return stations
 
     @classmethod
@@ -873,7 +872,7 @@ class Supply:
         """
         time_slots = {}
         for time_slot in data[key]:
-            assert all(k in time_slot.keys() for k in ('id', 'start', 'end')), "Incomplete TimeSlot data"
+            assert all(time_slot_fields in time_slot.keys() for time_slot_fields in ('id', 'start', 'end')), 'Incomplete TimeSlot data'
             time_slot_id = str(time_slot['id'])
             time_slots[time_slot_id] = TimeSlot(time_slot_id, get_time(time_slot['start']), get_time(time_slot['end']))
         return time_slots
@@ -913,17 +912,16 @@ class Supply:
             return {sta_dict[node]: to_station(tree[node], sta_dict) for node in tree}
 
         corridors = {}
-        for c in data[key]:
-            assert all(k in c.keys() for k in ('id', 'name', 'stations')), 'Incomplete Corridor data'
+        for corridor in data[key]:
+            assert all(corridor_fields in corridor.keys() for corridor_fields in ('id', 'name', 'stations')), 'Incomplete Corridor data'
 
-            tree_dictionary = convert_tree_to_dict(c['stations'])
+            tree_dictionary = convert_tree_to_dict(corridor['stations'])
             corr_stations_ids = set_stations_ids(tree_dictionary)
-            assert all(s in stations.keys() for s in corr_stations_ids), 'Station not found in Station list'
+            assert all(station in stations.keys() for station in corr_stations_ids), 'Station not found in Station list'
 
             stations_tree = to_station(deepcopy(tree_dictionary), stations)
-            corridor_id = str(c['id'])
-            corridors[corridor_id] = Corridor(corridor_id, c['name'], stations_tree)
-
+            corridor_id = str(corridor['id'])
+            corridors[corridor_id] = Corridor(corridor_id, corridor['name'], stations_tree)
         return corridors
 
     @classmethod
@@ -940,24 +938,25 @@ class Supply:
             Dict[str, Line]: Dict of Line objects.
         """
         lines = {}
-        for ln in data[key]:
-            assert all(k in ln.keys() for k in ('id', 'name', 'corridor', 'stops')), 'Incomplete Line data'
+        for line in data[key]:
+            assert all(line_fields in line.keys() for line_fields in ('id', 'name', 'corridor', 'stops')), 'Incomplete Line data'
 
-            corr_id = str(ln['corridor'])
+            corr_id = str(line['corridor'])
             assert corr_id in corridors.keys(), 'Corridor not found in Corridor list'
-            corr = corridors[corr_id]
+            corridor = corridors[corr_id]
 
-            for stn in ln['stops']:
-                assert all(k in stn for k in ('station', 'arrival_time', 'departure_time')), 'Incomplete Stops data'
+            for station in line['stops']:
+                assert all(stop_fields in station for stop_fields in ('station', 'arrival_time', 'departure_time')), 'Incomplete Stops data'
 
-            corr_stations_ids = [s.id for s in corr.stations.values()]
-            assert all(s['station'] in corr_stations_ids for s in ln['stops']), 'Station not found in Corridor list'
+            corr_stations_ids = [station.id for station in corridor.stations.values()]
+            assert all(station['station'] in corr_stations_ids for station in line['stops']), 'Station not found in Corridor list'
 
-            timetable = {s['station']: (float(s['arrival_time']), float(s['departure_time']))
-                         for s in ln['stops']}
-            line_id = str(ln['id'])
-            lines[line_id] = Line(line_id, ln['name'], corr, timetable)
-
+            timetable = {
+                station['station']: (float(station['arrival_time']), float(station['departure_time']))
+                for station in line['stops']
+            }
+            line_id = str(line['id'])
+            lines[line_id] = Line(line_id, line['name'], corridor, timetable)
         return lines
 
     @classmethod
@@ -973,10 +972,10 @@ class Supply:
             Dict[str, Seat]: Dict of Seat objects.
         """
         seats = {}
-        for s in data[key]:
-            assert all(k in s.keys() for k in ('id', 'name', 'hard_type', 'soft_type')), 'Incomplete Seat data'
-            seat_id = str(s['id'])
-            seats[seat_id] = Seat(seat_id, s['name'], s['hard_type'], s['soft_type'])
+        for seat in data[key]:
+            assert all(seat_fields in seat.keys() for seat_fields in ('id', 'name', 'hard_type', 'soft_type')), 'Incomplete Seat data'
+            seat_id = str(seat['id'])
+            seats[seat_id] = Seat(seat_id, seat['name'], seat['hard_type'], seat['soft_type'])
         return seats
 
     @classmethod
@@ -999,7 +998,7 @@ class Supply:
         """
         rolling_stocks = {}
         for rolling_stock in data[key]:
-            assert all(k in rolling_stock.keys() for k in ('id', 'name', 'seats')), 'Incomplete RollingStock data'
+            assert all(rolling_stock_fields in rolling_stock.keys() for rolling_stock_fields in ('id', 'name', 'seats')), 'Incomplete RollingStock data'
 
             for seat in rolling_stock['seats']:
                 assert all(key in seat for key in ('hard_type', 'quantity')), 'Incomplete seats data for RS'
@@ -1009,10 +1008,7 @@ class Supply:
 
             rolling_stock_seats = {int(seat['hard_type']): int(seat['quantity']) for seat in rolling_stock['seats']}
             rolling_stock_id = str(rolling_stock['id'])
-            rolling_stocks[rolling_stock_id] = RollingStock(rolling_stock_id,
-                                                            rolling_stock['name'],
-                                                            rolling_stock_seats)
-
+            rolling_stocks[rolling_stock_id] = RollingStock(rolling_stock_id, rolling_stock['name'], rolling_stock_seats)
         return rolling_stocks
 
     @classmethod
@@ -1035,10 +1031,10 @@ class Supply:
         """
         tsps = {}
         for tsp in data[key]:
-            assert all(k in tsp.keys() for k in ('id', 'name', 'rolling_stock')), 'Incomplete TSP data'
-            assert all(str(i) in rolling_stock.keys() for i in tsp['rolling_stock']), 'Unknown RollingStock ID'
+            assert all(tsp_fields in tsp.keys() for tsp_fields in ('id', 'name', 'rolling_stock')), 'Incomplete TSP data'
+            assert all(str(rolling_stock_id) in rolling_stock.keys() for rolling_stock_id in tsp['rolling_stock']), 'Unknown RollingStock ID'
             tsp_id = str(tsp['id'])
-            tsps[tsp_id] = TSP(tsp_id, tsp['name'], [rolling_stock[str(rs_id)] for rs_id in tsp['rolling_stock']])
+            tsps[tsp_id] = TSP(tsp_id, tsp['name'], [rolling_stock[str(rolling_stock_id)] for rolling_stock_id in tsp['rolling_stock']])
         return tsps
 
     @classmethod
@@ -1061,14 +1057,14 @@ class Supply:
         if yaml_capacity_constraints:
             capacity_constraints = {}
             for capacity_constraint in yaml_capacity_constraints:
-                assert all(k in capacity_constraint for k in
+                assert all(capacity_constraint_field in capacity_constraint for capacity_constraint_field in
                            ('origin', 'destination', 'seats')), 'Incomplete capacity constraints data for Service'
-                assert all(s in service_line.corridor.stations.keys() for s in
+                assert all(station in service_line.corridor.stations.keys() for station in
                            (capacity_constraint['origin'],
                             capacity_constraint['destination'])), 'Invalid station in capacity constraints'
 
                 for seat in capacity_constraint['seats']:
-                    assert all(k in seat for k in ('hard_type', 'quantity')), 'Incomplete seats data for Service'
+                    assert all(service in seat for service in ('hard_type', 'quantity')), 'Incomplete seats data for Service'
                     assert seat['hard_type'] in service_rolling_stock.seats.keys(), 'Invalid hard type in capacity constraints'
 
                 origin_destination_tuple = (capacity_constraint['origin'], capacity_constraint['destination'])
@@ -1098,19 +1094,18 @@ class Supply:
             Dict[Tuple[str, str], Dict[Seat, float]]: Dict of service prices.
         """
         service_prices = {}
-        for pair in yaml_service_prices:
-            assert all(k in pair.keys() for k in ('origin', 'destination', 'seats')), 'Incomplete Service prices'
+        for trip in yaml_service_prices:
+            assert all(trip_fields in trip.keys() for trip_fields in ('origin', 'destination', 'seats')), 'Incomplete Service prices'
 
-            origin = pair['origin']
-            destination = pair['destination']
-            assert all(s in service_line.corridor.stations.keys() for s in (origin, destination)), 'Invalid station in Service'
-            for seat in pair['seats']:
+            origin = trip['origin']
+            destination = trip['destination']
+            assert all(station in service_line.corridor.stations.keys() for station in (origin, destination)), 'Invalid station in Service'
+            for seat in trip['seats']:
                 assert all(key in seat for key in ('seat', 'price')), 'Incomplete seats data for Service'
                 assert str(seat['seat']) in seats, 'Invalid seat in Service prices'
 
-            prices = {seats[str(seat['seat'])]: seat['price'] for seat in pair['seats']}
+            prices = {seats[str(seat['seat'])]: seat['price'] for seat in trip['seats']}
             service_prices[(origin, destination)] = prices
-
         return service_prices
 
     @classmethod
@@ -1145,7 +1140,7 @@ class Supply:
                 'id', 'date', 'line', 'train_service_provider', 'time_slot', 'rolling_stock',
                 'origin_destination_tuples', 'capacity_constraints'
             )
-            assert all(k in service.keys() for k in service_keys), 'Incomplete Service data'
+            assert all(service_fields in service.keys() for service_fields in service_keys), 'Incomplete Service data'
 
             service_id = str(service['id'])
             service_date = get_date(service['date'])
@@ -1166,14 +1161,14 @@ class Supply:
             service_rolling_stock = rolling_stock[rolling_stock_id]
 
             yaml_service_prices = service['origin_destination_tuples']
-            service_prices = cls._get_service_prices(service_line=service_line,
-                                                     seats=seats,
-                                                     yaml_service_prices=yaml_service_prices)
+            service_prices = cls._get_service_prices(
+                service_line, seats, yaml_service_prices
+            )
 
             yaml_capacity_constraints = service['capacity_constraints']
-            capacity_constraints = cls._get_capacity_constraints(service_line=service_line,
-                                                                 service_rolling_stock=service_rolling_stock,
-                                                                 yaml_capacity_constraints=yaml_capacity_constraints)
+            capacity_constraints = cls._get_capacity_constraints(
+                service_line, service_rolling_stock, yaml_capacity_constraints
+            )
 
             services[service_id] = Service(
                 service_id,
