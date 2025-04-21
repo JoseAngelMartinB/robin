@@ -598,9 +598,10 @@ class RenfeScraper:
                 od_pairs.add((origin, destination))
         return od_pairs
 
-    def _save_df_stops(
+    def _save_df(
         self,
-        df_stops: pd.DataFrame,
+        df: pd.DataFrame,
+        df_name: str,
         origin_id: str,
         destination_id: str,
         init_date: datetime.date,
@@ -608,19 +609,20 @@ class RenfeScraper:
         save_path: str
     ) -> None:
         """
-        Saves the dataframe with the stops information to a CSV file.
+        Saves the dataframe to a CSV file.
 
         Args:
-            df_stops (pd.DataFrame): Dataframe with the stops information.
+            df_stops (pd.DataFrame): Dataframe to save.
+            df_name (str): Name of the dataframe.
             origin_id (str): Renfe id of the origin station.
             destination_id (str): Renfe id of the destination station.
             init_date (datetime.date): initial date of the trip.
             end_date (datetime.date): end date of the trip.
             save_path (str): Path to save the CSV file.
         """
-        os.makedirs(f'{save_path}/stopTimes/', exist_ok=True)
-        df_stops.to_csv(
-            f'{save_path}/stopTimes/stopTimes_{origin_id}_{destination_id}_{init_date}_{end_date}.csv',
+        os.makedirs(f'{save_path}/{df_name}/', exist_ok=True)
+        df.to_csv(
+            f'{save_path}/{df_name}/{df_name}_{origin_id}_{destination_id}_{init_date}_{end_date}.csv',
             index=False
         )
 
@@ -726,11 +728,14 @@ class RenfeScraper:
                 df_prices = pd.concat([df_prices, new_df_prices], ignore_index=True)
                 date += datetime.timedelta(days=1)
 
-        # Save prices
-        os.makedirs(f'{save_path}/prices/', exist_ok=True)
-        df_prices.to_csv(
-            f'{save_path}/prices/prices_{origin_id}_{destination_id}_{init_date}_{end_date}.csv',
-            index=False
+        self._save_df(
+            df=df_prices,
+            df_name='prices',
+            origin_id=self.driver.get_value_from_stations(search_column='RENFE_ID', value=origin_id, objective_column='ADIF_ID'),
+            destination_id=self.driver.get_value_from_stations(search_column='RENFE_ID', value=destination_id, objective_column='ADIF_ID'),
+            init_date=init_date,
+            end_date=end_date,
+            save_path=save_path
         )
         return df_prices
 
@@ -772,10 +777,11 @@ class RenfeScraper:
             return pd.DataFrame()
 
         df_stops = self._get_df_stops(df_trips)
-        self._save_df_stops(
-            df_stops=df_stops,
-            origin_id=origin_id,
-            destination_id=destination_id,
+        self._save_df(
+            df=df_stops,
+            df_name='stopTimes',
+            origin_id=self.driver.get_value_from_stations(search_column='RENFE_ID', value=origin_id, objective_column='ADIF_ID'),
+            destination_id=self.driver.get_value_from_stations(search_column='RENFE_ID', value=destination_id, objective_column='ADIF_ID'),
             init_date=init_date,
             end_date=end_date,
             save_path=save_path
