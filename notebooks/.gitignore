@@ -1,0 +1,7 @@
+# Ignore everything in this directory
+*
+# Except these files
+!.gitignore
+!1.0-test_case.ipynb
+!2.0-renfe_scraping.ipynb
+!3.0-calibration.ipynb

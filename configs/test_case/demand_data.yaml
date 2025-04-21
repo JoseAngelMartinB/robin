@@ -1,6 +1,3 @@
-# Yaml datafile for demand data. Data of test case.
-
-# Market
 market:
   - id: 1
     departure_station: '60000'
@@ -11,8 +8,6 @@ market:
   - id: 3
     departure_station: '60000'
     arrival_station: '71801'
-
-# User Pattern
 userPattern:
   - id: 1
     name: Business
@@ -98,13 +93,10 @@ userPattern:
     error_kwargs:
       loc: 1
       scale: 0.5
-
-# Demand Pattern
 demandPattern:
   - id: 1
     name: Monday-Thursday
     markets:
-      # Madrid - Zaragoza
       - market: 1
         potential_demand: randint
         potential_demand_kwargs:
@@ -115,7 +107,6 @@ demandPattern:
             percentage: 0.4
           - id: 2
             percentage: 0.6
-      # Zaragoza - Barcelona
       - market: 2
         potential_demand: randint
         potential_demand_kwargs:
@@ -126,7 +117,6 @@ demandPattern:
             percentage: 0.5
           - id: 2
             percentage: 0.5
-      # Madrid - Barcelona
       - market: 3
         potential_demand: randint
         potential_demand_kwargs:
@@ -137,8 +127,6 @@ demandPattern:
             percentage: 0.8
           - id: 2
             percentage: 0.2
-
-# Day
 day:
   - id: 1
     date: 2023-06-01

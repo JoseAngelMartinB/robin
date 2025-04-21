@@ -3,7 +3,7 @@
 # Train stations
 stations:
   - id: "MAD"
-    name: "Atocha"
+    name: "Madrid-Puerta de Atocha"
     city: "Madrid"
     short_name: "MAD"
   - id: "ZAZ"
@@ -15,7 +15,7 @@ stations:
     city: "Barcelona"
     short_name: "BCN"
 
-# Time slots (surcos)
+# Time slots
 timeSlot:
   - id: 1
     start: "8:00:00"
@@ -49,8 +49,6 @@ corridor:
             des:
               - org: "BCN"
                 des: []
-
-    # stations: ["MAD", "ZAZ", "BCN"]
 
 # Lines
 line:

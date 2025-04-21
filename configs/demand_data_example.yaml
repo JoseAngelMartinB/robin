@@ -76,13 +76,13 @@ userPattern:
       end: 14
     seats:
       - id: 1
-        utility: 15
+        utility: 18
       - id: 2
-        utility: 12
+        utility: 15
       - id: 3
-        utility: 10
+        utility: 12
       - id: 4
-        utility: 8
+        utility: 10
     train_service_providers:
       - id: 1
         utility: 2
