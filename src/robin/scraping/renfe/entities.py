@@ -5,14 +5,8 @@ import os
 import pandas as pd
 
 from robin.scraping.renfe.constants import (
-    MAIN_MENU_URL,
-    PRICES_URL,
-    SCHEDULE_URL,
-    SAVE_PATH,
-    RENFE_STATIONS_CSV,
-    LR_RENFE_SERVICES,
-    DEFAULT_PATIENCE,
-    ONE_DAY
+    MAIN_MENU_URL, PRICES_URL, SCHEDULE_URL, SAVE_PATH,
+    RENFE_STATIONS_CSV, LR_RENFE_SERVICES, DEFAULT_PATIENCE, ONE_DAY
 )
 from robin.scraping.renfe.exceptions import NotAvailableStationsException
 from robin.scraping.renfe.utils import time_str_to_minutes, time_to_datetime, time_to_minutes
@@ -505,6 +499,7 @@ class DriverManager:
             if station_name == 'Estaciones de Origen':
                 continue
             station_id = station.get_attribute('value')
+            station_id = self.get_value_from_stations(search_column='RENFE_ID', value=station_id, objective_column='ADIF_ID')
             ids_names[station_id] = station_name
         return ids_names
     
@@ -649,17 +644,17 @@ class RenfeScraper:
             all_pairs (bool): If True, scrape prices for all origin-destination pairs in the trips dataframe.
             save_path (str): Path to save the CSV files.
         """
-        # Convert Adif station ids to Renfe station ids
-        origin_id = self.driver.get_value_from_stations(search_column='ADIF_ID', value=origin, objective_column='RENFE_ID')
-        destination_id = self.driver.get_value_from_stations(search_column='ADIF_ID', value=destination, objective_column='RENFE_ID')
-
         # Assert that the origin and destination stations are in the list of stations operated by Renfe
-        pair_of_stations_in_csv = all(s in self.available_stations.keys() for s in (origin_id, destination_id))
+        pair_of_stations_in_csv = all(trip in self.available_stations.keys() for trip in (origin, destination))
         assert pair_of_stations_in_csv, 'Invalid origin or destination'
 
         # If no initial date is provided, use today's date
         if not init_date:
             init_date = datetime.date.today()
+
+        # Convert Adif station ids to Renfe station ids
+        origin_id = self.driver.get_value_from_stations(search_column='ADIF_ID', value=origin, objective_column='RENFE_ID')
+        destination_id = self.driver.get_value_from_stations(search_column='ADIF_ID', value=destination, objective_column='RENFE_ID')
 
         # Scrape trips
         df_trips = self.scrape_trips(
