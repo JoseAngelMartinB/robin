@@ -669,7 +669,8 @@ class RenfeScraper:
         if df_trips.empty:
             logger.warning(f'No trips found between {origin_id} and {destination_id} from {init_date} to {init_date + datetime.timedelta(days=range_days)}')
         else:
-            logger.success(f'Scraped {len(df_trips)} trips between {origin_id} and {destination_id} from {init_date} to {end_date}')
+            unique_trips = df_trips.groupby('service_id').size()
+            logger.success(f'Scraped {len(unique_trips)} trips between {origin_id} and {destination_id} from {init_date} to {end_date}')
             logger.info(f'First five trips:\n{df_trips.head()}')
 
         # Scrape prices
