@@ -12,7 +12,7 @@ SAVE_PATH = 'data/renfe'
 RENFE_STATIONS_CSV = importlib.resources.files('robin.data').joinpath('adif_renfe_stations.csv')
 
 # Allowed Renfe services for scraping
-LR_RENFE_SERVICES = ('AVE', 'AVLO', 'AVE INT', 'ALVIA', 'AVANT', 'MD', 'REG.EXP.')
+LR_RENFE_SERVICES = ('AVE', 'AVLO', 'AVE INT', 'ALVIA', 'AVANT')
 
 # Default patience for scraping
 DEFAULT_PATIENCE = 10

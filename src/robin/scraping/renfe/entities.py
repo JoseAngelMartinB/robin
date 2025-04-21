@@ -95,6 +95,8 @@ class DriverManager:
         trains = prices.find_elements(By.CSS_SELECTOR, '.row.selectedTren')
         records = []
         for train in trains:
+            if self._is_transfer_train(train):
+                continue
             trip_id = self._get_prices_trip_id(train)
             if not trip_id:
                 continue
@@ -412,6 +414,22 @@ class DriverManager:
             bool: True if the train type is allowed, False otherwise.
         """
         return train_type in ' '.join(self.allowed_train_types)
+
+    def _is_transfer_train(self, train: WebElement) -> bool:
+        """
+        Checks if the train is a transfer train.
+
+        Args:
+            train (WebElement): Train element.
+
+        Returns:
+            bool: True if the train is a transfer train, False otherwise.
+        """
+        try:
+            train.find_element(By.CLASS_NAME, 'enlace-tren')
+            return True
+        except NoSuchElementException:
+            return False
 
     def _request_url(
         self,
