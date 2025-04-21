@@ -433,9 +433,8 @@ class DriverManager:
             Union[WebElement, None]: WebElement with the prices or None if the prices are not loaded.
         """
         self.driver.get(url)
-        div = self.driver.find_element(find_by, find_value)
         try:
-            WebDriverWait(self.driver, patience).until(EC.visibility_of_element_located((find_by, find_value)))
+            div = WebDriverWait(self.driver, patience).until(EC.visibility_of_element_located((find_by, find_value)))
         except TimeoutException:
             return None
         return div
@@ -667,8 +666,11 @@ class RenfeScraper:
             save_path=save_path
         )
         end_date = init_date + datetime.timedelta(days=range_days)
-        logger.success(f'Scraped {len(df_trips)} trips between {origin_id} and {destination_id} from {init_date} to {end_date}')
-        logger.info(f'First five trips:\n{df_trips.head()}')
+        if df_trips.empty:
+            logger.warning(f'No trips found between {origin_id} and {destination_id} from {init_date} to {init_date + datetime.timedelta(days=range_days)}')
+        else:
+            logger.success(f'Scraped {len(df_trips)} trips between {origin_id} and {destination_id} from {init_date} to {end_date}')
+            logger.info(f'First five trips:\n{df_trips.head()}')
 
         # Scrape prices
         df_prices = self.scrape_prices(
@@ -679,8 +681,11 @@ class RenfeScraper:
             df_trips=df_trips if all_pairs else None,
             save_path=save_path
         )
-        logger.success(f'Scraped {len(df_prices)} services between {origin_id} and {destination_id} from {init_date} to {end_date}')
-        logger.info(f'First five services:\n{df_prices.head()}')
+        if df_prices.empty:
+            logger.warning(f'No prices found between {origin_id} and {destination_id} from {init_date} to {end_date}')
+        else:
+            logger.success(f'Scraped {len(df_prices)} services between {origin_id} and {destination_id} from {init_date} to {end_date}')
+            logger.info(f'First five services:\n{df_prices.head()}')
 
     def scrape_prices(
         self,
@@ -767,7 +772,7 @@ class RenfeScraper:
         for _ in range(range_days):
             logger.info(f'Scraping trips for {origin_id} - {destination_id} on {date}')
             new_df_trips = self.driver.scrape_trips(origin_id=origin_id, destination_id=destination_id, date=date)
-            if new_df_trips is None:
+            if new_df_trips.empty:
                 logger.warning(f'No trips found for {origin_id} - {destination_id} on {date}. Skipping...')
                 continue
             df_trips = pd.concat([df_trips, new_df_trips], ignore_index=True)
