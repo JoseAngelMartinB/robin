@@ -5,8 +5,8 @@ import os
 import pandas as pd
 
 from robin.scraping.renfe.constants import (
-    MAIN_MENU_URL, PRICES_URL, SCHEDULE_URL, SAVE_PATH, RENFE_TSP,
-    RENFE_STATIONS_CSV, LR_RENFE_SERVICES, DEFAULT_PATIENCE, ONE_DAY
+    ALLOWED_RENFE_SERVICES, DEFAULT_PATIENCE, MAIN_MENU_URL, ONE_DAY,
+    PRICES_URL, RENFE_TSP, RENFE_STATIONS_CSV, SAVE_PATH, SCHEDULE_URL
 )
 from robin.scraping.renfe.exceptions import NotAvailableStationsException
 from robin.scraping.renfe.utils import time_str_to_minutes, time_to_datetime, time_to_minutes
@@ -35,7 +35,7 @@ class DriverManager:
     def __init__(
         self,
         stations_df: pd.DataFrame,
-        allowed_train_types: List[str] = LR_RENFE_SERVICES
+        allowed_train_types: List[str] = ALLOWED_RENFE_SERVICES
     ) -> None:
         """
         Initializes the DriverManager object.
@@ -561,7 +561,7 @@ class RenfeScraper:
         self,
         stations_csv_path: str = RENFE_STATIONS_CSV,
         menu_url: str = MAIN_MENU_URL,
-        allowed_train_types: List[str] = LR_RENFE_SERVICES
+        allowed_train_types: List[str] = ALLOWED_RENFE_SERVICES
     ) -> None:
         """
         Initialize a RenfeScraper object.

@@ -7,7 +7,7 @@ import yaml
 
 from robin.scraping.exceptions import InvalidHardTypesException
 from robin.scraping.constants import (
-    OUTPUT_SUPPLY_PATH, PRICES_COLUMNS, RENFE_STATIONS_PATH, TIME_SLOT_SIZE, SPANISH_CORRIDOR_PATH
+    OUTPUT_SUPPLY_PATH, PRICES_COLUMNS, RENFE_STATIONS_PATH, SPANISH_CORRIDOR_PATH, TIME_SLOT_SIZE
 )
 from robin.scraping.utils import timedelta_to_str
 from robin.supply.entities import Station, TimeSlot, Corridor, Line, Seat, RollingStock, TSP, Service, Supply
