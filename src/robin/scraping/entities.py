@@ -26,7 +26,6 @@ class DataLoader:
         stops (pd.Dataframe): DataFrame containing the stops data.
         prices (pd.Dataframe): DataFrame containing the prices data.
         renfe_stations (pd.Dataframe): DataFrame containing the Renfe stations data.
-        trips (pd.Dataframe): DataFrame containing the trips data.
         seat_components (Mapping[int, int]): Dictionary with seat components.
         seat_quantity (Mapping[int, int]): Dictionary with seat quantity.
         seat_names (List[str]): List of seat names.
@@ -59,7 +58,6 @@ class DataLoader:
         self.stops = pd.read_csv(stops_path, dtype={'stop_id': str})
         self.prices = pd.read_csv(prices_path, dtype={'origin': str, 'destination': str})
         self.renfe_stations = pd.read_csv(renfe_stations_path, delimiter=';', dtype={'ADIF_ID': str, 'RENFE_ID': str})
-        self.trips = pd.DataFrame({'service_id': list(dict.fromkeys(self.stops['service_id']))})
         self.seat_components, self.seat_quantity = self._check_hard_types(seat_components, seat_quantity)
         self.seat_names = self.prices.columns[PRICES_COLUMNS:]
         self.spanish_corridor = self._read_yaml(path=spanish_corridor_path)
@@ -138,8 +136,8 @@ class DataLoader:
                 prices = self.prices[condition][price_cols].values[0].tolist()
             except IndexError:
                 continue
-            total_prices[pair] = {st: p for st, p in zip(self.seats.values(), prices)}
-        filtered_prices = {pair: {st: p for st, p in total_prices[pair].items() if not np.isnan(p)} for pair in total_prices}
+            total_prices[pair] = {seat: price for seat, price in zip(self.seats.values(), prices)}
+        filtered_prices = {pair: {seat: price for seat, price in total_prices[pair].items() if not np.isnan(price)} for pair in total_prices}
         return filtered_prices
 
     def _read_yaml(self, path: str) -> Dict[str, List[str]]:
@@ -169,20 +167,19 @@ class DataLoader:
     @cached_property
     def time_slots(self) -> Dict[str, TimeSlot]:
         """
-        Returns a dictionary of time slots with the service IDs as keys.
+        Returns a dictionary of time slots with their IDs as keys.
 
         Returns:
-            Dict[str, TimeSlot]: Dictionary of time slots with the service IDs as keys.
+            Dict[str, TimeSlot]: Dictionary of time slots with their IDs as keys.
         """
         time_slots_dict = {}
-        for service_id in self.trips['service_id']:
+        for service_id in self.prices['service_id']:
             departure_str = service_id.split('-')[-1].replace('.', ':') + ':00'
             time_slot_start = get_time(departure_str)
             delta = datetime.timedelta(minutes=self.time_slot_size)
             time_slot_end = time_slot_start + delta
             time_slot_id = str(time_slot_start.seconds // 60) + str(delta.seconds // 60)
-            # NOTE: Use the service_id as the key for the time slot as then it is possible to index by it
-            time_slots_dict[service_id] = TimeSlot(time_slot_id, time_slot_start, time_slot_end)
+            time_slots_dict[time_slot_id] = TimeSlot(time_slot_id, time_slot_start, time_slot_end)
         return time_slots_dict
 
     @cached_property
@@ -222,7 +219,7 @@ class DataLoader:
         Returns:
             Dict[str, RollingStock]: Dictionary of rolling stocks with their IDs as keys.
         """
-        return {1: RollingStock('1', 'S-114', self.seat_quantity)}
+        return {'1': RollingStock('1', 'S-114', self.seat_quantity)}
 
     @cached_property
     def seats(self) -> Dict[str, Seat]:
@@ -246,7 +243,12 @@ class DataLoader:
         Returns:
             Dict[str, TSP]: Dictionary of train service providers with their IDs as keys.
         """
-        return {1: TSP('1', 'Renfe', [rolling_stock for rolling_stock in self.rolling_stocks.values()])}
+        unique_tsps = self.prices['tsp'].unique()
+        tsps_dict = {}
+        for i, tsp_name in enumerate(unique_tsps, start=1):
+            tsp_id = str(i)
+            tsps_dict[tsp_id] = TSP(tsp_id, tsp_name, [rolling_stock for rolling_stock in self.rolling_stocks.values()])
+        return tsps_dict
 
     @cached_property
     def services(self) -> List[Service]:
@@ -256,29 +258,37 @@ class DataLoader:
         Returns:
             List[Service]: List of services.
         """
-        self.trips['date'] = self.trips['service_id'].apply(lambda service_id: datetime.datetime.strptime(service_id.split('_')[1], '%d-%m-%Y-%H.%M').date())
-        self.trips['line'] = self.trips['service_id'].apply(lambda service_id: self.lines[service_id.split('_')[0]])
-        self.trips['train_service_provider'] = self.trips['service_id'].apply(lambda _: self.tsps[1])
-        self.trips['time_slot'] = self.trips['service_id'].apply(lambda service_id: self.time_slots[service_id])
-        self.trips['rolling_stock'] = self.trips['service_id'].apply(lambda _: self.rolling_stocks[1])
-        self.trips['prices'] = self.trips['service_id'].apply(
+        trips = deepcopy(self.prices)
+        trips['date'] = trips['service_id'].apply(lambda service_id: datetime.datetime.strptime(service_id.split('_')[1], '%d-%m-%Y-%H.%M').date())
+        trips['line'] = trips['service_id'].apply(lambda service_id: self.lines[service_id.split('_')[0]])
+        trips['train_service_provider'] = trips['tsp'].apply(
+            lambda tsp_name: next(tsp for tsp in self.tsps.values() if tsp.name == tsp_name)
+        )
+        trips['time_slot'] = trips['service_id'].apply(
+            lambda service_id: self.time_slots[
+                f'{get_time(service_id.split("-")[-1].replace(".", ":") + ":00").seconds // 60}'
+                f'{datetime.timedelta(minutes=self.time_slot_size).seconds // 60}'
+            ]
+        )
+        trips['rolling_stock'] = trips['service_id'].apply(lambda _: self.rolling_stocks['1'])
+        trips['prices'] = trips['service_id'].apply(
             lambda service_id: self._get_trip_prices(
-                service_id=service_id, line=self.trips['line'].values[0], start_time=get_time(service_id.split('-')[-1].replace('.', ':') + ':00')
+                service_id=service_id, line=trips['line'].values[0], start_time=get_time(service_id.split('-')[-1].replace('.', ':') + ':00')
             )
         )
-        self.trips['service'] = self.trips.apply(
+        trips['service'] = trips.apply(
             lambda service: Service(
-                service['service_id'],
-                service['date'],
-                service['line'],
-                service['train_service_provider'],
-                service['time_slot'],
-                service['rolling_stock'],
-                service['prices']
+            service['service_id'],
+            service['date'],
+            service['line'],
+            service['train_service_provider'],
+            service['time_slot'],
+            service['rolling_stock'],
+            service['prices']
             ),
             axis=1
         )
-        return self.trips['service'].values.tolist()
+        return trips['service'].values.tolist()
 
 
 class SupplySaver(Supply):

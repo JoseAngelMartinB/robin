@@ -306,9 +306,6 @@ timeSlot:
 - id: '56710'
   start: '9:27:00'
   end: '9:37:00'
-- id: '62710'
-  start: '10:27:00'
-  end: '10:37:00'
 - id: '68710'
   start: '11:27:00'
   end: '11:37:00'
@@ -543,19 +540,6 @@ line:
   - station: '04307'
     arrival_time: 467
     departure_time: 467
-- id: '06303'
-  name: Line 06303
-  corridor: '1'
-  stops:
-  - station: '60000'
-    arrival_time: 0
-    departure_time: 0
-  - station: '04040'
-    arrival_time: 80
-    departure_time: 81
-  - station: '71801'
-    arrival_time: 172
-    departure_time: 172
 - id: '03113'
   name: Line 03113
   corridor: '1'
@@ -989,17 +973,9 @@ service:
     - seat: '3'
       price: 92.65
     - seat: '4'
-      price: 184.8
+      price: 61.6
     - seat: '5'
-      price: 203.8
-  capacity_constraints: null
-- id: 06303_01-06-2025-10.27
-  date: '2025-06-01'
-  line: '06303'
-  train_service_provider: '1'
-  time_slot: '62710'
-  rolling_stock: '1'
-  origin_destination_tuples: []
+      price: 80.6
   capacity_constraints: null
 - id: 03113_01-06-2025-11.27
   date: '2025-06-01'
@@ -1035,9 +1011,9 @@ service:
     - seat: '3'
       price: 104.2
     - seat: '4'
-      price: 184.8
+      price: 61.6
     - seat: '5'
-      price: 203.8
+      price: 80.6
   capacity_constraints: null
 - id: 03131_01-06-2025-12.57
   date: '2025-06-01'
@@ -1209,13 +1185,13 @@ service:
     destination: '71801'
     seats:
     - seat: '2'
-      price: 104.2
-    - seat: '3'
       price: 115.8
+    - seat: '3'
+      price: 127.4
     - seat: '4'
-      price: 123.2
+      price: 138.6
     - seat: '5'
-      price: 142.2
+      price: 157.6
   capacity_constraints: null
 - id: 03191_01-06-2025-18.57
   date: '2025-06-01'
@@ -1228,9 +1204,9 @@ service:
     destination: '71801'
     seats:
     - seat: '2'
-      price: 123.05
+      price: 95.7
     - seat: '3'
-      price: 136.7
+      price: 109.35
     - seat: '4'
       price: 145.45
     - seat: '5'
@@ -1247,7 +1223,7 @@ service:
     destination: '71801'
     seats:
     - seat: '1'
-      price: 99.0
+      price: 109.0
   capacity_constraints: null
 - id: 03201_01-06-2025-20.05
   date: '2025-06-01'

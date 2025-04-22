@@ -5,7 +5,7 @@ import os
 import pandas as pd
 
 from robin.scraping.renfe.constants import (
-    MAIN_MENU_URL, PRICES_URL, SCHEDULE_URL, SAVE_PATH,
+    MAIN_MENU_URL, PRICES_URL, SCHEDULE_URL, SAVE_PATH, RENFE_TSP,
     RENFE_STATIONS_CSV, LR_RENFE_SERVICES, DEFAULT_PATIENCE, ONE_DAY
 )
 from robin.scraping.renfe.exceptions import NotAvailableStationsException
@@ -102,17 +102,18 @@ class DriverManager:
                 continue
             origin = self.get_value_from_stations(search_column='RENFE_ID', value=origin_id, objective_column='ADIF_ID')
             destination = self.get_value_from_stations(search_column='RENFE_ID', value=destination_id, objective_column='ADIF_ID')
+            tsp = RENFE_TSP
             train_type = self._get_prices_train_type(train)
             departure, arrival, duration = self._get_prices_train_schedule(train, date)
             train_prices = self._get_prices_train(train)
             if not self._is_allowed_train_type(train_type):
                 continue
-            train_record = [trip_id, origin, destination, train_type, departure, arrival, duration, train_prices]
+            train_record = [trip_id, origin, destination, tsp, train_type, departure, arrival, duration, train_prices]
             records.append(train_record)
 
         if not records:
             return pd.DataFrame()
-        col_names = ['trip_id', 'origin', 'destination', 'train_type', 'departure', 'arrival', 'duration', 'prices']
+        col_names = ['trip_id', 'origin', 'destination', 'tsp', 'train_type', 'departure', 'arrival', 'duration', 'prices']
         return self._get_prices_dataframe(records=records, col_names=col_names)
 
     def _get_df_trips(self, trips: WebElement, date: datetime.date) -> pd.DataFrame:
