@@ -11,7 +11,7 @@ ROBIN is a Python package that has been developed in the framework of the projec
 * Julio Alberto López Gomez ([julioalbertolopez](https://github.com/julioalbertolopez))
 * José Ángel Martín Baos ([JoseAngelMartinB](https://github.com/JoseAngelMartinB))
 * Juan Moreno García ([juanmorenogarcia](https://github.com/juanmorenogarcia))
-* David Muñoz ([TraktylCo](https://github.com/TraktylCo))
+* David Muñoz ([DavidMunozValero](https://github.com/DavidMunozValero))
 * Luis Rodríguez Benitez ([lrbenitez](https://github.com/lrbenitez))
 * Enrique Villarubia ([Kinrre](https://github.com/Kinrre))
 

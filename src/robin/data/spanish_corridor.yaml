@@ -1,0 +1,384 @@
+stations:
+- id: '60000'
+  name: MADRID PTA. ATOCHA - ALMUDENA GRANDES
+  city: MADRID
+  short_name: MADRI
+  coordinates:
+    lat: 40.406442
+    lon: -3.690886
+- id: '04007'
+  name: GUADALAJARA - YEBES
+  city: GUADALAJARA - YEBES
+  short_name: 04007
+  coordinates:
+    lat: 40.587315
+    lon: -3.124301
+- id: '70600'
+  name: CALATAYUD
+  city: CALATAYUD
+  short_name: '70600'
+  coordinates:
+    lat: 41.346692
+    lon: -1.63868
+- id: '04040'
+  name: ZARAGOZA-DELICIAS
+  city: ZARAGOZA
+  short_name: ZARAG
+  coordinates:
+    lat: 41.658649
+    lon: -0.911615
+- id: '78400'
+  name: LLEIDA-PIRINEUS
+  city: LLEIDA
+  short_name: '78400'
+  coordinates:
+    lat: 41.620696
+    lon: 0.632669
+- id: '04104'
+  name: CAMP TARRAGONA
+  city: TARRAGONA
+  short_name: '04104'
+  coordinates:
+    lat: 41.192066
+    lon: 1.272666
+- id: '71801'
+  name: BARCELONA-SANTS
+  city: BARCELONA
+  short_name: BARCE
+  coordinates:
+    lat: 41.37922
+    lon: 2.140624
+- id: '79206'
+  name: GIRONA
+  city: GIRONA
+  short_name: '79206'
+  coordinates:
+    lat: 41.953481
+    lon: 2.80536
+- id: '04307'
+  name: FIGUERES VILAFANT
+  city: FIGUERES
+  short_name: '04307'
+  coordinates:
+    lat: 42.264771
+    lon: 2.943547
+- id: '87374'
+  name: PERPIGNAN
+  city: PERPIGNAN
+  short_name: '87374'
+  coordinates:
+    lat: 42.696421
+    lon: 2.880381
+- id: '87088'
+  name: NARBONNE
+  city: NARBONNE
+  short_name: '87088'
+  coordinates:
+    lat: 43.190253
+    lon: 3.005716
+- id: '87173'
+  name: MONTPELLIER SAINT-ROCH
+  city: MONTPELLIER
+  short_name: '87173'
+  coordinates:
+    lat: 43.604852
+    lon: 3.880491
+- id: '87302'
+  name: NIMES
+  city: NIMES
+  short_name: '87302'
+  coordinates:
+    lat: 43.832291
+    lon: 4.365845
+- id: '87814'
+  name: AVIGNON TGV
+  city: AVIGNON
+  short_name: '87814'
+  coordinates:
+    lat: 43.921938
+    lon: 4.785813
+- id: '87912'
+  name: AIX EN PROVENCE TGV 
+  city: AIX EN PROVENCE
+  short_name: '87912'
+  coordinates:
+    lat: 43.455268
+    lon: 5.31723
+- id: '87089'
+  name: MARSEILLE ST CHARLES
+  city: MARSEILLE
+  short_name: '87089'
+  coordinates:
+    lat: 43.30349
+    lon: 5.382236
+- id: '37200'
+  name: CIUDAD REAL
+  city: CIUDAD REAL
+  short_name: '37200'
+  coordinates:
+    lat: 38.9853
+    lon: -3.913633
+- id: '37300'
+  name: PUERTOLLANO
+  city: PUERTOLLANO
+  short_name: '37300'
+  coordinates:
+    lat: 38.69128
+    lon: -4.111655
+- id: '50500'
+  name: CÓRDOBA
+  city: CÓRDOBA
+  short_name: '50500'
+  coordinates:
+    lat: 37.888291
+    lon: -4.789453
+- id: '51003'
+  name: SEVILLA-SANTA JUSTA
+  city: SEVILLA
+  short_name: '51003'
+  coordinates:
+    lat: 37.3921277
+    lon: -5.9752694
+- id: '54413'
+  name: MÁLAGA MARÍA ZAMBRANO
+  city: MÁLAGA
+  short_name: '54413'
+  coordinates:
+    lat: 36.7113388
+    lon: -4.4313888
+- id: '05000'
+  name: GRANADA
+  city: GRANADA
+  short_name: '05000'
+  coordinates:
+    lat: 37.184038
+    lon: -3.609154
+- id: '08004'
+  name: SEGOVIA GUIOMAR
+  city: SEGOVIA
+  short_name: '08004'
+  coordinates:
+    lat: 40.910577
+    lon: -4.094564
+- id: '30200'
+  name: ZAMORA
+  city: ZAMORA
+  short_name: '30200'
+  coordinates:
+    lat: 41.515892
+    lon: -5.739675
+- id: '22100'
+  name: OURENSE
+  city: OURENSE
+  short_name: '22100'
+  coordinates:
+    lat: 42.350389
+    lon: -7.872777
+- id: '23004'
+  name: PONTEVEDRA
+  city: PONTEVEDRA
+  short_name: '23004'
+  coordinates:
+    lat: 42.421969
+    lon: -8.635546
+- id: '31412'
+  name: A CORUÑA
+  city: A CORUÑA
+  short_name: '31412'
+  coordinates:
+    lat: 43.3496932
+    lon: -8.4155629
+- id: '10600'
+  name: VALLADOLID
+  city: VALLADOLID
+  short_name: '10600'
+  coordinates:
+    lat: 41.642167
+    lon: -4.726986
+- id: '14100'
+  name: PALENCIA
+  city: PALENCIA
+  short_name: '14100'
+  coordinates:
+    lat: 42.015711
+    lon: -4.534135
+- id: '15100'
+  name: LEÓN
+  city: LEÓN
+  short_name: '15100'
+  coordinates:
+    lat: 42.596048
+    lon: -5.582428
+- id: '15211'
+  name: OVIEDO/UVIÉU
+  city: OVIEDO
+  short_name: '15211'
+  coordinates:
+    lat: 43.366841
+    lon: -5.854263
+- id: '15402'
+  name: GIJÓN/XIXÓN
+  city: GIJÓN
+  short_name: '15402'
+  coordinates:
+    lat: 43.539243
+    lon: -5.675436
+- id: '11014'
+  name: BURGOS ROSA MANZANO
+  city: BURGOS
+  short_name: '11014'
+  coordinates:
+    lat: 42.371197
+    lon: -3.666308
+- id: '17000'
+  name: MADRID-CHAMARTÍN-CLARA CAMPOAMOR
+  city: MADRID
+  short_name: '17000'
+  coordinates:
+    lat: 40.4720993
+    lon: -3.6824687
+- id: '03208'
+  name: CUENCA FERNANDO ZÓBEL
+  city: CUENCA
+  short_name: '03208'
+  coordinates:
+    lat: 40.035192
+    lon: -2.14441
+- id: '03213'
+  name: REQUENA UTIEL
+  city: REQUENA
+  short_name: '03213'
+  coordinates:
+    lat: 39.519834
+    lon: -1.127601
+- id: '03216'
+  name: VALENCIA JOAQUÍN SOROLLA
+  city: VALENCIA
+  short_name: 'VALEN'
+  coordinates:
+    lat: 39.459051
+    lon: -0.382923
+- id: '65200'
+  name: SAGUNT/SAGUNTO
+  city: SAGUNT
+  short_name: '65200'
+  coordinates:
+    lat: 39.6756611
+    lon: -0.2715972
+- id: '65300'
+  name: CASTELLÓ
+  city: CASTELLÓ
+  short_name: '65300'
+  coordinates:
+    lat: 39.9882552
+    lon: -0.0524126
+- id: '60600'
+  name: ALBACETE-LOS LLANOS
+  city: ALBACETE
+  short_name: '60600'
+  coordinates:
+    lat: 38.999384
+    lon: -1.84845
+- id: '60911'
+  name: ALICANTE/ALACANT
+  city: ALICANTE
+  short_name: '60911'
+  coordinates:
+    lat: 38.34445
+    lon: -0.4950527
+- id: '61200'
+  name: MURCIA
+  city: MURCIA
+  short_name: '61200'
+  coordinates:
+    lat: 37.97465
+    lon: -1.1299555
+
+corridor:
+- id: '1'
+  name: 'Spanish Corridor'
+  stations:
+  - org: '60000'  # MADRID PTA. ATOCHA - ALMUDENA GRANDES
+    des:
+    - org: '04007'  # GUADALAJARA - YEBES
+      des:
+      - org: '70600'  # CALATAYUD
+        des:
+        - org: '04040'  # ZARAGOZA-DELICIAS
+          des:
+          - org: '78400'  # LLEIDA-PIRINEUS
+            des:
+            - org: '04104'  # CAMP TARRAGONA
+              des:
+              - org: '71801'  # BARCELONA-SANTS
+                des:
+                - org: '79206'  # GIRONA
+                  des:
+                  - org: '04307'  # FIGUERES VILAFANT
+                    des:
+                    - org: '87374'  # PERPIGNAN
+                      des:
+                      - org: '87088'  # NARBONNE
+                        des:
+                        - org: '87173'  # MONTPELLIER SAINT-ROCH
+                          des:
+                          - org: '87302'  # NIMES
+                            des:
+                            - org: '87814'  # AVIGNON TGV
+                              des:
+                              - org: '87912'  # AIX EN PROVENCE TGV 
+                                des:
+                                - org: '87089'  # MARSEILLE ST CHARLES
+                                  des: []
+    - org: '37200'  # CIUDAD REAL
+      des:
+      - org: '37300'  # PUERTOLLANO
+        des:
+        - org: '50500'  # CÓRDOBA
+          des:
+          - org: '51003'  # SEVILLA-SANTA JUSTA
+            des: []
+          - org: '54413'  # MÁLAGA MARÍA ZAMBRANO
+            des: []
+          - org: '05000'  # GRANADA
+            des: []
+    - org: '08004'  # SEGOVIA GUIOMAR
+      des:
+      - org: '30200'  # ZAMORA
+        des:
+        - org: '22100'  # OURENSE
+          des:
+          - org: '23004'  # PONTEVEDRA
+            des: []
+          - org: '31412'  # A CORUÑA
+            des: []
+        - org: '10600'  # VALLADOLID
+          des:
+          - org: '14100'  # PALENCIA
+            des:
+            - org: '15100'  # LEÓN
+              des:
+              - org: '15211'  # OVIEDO/UVIÉU
+                des:
+                - org: '15402'  # GIJÓN/XIXÓN
+                  des: []
+            - org: '11014'  # BURGOS ROSA MANZANO
+              des: []
+  - org: '17000'  # MADRID-CHAMARTÍN-CLARA CAMPOAMOR
+    des:
+    - org: '03208'  # CUENCA FERNANDO ZÓBEL
+      des:
+      - org: '03213'  # REQUENA UTIEL
+        des:
+        - org: '03216'  # VALENCIA JOAQUÍN SOROLLA
+          des:
+          - org: '65200'  # SAGUNT/SAGUNTO
+            des:
+            - org: '65300'  # CASTELLÓ
+              des: []
+      - org: '60600'  # ALBACETE-LOS LLANOS
+        des:
+        - org: '60911'  # ALICANTE/ALACANT
+          des:
+          - org: '61200'  # MURCIA
+            des: []
