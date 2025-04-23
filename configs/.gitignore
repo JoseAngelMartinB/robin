@@ -1,0 +1,18 @@
+# Ignore everything in this directory
+*
+# Except these files
+!.gitignore
+!demand_data_example.yaml
+!demand_data_one_year.yaml
+!supply_data_example.yaml
+!supply_data_one_year.yaml
+
+!calibration
+!calibration/demand_data_target.yaml
+!calibration/demand_data.yaml
+!calibration/supply_data.yaml
+!calibration/target.csv
+
+!plotter
+!plotter/demand_data.yaml
+!plotter/supply_data.yaml

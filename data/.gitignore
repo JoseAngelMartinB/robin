@@ -2,10 +2,11 @@
 *
 # Except these files
 !.gitignore
-!supply_data_example.yml
-!supply_data.yml
-!demand_data_example.yml
-!demand_data.yml
 
-!datagen/
-!datagen/**
+!scraping
+!scraping/renfe
+!scraping/renfe/supply_60000_71801_2025-06-01_2025-06-02.yaml
+!scraping/renfe/prices
+!scraping/renfe/prices/prices_60000_71801_2025-06-01_2025-06-02.csv
+!scraping/renfe/stopTimes
+!scraping/renfe/stopTimes/stopTimes_60000_71801_2025-06-01_2025-06-02.csv

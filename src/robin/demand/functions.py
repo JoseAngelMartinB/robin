@@ -1,8 +1,7 @@
-"""Functions for demand module."""
+"""Functions for the demand module."""
 
-import numpy as np
-
-from typing import Mapping
+from numpy.polynomial.polynomial import polyval
+from typing import List, Union
 
 
 class Function:
@@ -14,17 +13,21 @@ class Function:
     """
 
     @staticmethod
-    def polynomial(x: float, **kwargs: Mapping[str, float]) -> float:
+    def polynomial(x: float, coeff: List[Union[int, float]]) -> float:
         """
         Polynomial function.
 
         Args:
             x (float): The x value.
-            **kwargs (Mapping[str, float]): The coefficients of the polynomial.
+            coeff (List[Union[int, float]]): The coefficients of the polynomial.
 
         Returns:
             float: The y value.
         """
-        reverse_sorted = dict(sorted(kwargs.items(), key=lambda item: item[1], reverse=True))
-        coeff = list(reverse_sorted.values())
-        return np.polyval(x=x, p=coeff)
+        # NOTE: This speed up the polynomial function for 2nd and 3rd degree polynomials.
+        number_of_coeff = len(coeff)
+        if number_of_coeff == 2:
+            return coeff[0] + coeff[1] * x
+        elif number_of_coeff == 3:
+            return coeff[0] + coeff[1] * x + coeff[2] * x ** 2
+        return polyval(x=x, c=coeff)
