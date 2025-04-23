@@ -13,6 +13,9 @@
 !calibration/supply_data.yaml
 !calibration/target.csv
 
-!plotter
-!plotter/demand_data.yaml
-!plotter/supply_data.yaml
+!supply_generator
+!supply_generator/config.yaml
+
+!test_case
+!test_case/demand_data.yaml
+!test_case/supply_data.yaml
