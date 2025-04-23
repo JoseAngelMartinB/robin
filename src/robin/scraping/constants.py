@@ -2,9 +2,6 @@
 
 import importlib.resources
 
-# Default file path where the SupplySaver will save the YAML file
-OUTPUT_SUPPLY_PATH = 'supply_data.yaml'
-
 # Starting column number for the prices in the CSV prices file
 PRICES_COLUMNS = 9
 

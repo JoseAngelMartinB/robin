@@ -757,7 +757,7 @@ class Supply:
             services (List[Service]): List of services available in the system.
         """
         self.services = services
-        self.stations = tuple(dict.fromkeys(station for service in services for station in service.line.stations))
+        self.stations = tuple(dict.fromkeys(station for service in services for station in service.line.corridor.stations.values()))
         self.time_slots = tuple(dict.fromkeys(service.time_slot for service in services))
         self.corridors = tuple(dict.fromkeys(service.line.corridor for service in services))
         self.lines = tuple(dict.fromkeys(service.line for service in services))

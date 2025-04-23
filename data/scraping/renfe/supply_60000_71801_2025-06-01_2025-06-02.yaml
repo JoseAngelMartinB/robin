@@ -931,9 +931,9 @@ service:
     destination: '71801'
     seats:
     - seat: '2'
-      price: 34.75
+      price: 57.9
     - seat: '3'
-      price: 46.3
+      price: 69.5
     - seat: '4'
       price: 107.8
     - seat: '5'
@@ -973,9 +973,9 @@ service:
     - seat: '3'
       price: 92.65
     - seat: '4'
-      price: 61.6
+      price: 77.0
     - seat: '5'
-      price: 80.6
+      price: 96.0
   capacity_constraints: null
 - id: 03113_01-06-2025-11.27
   date: '2025-06-01'
@@ -1011,9 +1011,9 @@ service:
     - seat: '3'
       price: 104.2
     - seat: '4'
-      price: 61.6
+      price: 77.0
     - seat: '5'
-      price: 80.6
+      price: 96.0
   capacity_constraints: null
 - id: 03131_01-06-2025-12.57
   date: '2025-06-01'
@@ -1045,9 +1045,9 @@ service:
     destination: '71801'
     seats:
     - seat: '2'
-      price: 91.9
+      price: 114.9
     - seat: '3'
-      price: 103.4
+      price: 126.4
     - seat: '4'
       price: 183.4
     - seat: '5'
