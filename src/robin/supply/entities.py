@@ -790,49 +790,6 @@ class Supply:
 
         return cls(list(services.values()))
 
-    def get_stations_dict(self):
-        """
-        Get a dictionary of stations in the supply with the station id as key and the station name as value.
-
-        Returns:
-            Dict[str, str]: Dictionary of stations in the supply with the station id as key and the station name
-            as value.
-        """
-        return {str(sta.id): sta.name for s in self.services for sta in s.line.stations}
-
-    def filter_service_by_id(self, service_id: str) -> Service:
-        """
-        Filters a Service by ID.
-
-        Args:
-            service_id (str): Service ID.
-
-        Returns:
-            Service: Service object.
-        """
-        for service in self.services:
-            if service.id == service_id:
-                return service
-
-    @cache
-    def filter_services(self, origin: str, destination: str, date: datetime.date) -> List[Service]:
-        """
-        Filters a List of Services available in the system that meet the users requirements.
-
-        Args:
-            origin (str): Origin Station ID.
-            destination (str): Destination Station ID.
-            date (datetime.date): Date of service (day, month, year, without time).
-
-        Returns:
-            List[Service]: List of Service objects that meet the user requests.
-        """
-        filtered_services = []
-        for service in self.services:
-            if service.date == date and (origin, destination) in service.prices.keys():
-                filtered_services.append(service)
-        return filtered_services
-
     @classmethod
     def _get_stations(cls, data: Mapping[Any, Any], key: str = 'stations') -> Dict[str, Station]:
         """
@@ -1180,3 +1137,46 @@ class Supply:
                 capacity_constraints
             )
         return services
+
+    def get_stations_dict(self) -> Mapping[str, str]:
+        """
+        Get a dictionary of stations in the supply with the station id as key and the station name as value.
+
+        Returns:
+            Mapping[str, str]: Dictionary of stations in the supply with
+            the station id as key and the station name as value.
+        """
+        return {str(station.id): station.name for service in self.services for station in service.line.corridor.stations.values()}
+
+    def filter_service_by_id(self, service_id: str) -> Service:
+        """
+        Filters a Service by ID.
+
+        Args:
+            service_id (str): Service ID.
+
+        Returns:
+            Service: Service object.
+        """
+        for service in self.services:
+            if service.id == service_id:
+                return service
+
+    @cache
+    def filter_services(self, origin: str, destination: str, date: datetime.date) -> List[Service]:
+        """
+        Filters a List of Services available in the system that meet the users requirements.
+
+        Args:
+            origin (str): Origin Station ID.
+            destination (str): Destination Station ID.
+            date (datetime.date): Date of service (day, month, year, without time).
+
+        Returns:
+            List[Service]: List of Service objects that meet the user requests.
+        """
+        filtered_services = []
+        for service in self.services:
+            if service.date == date and (origin, destination) in service.prices.keys():
+                filtered_services.append(service)
+        return filtered_services
