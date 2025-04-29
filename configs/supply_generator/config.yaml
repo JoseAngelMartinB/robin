@@ -1,6 +1,9 @@
-# Corridors config
+# Dates
+dates:
+  min: 2024-06-25
+  max: 2024-06-26
 
-# Lines config
+# Lines
 lines:
   probabilities:
     '03612': 0.5
@@ -47,9 +50,3 @@ prices:
       '1': 1  # Tourist Class
       '2': 1.2 # Tourist Plus Class
       '3': 1.6  # Business Class
-
-# Service config
-services:
-  dates: # Set range for random dates
-    min: 2024-06-25
-    max: 2024-06-26

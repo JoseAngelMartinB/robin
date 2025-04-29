@@ -1,0 +1,165 @@
+# Yaml datafile for supply data. Example data for testing.
+
+# Train stations
+stations:
+  - id: "MAD"
+    name: "Madrid-Puerta de Atocha"
+    city: "Madrid"
+    short_name: "MAD"
+  - id: "ZAZ"
+    name: "Zaragoza-Delicias"
+    city: "Zaragoza"
+    short_name: "ZAZ"
+  - id: "BCN"
+    name: "Barcelona-Sants"
+    city: "Barcelona"
+    short_name: "BCN"
+
+# Time slots
+timeSlot:
+  - id: 1
+    start: "8:00:00"
+    end: "8:10:00"
+    mark: "8:05:00"
+  - id: 2
+    start: "12:15:00"
+    end: "12:25:00"
+    mark: "12:20:00"
+  - id: 3
+    start: "16:30:00"
+    end: "16:40:00"
+    mark: "16:35:00"
+  - id: 4
+    start: "20:45:00"
+    end: "20:55:00"
+    mark: "20:50:00"
+  - id: 5
+    start: "23:45:00"
+    end: "00:45:00"
+    mark: "00:15:00"
+
+# Corridor
+corridor:
+  - id: 1
+    name: "Madrid-Barcelona"
+    stations:
+      - org: "MAD"
+        des:
+          - org: "ZAZ"
+            des:
+              - org: "BCN"
+                des: []
+
+# Lines
+line:
+  - id: 1
+    name: "L1"
+    corridor: 1
+    stops:
+      - station: "MAD"
+        arrival_time: 0
+        departure_time: 0
+      - station: "ZAZ"
+        arrival_time: 79.3
+        departure_time: 94.3
+      - station: "BCN"
+        arrival_time: 185.1
+        departure_time: 185.1
+  - id: 2
+    name: "L1-reverse"
+    corridor: 1
+    stops:
+      - station: "BCN"
+        arrival_time: 0
+        departure_time: 0
+      - station: "ZAZ"
+        arrival_time: 90.8
+        departure_time: 95.8
+      - station: "MAD"
+        arrival_time: 185.1
+        departure_time: 185.1
+  - id: 3
+    name: "L2"
+    corridor: 1
+    stops:
+      - station: "MAD"
+        arrival_time: 0
+        departure_time: 0
+      - station: "BCN"
+        arrival_time: 150.1
+        departure_time: 150.1
+  - id: 4
+    name: "L2-reverse"
+    corridor: 1
+    stops:
+      - station: "BCN"
+        arrival_time: 0
+        departure_time: 0
+      - station: "MAD"
+        arrival_time: 150.1
+        departure_time: 150.1
+
+# Seats
+seat:
+  - id: 1
+    name: "First class - With luggage"
+    hard_type: 1
+    soft_type: 1
+  - id: 2
+    name: "Second class - With luggage"
+    hard_type: 2
+    soft_type: 1
+  - id: 3
+    name: "First class - Without luggage"
+    hard_type: 1
+    soft_type: 2
+  - id: 4
+    name: "Second class - Without luggage"
+    hard_type: 2
+    soft_type: 2
+
+# Rolling stock
+rollingStock:
+  - id: 1
+    name: "Talgo 350"
+    seats:
+      - hard_type: 1
+        quantity: 50
+      - hard_type: 2
+        quantity: 250
+  - id: 2
+    name: "Talgo 350"
+    seats:
+      - hard_type: 1
+        quantity: 50
+      - hard_type: 2
+        quantity: 250
+  - id: 3
+    name: "Talgo 350"
+    seats:
+      - hard_type: 1
+        quantity: 50
+      - hard_type: 2
+        quantity: 250
+  - id: 4
+    name: "Talgo 200"
+    seats:
+      - hard_type: 2
+        quantity: 200
+  - id: 5
+    name: "Talgo 200"
+    seats:
+      - hard_type: 2
+        quantity: 200
+
+# Train service provider
+trainServiceProvider:
+  - id: 1
+    name: "Renfe"
+    rolling_stock: [1, 2, 3, 4, 5]
+  - id: 2
+    name: "Ouigo"
+    rolling_stock: [1, 2, 3, 4, 5]
+
+# Service
+service: []

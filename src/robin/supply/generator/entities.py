@@ -6,113 +6,146 @@ import os
 import random
 import yaml
 
-from robin.supply.entities import Seat, TimeSlot, TSP, Line, RollingStock, Service
+from robin.supply.entities import Station, TimeSlot, Corridor, Line, Seat, RollingStock, TSP, Service
 from robin.supply.saver.entities import SupplySaver
 
 from robin.supply.generator.utils import get_distance
 
 from pathlib import Path
-from typing import Dict, List, Mapping, Tuple
+from typing import Any, List, Mapping, Union, Tuple
 
 
 class SupplyGenerator(SupplySaver):
     """
     """
 
-    def __init__(self, services: List[Service]) -> None:
+    def __init__(
+        self,
+        stations: Mapping[str, Station],
+        time_slots: Mapping[str, TimeSlot],
+        corridors: Mapping[str, Corridor],
+        lines: Mapping[str, Line],
+        seats: Mapping[str, Seat],
+        rolling_stock: Mapping[str, RollingStock],
+        tsps: Mapping[str, TSP],
+        services: List[Service],
+        config: Union[Mapping[str, Any], None] = None,
+        seed: Union[int, None] = None
+    ) -> None:
         """
         """
+        if seed is not None:
+            self.set_seed(seed)
         SupplySaver.__init__(self, services)
-
-    def _generate_service(self) -> Service:
-        """
-        """
-        feasible = False
-
-        while not feasible:
-            line = self._get_random_line()
-            time_slot = self._get_random_time_slot()
-            tsp = self._get_random_tsp()
-            rolling_stock = self._get_random_rs(tsp)
-            date = self._get_random_date()
-            prices = self._get_random_prices(line, rolling_stock, tsp)
-            date_str = date.strftime('%Y-%m-%d')
-            time_str = '.'.join(str(time_slot.start).split(':')[:2])
-            service_id = f'{line.id}_{date_str}-{time_str}'
-            service = Service(
-                id_=service_id, date=date, line=line, time_slot=time_slot,
-                tsp=tsp, rolling_stock=rolling_stock, prices=prices
-            )
-
-            # TODO: Check if the service is feasible
-            feasible = True
-
-        self.services.append(service)
-        return service
-
-    def _set_config(self, path_config: Path):
-        """
-        Set config file
-
-        Args:
-            path_config (Path): Path to config file
-        """
-        with open(path_config, 'r') as f:
-            config = yaml.safe_load(f)
+        self.stations = stations
+        self.time_slots = time_slots
+        self.corridors = corridors
+        self.lines = lines
+        self.seats = seats
+        self.rolling_stock = rolling_stock
+        self.tsps = tsps
+        self.services = services
         self.config = config
-
-    def _get_random_rs(self, tsp: TSP) -> RollingStock:
+    
+    @classmethod
+    def from_yaml(
+        cls,
+        path_config_supply: str,
+        path_config_generator: str, seed: Union[int, None] = None
+    ) -> 'SupplyGenerator':
         """
-        Get a random rolling stock from a TSP
+        """
+        data = cls._read_yaml(path_config_supply)
+        stations = SupplySaver._get_stations(data, key='stations')
+        time_slots = SupplySaver._get_time_slots(data, key='timeSlot')
+        corridors = SupplySaver._get_corridors(data, stations, key='corridor')
+        lines = SupplySaver._get_lines(data, corridors, key='line')
+        seats = SupplySaver._get_seats(data, key='seat')
+        rolling_stock = SupplySaver._get_rolling_stock(data, seats, key='rollingStock')
+        tsps = SupplySaver._get_tsps(data, rolling_stock, key='trainServiceProvider')
+        services = SupplySaver._get_services(data, lines, tsps, time_slots, seats, rolling_stock, key='service')
+        config = cls._read_yaml(path_config_generator)
+        return cls(services, config, seed)
 
-        Args:
-            tsp (TSP): TSP object
+    def _generate_date(self) -> datetime.date:
+        """
+        Generate a random date between the min and max dates specified in the config.
+
+        The min and max dates are expected to be in the format 'YYYY-MM-DD', upper range is exclusive.
 
         Returns:
-            RollingStock: Rolling stock object randomly selected from  the specified TSP
+            datetime.date: Randomly generated date.
         """
-        return random.choice(tsp.rolling_stock)
+        start, end = self.config['dates']['min'], self.config['dates']['max']
+        delta = end - start
+        int_delta = (delta.days * 24 * 60 * 60) + delta.seconds
+        random_second = np.random.randint(int_delta)
+        return start + datetime.timedelta(seconds=random_second)
 
-    def _get_random_tsp(self) -> TSP:
+    def _generate_line(self) -> Line:
         """
-        Get a random TSP
+        """
+        lines = list(self.config['lines']['probabilities'].keys())
+        probabilities = list(self.config['lines']['probabilities'].values())
+        print('Lines:', lines)
+        print('Probabilities:', probabilities)
+        line = np.random.choice(lines, p=probabilities)
+        print('Chosen line:', line)
+        print(self.lines)
 
-        Returns:
-            TSP: TSP object randomly selected from the available TSPs
+        timetable = {}
+        # TODO: Review this, tt? dt? travel time? departure time? Why we use 0.4 and 0.5? Is not directly to take a line from the supply?
+        tt_randomizer = np.random.uniform(low=0.0, high=0.4)
+        dt_randomizer = np.random.uniform(low=0.0, high=0.5)
+        for i, station in enumerate(line.timetable):
+            arrival, departure = line.timetable[station]
+            if i == 0:
+                prev_dt = departure
+            else:
+                ref_stop_time = departure - arrival
+                travel_time = arrival - prev_dt
+                arrival = float(round(prev_dt + (travel_time + travel_time * tt_randomizer)))
+                departure = float(round(arrival + ref_stop_time + ref_stop_time * dt_randomizer))
+            timetable[station] = (arrival, departure)
+
+        # Encode timetable to string (Hash or something) for unique line id based on timetable
+        line_id = str(hash(str(timetable.values())))
+        return Line(f'Line_{line_id}', line.name, line.corridor, timetable)
+
+    def _generate_tsp(self) -> TSP:
+        """
         """
         #tsp_probabilities = self.config['tsps']['probabilities']
         #return random.choices(list(self.tsps.values()), weights=list(tsp_probabilities.values()))[0]
         return random.choices(list(self.tsps.values()))[0]
 
-    def _get_random_date(self) -> datetime.date:
+    def _generate_time_slot(self) -> TimeSlot:
         """
-        This function will return a random datetime between two datetime objects.
-
-        Returns:
-            datetime: Random datetime in range [start, end] specified in config file
         """
-        start, end = self.config['services']['dates']['min'], self.config['services']['dates']['max']
+        ts_probabilities = self.config['time_slots']['probabilities']
+        hour = random.choices(list(ts_probabilities.keys()), weights=list(ts_probabilities.values()))[0]
+        minutes = random.randint(0, 59)
+        start_time = datetime.timedelta(hours=hour, minutes=minutes)
+        end_time = start_time + datetime.timedelta(minutes=10)
+        if end_time >= datetime.timedelta(hours=24):
+            # Decrease time by a full day
+            end_time -= datetime.timedelta(days=1)
+        time_slot_id = f'{start_time.seconds}'
+        time_slot = TimeSlot(time_slot_id, start_time, end_time)
+        return time_slot
 
-        delta = end - start
-        int_delta = (delta.days * 24 * 60 * 60) + delta.seconds
-        random_second = random.randrange(int_delta)
-        return start + datetime.timedelta(seconds=random_second)
-
-    def _get_random_prices(self,
-                           line: Line,
-                           rolling_stock: RollingStock,
-                           tsp: TSP
-        ) -> Dict[Tuple[str, str], Dict[Seat, float]]:
+    def _generate_rolling_stock(self, tsp: TSP) -> RollingStock:
         """
-        Get prices for a service for a given line, rolling stock and TSP
+        """
+        return random.choice(tsp.rolling_stock)
 
-        Args:
-            line: Line object
-            rolling_stock: RollingStock object
-            tsp: TSP object
-
-        Returns:
-            Dict[Tuple[str, str], Dict[Seat, float]]: Prices for each pair of stations
+    def _generate_prices(
+        self,
+        line: Line,
+        rolling_stock: RollingStock,
+        tsp: TSP
+    ) -> Mapping[Tuple[str, str], Mapping[Seat, float]]:
+        """
         """
         prices = {}
         hard_types = rolling_stock.seats.keys()
@@ -134,50 +167,55 @@ class SupplyGenerator(SupplySaver):
 
         return prices
 
-    def _get_random_time_slot(self) -> TimeSlot:
+    def _generate_service_id(self, line: Line, date: datetime.date, time_slot: TimeSlot) -> str:
         """
-        Get a random time slot
+        Generate a unique service ID based on the line, date, and time slot.
+
+        Args:
+            line (Line): Line of the service.
+            date (datetime.date): Date of the service.
+            time_slot (TimeSlot): Time slot of the service.
 
         Returns:
-            TimeSlot: Time slot object
+            str: Unique service ID.
         """
-        ts_probabilities = self.config['time_slots']['probabilities']
-        hour = random.choices(list(ts_probabilities.keys()), weights=list(ts_probabilities.values()))[0]
-        minutes = random.randint(0, 59)
-        start_time = datetime.timedelta(hours=hour, minutes=minutes)
-        end_time = start_time + datetime.timedelta(minutes=10)
-        if end_time >= datetime.timedelta(hours=24):
-            # Decrease time by a full day
-            end_time -= datetime.timedelta(days=1)
-        time_slot_id = f'{start_time.seconds}'
-        time_slot = TimeSlot(time_slot_id, start_time, end_time)
-        return time_slot
+        date_str = date.strftime('%Y-%m-%d')
+        time_str = '.'.join(str(time_slot.start).split(':')[:2])
+        return f'{line.id}_{date_str}-{time_str}'
 
-    def _get_random_line(self) -> Line:
+    def _generate_service(self) -> Service:
         """
         """
-        probs = self.config['lines']['probabilities'].values()
-        line = random.choices(list(self.lines.values()), weights=list(probs))[0]
+        feasible = False
 
-        timetable = {}
-        tt_randomizer = np.random.uniform(low=0.0, high=0.4)
-        dt_randomizer = np.random.uniform(low=0.0, high=0.5)
-        for i, station in enumerate(line.timetable):
-            arrival, departure = line.timetable[station]
+        while not feasible:
+            date = self._generate_date()
+            line = self._generate_line()
+            tsp = self._generate_tsp()
+            time_slot = self._generate_time_slot()
+            rolling_stock = self._generate_rolling_stock(tsp)
+            prices = self._generate_prices(line, rolling_stock, tsp)
+            service_id = self._generate_service_id(line, date, time_slot)
+            service = Service(service_id, date, line, tsp, time_slot, rolling_stock, prices)
 
-            if i == 0:
-                prev_dt = departure
-            else:
-                ref_stop_time = departure - arrival
-                travel_time = arrival - prev_dt
-                arrival = float(round(prev_dt + (travel_time + travel_time * tt_randomizer)))
-                departure = float(round(arrival + ref_stop_time + ref_stop_time * dt_randomizer))
+            # TODO: Check if the service is feasible
+            feasible = True
 
-            timetable[station] = (arrival, departure)
+        return service
 
-        # Encode timetable to string (Hash or something) for unique line id based on timetable
-        line_id = str(hash(str(timetable.values())))
-        return Line(f'Line_{line_id}', line.name, line.corridor, timetable)
+    def _read_yaml(self, path: str) -> Mapping[str, Any]:
+        """
+        Read a YAML file and return its content.
+
+        Args:
+            path (str): Path to the YAML file.
+
+        Returns:
+            Mapping[str, Any]: Content of the YAML file.
+        """
+        with open(path, 'r') as file:
+            data = yaml.load(file, Loader=yaml.CSafeLoader)
+        return data
 
     def generate(
         self,
@@ -204,10 +242,6 @@ class SupplyGenerator(SupplySaver):
         Returns:
             List[Service]: List of generated Service objects.
         """
-        if seed is not None:
-            self.set_seed(seed)
-        self._set_config(path_config)
-
         services = []
         # Generate services per RU if a mapping is provided
         #if n_services_by_ru is not None:
@@ -234,3 +268,12 @@ class SupplyGenerator(SupplySaver):
         random.seed(seed)
         np.random.seed(seed)
         os.environ['PYTHONHASHSEED'] = str(seed)
+
+
+if __name__ == '__main__':
+    path_config_supply = 'configs/supply_generator/supply_data_example.yaml'
+    path_config_generator = 'configs/supply_generator/config.yaml'
+    generator = SupplyGenerator.from_yaml(path_config_supply, path_config_generator)
+    print('Config:', generator.config)
+    print('Random date:', generator._generate_date())
+    print('Random line:', generator._generate_line())
