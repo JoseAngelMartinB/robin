@@ -52,7 +52,7 @@ corridor:
 
 # Lines
 line:
-  - id: 1
+  - id: "03612"
     name: "L1"
     corridor: 1
     stops:
@@ -65,7 +65,7 @@ line:
       - station: "BCN"
         arrival_time: 185.1
         departure_time: 185.1
-  - id: 2
+  - id: "04161"
     name: "L1-reverse"
     corridor: 1
     stops:
@@ -78,7 +78,7 @@ line:
       - station: "MAD"
         arrival_time: 185.1
         departure_time: 185.1
-  - id: 3
+  - id: "02731"
     name: "L2"
     corridor: 1
     stops:

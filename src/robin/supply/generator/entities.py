@@ -4,12 +4,11 @@ import datetime
 import numpy as np
 import os
 import random
-import yaml
 
 from robin.supply.entities import Station, TimeSlot, Corridor, Line, Seat, RollingStock, TSP, Service
 from robin.supply.saver.entities import SupplySaver
 
-from robin.supply.generator.utils import get_distance
+from robin.supply.generator.utils import get_distance, read_yaml
 
 from pathlib import Path
 from typing import Any, List, Mapping, Union, Tuple
@@ -33,6 +32,8 @@ class SupplyGenerator(SupplySaver):
         seed: Union[int, None] = None
     ) -> None:
         """
+
+        Unlike the other Supply classes, it is necessary to have the raw supply data from the YAML to generate the services.
         """
         if seed is not None:
             self.set_seed(seed)
@@ -55,7 +56,7 @@ class SupplyGenerator(SupplySaver):
     ) -> 'SupplyGenerator':
         """
         """
-        data = cls._read_yaml(path_config_supply)
+        data = read_yaml(path_config_supply)
         stations = SupplySaver._get_stations(data, key='stations')
         time_slots = SupplySaver._get_time_slots(data, key='timeSlot')
         corridors = SupplySaver._get_corridors(data, stations, key='corridor')
@@ -64,8 +65,8 @@ class SupplyGenerator(SupplySaver):
         rolling_stock = SupplySaver._get_rolling_stock(data, seats, key='rollingStock')
         tsps = SupplySaver._get_tsps(data, rolling_stock, key='trainServiceProvider')
         services = SupplySaver._get_services(data, lines, tsps, time_slots, seats, rolling_stock, key='service')
-        config = cls._read_yaml(path_config_generator)
-        return cls(services, config, seed)
+        config = read_yaml(path_config_generator)
+        return cls(stations, time_slots, corridors, lines, seats, rolling_stock, tsps, services, config, seed)
 
     def _generate_date(self) -> datetime.date:
         """
@@ -87,30 +88,30 @@ class SupplyGenerator(SupplySaver):
         """
         lines = list(self.config['lines']['probabilities'].keys())
         probabilities = list(self.config['lines']['probabilities'].values())
-        print('Lines:', lines)
-        print('Probabilities:', probabilities)
         line = np.random.choice(lines, p=probabilities)
-        print('Chosen line:', line)
-        print(self.lines)
+        assert line in self.lines, f'Line {line} not found in lines'
+        line = self.lines[line]
+        return line
 
-        timetable = {}
         # TODO: Review this, tt? dt? travel time? departure time? Why we use 0.4 and 0.5? Is not directly to take a line from the supply?
-        tt_randomizer = np.random.uniform(low=0.0, high=0.4)
-        dt_randomizer = np.random.uniform(low=0.0, high=0.5)
-        for i, station in enumerate(line.timetable):
-            arrival, departure = line.timetable[station]
-            if i == 0:
-                prev_dt = departure
-            else:
-                ref_stop_time = departure - arrival
-                travel_time = arrival - prev_dt
-                arrival = float(round(prev_dt + (travel_time + travel_time * tt_randomizer)))
-                departure = float(round(arrival + ref_stop_time + ref_stop_time * dt_randomizer))
-            timetable[station] = (arrival, departure)
+        # NOTE: I think this is not needed as we now take the line from the supply
+        # timetable = {}
+        # tt_randomizer = np.random.uniform(low=0.0, high=0.4)
+        # dt_randomizer = np.random.uniform(low=0.0, high=0.5)
+        # for i, station in enumerate(line.timetable):
+        #     arrival, departure = line.timetable[station]
+        #     if i == 0:
+        #         prev_dt = departure
+        #     else:
+        #         ref_stop_time = departure - arrival
+        #         travel_time = arrival - prev_dt
+        #         arrival = float(round(prev_dt + (travel_time + travel_time * tt_randomizer)))
+        #         departure = float(round(arrival + ref_stop_time + ref_stop_time * dt_randomizer))
+        #     timetable[station] = (arrival, departure)
 
         # Encode timetable to string (Hash or something) for unique line id based on timetable
-        line_id = str(hash(str(timetable.values())))
-        return Line(f'Line_{line_id}', line.name, line.corridor, timetable)
+        # line_id = str(hash(str(timetable.values())))
+        # return Line(f'Line_{line_id}', line.name, line.corridor, timetable)
 
     def _generate_tsp(self) -> TSP:
         """
@@ -203,20 +204,6 @@ class SupplyGenerator(SupplySaver):
 
         return service
 
-    def _read_yaml(self, path: str) -> Mapping[str, Any]:
-        """
-        Read a YAML file and return its content.
-
-        Args:
-            path (str): Path to the YAML file.
-
-        Returns:
-            Mapping[str, Any]: Content of the YAML file.
-        """
-        with open(path, 'r') as file:
-            data = yaml.load(file, Loader=yaml.CSafeLoader)
-        return data
-
     def generate(
         self,
         file_name: Path,
@@ -271,7 +258,7 @@ class SupplyGenerator(SupplySaver):
 
 
 if __name__ == '__main__':
-    path_config_supply = 'configs/supply_generator/supply_data_example.yaml'
+    path_config_supply = 'configs/supply_generator/supply_data.yaml'
     path_config_generator = 'configs/supply_generator/config.yaml'
     generator = SupplyGenerator.from_yaml(path_config_supply, path_config_generator)
     print('Config:', generator.config)
