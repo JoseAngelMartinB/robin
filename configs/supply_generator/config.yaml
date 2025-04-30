@@ -1,14 +1,17 @@
-# Dates
 dates:
   min: 2024-06-25
   max: 2024-06-26
 
-# Lines
 lines:
   probabilities:
     '03612': 0.5
     '04161': 0.3
     '02731': 0.2
+
+tsps:
+  probabilities:
+    '1': 0.7
+    '2': 0.3
 
 time_slots:
   probabilities:

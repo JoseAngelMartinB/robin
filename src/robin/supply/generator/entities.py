@@ -85,13 +85,12 @@ class SupplyGenerator(SupplySaver):
 
     def _generate_line(self) -> Line:
         """
+        Generate a line based on the configuration probabilities.
+
+        Returns:
+            Line: Generated line based on the configuration probabilities.
         """
-        lines = list(self.config['lines']['probabilities'].keys())
-        probabilities = list(self.config['lines']['probabilities'].values())
-        line = np.random.choice(lines, p=probabilities)
-        assert line in self.lines, f'Line {line} not found in lines'
-        line = self.lines[line]
-        return line
+        return self._sample_from_config('lines')
 
         # TODO: Review this, tt? dt? travel time? departure time? Why we use 0.4 and 0.5? Is not directly to take a line from the supply?
         # NOTE: I think this is not needed as we now take the line from the supply
@@ -116,9 +115,7 @@ class SupplyGenerator(SupplySaver):
     def _generate_tsp(self) -> TSP:
         """
         """
-        #tsp_probabilities = self.config['tsps']['probabilities']
-        #return random.choices(list(self.tsps.values()), weights=list(tsp_probabilities.values()))[0]
-        return random.choices(list(self.tsps.values()))[0]
+        return self._sample_from_config('tsps')
 
     def _generate_time_slot(self) -> TimeSlot:
         """
@@ -204,6 +201,22 @@ class SupplyGenerator(SupplySaver):
 
         return service
 
+    def _sample_from_config(self, key: str) -> Any:
+        """
+        Sample an item from the configuration probabilities for the given key.
+
+        Args:
+            key (str): The key in the configuration to sample from.
+
+        Returns:
+            Any: The sampled item from the configuration.
+        """
+        items = list(self.config[key]['probabilities'].keys())
+        probabilities = list(self.config[key]['probabilities'].values())
+        sampled_item = np.random.choice(items, p=probabilities)
+        assert sampled_item in getattr(self, key), f'{sampled_item} not found in {key}'
+        return getattr(self, key)[sampled_item]
+
     def generate(
         self,
         file_name: Path,
@@ -264,3 +277,4 @@ if __name__ == '__main__':
     print('Config:', generator.config)
     print('Random date:', generator._generate_date())
     print('Random line:', generator._generate_line())
+    print('Random TSP:', generator._generate_tsp())
