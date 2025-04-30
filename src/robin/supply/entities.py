@@ -768,13 +768,13 @@ class Supply:
     @classmethod
     def from_yaml(cls, path: str) -> 'Supply':
         """
-        Class method to create a Supply object (List[Service]) from a YAML file.
+        Create a Supply object from a YAML file.
 
         Args:
             path (str): Path to the YAML file.
 
         Returns:
-            Supply: Supply object.
+            Supply: An instance of the Supply class.
         """
         with open(path, 'r') as file:
             data = yaml.load(file, Loader=yaml.CSafeLoader)

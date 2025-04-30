@@ -16,6 +16,19 @@ from typing import Any, List, Mapping, Union, Tuple
 
 class SupplyGenerator(SupplySaver):
     """
+    A SupplyGenerator is a class that generates supply entities based on configuration probabilities.
+
+    Attributes:
+        stations (Mapping[str, Station]): Mapping of station id to Station object.
+        time_slots (Mapping[str, TimeSlot]): Mapping of time slot id to TimeSlot object.
+        corridors (Mapping[str, Corridor]): Mapping of corridor id to Corridor object.
+        lines (Mapping[str, Line]): Mapping of line id to Line object.
+        seats (Mapping[str, Seat]): Mapping of seat id to Seat object.
+        rolling_stocks (Mapping[str, RollingStock]): Mapping of rolling stock id to RollingStock object.
+        tsps (Mapping[str, TSP]): Mapping of TSP id to TSP object.
+        services (List[Service]): List of Service objects.
+        config (Mapping[str, Any]): Configuration mapping for the generator.
+        seed (Union[int, None]): Seed for the random number generator.
     """
 
     def __init__(
@@ -28,12 +41,25 @@ class SupplyGenerator(SupplySaver):
         rolling_stocks: Mapping[str, RollingStock],
         tsps: Mapping[str, TSP],
         services: List[Service],
-        config: Union[Mapping[str, Any], None] = None,
+        config: Mapping[str, Any],
         seed: Union[int, None] = None
     ) -> None:
         """
-
+        Initialize a SupplyGenerator with the given parameters.
+        
         Unlike the other Supply classes, it is necessary to have the raw supply data from the YAML to generate the services.
+
+        Args:
+            stations (Mapping[str, Station]): Mapping of station id to Station object.
+            time_slots (Mapping[str, TimeSlot]): Mapping of time slot id to TimeSlot object.
+            corridors (Mapping[str, Corridor]): Mapping of corridor id to Corridor object.
+            lines (Mapping[str, Line]): Mapping of line id to Line object.
+            seats (Mapping[str, Seat]): Mapping of seat id to Seat object.
+            rolling_stocks (Mapping[str, RollingStock]): Mapping of rolling stock id to RollingStock object.
+            tsps (Mapping[str, TSP]): Mapping of TSP id to TSP object.
+            services (List[Service]): List of Service objects.
+            config (Mapping[str, Any]): Configuration mapping for the generator.
+            seed (Union[int, None], optional): Seed for the random number generator. Defaults to None.
         """
         if seed is not None:
             self.set_seed(seed)
@@ -52,9 +78,19 @@ class SupplyGenerator(SupplySaver):
     def from_yaml(
         cls,
         path_config_supply: str,
-        path_config_generator: str, seed: Union[int, None] = None
+        path_config_generator: str,
+        seed: Union[int, None] = None
     ) -> 'SupplyGenerator':
         """
+        Create a SupplyGenerator object from YAML configuration files.
+
+        Args:
+            path_config_supply (str): Path to the supply configuration YAML file.
+            path_config_generator (str): Path to the generator configuration YAML file.
+            seed (Union[int, None], optional): Seed for the random number generator. Defaults to None.
+        
+        Returns:
+            SupplyGenerator: An instance of the SupplyGenerator class.
         """
         data = read_yaml(path_config_supply)
         stations = SupplySaver._get_stations(data, key='stations')
