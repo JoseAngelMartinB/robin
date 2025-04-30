@@ -1,6 +1,7 @@
 """Entities for the supply generator module."""
 
 import datetime
+import networkx as nx
 import numpy as np
 import os
 import random
@@ -10,8 +11,9 @@ from robin.supply.saver.entities import SupplySaver
 
 from robin.supply.generator.utils import get_distance, read_yaml
 
+from geopy.distance import geodesic
 from pathlib import Path
-from typing import Any, List, Mapping, Union, Tuple
+from typing import Any, FrozenSet, List, Mapping, Set, Union, Tuple
 
 
 class SupplyGenerator(SupplySaver):
@@ -104,6 +106,35 @@ class SupplyGenerator(SupplySaver):
         config = read_yaml(path_config_generator)
         return cls(stations, time_slots, corridors, lines, seats, rolling_stocks, tsps, services, config, seed)
 
+    def _build_graph(self, tree: Mapping[Station, ...], graph=None) -> nx.Graph:
+        """
+        Recursively builds a graph from the given tree structure.
+
+        Args:
+            tree (Mapping): A mapping of Station objects to their branches.
+            graph (nx.Graph, optional): An existing graph to add edges to. If None, a new graph is created.
+
+        Returns:
+            nx.Graph: The graph with edges added based on the tree structure.
+        """
+        if graph is None:
+            graph = nx.Graph()
+
+        for origin_station, branches in tree.items():
+            for destination_station in branches:
+                # Get geodesic distance between the two stations
+                coord_origen = origin_station.coordinates
+                coord_destino = destination_station.coordinates
+                distance_km = geodesic(coord_origen, coord_destino).kilometers
+
+                # Add edge to the graph with the distance as weight
+                graph.add_edge(origin_station, destination_station, weight=distance_km)
+
+                # Recursively build the graph for the branches
+                self._build_graph({destination_station: branches[destination_station]}, graph)
+
+        return graph
+
     def _generate_date(self) -> datetime.date:
         """
         Generate a random date between the min and max dates specified in the config.
@@ -147,6 +178,22 @@ class SupplyGenerator(SupplySaver):
         # Encode timetable to string (Hash or something) for unique line id based on timetable
         # line_id = str(hash(str(timetable.values())))
         # return Line(f'Line_{line_id}', line.name, line.corridor, timetable)
+
+    def _get_edges_from_path(self, path: List[Station]) -> Set[FrozenSet[Station]]:
+        """
+        Returns the set of edges (as frozensets) traversed in the given path.
+
+        Args:
+            path (List[Station]): A list of Station objects representing the path.
+
+        Returns:
+            A set of frozensets, each containing two Station objects that form an edge.
+        """
+        edges: Set[FrozenSet[Station]] = set()
+        for i in range(len(path) - 1):
+            u, v = path[i], path[i + 1]
+            edges.add(frozenset((u, v)))
+        return edges
 
     def _generate_tsp(self) -> TSP:
         """
@@ -207,11 +254,9 @@ class SupplyGenerator(SupplySaver):
         distance_factor = self.config['prices']['distance_factor']
         seat_factor = self.config['prices']['seat_type_factor']
         tsp_factor = self.config['prices']['tsp_factor']
-
         for pair in line.pairs:
             origin_sta, destination_sta = line.pairs[pair]
             distance = get_distance(line, origin_sta, destination_sta)
-            # print(f'Distance between {origin_sta.name} and {destination_sta.name}: {distance} km')
             prices[pair] = {}
             for seat in seats:
                 price_calc = (base_price + distance * distance_factor) * seat_factor[seat.id] * tsp_factor[tsp.id]
@@ -257,7 +302,7 @@ class SupplyGenerator(SupplySaver):
             service = Service(service_id, date, line, tsp, time_slot, rolling_stock, prices)
 
             # TODO: Check if the service is feasible
-            feasible = True
+            feasible = self._is_feasible(service, self.services)
 
         return service
 
@@ -284,13 +329,100 @@ class SupplyGenerator(SupplySaver):
         assert sampled_item in getattr(self, key), f'{sampled_item} not found in {key}'
         return getattr(self, key)[sampled_item]
 
+    def _infer_path(self, service: Service) -> List[Station]:
+        """
+        Infers the path of a service based on its line and corridor.
+
+        Args:
+            service (Service): The service to infer.
+
+        Returns:
+            List[Station]: The inferred path of the service.
+        """
+        paths = []
+        for path in service.line.corridor.paths:
+            if all(station in path for station in service.line.stations):
+                paths.append(path)
+
+        # Return the shortest path
+        if paths:
+            path = min(paths, key=len)
+        else:
+            raise ValueError("No valid path found for the service.")
+
+        # Clip the path from origin to destination
+        origin_index = path.index(service.line.stations[0])
+        destination_index = path.index(service.line.stations[-1])
+        return path[origin_index:destination_index + 1]
+
+    def _is_feasible(
+            self,
+            new_service: Service,
+            safety_headway: int = 10,
+    ) -> bool:
+        """
+        Check if the service is feasible.
+
+        Args:
+            service (Service): Service to check.
+            services (List[Service]): List of existing services.
+            safety_headway (int): Safety headway in minutes.
+
+        Returns:
+            bool: True if the service is feasible, False otherwise.
+        """
+        # Check each pair of services once
+        for service in self.services:
+            shared_edges = self._shared_edges_between_services(
+                self._infer_path(service),
+                self._infer_path(new_service)
+            )
+            if not shared_edges:
+                continue
+
+            for edge in shared_edges:
+                station1, station2 = list(edge)
+
+                departure1, arrival1 = sorted([new_service.schedule[station1], new_service.schedule[station2]])
+                departure2, arrival2 = sorted([service.schedule[station1], service.schedule[station2]])
+
+                # Expand time intervals with buffer
+                interval1_start = departure1 + new_service.date - safety_headway
+                interval1_end = arrival1 + new_service.date + safety_headway
+                interval2_start = departure2 + service.date - safety_headway
+                interval2_end = arrival2 + service.date + safety_headway
+
+                # Check overlap
+                if interval1_start <= interval2_end and interval2_start <= interval1_end:
+                    return False
+
+        return True
+
+    def _shared_edges_between_services(
+            self,
+            path1: List[Station],
+            path2: List[Station]
+    ) -> Set[FrozenSet[Station]]:
+        """Checks whether two services (given by their paths) share any track segments.
+
+        Args:
+            path1: A list of Station objects for the first service.
+            path2: A list of Station objects for the second service.
+
+        Returns:
+            A set of shared edges (track segments), if any.
+        """
+        edges1 = self._get_edges_from_path(path1)
+        edges2 = self._get_edges_from_path(path2)
+        return edges1.intersection(edges2)
+
     def generate(
         self,
-        file_name: Path,
-        path_config: Path,
+        file_name: str,
         n_services: int = 1,
         n_services_by_ru: Mapping[str, int] = None,
-        seed: int = None
+        seed: int = None,
+        safety_gap: int = 10,
     ) -> List[Service]:
         """
         Generate a list of services.
@@ -300,8 +432,7 @@ class SupplyGenerator(SupplySaver):
         as a global counter.
 
         Args:
-            file_name (Path): Name of the output file.
-            path_config (Path): Path to the config file.
+            file_name (str): Name of the output file.
             n_services (int, optional): Number of services to generate (if n_services_by_ru is not provided). Defaults to 1.
             n_services_by_ru (Mapping[str, int], optional): Mapping of RU id (TSP id) to the number of services to generate.
             seed (int, optional): Seed for the random number generator.
@@ -309,6 +440,8 @@ class SupplyGenerator(SupplySaver):
         Returns:
             List[Service]: List of generated Service objects.
         """
+        self.safety_gap = safety_gap
+
         services = []
         # Generate services per RU if a mapping is provided
         #if n_services_by_ru is not None:
@@ -322,7 +455,7 @@ class SupplyGenerator(SupplySaver):
             services.append(self._generate_service())
 
         self.services = services
-        self.save_to_yaml(services, file_name)
+        #self.to_yaml(output_path=file_name)
         return services
 
     def set_seed(seed: int) -> None:
