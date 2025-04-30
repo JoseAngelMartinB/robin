@@ -1072,7 +1072,7 @@ class Supply:
         tsps: Mapping[str, TSP],
         time_slots: Mapping[str, TimeSlot],
         seats: Mapping[str, Seat],
-        rolling_stock: Mapping[str, RollingStock],
+        rolling_stocks: Mapping[str, RollingStock],
         key: str = 'service'
     ) -> Dict[str, Service]:
         """
@@ -1084,7 +1084,7 @@ class Supply:
             tsps (Mapping[str, TSP]): Dict of TSP objects.
             time_slots (Mapping[str, TimeSlot]): Dict of TimeSlot objects.
             seats (Mapping[str, Seat]): Dict of Seat objects.
-            rolling_stock (Mapping[str, RollingStock]): Dict of RollingStock objects.
+            rolling_stocks (Mapping[str, RollingStock]): Dict of RollingStock objects.
             key (str): Key to access the data in the YAML file. Default: 'service'.
 
         Returns:
@@ -1113,8 +1113,8 @@ class Supply:
             service_time_slot = time_slots[time_slot_id]
 
             rolling_stock_id = str(service['rolling_stock'])
-            assert rolling_stock_id in rolling_stock.keys(), 'RollingStock not found'
-            service_rolling_stock = rolling_stock[rolling_stock_id]
+            assert rolling_stock_id in rolling_stocks.keys(), 'RollingStock not found'
+            service_rolling_stock = rolling_stocks[rolling_stock_id]
 
             yaml_service_prices = service['origin_destination_tuples']
             service_prices = cls._get_service_prices(

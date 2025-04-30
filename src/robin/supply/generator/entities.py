@@ -25,7 +25,7 @@ class SupplyGenerator(SupplySaver):
         corridors: Mapping[str, Corridor],
         lines: Mapping[str, Line],
         seats: Mapping[str, Seat],
-        rolling_stock: Mapping[str, RollingStock],
+        rolling_stocks: Mapping[str, RollingStock],
         tsps: Mapping[str, TSP],
         services: List[Service],
         config: Union[Mapping[str, Any], None] = None,
@@ -43,7 +43,7 @@ class SupplyGenerator(SupplySaver):
         self.corridors = corridors
         self.lines = lines
         self.seats = seats
-        self.rolling_stock = rolling_stock
+        self.rolling_stocks = rolling_stocks
         self.tsps = tsps
         self.services = services
         self.config = config
@@ -62,11 +62,11 @@ class SupplyGenerator(SupplySaver):
         corridors = SupplySaver._get_corridors(data, stations, key='corridor')
         lines = SupplySaver._get_lines(data, corridors, key='line')
         seats = SupplySaver._get_seats(data, key='seat')
-        rolling_stock = SupplySaver._get_rolling_stock(data, seats, key='rollingStock')
-        tsps = SupplySaver._get_tsps(data, rolling_stock, key='trainServiceProvider')
-        services = SupplySaver._get_services(data, lines, tsps, time_slots, seats, rolling_stock, key='service')
+        rolling_stocks = SupplySaver._get_rolling_stock(data, seats, key='rollingStock')
+        tsps = SupplySaver._get_tsps(data, rolling_stocks, key='trainServiceProvider')
+        services = SupplySaver._get_services(data, lines, tsps, time_slots, seats, rolling_stocks, key='service')
         config = read_yaml(path_config_generator)
-        return cls(stations, time_slots, corridors, lines, seats, rolling_stock, tsps, services, config, seed)
+        return cls(stations, time_slots, corridors, lines, seats, rolling_stocks, tsps, services, config, seed)
 
     def _generate_date(self) -> datetime.date:
         """
@@ -90,7 +90,7 @@ class SupplyGenerator(SupplySaver):
         Returns:
             Line: Generated line based on the configuration probabilities.
         """
-        return self._sample_from_config('lines')
+        return self._sample_from_config(key='lines')
 
         # TODO: Review this, tt? dt? travel time? departure time? Why we use 0.4 and 0.5? Is not directly to take a line from the supply?
         # NOTE: I think this is not needed as we now take the line from the supply
@@ -114,28 +114,46 @@ class SupplyGenerator(SupplySaver):
 
     def _generate_tsp(self) -> TSP:
         """
+        Generate a TSP based on the configuration probabilities.
+
+        Returns:
+            TSP: Generated TSP based on the configuration probabilities.
         """
-        return self._sample_from_config('tsps')
+        return self._sample_from_config(key='tsps')
 
     def _generate_time_slot(self) -> TimeSlot:
         """
+        Generate a time slot based on the configuration probabilities.
+
+        Returns:
+            TimeSlot: Generated time slot based on the configuration probabilities.
         """
-        ts_probabilities = self.config['time_slots']['probabilities']
-        hour = random.choices(list(ts_probabilities.keys()), weights=list(ts_probabilities.values()))[0]
-        minutes = random.randint(0, 59)
-        start_time = datetime.timedelta(hours=hour, minutes=minutes)
-        end_time = start_time + datetime.timedelta(minutes=10)
-        if end_time >= datetime.timedelta(hours=24):
-            # Decrease time by a full day
-            end_time -= datetime.timedelta(days=1)
-        time_slot_id = f'{start_time.seconds}'
-        time_slot = TimeSlot(time_slot_id, start_time, end_time)
-        return time_slot
+        return self._sample_from_config(key='time_slots')
+
+        # TODO: Same as for the line
+        # ts_probabilities = self.config['time_slots']['probabilities']
+        # hour = random.choices(list(ts_probabilities.keys()), weights=list(ts_probabilities.values()))[0]
+        # minutes = random.randint(0, 59)
+        # start_time = datetime.timedelta(hours=hour, minutes=minutes)
+        # end_time = start_time + datetime.timedelta(minutes=10)
+        # if end_time >= datetime.timedelta(hours=24):
+        #     # Decrease time by a full day
+        #     end_time -= datetime.timedelta(days=1)
+        # time_slot_id = f'{start_time.seconds}'
+        # time_slot = TimeSlot(time_slot_id, start_time, end_time)
+        # return time_slot
 
     def _generate_rolling_stock(self, tsp: TSP) -> RollingStock:
         """
+        Generate a rolling stock based on the configuration probabilities.
+
+        Args:
+            tsp (TSP): TSP for which to generate the rolling stock.
+
+        Returns:
+            RollingStock: Generated rolling stock based on the configuration probabilities.
         """
-        return random.choice(tsp.rolling_stock)
+        return self._sample_from_config(key='rolling_stocks', id=tsp.id)
 
     def _generate_prices(
         self,
@@ -183,6 +201,12 @@ class SupplyGenerator(SupplySaver):
 
     def _generate_service(self) -> Service:
         """
+        Generate a service based on the configuration probabilities.
+
+        It checks if the service is feasible and generates a new one if not. (TODO: Implement feasibility check)
+
+        Returns:
+            Service: Generated service based on the configuration probabilities.
         """
         feasible = False
 
@@ -201,18 +225,25 @@ class SupplyGenerator(SupplySaver):
 
         return service
 
-    def _sample_from_config(self, key: str) -> Any:
+    def _sample_from_config(self, key: str, id: Union[str, None] = None) -> Any:
         """
         Sample an item from the configuration probabilities for the given key.
 
         Args:
             key (str): The key in the configuration to sample from.
+            id (Union[str, None], optional): The id of the item to sample. Defaults to None.
 
         Returns:
             Any: The sampled item from the configuration.
         """
-        items = list(self.config[key]['probabilities'].keys())
-        probabilities = list(self.config[key]['probabilities'].values())
+        if id:
+            assert id in self.config[key]['probabilities'], f'{id} not found in {key}'
+            items = list(self.config[key]['probabilities'][id].keys())
+            probabilities = list(self.config[key]['probabilities'][id].values())
+        else:
+            assert key in self.config, f'{key} not found in config'
+            items = list(self.config[key]['probabilities'].keys())
+            probabilities = list(self.config[key]['probabilities'].values())
         sampled_item = np.random.choice(items, p=probabilities)
         assert sampled_item in getattr(self, key), f'{sampled_item} not found in {key}'
         return getattr(self, key)[sampled_item]
@@ -278,3 +309,5 @@ if __name__ == '__main__':
     print('Random date:', generator._generate_date())
     print('Random line:', generator._generate_line())
     print('Random TSP:', generator._generate_tsp())
+    print('Random time slot:', generator._generate_time_slot())
+    print('Random rolling stock:', generator._generate_rolling_stock(generator._generate_tsp()))
