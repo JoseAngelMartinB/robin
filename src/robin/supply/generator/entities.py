@@ -301,8 +301,7 @@ class SupplyGenerator(SupplySaver):
             service_id = self._generate_service_id(line, date, time_slot)
             service = Service(service_id, date, line, tsp, time_slot, rolling_stock, prices)
 
-            # TODO: Check if the service is feasible
-            feasible = self._is_feasible(service, self.services)
+            feasible = self._is_feasible(service)
 
         return service
 
@@ -358,15 +357,12 @@ class SupplyGenerator(SupplySaver):
     def _is_feasible(
             self,
             new_service: Service,
-            safety_headway: int = 10,
     ) -> bool:
         """
         Check if the service is feasible.
 
         Args:
-            service (Service): Service to check.
-            services (List[Service]): List of existing services.
-            safety_headway (int): Safety headway in minutes.
+            new_service (Service): Service to check.
 
         Returns:
             bool: True if the service is feasible, False otherwise.
@@ -387,10 +383,10 @@ class SupplyGenerator(SupplySaver):
                 departure2, arrival2 = sorted([service.schedule[station1], service.schedule[station2]])
 
                 # Expand time intervals with buffer
-                interval1_start = departure1 + new_service.date - safety_headway
-                interval1_end = arrival1 + new_service.date + safety_headway
-                interval2_start = departure2 + service.date - safety_headway
-                interval2_end = arrival2 + service.date + safety_headway
+                interval1_start = departure1 + new_service.date - self.safety_gap
+                interval1_end = arrival1 + new_service.date + self.safety_gap
+                interval2_start = departure2 + service.date - self.safety_gap
+                interval2_end = arrival2 + service.date + self.safety_gap
 
                 # Check overlap
                 if interval1_start <= interval2_end and interval2_start <= interval1_end:
@@ -455,7 +451,7 @@ class SupplyGenerator(SupplySaver):
             services.append(self._generate_service())
 
         self.services = services
-        #self.to_yaml(output_path=file_name)
+        SupplySaver(services).to_yaml(output_path=file_name)
         return services
 
     def set_seed(seed: int) -> None:
