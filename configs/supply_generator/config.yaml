@@ -6,9 +6,9 @@ dates:
 # Lines
 lines:
   probabilities:
-    '03612': 0.5
-    '04161': 0.3
-    '02731': 0.2
+    '06301': 0.5
+    '03073': 0.3
+    '03083': 0.2
 
 # Train service providers
 tsps:
@@ -29,17 +29,17 @@ time_slots:
 rolling_stocks:
   probabilities:
     '1':
-      '1': 0.3
-      '2': 0.3
-      '3': 0.3
-      '4': 0.05
-      '5': 0.05
+      '1': 1.0
+      '2': 0.0
+      '3': 0.0
+      '4': 0.0
+      '5': 0.0
     '2':
-      '1': 0.4
-      '2': 0.3
-      '3': 0.2
-      '4': 0.05
-      '5': 0.05
+      '1': 1.0
+      '2': 0.0
+      '3': 0.0
+      '4': 0.0
+      '5': 0.0
 
 # Prices config
 prices:
@@ -49,8 +49,6 @@ prices:
   tsp_factor:  # Defines how the TSP affects the price (multiplies each price by the factor)
       '1': 1.5  # Renfe AVE
       '2': 1.1  # Renfe AVLO
-      '3': 1  # Ouigo
-      '4': 0.9  # Iryo
   seat_type_factor:  # Defines how the seat type affects the price (multiplies each price by the factor)
       '1': 1  # Tourist Class
       '2': 1.2 # Tourist Plus Class

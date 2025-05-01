@@ -16,6 +16,7 @@
 !supply_generator
 !supply_generator/config.yaml
 !supply_generator/supply_data.yaml
+!supply_generator/supply_data_new.yaml
 
 !test_case
 !test_case/demand_data.yaml
