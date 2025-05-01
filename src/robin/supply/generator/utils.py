@@ -1,33 +1,157 @@
 """Utils for the supply generator module."""
 
-from robin.supply.entities import Station, Line
-
-from math import sin, cos, acos, radians
-from typing import Any, Mapping
-
 import yaml
 
+from robin.supply.entities import Station, Service
 
-def get_distance(line: Line, origin: Station, destination: Station) -> float:
+from datetime import timedelta
+from functools import cache
+from geopy.distance import geodesic
+from typing import Any, Callable, FrozenSet, List, Mapping, NamedTuple, Set, Tuple
+
+
+class Segment(NamedTuple):
+    service_idx: str
+    start_pos: float
+    end_pos: float
+    time_at: "Callable[[float], timedelta]"
+
+def build_segments_for_service(
+    service: Service,
+    positions: Mapping[Station, float]
+) -> List[Segment]:
     """
-    Get distance between two stations in a line in km using Haversine formula.
+    Build a list of motion segments for a service, each with its spatial interval
+    and a local linear time interpolator.
+    """
+    segments: List[Segment] = []
+    stations = service.line.stations
+
+    for k, (prev_stn, next_stn) in enumerate(zip(stations, stations[1:])):
+        start_pos = positions[prev_stn]
+        end_pos = positions[next_stn]
+
+        # Scheduled departure and arrival
+        depart_time = service.schedule[prev_stn.id][1]
+        arrive_time = service.schedule[next_stn.id][0]
+
+        # Local interpolator mapping any position in [start_pos, end_pos]
+        time_interp = get_time_from_position(
+            (depart_time, start_pos),
+            (arrive_time, end_pos)
+        )
+
+        segments.append(Segment(service.id, start_pos, end_pos, time_interp))
+
+    return segments
+
+def get_edges_from_path(path: List[Station]) -> Set[FrozenSet[Station]]:
+    """
+    Returns the set of edges (as frozensets) traversed in the given path.
 
     Args:
-        line (Line): Line to get the distance between the stations.
-        origin (Station): Origin station.
-        destination (Station): Destination station.
+        path (List[Station]): A list of Station objects representing the path.
 
     Returns:
-        float: Distance between the two stations in km.
+        A set of frozensets, each containing two Station objects that form an edge.
     """
-    # NOTE: Considered geodesic distance for a more accurate result and cache it
-    earth_radius = 6371.0
-    assert origin in line.stations and destination in line.stations, 'Stations not in line'
+    edges: Set[FrozenSet[Station]] = set()
+    for i in range(len(path) - 1):
+        u, v = path[i], path[i + 1]
+        edges.add(frozenset((u, v)))
+    return edges
 
-    lat1, lon1, lat2, lon2 = map(radians, [*origin.coordinates, *destination.coordinates])
-    lon_diff = lon2 - lon1
-    return acos(sin(lat1) * sin(lat2) + cos(lat1) * cos(lat2) * cos(lon_diff)) * earth_radius
+def get_stations_positions(stations: List[Station]) -> Mapping[Station, float]:
+    """
+    Compute the positions of stations along the line based on their coordinates.
 
+    Args:
+        stations: List of Station objects.
+
+    Returns:
+        A dictionary mapping each station to its position along the line.
+    """
+    positions = {}
+    if not stations:
+        return positions
+
+    # First station is at position zero
+    positions[stations[0]] = 0.0
+    total_distance = 0.0
+
+    # Iterate over consecutive station pairs
+    for prev, curr in zip(stations, stations[1:]):
+        segment = geodesic(prev.coordinates, curr.coordinates).km
+        total_distance += segment
+        positions[curr] = total_distance
+
+    return positions
+
+@cache
+def get_time_from_position(
+    point_a: Tuple[timedelta, float],
+    point_b: Tuple[timedelta, float]
+) -> Callable[[float], timedelta]:
+    """
+    Build a linear interpolator that maps a position (float) back to a time.
+
+    Args:
+        point_a: (time, position) for the first sample.
+        point_b: (time, position) for the second sample.
+
+    Returns:
+        A function f(pos: float) -> timedelta giving the interpolated time.
+    """
+    # Convert times to minutes (float)
+    t0 = point_a[0].total_seconds() / 60
+    t1 = point_b[0].total_seconds() / 60
+
+    # Extract positions
+    x0 = point_a[1]
+    x1 = point_b[1]
+
+    # Ensure we have a valid line
+    if t0 == t1:
+        raise ValueError("point_a and point_b must have different times")
+    if x0 == x1:
+        raise ValueError("point_a and point_b must have different positions")
+
+    # Slope: position change per minute
+    slope = (x1 - x0) / (t1 - t0)
+
+    def time_from_position(position: float) -> timedelta:
+        """
+        Given a position, compute the corresponding time via
+        inverse of y = slope * t + intercept.
+        """
+        # Invert the line: t = (position - intercept) / slope
+        minutes = (position - x0) / slope + t0
+        return timedelta(minutes=minutes)
+
+    return time_from_position
+
+def infer_paths(service: Service) -> List[List[Station]]:
+    """
+    Infers the path of a service based on its line and corridor.
+
+    Args:
+        service (Service): The service to infer.
+
+    Returns:
+        List[List[Station]]: A list of paths, where each path is a list of Station objects.
+    """
+    paths = []
+    for path in service.line.corridor.paths:
+        if sum([station in path for station in service.line.stations]) > 1:
+            paths.append(path)
+
+    # Clip the paths from origin to destination
+    for i, path in enumerate(paths):
+        origin_index = path.index(service.line.stations[0]) if service.line.stations[0] in path else 0
+        destination_index = path.index(service.line.stations[-1]) if service.line.stations[-1] in path else len(path) - 1
+        paths[i] = path[origin_index:destination_index + 1]
+
+    return paths
 
 def read_yaml(path: str) -> Mapping[str, Any]:
     """
@@ -42,3 +166,53 @@ def read_yaml(path: str) -> Mapping[str, Any]:
     with open(path, 'r') as file:
         data = yaml.load(file, Loader=yaml.CSafeLoader)
     return data
+
+def segments_conflict(
+    seg1: Segment,
+    seg2: Segment,
+    safety_headway: int
+) -> bool:
+    """
+    Determine if two motion segments conflict within a given safety headway.
+
+    They conflict if their spatial intervals overlap and their time gaps
+    at the overlap boundaries violate the headway constraint.
+    """
+    # Spatial overlap
+    overlap_start = max(seg1.start_pos, seg2.start_pos)
+    overlap_end = min(seg1.end_pos, seg2.end_pos)
+    if overlap_start >= overlap_end:
+        return False
+
+    # Time at overlap boundaries
+    t1_start = seg1.time_at(overlap_start)
+    t1_end = seg1.time_at(overlap_end)
+    t2_start = seg2.time_at(overlap_start)
+    t2_end = seg2.time_at(overlap_end)
+
+    # Time differences in whole minutes
+    dt_start = int((t2_start - t1_start).total_seconds() // 60)
+    dt_end = int((t2_end - t1_end).total_seconds() // 60)
+
+    # No conflict if both differences have the same sign (ordering preserved)
+    # and both exceed twice the safety headway
+    same_order = dt_start * dt_end > 0
+    if same_order and abs(dt_start) >= 2 * safety_headway and abs(dt_end) >= 2 * safety_headway:
+        return False
+
+    return True
+
+def shared_edges_between_services(path1: List[Station], path2: List[Station]) -> Set[FrozenSet[Station]]:
+    """
+    Checks whether two services (given by their paths) share any track segments.
+
+    Args:
+        path1: A list of Station objects for the first service.
+        path2: A list of Station objects for the second service.
+
+    Returns:
+        A set of shared edges (track segments), if any.
+    """
+    edges1 = get_edges_from_path(path1)
+    edges2 = get_edges_from_path(path2)
+    return edges1.intersection(edges2)

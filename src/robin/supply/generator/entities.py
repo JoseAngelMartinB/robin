@@ -9,11 +9,10 @@ import random
 from robin.supply.entities import Station, TimeSlot, Corridor, Line, Seat, RollingStock, TSP, Service
 from robin.supply.saver.entities import SupplySaver
 
-from robin.supply.generator.utils import get_distance, read_yaml
+from robin.supply.generator.utils import build_segments_for_service, get_stations_positions, read_yaml, segments_conflict
 
 from geopy.distance import geodesic
-from pathlib import Path
-from typing import Any, FrozenSet, List, Mapping, Set, Union, Tuple
+from typing import Any, List, Mapping, Union, Tuple
 
 
 class SupplyGenerator(SupplySaver):
@@ -75,6 +74,7 @@ class SupplyGenerator(SupplySaver):
         self.tsps = tsps
         self.services = services
         self.config = config
+        self.generated_services = []
     
     @classmethod
     def from_yaml(
@@ -179,22 +179,6 @@ class SupplyGenerator(SupplySaver):
         # line_id = str(hash(str(timetable.values())))
         # return Line(f'Line_{line_id}', line.name, line.corridor, timetable)
 
-    def _get_edges_from_path(self, path: List[Station]) -> Set[FrozenSet[Station]]:
-        """
-        Returns the set of edges (as frozensets) traversed in the given path.
-
-        Args:
-            path (List[Station]): A list of Station objects representing the path.
-
-        Returns:
-            A set of frozensets, each containing two Station objects that form an edge.
-        """
-        edges: Set[FrozenSet[Station]] = set()
-        for i in range(len(path) - 1):
-            u, v = path[i], path[i + 1]
-            edges.add(frozenset((u, v)))
-        return edges
-
     def _generate_tsp(self) -> TSP:
         """
         Generate a TSP based on the configuration probabilities.
@@ -256,7 +240,7 @@ class SupplyGenerator(SupplySaver):
         tsp_factor = self.config['prices']['tsp_factor']
         for pair in line.pairs:
             origin_sta, destination_sta = line.pairs[pair]
-            distance = get_distance(line, origin_sta, destination_sta)
+            distance = geodesic(origin_sta.coordinates, destination_sta.coordinates).kilometers
             prices[pair] = {}
             for seat in seats:
                 price_calc = (base_price + distance * distance_factor) * seat_factor[seat.id] * tsp_factor[tsp.id]
@@ -328,32 +312,6 @@ class SupplyGenerator(SupplySaver):
         assert sampled_item in getattr(self, key), f'{sampled_item} not found in {key}'
         return getattr(self, key)[sampled_item]
 
-    def _infer_path(self, service: Service) -> List[Station]:
-        """
-        Infers the path of a service based on its line and corridor.
-
-        Args:
-            service (Service): The service to infer.
-
-        Returns:
-            List[Station]: The inferred path of the service.
-        """
-        paths = []
-        for path in service.line.corridor.paths:
-            if all(station in path for station in service.line.stations):
-                paths.append(path)
-
-        # Return the shortest path
-        if paths:
-            path = min(paths, key=len)
-        else:
-            raise ValueError("No valid path found for the service.")
-
-        # Clip the path from origin to destination
-        origin_index = path.index(service.line.stations[0])
-        destination_index = path.index(service.line.stations[-1])
-        return path[origin_index:destination_index + 1]
-
     def _is_feasible(
             self,
             new_service: Service,
@@ -367,50 +325,30 @@ class SupplyGenerator(SupplySaver):
         Returns:
             bool: True if the service is feasible, False otherwise.
         """
-        # Check each pair of services once
-        for service in self.services:
-            shared_edges = self._shared_edges_between_services(
-                self._infer_path(service),
-                self._infer_path(new_service)
-            )
-            if not shared_edges:
-                continue
+        # Get paths of the corridor visited by the new service
+        paths = []
+        for path in new_service.line.corridor.paths:
+            if sum([station in path for station in new_service.line.stations]) > 1:
+                paths.append(path)
 
-            for edge in shared_edges:
-                station1, station2 = list(edge)
+        for path in paths:
+            new_service_segments = build_segments_for_service(new_service, get_stations_positions(path))
+            for service in self.generated_services:
+                if sum([station in path for station in service.line.stations]) <= 1:
+                    continue
 
-                departure1, arrival1 = sorted([new_service.schedule[station1], new_service.schedule[station2]])
-                departure2, arrival2 = sorted([service.schedule[station1], service.schedule[station2]])
+                stations_positions = get_stations_positions(path)
 
-                # Expand time intervals with buffer
-                interval1_start = departure1 + new_service.date - self.safety_gap
-                interval1_end = arrival1 + new_service.date + self.safety_gap
-                interval2_start = departure2 + service.date - self.safety_gap
-                interval2_end = arrival2 + service.date + self.safety_gap
+                # Precompute segments per service
+                service_segments = build_segments_for_service(service, stations_positions)
 
-                # Check overlap
-                if interval1_start <= interval2_end and interval2_start <= interval1_end:
-                    return False
+                # Test all segment pairs
+                for seg1 in new_service_segments:
+                    for seg2 in service_segments:
+                        if segments_conflict(seg1, seg2, self.safety_gap):
+                            return False
 
         return True
-
-    def _shared_edges_between_services(
-            self,
-            path1: List[Station],
-            path2: List[Station]
-    ) -> Set[FrozenSet[Station]]:
-        """Checks whether two services (given by their paths) share any track segments.
-
-        Args:
-            path1: A list of Station objects for the first service.
-            path2: A list of Station objects for the second service.
-
-        Returns:
-            A set of shared edges (track segments), if any.
-        """
-        edges1 = self._get_edges_from_path(path1)
-        edges2 = self._get_edges_from_path(path2)
-        return edges1.intersection(edges2)
 
     def generate(
         self,
@@ -438,7 +376,6 @@ class SupplyGenerator(SupplySaver):
         """
         self.safety_gap = safety_gap
 
-        services = []
         # Generate services per RU if a mapping is provided
         #if n_services_by_ru is not None:
         #    for ru_id, count in n_services_by_ru.items():
@@ -448,11 +385,9 @@ class SupplyGenerator(SupplySaver):
         #            services.append(service)
         #else:
         for _ in range(n_services):
-            services.append(self._generate_service())
+            self.generated_services.append(self._generate_service())
 
-        self.services = services
-        SupplySaver(services).to_yaml(output_path=file_name)
-        return services
+        SupplySaver(self.generated_services).to_yaml(output_path=file_name)
 
     def set_seed(seed: int) -> None:
         """
