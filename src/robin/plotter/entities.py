@@ -2,15 +2,22 @@
 
 import numpy as np
 import pandas as pd
+import seaborn as sns
 import textwrap
 
 from robin.plotter.constants import COLORS, DARK_GRAY, STYLE, WHITE_SMOKE
 from robin.supply.entities import Supply
+from robin.supply.generator.utils import infer_paths, shared_edges_between_services
 
+from geopy.distance import geodesic
 from loguru import logger
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
+from matplotlib.colors import ListedColormap
+from matplotlib.patches import Polygon as MplPolygon
+from matplotlib.ticker import FuncFormatter, MultipleLocator
 from pathlib import Path
+from shapely.geometry.polygon import Polygon
 from typing import Any, List, Mapping, Tuple, Union
 
 
@@ -447,6 +454,206 @@ class KernelPlotter:
             status_perc = round(demand_data[status] / passengers * 100, 2)
             ax.bar_label(ax.containers[i], labels=[f'{demand_data[status]} ({status_perc}%)'], padding=3)
         self._show_plot(fig=fig, save_path=save_path)
+
+    def plot_marey_chart(self, save_path: str = None, safety_gap: int = 10) -> None:
+        """
+        Plot Marey chart for the given supply.
+
+        Args:
+            save_path (str, optional): Path to save the plot in PDF format. Defaults to None.
+        """
+
+        def get_time_label(minutes: int, position) -> str:
+            """
+            Convert minutes to HH:MM format string.
+            NOTE: Do not remove the second argument. It is required by FuncFormatter.
+
+            Args:
+                minutes (int): Time in minutes.
+
+            Returns:
+                str: Time in HH:MM format.
+            """
+            hours = int(minutes // 60)
+            minutes = int(minutes % 60)
+            hours = str(hours).zfill(2)
+            minutes = str(minutes).zfill(2)
+            label = f'{hours}:{minutes} h.'
+            return label
+
+        # Get a set of corridors in supply
+        corridors = set([corridor for corridor in self.supply.corridors])
+
+        # Get a set of paths
+        paths = set([tuple(path) for corridor in corridors for path in corridor.paths])
+        paths_dict = {i: path for i, path in enumerate(paths)}
+
+        # Get paths positions
+        paths_positions = {}
+        for path in paths_dict:
+            position = 0
+            path_position = {paths_dict[path][0]: position}
+            for i in range(len(paths_dict[path]) - 1):
+                origin_station = paths_dict[path][i]
+                destination_station = paths_dict[path][i + 1]
+                position += geodesic(origin_station.coordinates, destination_station.coordinates).kilometers
+                path_position[destination_station] = position
+            paths_positions[path] = path_position
+
+        # Paths max distance normalization for Marey chart
+        new_max = 1000  # Max value for normalization
+
+        for path in paths_positions:
+            # Get current max value
+            current_max = max(paths_positions[path].values())
+
+            # Normalize the path positions
+            normalized = {station: round(position / current_max * new_max)
+                          for station, position in paths_positions[path].items()}
+            paths_positions[path] = normalized
+
+        services_paths = {}
+        for service in self.supply.services:
+            for path in paths_dict:
+                if path not in services_paths:
+                    services_paths[path] = []
+                for service_path in infer_paths(service):
+                    shared_edges = shared_edges_between_services(service_path, paths_dict[path])
+                    if not shared_edges:
+                        continue
+
+                    services_paths[path].append(service.id)
+
+        for path_index in paths_positions:
+            services = [service for service in self.supply.services if service.id in services_paths[path_index]]
+            if not services:
+                continue
+            station_positions = paths_positions[path_index]
+
+            qualitative_colors = sns.color_palette("pastel", 10)
+            my_cmap = ListedColormap(sns.color_palette(qualitative_colors).as_hex())
+
+            tsps = sorted(set([service.tsp.name for service in services]))
+            services_dict = {service.id: service for service in services}
+            tsp_colors = {tsp: my_cmap(i) for i, tsp in enumerate(tsps)}
+            service_color = {service.id: tsp_colors[service.tsp.name] for service in services}
+
+            fig, ax = plt.subplots(figsize=(20, 11))
+
+            min_x = 0
+            max_x = 24 * 60
+
+            schedule = {}
+            for service in services:
+                schedule[service.id] = {}
+                time = service.time_slot.start
+                delta = time.total_seconds() // 60
+                for station, stop in zip(service.line.stations, service.line.timetable):
+                    if station not in station_positions:
+                        continue
+                    arrival_time = delta + int(service.line.timetable[stop][0])
+                    departure_time = delta + int(service.line.timetable[stop][1])
+                    schedule[service.id][station] = [arrival_time, departure_time]
+
+            labels_added = set()
+            # Set default color for requested services
+            requested_color = '#D3D3D3'
+            polygons = []
+            for service_id, stations in schedule.items():
+                times = [time for station, (arrival, departure) in stations.items() for time in (arrival, departure)]
+                if min(times) < min_x:
+                    min_x = min(times)
+                if max(times) > max_x:
+                    max_x = max(times)
+                station_indices = [station_positions[station] for station in stations.keys() for _ in range(2)]
+                if services_dict[service_id].tsp.name not in labels_added:
+                    label = services_dict[service_id].tsp.name
+                    labels_added.add(label)
+                else:
+                    label = None
+
+                ax.plot(times,
+                        station_indices,
+                        color=service_color[service_id],
+                        marker='o',
+                        linewidth=2.0,
+                        label=label)
+
+                stops = list(stations.keys())
+                for i in range(len(stops) - 1):
+                    departure_x = stations[stops[i]][1]
+                    arrival_x = stations[stops[i + 1]][0]
+                    if departure_x < min_x:
+                        min_x = departure_x
+                    if arrival_x > max_x:
+                        max_x = arrival_x
+                    departure_station_y = station_positions[stops[i]]
+                    arrival_station_y = station_positions[stops[i + 1]]
+                    vertices = [(departure_x - safety_gap, departure_station_y), (arrival_x - safety_gap, arrival_station_y),
+                                (arrival_x + safety_gap, arrival_station_y), (departure_x + safety_gap, departure_station_y)]
+                    ring_mixed = Polygon(vertices)
+                    polygons.append(ring_mixed)
+
+                    patch = MplPolygon(list(ring_mixed.exterior.coords),
+                                       closed=True,
+                                       facecolor=requested_color,
+                                       edgecolor=requested_color,
+                                       alpha=0.6)
+                    ax.add_patch(patch)
+
+                for i, pa in enumerate(polygons):
+                    for j, pb in enumerate(polygons[i:], start=i):
+                        if i == j:
+                            continue
+                        intersection = pa.intersection(pb)
+                        if not intersection.is_empty:
+                            if intersection.geom_type == 'Polygon':
+                                patches = [intersection]
+                            elif intersection.geom_type == 'MultiPolygon':
+                                patches = list(intersection.geoms)
+                            else:
+                                continue  # Ignorar otros tipos geométricos
+
+                            for poly in patches:
+                                patch = MplPolygon(list(poly.exterior.coords),
+                                                   closed=True,
+                                                   facecolor='crimson',
+                                                   edgecolor='crimson',
+                                                   alpha=0.5)
+                                ax.add_patch(patch)
+
+            for spn in ('top', 'right', 'bottom', 'left'):
+                ax.spines[spn].set_visible(True)
+                ax.spines[spn].set_linewidth(1.0)
+                ax.spines[spn].set_color('#A9A9A9')
+
+            ax.tick_params(axis='both', which='major', labelsize=16)
+            ax.set_yticks(tuple(station_positions.values()))
+            ax.set_yticklabels(station_positions.keys(), fontsize=16)
+
+            ax.grid(True)
+            ax.grid(True, color='#A9A9A9', alpha=0.3, zorder=1, linestyle='-', linewidth=1.0)
+            ax.set_title('Marey Chart', fontweight='bold', fontsize=24)
+            ax.set_xlabel('Time (HH:MM)', fontsize=18)
+            ax.set_ylabel('Stations', fontsize=18)
+
+            ax.legend()
+            ax.xaxis.set_major_locator(MultipleLocator(60))
+            formatter = FuncFormatter(get_time_label)
+            ax.xaxis.set_major_formatter(formatter)
+            plt.setp(ax.get_xticklabels(), rotation=70, horizontalalignment='right', fontsize=20)
+
+            plt.tight_layout()
+            plt.show()
+
+            if save_path:
+                fig.savefig(
+                    f'{save_path}marey_chart_{path_index}.pdf',
+                    format='pdf',
+                    dpi=300,
+                    bbox_inches='tight',
+                    transparent=True
+                )
 
     def plot_seat_distribution(self, save_path: str = None) -> None:
         """
