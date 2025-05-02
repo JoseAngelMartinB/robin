@@ -1,11 +1,12 @@
 """Entities for the plotter module."""
 
+import datetime
 import numpy as np
 import pandas as pd
 import seaborn as sns
 import textwrap
 
-from robin.plotter.constants import COLORS, DARK_GRAY, STYLE, WHITE_SMOKE
+from robin.plotter.constants import COLORS, DARK_GRAY, SAFETY_GAP, STYLE, WHITE_SMOKE
 from robin.supply.entities import Supply
 from robin.supply.generator.utils import infer_paths, shared_edges_between_services
 
@@ -41,18 +42,9 @@ class KernelPlotter:
         """
         self.output = pd.read_csv(path_output_csv, dtype={'departure_station': str, 'arrival_station': str})
         self.supply = Supply.from_yaml(path=path_config_supply)
-        self.stations_dict = self._create_stations_dict()
+        self.stations_dict = self.supply.get_stations_dict()
         self.colors = COLORS
         plt.style.use(STYLE)
-
-    def _create_stations_dict(self) -> Mapping[str, str]:
-        """
-        Create dictionary mapping station IDs to names.
-
-        Returns:
-            Mapping[str, str]: Dictionary mapping station IDs to names.
-        """
-        return {str(station.id): station.name for service in self.supply.services for station in service.line.stations}
 
     def _get_passenger_status(self) -> Tuple[Mapping[int, int], List[str]]:
         """
@@ -455,13 +447,16 @@ class KernelPlotter:
             ax.bar_label(ax.containers[i], labels=[f'{demand_data[status]} ({status_perc}%)'], padding=3)
         self._show_plot(fig=fig, save_path=save_path)
 
-    def plot_marey_chart(self, save_path: str = None, safety_gap: int = 10) -> None:
+    def plot_marey_chart(self, date: datetime.date, safety_gap: int = SAFETY_GAP, save_path: str = None) -> None:
         """
         Plot Marey chart for the given supply.
 
         Args:
+            date (datetime.date): Date to filter the services.
+            safety_gap (int, optional): Safety gap in minutes. Defaults to 10.
             save_path (str, optional): Path to save the plot in PDF format. Defaults to None.
         """
+        services = self.supply.filter_services_by_date(date)
 
         def get_time_label(minutes: int, position) -> str:
             """
@@ -516,7 +511,7 @@ class KernelPlotter:
 
         # Get services for each path
         services_paths = {}
-        for service in self.supply.services:
+        for service in services:
             for path_idx in paths_dict:
                 if path_idx not in services_paths:
                     services_paths[path_idx] = []
@@ -528,18 +523,18 @@ class KernelPlotter:
 
         # Plot a Marey chart for each path
         for path_index in paths_positions:
-            services = [service for service in self.supply.services if service.id in services_paths[path_index]]
-            if not services:
+            services_in_path = [service for service in services if service.id in services_paths[path_index]]
+            if not services_in_path:
                 continue
             station_positions = paths_positions[path_index]
 
             qualitative_colors = sns.color_palette('pastel', 10)
             my_cmap = ListedColormap(sns.color_palette(qualitative_colors).as_hex())
 
-            tsps = sorted(set([service.tsp.name for service in services]))
-            services_dict = {service.id: service for service in services}
+            tsps = sorted(set([service.tsp.name for service in services_in_path]))
+            services_dict = {service.id: service for service in services_in_path}
             tsp_colors = {tsp: my_cmap(i) for i, tsp in enumerate(tsps)}
-            service_color = {service.id: tsp_colors[service.tsp.name] for service in services}
+            service_color = {service.id: tsp_colors[service.tsp.name] for service in services_in_path}
 
             fig, ax = plt.subplots(figsize=(20, 11))
 
@@ -547,7 +542,7 @@ class KernelPlotter:
             max_x = 24 * 60
 
             schedule = {}
-            for service in services:
+            for service in services_in_path:
                 schedule[service.id] = {}
                 time = service.time_slot.start
                 delta = time.total_seconds() // 60
@@ -738,17 +733,17 @@ class KernelPlotter:
 
     def plot_tickets_by_trip(
         self,
+        seat_disaggregation: bool = False,
         ylim: Tuple[float, float] = None,
-        save_path: str = None,
-        seat_disaggregation: bool = False
+        save_path: str = None
     ) -> None:
         """
         Plot the number of tickets sold by trip of stations.
 
         Args:
+            seat_disaggregation (bool, optional): If True, disaggregate by seat type. Defaults to False.
             ylim (Tuple[float, float], optional): Bounds of the y-axis. Defaults to None.
             save_path (str, optional): Path to save the plot in PDF format. Defaults to None.
-            seat_disaggregation (bool, optional): If True, disaggregate by seat type. Defaults to False.
         """
         fig, ax = plt.subplots(1, 1, figsize=(7, 4))
         fig.subplots_adjust(hspace=0.75, bottom=0.2, top=0.9)

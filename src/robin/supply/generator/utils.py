@@ -14,7 +14,7 @@ class Segment(NamedTuple):
     service_idx: str
     start_pos: float
     end_pos: float
-    time_at: "Callable[[float], timedelta]"
+    time_at: 'Callable[[float], timedelta]'
 
 
 def build_segments_for_service(
@@ -28,20 +28,19 @@ def build_segments_for_service(
     segments: List[Segment] = []
     stations = service.line.stations
 
-    for k, (prev_stn, next_stn) in enumerate(zip(stations, stations[1:])):
+    for prev_stn, next_stn in zip(stations, stations[1:]):
         start_pos = positions[prev_stn]
         end_pos = positions[next_stn]
 
         # Scheduled departure and arrival
-        depart_time = service.schedule[prev_stn.id][1]
-        arrive_time = service.schedule[next_stn.id][0]
+        depart_time = service.schedule[prev_stn.id][1] + timedelta(days=service.date.toordinal())
+        arrive_time = service.schedule[next_stn.id][0] + timedelta(days=service.date.toordinal())
 
         # Local interpolator mapping any position in [start_pos, end_pos]
         time_interp = get_time_from_position(
             (depart_time, start_pos),
             (arrive_time, end_pos)
         )
-
         segments.append(Segment(service.id, start_pos, end_pos, time_interp))
 
     return segments
@@ -116,9 +115,9 @@ def get_time_from_position(
 
     # Ensure we have a valid line
     if t0 == t1:
-        raise ValueError("point_a and point_b must have different times")
+        raise ValueError('point_a and point_b must have different times')
     if x0 == x1:
-        raise ValueError("point_a and point_b must have different positions")
+        raise ValueError('point_a and point_b must have different positions')
 
     # Slope: position change per minute
     slope = (x1 - x0) / (t1 - t0)

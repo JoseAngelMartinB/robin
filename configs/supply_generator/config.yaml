@@ -2,7 +2,7 @@
 # The max date is not included in the range
 dates:
   min: 2024-06-25
-  max: 2024-06-26
+  max: 2024-06-30
 
 # Lines
 # If you want equal probabilities set probabilities equal to {} like with the tsps

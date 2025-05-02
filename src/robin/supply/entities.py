@@ -1159,8 +1159,9 @@ class Supply:
             Mapping[str, str]: Dictionary of stations in the supply with
             the station id as key and the station name as value.
         """
-        return {str(station.id): station.name for service in self.services for station in service.line.corridor.stations.values()}
+        return {str(station.id): station.name for service in self.services for station in service.line.stations}
 
+    @cache
     def filter_service_by_id(self, service_id: str) -> Service:
         """
         Filters a Service by ID.
@@ -1193,3 +1194,16 @@ class Supply:
             if service.date == date and (origin, destination) in service.prices.keys():
                 filtered_services.append(service)
         return filtered_services
+
+    @cache
+    def filter_services_by_date(self, date: datetime.date) -> List[Service]:
+        """
+        Filters a List of Services available in the system by date.
+
+        Args:
+            date (datetime.date): Date of service (day, month, year, without time).
+
+        Returns:
+            List[Service]: List of Service objects that meet the user requests.
+        """
+        return [service for service in self.services if service.date == date]

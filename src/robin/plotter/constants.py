@@ -6,6 +6,9 @@ COLORS = ['lemonchiffon', 'lightsteelblue', 'palegreen', 'lightsalmon', 'lavende
 # Grid color
 DARK_GRAY = '#A9A9A9'
 
+# Safety gap in minutes
+SAFETY_GAP = 10
+
 # Seaborn style for the plots
 STYLE = 'seaborn-v0_8-pastel'
 
