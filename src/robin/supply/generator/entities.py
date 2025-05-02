@@ -1,6 +1,8 @@
 """Entities for the supply generator module."""
 
 import datetime
+import hashlib
+import json
 import numpy as np
 import os
 import random
@@ -34,7 +36,6 @@ class SupplyGenerator(SupplySaver):
         tsps (Mapping[str, TSP]): Mapping of TSP id to TSP object.
         services (List[Service]): List of Service objects.
         config (Mapping[str, Any]): Configuration mapping for the generator.
-        seed (Union[int, None]): Seed for the random number generator.
     """
 
     def __init__(
@@ -48,7 +49,6 @@ class SupplyGenerator(SupplySaver):
         tsps: Mapping[str, TSP],
         services: List[Service],
         config: Mapping[str, Any],
-        seed: Union[int, None] = None
     ) -> None:
         """
         Initialize a SupplyGenerator with the given parameters.
@@ -65,10 +65,7 @@ class SupplyGenerator(SupplySaver):
             tsps (Mapping[str, TSP]): Mapping of TSP id to TSP object.
             services (List[Service]): List of Service objects.
             config (Mapping[str, Any]): Configuration mapping for the generator.
-            seed (Union[int, None], optional): Seed for the random number generator. Defaults to None.
         """
-        if seed is not None:
-            self.set_seed(seed)
         SupplySaver.__init__(self, services)
         self.stations = stations
         self.time_slots = time_slots
@@ -79,13 +76,12 @@ class SupplyGenerator(SupplySaver):
         self.tsps = tsps
         self.services = services
         self.config = config
-    
+
     @classmethod
     def from_yaml(
         cls,
         path_config_supply: str,
         path_config_generator: str,
-        seed: Union[int, None] = None
     ) -> 'SupplyGenerator':
         """
         Create a SupplyGenerator object from YAML configuration files.
@@ -93,8 +89,7 @@ class SupplyGenerator(SupplySaver):
         Args:
             path_config_supply (str): Path to the supply configuration YAML file.
             path_config_generator (str): Path to the generator configuration YAML file.
-            seed (Union[int, None], optional): Seed for the random number generator. Defaults to None.
-        
+
         Returns:
             SupplyGenerator: An instance of the SupplyGenerator class.
         """
@@ -108,7 +103,7 @@ class SupplyGenerator(SupplySaver):
         tsps = SupplySaver._get_tsps(data, rolling_stocks, key='trainServiceProvider')
         services = SupplySaver._get_services(data, lines, tsps, time_slots, seats, rolling_stocks, key='service')
         config = read_yaml(path_config_generator)
-        return cls(stations, time_slots, corridors, lines, seats, rolling_stocks, tsps, services, config, seed)
+        return cls(stations, time_slots, corridors, lines, seats, rolling_stocks, tsps, services, config)
 
     def _filter_rolling_stocks(self) -> None:
         """
@@ -159,7 +154,8 @@ class SupplyGenerator(SupplySaver):
                     timetable[station] = (noisy_arrival, noisy_departure)
 
             # Generate a unique line ID based on the timetable with 5 digits
-            line_id = str(abs(hash(str(timetable.values()))))[:5]
+            s = json.dumps(str(timetable.values()), sort_keys=True)
+            line_id = hashlib.md5(s.encode()).hexdigest()[:5]
 
             # Create a new line with the updated timetable
             line = Line(line_id, line.name, line.corridor, timetable)
@@ -366,6 +362,9 @@ class SupplyGenerator(SupplySaver):
         Returns:
             List[Service]: List of generated Service objects.
         """
+        if seed:
+            self.set_seed(seed)
+
         self.safety_gap = safety_gap
 
         # Generate services per RU if a mapping is provided
@@ -386,7 +385,7 @@ class SupplyGenerator(SupplySaver):
         self._filter_rolling_stocks()
         SupplySaver(self.services).to_yaml(output_path=file_name)
 
-    def set_seed(seed: int) -> None:
+    def set_seed(self, seed: int) -> None:
         """
         Set seed for the random number generator.
 
