@@ -273,7 +273,7 @@ class SupplyGenerator(SupplySaver):
         """
         Generate a service based on the configuration probabilities.
 
-        It checks if the service is feasible and generates a new one if not. (TODO: Implement feasibility check)
+        It checks if the service is feasible and generates a new one if not.
 
         Returns:
             Service: Generated service based on the configuration probabilities.

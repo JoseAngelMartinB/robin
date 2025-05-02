@@ -162,7 +162,8 @@ class Corridor:
         self.id = id_
         self.name = name
         self.tree = tree
-        self.paths = self._get_paths(self.tree)
+        paths = self._get_paths(tree)
+        self.paths = paths + self._reverse_paths(paths)
         self.stations = self._dict_stations(self.tree)
 
     def _get_paths(
@@ -220,6 +221,18 @@ class Corridor:
             stations[org.id] = org
             self._dict_stations(tree[node], stations)
         return stations
+
+    def _reverse_paths(self, paths: List[List[Station]]) -> List[List[Station]]:
+        """
+        Reverse paths.
+
+        Args:
+            paths (List[List[Station]]): List of paths.
+
+        Returns:
+            List[List[Station]]: List of reversed paths.
+        """
+        return [list(reversed(path)) for path in paths]
 
     def __str__(self) -> str:
         """

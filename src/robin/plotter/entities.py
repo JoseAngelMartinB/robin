@@ -466,6 +466,7 @@ class KernelPlotter:
         def get_time_label(minutes: int, position) -> str:
             """
             Convert minutes to HH:MM format string.
+
             NOTE: Do not remove the second argument. It is required by FuncFormatter.
 
             Args:
@@ -490,47 +491,49 @@ class KernelPlotter:
 
         # Get paths positions
         paths_positions = {}
-        for path in paths_dict:
+        for path_idx in paths_dict:
             position = 0
-            path_position = {paths_dict[path][0]: position}
-            for i in range(len(paths_dict[path]) - 1):
-                origin_station = paths_dict[path][i]
-                destination_station = paths_dict[path][i + 1]
+            path_position = {paths_dict[path_idx][0]: position}
+            for i in range(len(paths_dict[path_idx]) - 1):
+                origin_station = paths_dict[path_idx][i]
+                destination_station = paths_dict[path_idx][i + 1]
                 position += geodesic(origin_station.coordinates, destination_station.coordinates).kilometers
                 path_position[destination_station] = position
-            paths_positions[path] = path_position
+            paths_positions[path_idx] = path_position
 
         # Paths max distance normalization for Marey chart
-        new_max = 1000  # Max value for normalization
+        new_max = 1000
 
-        for path in paths_positions:
+        for path_idx in paths_positions:
             # Get current max value
-            current_max = max(paths_positions[path].values())
+            current_max = max(paths_positions[path_idx].values())
 
             # Normalize the path positions
-            normalized = {station: round(position / current_max * new_max)
-                          for station, position in paths_positions[path].items()}
-            paths_positions[path] = normalized
+            normalized = {
+                station: round(position / current_max * new_max) for station, position in paths_positions[path_idx].items()
+            }
+            paths_positions[path_idx] = normalized
 
+        # Get services for each path
         services_paths = {}
         for service in self.supply.services:
-            for path in paths_dict:
-                if path not in services_paths:
-                    services_paths[path] = []
+            for path_idx in paths_dict:
+                if path_idx not in services_paths:
+                    services_paths[path_idx] = []
                 for service_path in infer_paths(service):
-                    shared_edges = shared_edges_between_services(service_path, paths_dict[path])
+                    shared_edges = shared_edges_between_services(service_path, paths_dict[path_idx])
                     if not shared_edges:
                         continue
+                    services_paths[path_idx].append(service.id)
 
-                    services_paths[path].append(service.id)
-
+        # Plot a Marey chart for each path
         for path_index in paths_positions:
             services = [service for service in self.supply.services if service.id in services_paths[path_index]]
             if not services:
                 continue
             station_positions = paths_positions[path_index]
 
-            qualitative_colors = sns.color_palette("pastel", 10)
+            qualitative_colors = sns.color_palette('pastel', 10)
             my_cmap = ListedColormap(sns.color_palette(qualitative_colors).as_hex())
 
             tsps = sorted(set([service.tsp.name for service in services]))

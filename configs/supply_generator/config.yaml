@@ -9,7 +9,7 @@ lines:
     '03612': 0.5
     '04161': 0.3
     '02731': 0.2
-  'noise_std': 0.1
+  noise_std: 0.1
 
 # Train service providers
 tsps:

@@ -7,7 +7,7 @@ from robin.supply.entities import Station, Service
 from datetime import timedelta
 from functools import cache
 from geopy.distance import geodesic
-from typing import Any, Callable, FrozenSet, List, Mapping, NamedTuple, Set, Tuple
+from typing import Any, Callable, List, Mapping, NamedTuple, Set, Tuple
 
 
 class Segment(NamedTuple):
@@ -15,6 +15,7 @@ class Segment(NamedTuple):
     start_pos: float
     end_pos: float
     time_at: "Callable[[float], timedelta]"
+
 
 def build_segments_for_service(
     service: Service,
@@ -45,21 +46,23 @@ def build_segments_for_service(
 
     return segments
 
-def get_edges_from_path(path: List[Station]) -> Set[FrozenSet[Station]]:
+
+def get_edges_from_path(path: List[Station]) -> Set[Tuple[Station]]:
     """
-    Returns the set of edges (as frozensets) traversed in the given path.
+    Returns the set of edges for a given path of stations.
 
     Args:
         path (List[Station]): A list of Station objects representing the path.
 
     Returns:
-        A set of frozensets, each containing two Station objects that form an edge.
+        Set[Tuple[Station]]: A set of edges, where each edge is represented as a tuple of two stations.
     """
-    edges: Set[FrozenSet[Station]] = set()
+    edges: Set[Tuple[Station]] = set()
     for i in range(len(path) - 1):
         u, v = path[i], path[i + 1]
-        edges.add(frozenset((u, v)))
+        edges.add((u, v))
     return edges
+
 
 def get_stations_positions(stations: List[Station]) -> Mapping[Station, float]:
     """
@@ -86,6 +89,7 @@ def get_stations_positions(stations: List[Station]) -> Mapping[Station, float]:
         positions[curr] = total_distance
 
     return positions
+
 
 @cache
 def get_time_from_position(
@@ -130,6 +134,7 @@ def get_time_from_position(
 
     return time_from_position
 
+
 def infer_paths(service: Service) -> List[List[Station]]:
     """
     Infers the path of a service based on its line and corridor.
@@ -142,16 +147,16 @@ def infer_paths(service: Service) -> List[List[Station]]:
     """
     paths = []
     for path in service.line.corridor.paths:
-        if sum([station in path for station in service.line.stations]) > 1:
-            paths.append(path)
-
-    # Clip the paths from origin to destination
-    for i, path in enumerate(paths):
-        origin_index = path.index(service.line.stations[0]) if service.line.stations[0] in path else 0
-        destination_index = path.index(service.line.stations[-1]) if service.line.stations[-1] in path else len(path) - 1
-        paths[i] = path[origin_index:destination_index + 1]
-
+        # Skip paths that do not contain the service's stations
+        if sum([station in path for station in service.line.stations]) < 2:
+            continue
+        # Only consider forward paths
+        if path.index(service.line.stations[0]) < path.index(service.line.stations[-1]):
+            origin_index = path.index(service.line.stations[0])
+            destination_index = path.index(service.line.stations[-1])
+            paths.append(path[origin_index:destination_index + 1])
     return paths
+
 
 def read_yaml(path: str) -> Mapping[str, Any]:
     """
@@ -166,6 +171,7 @@ def read_yaml(path: str) -> Mapping[str, Any]:
     with open(path, 'r') as file:
         data = yaml.load(file, Loader=yaml.CSafeLoader)
     return data
+
 
 def segments_conflict(
     seg1: Segment,
@@ -202,7 +208,8 @@ def segments_conflict(
 
     return True
 
-def shared_edges_between_services(path1: List[Station], path2: List[Station]) -> Set[FrozenSet[Station]]:
+
+def shared_edges_between_services(path1: List[Station], path2: List[Station]) -> Set[Tuple[Station]]:
     """
     Checks whether two services (given by their paths) share any track segments.
 
