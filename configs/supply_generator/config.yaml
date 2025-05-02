@@ -4,6 +4,7 @@ dates:
   max: 2024-06-26
 
 # Lines
+# If you want equal probabilities set probabilities equal to {} and if you don't want noise, just remove the noise_std key
 lines:
   probabilities:
     '03612': 0.5

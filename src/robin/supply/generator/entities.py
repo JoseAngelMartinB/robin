@@ -295,6 +295,8 @@ class SupplyGenerator(SupplySaver):
         """
         Sample an item from the configuration probabilities for the given key.
 
+        If probabilities are not defined, all items will have the same probability.
+
         Args:
             key (str): The key in the configuration to sample from.
             id (Union[str, None], optional): The id of the item to sample. Defaults to None.
@@ -310,6 +312,12 @@ class SupplyGenerator(SupplySaver):
             assert key in self.config, f'{key} not found in config'
             items = list(self.config[key]['probabilities'].keys())
             probabilities = list(self.config[key]['probabilities'].values())
+        
+        # If probabilities are not defined, assign equal probability to all items
+        if not probabilities or sum(probabilities) == 0:
+            items = list(getattr(self, key).keys())
+            probabilities = [1 / len(items)] * len(items)
+        
         sampled_item = np.random.choice(items, p=probabilities)
         assert sampled_item in getattr(self, key), f'{sampled_item} not found in {key}'
         return getattr(self, key)[sampled_item]
