@@ -74,7 +74,6 @@ class SupplyGenerator(SupplySaver):
         self.tsps = tsps
         self.services = services
         self.config = config
-        self.generated_services = []
     
     @classmethod
     def from_yaml(
@@ -135,6 +134,16 @@ class SupplyGenerator(SupplySaver):
 
         return graph
 
+    def _filter_rolling_stocks(self) -> None:
+        """
+        Filter the rolling stocks of the services to only include those that are used in the services.
+        """
+        used_rolling_stocks = set()
+        for service in self.services:
+            used_rolling_stocks.add(service.rolling_stock)
+        for service in self.services:
+            service.tsp.rolling_stock = list(filter(lambda x: x in used_rolling_stocks, service.tsp.rolling_stock))
+
     def _generate_date(self) -> datetime.date:
         """
         Generate a random date between the min and max dates specified in the config.
@@ -157,27 +166,30 @@ class SupplyGenerator(SupplySaver):
         Returns:
             Line: Generated line based on the configuration probabilities.
         """
-        return self._sample_from_config(key='lines')
+        line: Line = self._sample_from_config(key='lines')
 
-        # TODO: Review this, tt? dt? travel time? departure time? Why we use 0.4 and 0.5? Is not directly to take a line from the supply?
-        # NOTE: I think this is not needed as we now take the line from the supply
-        # timetable = {}
-        # tt_randomizer = np.random.uniform(low=0.0, high=0.4)
-        # dt_randomizer = np.random.uniform(low=0.0, high=0.5)
-        # for i, station in enumerate(line.timetable):
-        #     arrival, departure = line.timetable[station]
-        #     if i == 0:
-        #         prev_dt = departure
-        #     else:
-        #         ref_stop_time = departure - arrival
-        #         travel_time = arrival - prev_dt
-        #         arrival = float(round(prev_dt + (travel_time + travel_time * tt_randomizer)))
-        #         departure = float(round(arrival + ref_stop_time + ref_stop_time * dt_randomizer))
-        #     timetable[station] = (arrival, departure)
+        # Add normal noise to the arrival and departure times
+        if self.config['lines'].get('noise_std', None):
+            timetable = {}
+            for i, (station, (arrival, departure)) in enumerate(line.timetable.items()):
+                if i == 0:
+                    timetable[station] = (arrival, departure)
+                elif i == len(line.timetable) - 1:
+                    arrival_noise = np.random.normal(0, self.config['lines']['noise_std'])
+                    noisy_arrival = float(round(arrival * (1 + arrival_noise), ndigits=1))
+                    timetable[station] = (noisy_arrival, noisy_arrival)
+                else:
+                    arrival_noise, departure_noise = np.random.normal(0, self.config['lines']['noise_std'], size=2)
+                    noisy_arrival = float(round(arrival * (1 + arrival_noise), ndigits=1))
+                    noisy_departure = float(round(max(noisy_arrival, departure * (1 + departure_noise)), ndigits=1))
+                    timetable[station] = (noisy_arrival, noisy_departure)
 
-        # Encode timetable to string (Hash or something) for unique line id based on timetable
-        # line_id = str(hash(str(timetable.values())))
-        # return Line(f'Line_{line_id}', line.name, line.corridor, timetable)
+            # Generate a unique line ID based on the timetable with 5 digits
+            line_id = str(abs(hash(str(timetable.values()))))[:5]
+
+            # Create a new line with the updated timetable
+            line = Line(line_id, line.name, line.corridor, timetable)
+        return line
 
     def _generate_tsp(self) -> TSP:
         """
@@ -274,7 +286,6 @@ class SupplyGenerator(SupplySaver):
             Service: Generated service based on the configuration probabilities.
         """
         feasible = False
-
         while not feasible:
             date = self._generate_date()
             line = self._generate_line()
@@ -284,9 +295,7 @@ class SupplyGenerator(SupplySaver):
             prices = self._generate_prices(line, rolling_stock, tsp)
             service_id = self._generate_service_id(line, date, time_slot)
             service = Service(service_id, date, line, tsp, time_slot, rolling_stock, prices)
-
             feasible = self._is_feasible(service)
-
         return service
 
     def _sample_from_config(self, key: str, id: Union[str, None] = None) -> Any:
@@ -313,8 +322,8 @@ class SupplyGenerator(SupplySaver):
         return getattr(self, key)[sampled_item]
 
     def _is_feasible(
-            self,
-            new_service: Service,
+        self,
+        new_service: Service,
     ) -> bool:
         """
         Check if the service is feasible.
@@ -333,7 +342,7 @@ class SupplyGenerator(SupplySaver):
 
         for path in paths:
             new_service_segments = build_segments_for_service(new_service, get_stations_positions(path))
-            for service in self.generated_services:
+            for service in self.services:
                 if sum([station in path for station in service.line.stations]) <= 1:
                     continue
 
@@ -384,10 +393,11 @@ class SupplyGenerator(SupplySaver):
         #            service = self._generate_service_for_ru(ru_id, service_id)
         #            services.append(service)
         #else:
+        self.services: List[Service] = []
         for _ in range(n_services):
-            self.generated_services.append(self._generate_service())
-
-        SupplySaver(self.generated_services).to_yaml(output_path=file_name)
+            self.services.append(self._generate_service())
+        self._filter_rolling_stocks()
+        SupplySaver(self.services).to_yaml(output_path=file_name)
 
     def set_seed(seed: int) -> None:
         """

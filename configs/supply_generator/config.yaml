@@ -6,9 +6,10 @@ dates:
 # Lines
 lines:
   probabilities:
-    '06301': 0.5
-    '03073': 0.3
-    '03083': 0.2
+    '03612': 0.5
+    '04161': 0.3
+    '02731': 0.2
+  'noise_std': 0.1
 
 # Train service providers
 tsps:
@@ -29,17 +30,17 @@ time_slots:
 rolling_stocks:
   probabilities:
     '1':
-      '1': 1.0
-      '2': 0.0
-      '3': 0.0
-      '4': 0.0
-      '5': 0.0
+      '1': 0.4
+      '2': 0.2
+      '3': 0.2
+      '4': 0.1
+      '5': 0.1
     '2':
-      '1': 1.0
-      '2': 0.0
-      '3': 0.0
-      '4': 0.0
-      '5': 0.0
+      '1': 0.4
+      '2': 0.2
+      '3': 0.2
+      '4': 0.1
+      '5': 0.1
 
 # Prices config
 prices:
@@ -53,3 +54,4 @@ prices:
       '1': 1  # Tourist Class
       '2': 1.2 # Tourist Plus Class
       '3': 1.6  # Business Class
+      '4': 1.8  # First Class

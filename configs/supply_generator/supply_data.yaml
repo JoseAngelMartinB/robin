@@ -6,14 +6,23 @@ stations:
     name: "Madrid-Puerta de Atocha"
     city: "Madrid"
     short_name: "MAD"
+    coordinates:
+      latitude: 40.406442
+      longitude: -3.690886
   - id: "ZAZ"
     name: "Zaragoza-Delicias"
     city: "Zaragoza"
     short_name: "ZAZ"
+    coordinates:
+      latitude: 41.658649
+      longitude: -0.911615
   - id: "BCN"
     name: "Barcelona-Sants"
     city: "Barcelona"
     short_name: "BCN"
+    coordinates:
+      latitude: 41.37922
+      longitude: 2.140624
 
 # Time slots
 timeSlot:
