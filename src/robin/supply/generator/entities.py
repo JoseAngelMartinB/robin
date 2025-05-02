@@ -11,7 +11,13 @@ from robin.supply.saver.entities import SupplySaver
 from robin.supply.generator.utils import build_segments_for_service, get_stations_positions, read_yaml, segments_conflict
 
 from geopy.distance import geodesic
+from loguru import logger
+from tqdm import tqdm
 from typing import Any, List, Mapping, Union, Tuple
+
+MAX_RETRY = 500
+
+SAFETY_GAP = 10
 
 
 class SupplyGenerator(SupplySaver):
@@ -237,15 +243,16 @@ class SupplyGenerator(SupplySaver):
         """
         return str(len(self.services) + 1).zfill(5)
 
-    def _generate_service(self) -> Service:
+    def _generate_service(self, max_retry: int) -> Union[Service, None]:
         """
         Generate a service based on the configuration probabilities.
 
         It checks if the service is feasible and generates a new one if not.
 
         Returns:
-            Service: Generated service based on the configuration probabilities.
+            Union[Service, None]: Generated service if possible, None if max retries are reached.
         """
+        retries = 0
         feasible = False
         while not feasible:
             date = self._generate_date()
@@ -257,6 +264,10 @@ class SupplyGenerator(SupplySaver):
             service_id = self._generate_service_id()
             service = Service(service_id, date, line, tsp, time_slot, rolling_stock, prices)
             feasible = self._is_feasible(service)
+            retries += 1
+            if retries >= max_retry:
+                logger.warning(f'Max retries reached. Service not generated.')
+                return None
         return service
 
     def _sample_from_config(self, key: str, id: Union[str, None] = None) -> Any:
@@ -334,7 +345,8 @@ class SupplyGenerator(SupplySaver):
         n_services: int = 1,
         n_services_by_ru: Mapping[str, int] = None,
         seed: int = None,
-        safety_gap: int = 10,
+        safety_gap: int = SAFETY_GAP,
+        max_retry: int = MAX_RETRY
     ) -> List[Service]:
         """
         Generate a list of services.
@@ -348,6 +360,8 @@ class SupplyGenerator(SupplySaver):
             n_services (int, optional): Number of services to generate (if n_services_by_ru is not provided). Defaults to 1.
             n_services_by_ru (Mapping[str, int], optional): Mapping of RU id (TSP id) to the number of services to generate.
             seed (int, optional): Seed for the random number generator.
+            safety_gap (int, optional): Safety gap for the segments. Defaults to SAFETY_GAP.
+            max_retry (int, optional): Maximum number of retries to generate a feasible service. Defaults to MAX_RETRY.
 
         Returns:
             List[Service]: List of generated Service objects.
@@ -363,8 +377,12 @@ class SupplyGenerator(SupplySaver):
         #            services.append(service)
         #else:
         self.services: List[Service] = []
-        for _ in range(n_services):
-            self.services.append(self._generate_service())
+        for _ in tqdm(range(n_services)):
+            generated_service = self._generate_service(max_retry=max_retry)
+            if generated_service:
+                self.services.append(generated_service)
+            else:  # Max retries reached
+                break
         self._filter_rolling_stocks()
         SupplySaver(self.services).to_yaml(output_path=file_name)
 
