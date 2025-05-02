@@ -1,7 +1,6 @@
 """Entities for the supply generator module."""
 
 import datetime
-import networkx as nx
 import numpy as np
 import os
 import random
@@ -104,35 +103,6 @@ class SupplyGenerator(SupplySaver):
         services = SupplySaver._get_services(data, lines, tsps, time_slots, seats, rolling_stocks, key='service')
         config = read_yaml(path_config_generator)
         return cls(stations, time_slots, corridors, lines, seats, rolling_stocks, tsps, services, config, seed)
-
-    def _build_graph(self, tree: Mapping[Station, ...], graph=None) -> nx.Graph:
-        """
-        Recursively builds a graph from the given tree structure.
-
-        Args:
-            tree (Mapping): A mapping of Station objects to their branches.
-            graph (nx.Graph, optional): An existing graph to add edges to. If None, a new graph is created.
-
-        Returns:
-            nx.Graph: The graph with edges added based on the tree structure.
-        """
-        if graph is None:
-            graph = nx.Graph()
-
-        for origin_station, branches in tree.items():
-            for destination_station in branches:
-                # Get geodesic distance between the two stations
-                coord_origen = origin_station.coordinates
-                coord_destino = destination_station.coordinates
-                distance_km = geodesic(coord_origen, coord_destino).kilometers
-
-                # Add edge to the graph with the distance as weight
-                graph.add_edge(origin_station, destination_station, weight=distance_km)
-
-                # Recursively build the graph for the branches
-                self._build_graph({destination_station: branches[destination_station]}, graph)
-
-        return graph
 
     def _filter_rolling_stocks(self) -> None:
         """
