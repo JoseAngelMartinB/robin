@@ -260,21 +260,14 @@ class SupplyGenerator(SupplySaver):
 
         return prices
 
-    def _generate_service_id(self, line: Line, date: datetime.date, time_slot: TimeSlot) -> str:
+    def _generate_service_id(self) -> str:
         """
-        Generate a unique service ID based on the line, date, and time slot.
-
-        Args:
-            line (Line): Line of the service.
-            date (datetime.date): Date of the service.
-            time_slot (TimeSlot): Time slot of the service.
+        Generate a unique service ID based on the current number of services.
 
         Returns:
             str: Unique service ID.
         """
-        date_str = date.strftime('%Y-%m-%d')
-        time_str = '.'.join(str(time_slot.start).split(':')[:2])
-        return f'{line.id}_{date_str}-{time_str}'
+        return str(len(self.services) + 1).zfill(5)
 
     def _generate_service(self) -> Service:
         """
@@ -293,7 +286,7 @@ class SupplyGenerator(SupplySaver):
             time_slot = self._generate_time_slot()
             rolling_stock = self._generate_rolling_stock(tsp)
             prices = self._generate_prices(line, rolling_stock, tsp)
-            service_id = self._generate_service_id(line, date, time_slot)
+            service_id = self._generate_service_id()
             service = Service(service_id, date, line, tsp, time_slot, rolling_stock, prices)
             feasible = self._is_feasible(service)
         return service
