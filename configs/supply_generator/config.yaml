@@ -1,10 +1,12 @@
 # Dates
+# The max date is not included in the range
 dates:
   min: 2024-06-25
   max: 2024-06-26
 
 # Lines
-# If you want equal probabilities set probabilities equal to {} and if you don't want noise, just remove the noise_std key
+# If you want equal probabilities set probabilities equal to {} like with the tsps
+# If you don't want noise, just remove the noise_std key
 lines:
   probabilities:
     '03612': 0.5
@@ -13,10 +15,9 @@ lines:
   noise_std: 0.1
 
 # Train service providers
+# If you want different probabilities explicitly set them here like with the lines
 tsps:
-  probabilities:
-    '1': 0.7
-    '2': 0.3
+  probabilities: {}
 
 # Time slots
 time_slots:
