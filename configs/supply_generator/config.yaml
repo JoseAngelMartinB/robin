@@ -12,7 +12,7 @@ lines:
     '03612': 0.5
     '04161': 0.3
     '02731': 0.2
-  noise_std: 0.1
+  noise_std: 0.05
 
 # Train service providers
 # If you want different probabilities explicitly set them here like with the lines

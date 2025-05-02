@@ -171,17 +171,15 @@ class SupplyGenerator(SupplySaver):
         # Add normal noise to the arrival and departure times
         if self.config['lines'].get('noise_std', None):
             timetable = {}
+            travel_time_noise, stop_time_noise = np.random.normal(0, self.config['lines']['noise_std'], size=2)
             for i, (station, (arrival, departure)) in enumerate(line.timetable.items()):
+                noisy_arrival = float(round(arrival * (1 + travel_time_noise), ndigits=1))
+                noisy_departure = float(round(noisy_arrival + (departure - arrival) * (1 + stop_time_noise), ndigits=1))
                 if i == 0:
                     timetable[station] = (arrival, departure)
                 elif i == len(line.timetable) - 1:
-                    arrival_noise = np.random.normal(0, self.config['lines']['noise_std'])
-                    noisy_arrival = float(round(arrival * (1 + arrival_noise), ndigits=1))
                     timetable[station] = (noisy_arrival, noisy_arrival)
                 else:
-                    arrival_noise, departure_noise = np.random.normal(0, self.config['lines']['noise_std'], size=2)
-                    noisy_arrival = float(round(arrival * (1 + arrival_noise), ndigits=1))
-                    noisy_departure = float(round(max(noisy_arrival, departure * (1 + departure_noise)), ndigits=1))
                     timetable[station] = (noisy_arrival, noisy_departure)
 
             # Generate a unique line ID based on the timetable with 5 digits
