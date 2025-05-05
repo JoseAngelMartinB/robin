@@ -178,7 +178,7 @@ def segments_conflict(
     safety_headway: int
 ) -> bool:
     """
-    Determine if two motion segments conflict within a given safety headway.
+    Determine if two motion segments conflict within a given safety headway in minutes.
 
     They conflict if their spatial intervals overlap and their time gaps
     at the overlap boundaries violate the headway constraint.

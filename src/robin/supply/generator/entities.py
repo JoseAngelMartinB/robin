@@ -340,12 +340,13 @@ class SupplyGenerator(SupplySaver):
 
     def generate(
         self,
-        output_path: Union[str, None] = None,
         n_services: int = 1,
-        n_services_by_ru: Mapping[str, int] = None,
+        n_services_by_tsp: Mapping[str, int] = None,
+        output_path: Union[str, None] = None,
         seed: Union[int, None] = None,
+        progress_bar: bool = True,
         safety_gap: int = DEFAULT_SAFETY_GAP,
-        max_retry: int = DEFAULT_MAX_RETRY
+        max_retry: int = DEFAULT_MAX_RETRY,
     ) -> List[Service]:
         """
         Generate a list of services.
@@ -356,9 +357,11 @@ class SupplyGenerator(SupplySaver):
 
         Args:
             output_path (str, optional): Path to the output YAML file. Defaults to None.
-            n_services (int, optional): Number of services to generate (if n_services_by_ru is not provided). Defaults to 1.
-            n_services_by_ru (Mapping[str, int], optional): Mapping of RU id (TSP id) to the number of services to generate.
+            n_services (int, optional): Number of services to generate. Defaults to 1.
+            n_services_by_tsp (Mapping[str, int], optional): Mapping of TSP id to number of services
+                to generate for each TSP. Defaults to None.
             seed (int, optional): Seed for the random number generator.
+            progress_bar (bool, optional): Whether to show a progress bar. Defaults to True.
             safety_gap (int, optional): Safety gap for the segments in minutes. Defaults to 10.
             max_retry (int, optional): Maximum number of retries to generate a feasible service. Defaults to 500.
 
@@ -381,8 +384,10 @@ class SupplyGenerator(SupplySaver):
         #else:
 
         self.services: List[Service] = []
-        # TODO: The iterator should be a tqdm iterator or range, not always tqdm
-        for _ in tqdm(range(n_services), desc='Generating services', unit='service'):
+        iterator = range(n_services)
+        if progress_bar:
+            iterator = tqdm(iterator, desc='Generating services', unit='service')
+        for _ in iterator:
             try:
                 generated_service = self._generate_service(max_retry=max_retry)
                 self.services.append(generated_service)
