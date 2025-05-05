@@ -22,17 +22,14 @@ class Kernel:
         demand (Demand): Demand object.
     """
     
-    def __init__(self, path_config_supply: str, path_config_demand: str, seed: Union[int, None] = None) -> None:
+    def __init__(self, path_config_supply: str, path_config_demand: str) -> None:
         """
         Initialize a kernel object.
 
         Args:
             path_config_supply (str): Path to the supply configuration file.
             path_config_demand (str): Path to the demand configuration file.
-            seed (int, optional): Seed for the random number generator. Defaults to None.
         """
-        if seed is not None:
-            self.set_seed(seed)
         self.supply = Supply.from_yaml(path_config_supply)
         self.demand = Demand.from_yaml(path_config_demand)
 
@@ -77,6 +74,7 @@ class Kernel:
     def simulate(
         self,
         output_path: Union[str, None] = None,
+        seed: Union[int, None] = None,
         departure_time_hard_restriction: bool = True,
         calculate_global_utility: bool = False
     ) -> List[Service]:
@@ -88,6 +86,7 @@ class Kernel:
 
         Args:
             output_path (str, optional): Path to the output CSV file. Defaults to None.
+            seed (int, optional): Seed for the random number generator. Defaults to None.
             departure_time_hard_restriction (bool, optional): If True, the passenger will not
                 be assigned to a service with a departure time that is not valid. Defaults to True.
             calculate_global_utility (bool, optional): If True, it will be calculated the global utility
@@ -96,6 +95,10 @@ class Kernel:
         Returns:
             List[Service]: List of services with updated tickets.
         """
+        # Set seed for reproducibility
+        if seed is not None:
+            self.set_seed(seed)
+
         # Generate passengers demand
         passengers = self.demand.generate_passengers()
         

@@ -44,8 +44,7 @@ class Calibration:
         target_output_path: str,
         calibration_logs: str = 'calibration_logs',
         departure_time_hard_restriction: bool = True,
-        keep_top_k: int = DEFAULT_KEEP_TOP_K,
-        seed: Union[int, None] = None
+        keep_top_k: int = DEFAULT_KEEP_TOP_K
     ) -> None:
         """
         Initialize a calibration object.
@@ -58,7 +57,6 @@ class Calibration:
             departure_time_hard_restriction (bool, optional): If True, the passenger will not
                 be assigned to a service with a departure time that is not valid. Defaults to True.
             keep_top_k (int, optional): Number of top k trials to keep. Defaults to 3.
-            seed (int, optional): Seed for the random number generator. Defaults to None.
         """
         self.path_config_supply = path_config_supply
         self.path_config_demand = path_config_demand
@@ -67,7 +65,6 @@ class Calibration:
         self.departure_time_hard_restriction = departure_time_hard_restriction
         self.top_k_trials = {}
         self.keep_top_k = keep_top_k
-        self.seed = seed
     
     def _create_directory(self, directory: str) -> str:
         """
@@ -108,10 +105,20 @@ class Calibration:
         storage: Union[str, None] = None,
         n_trials: Union[int, None] = None,
         timeout: Union[int, None] = None,
+        seed: Union[int, None] = None,
         show_progress_bar: bool = False
     ) -> None:
         """
         Creates an Optuna study and optimize the demand hyperparameters.
+
+        Args:
+            direction (str): Direction of the optimization. It can be 'minimize' or 'maximize'. Defaults to 'minimize'.
+            study_name (Union[int, None]): Name of the study. Defaults to None.
+            storage (Union[str, None]): Storage for the study. Defaults to None.
+            n_trials (Union[int, None]): Number of trials to run. Defaults to None.
+            timeout (Union[int, None]): Timeout for the study in seconds. Defaults to None.
+            seed (int, optional): Seed for the random number generator. Defaults to None.
+            show_progress_bar (bool): If True, show a progress bar. Defaults to False.
         """
         study = optuna.create_study(
             direction=direction,
@@ -120,25 +127,26 @@ class Calibration:
             load_if_exists=True
         )
         study.optimize(
-            func=self.optimize,
+            func=lambda trial: self.optimize(trial, seed),
             n_trials=n_trials,
             timeout=timeout,
             show_progress_bar=show_progress_bar
         )
 
-    def optimize(self, trial: optuna.Trial) -> float:
+    def optimize(self, trial: optuna.Trial, seed: Union[int, None] = None) -> float:
         """
         Optimize the demand hyperparameters.
         
         Args:
             trial (optuna.Trial): Optuna trial object.
+            seed (int, optional): Seed for the random number generator. Defaults to None.
 
         Returns:
             float: Objective function value.
         """
         trial_directory = self._create_directory(f'{self.calibration_logs}/trial_{trial.number}')
         self.suggest_hyperparameters(trial, trial_directory)
-        self.simulate(trial, trial_directory)
+        self.simulate(trial, trial_directory, seed)
         error = self.objetive_function(trial, trial_directory)
         self.keep_top_k_trials(trial, trial_directory, error)
         return error
@@ -155,21 +163,22 @@ class Calibration:
         hyperparameters.suggest_hyperparameters(trial)
         hyperparameters.save_demand_yaml(f'{trial_directory}/checkpoint_{trial.number}.yaml')
 
-    def simulate(self, trial: optuna.Trial, trial_directory: str) -> None:
+    def simulate(self, trial: optuna.Trial, trial_directory: str, seed: Union[int, None] = None) -> None:
         """
         Simulate the demand with the suggested hyperparameters.
         
         Args:
             trial (optuna.Trial): Optuna trial object.
             trial_directory (str): Path to the trial directory.
+            seed (int, optional): Seed for the random number generator. Defaults to None.
         """
         kernel = Kernel(
             path_config_supply=self.path_config_supply,
             path_config_demand=f'{trial_directory}/checkpoint_{trial.number}.yaml',
-            seed=self.seed
         )
         kernel.simulate(
             output_path=f'{trial_directory}/checkpoint_{trial.number}.csv',
+            seed=seed,
             departure_time_hard_restriction=self.departure_time_hard_restriction
         )
 
