@@ -325,7 +325,7 @@ class Hyperparameters:
         """
         arrival_time_kwargs = {}
         for user_pattern in self.demand_yaml['userPattern']:
-            if user_pattern['arrival_time'] != 'custom_arrival_time':
+            if user_pattern['arrival_time'] != 'hourly':
                 raise InvalidArrivalTimeDistribution(distribution_name=user_pattern['arrival_time'])
             arrival_time_kwargs[user_pattern['name']] = user_pattern['arrival_time_kwargs']
         return arrival_time_kwargs
