@@ -10,16 +10,13 @@ import random
 from robin.supply.entities import Station, TimeSlot, Corridor, Line, Seat, RollingStock, TSP, Service
 from robin.supply.saver.entities import SupplySaver
 
+from robin.supply.generator.constants import DEFAULT_MAX_RETRY, DEFAULT_SAFETY_GAP
 from robin.supply.generator.utils import build_segments_for_service, get_stations_positions, read_yaml, segments_conflict
 
 from geopy.distance import geodesic
 from loguru import logger
 from tqdm import tqdm
 from typing import Any, List, Mapping, Union, Tuple
-
-MAX_RETRY = 500
-
-SAFETY_GAP = 10
 
 
 class SupplyGenerator(SupplySaver):
@@ -154,8 +151,8 @@ class SupplyGenerator(SupplySaver):
                     timetable[station] = (noisy_arrival, noisy_departure)
 
             # Generate a unique line ID based on the timetable with 5 digits
-            s = json.dumps(str(timetable.values()), sort_keys=True)
-            line_id = hashlib.md5(s.encode()).hexdigest()[:5]
+            timetable_json = json.dumps(str(timetable.values()), sort_keys=True)
+            line_id = hashlib.md5(timetable_json.encode()).hexdigest()[:5]
 
             # Create a new line with the updated timetable
             line = Line(line_id, line.name, line.corridor, timetable)
@@ -227,7 +224,6 @@ class SupplyGenerator(SupplySaver):
             for seat in seats:
                 price_calc = (base_price + distance * distance_factor) * seat_factor[seat.id] * tsp_factor[tsp.id]
                 prices[pair][seat] = str(round(price_calc, 2)) if price_calc < max_price else max_price
-
         return prices
 
     def _generate_service_id(self) -> str:
@@ -243,7 +239,10 @@ class SupplyGenerator(SupplySaver):
         """
         Generate a service based on the configuration probabilities.
 
-        It checks if the service is feasible and generates a new one if not.
+        It checks if the service is feasible and generates a new one if not until max_retry is reached.
+
+        Args:
+            max_retry (int): Maximum number of retries to generate a feasible service.
 
         Returns:
             Union[Service, None]: Generated service if possible, None if max retries are reached.
@@ -261,8 +260,9 @@ class SupplyGenerator(SupplySaver):
             service = Service(service_id, date, line, tsp, time_slot, rolling_stock, prices)
             feasible = self._is_feasible(service)
             retries += 1
-            if retries >= max_retry:
-                logger.warning(f'Max retries reached. Service not generated.')
+            # TODO: This should raise an exception
+            if retries > max_retry:
+                logger.warning(f'Max retries reached. A feasible service could not be generated.')
                 return None
         return service
 
@@ -340,9 +340,9 @@ class SupplyGenerator(SupplySaver):
         file_name: str,
         n_services: int = 1,
         n_services_by_ru: Mapping[str, int] = None,
-        seed: int = None,
-        safety_gap: int = SAFETY_GAP,
-        max_retry: int = MAX_RETRY
+        seed: Union[int, None] = None,
+        safety_gap: int = DEFAULT_SAFETY_GAP,
+        max_retry: int = DEFAULT_MAX_RETRY
     ) -> List[Service]:
         """
         Generate a list of services.
@@ -356,7 +356,7 @@ class SupplyGenerator(SupplySaver):
             n_services (int, optional): Number of services to generate (if n_services_by_ru is not provided). Defaults to 1.
             n_services_by_ru (Mapping[str, int], optional): Mapping of RU id (TSP id) to the number of services to generate.
             seed (int, optional): Seed for the random number generator.
-            safety_gap (int, optional): Safety gap for the segments. Defaults to SAFETY_GAP.
+            safety_gap (int, optional): Safety gap for the segments in minutes. Defaults to SAFETY_GAP.
             max_retry (int, optional): Maximum number of retries to generate a feasible service. Defaults to MAX_RETRY.
 
         Returns:
@@ -365,6 +365,7 @@ class SupplyGenerator(SupplySaver):
         if seed:
             self.set_seed(seed)
 
+        # NOTE: I'm not sure about this being an attribute of the class here, max_retry is not
         self.safety_gap = safety_gap
 
         # Generate services per RU if a mapping is provided
@@ -376,7 +377,8 @@ class SupplyGenerator(SupplySaver):
         #            services.append(service)
         #else:
         self.services: List[Service] = []
-        for _ in tqdm(range(n_services)):
+        # TODO: The iterator should be a tqdm iterator or range, not always tqdm
+        for _ in tqdm(range(n_services), desc='Generating services', unit='service'):
             generated_service = self._generate_service(max_retry=max_retry)
             if generated_service:
                 self.services.append(generated_service)
