@@ -105,7 +105,10 @@ class SupplyGenerator(SupplySaver):
 
     def _filter_rolling_stocks(self) -> None:
         """
-        Filter the rolling stocks of the services to only include those that are used in the services.
+        Filter the rolling stocks of the train service providers to only include those that are used in the services.
+
+        This is needed to avoid having rolling stocks used by the train
+        service providers that are not defined in the generated YAML file.
         """
         used_rolling_stocks = set()
         for service in self.services:
