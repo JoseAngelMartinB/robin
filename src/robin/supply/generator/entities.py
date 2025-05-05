@@ -340,7 +340,7 @@ class SupplyGenerator(SupplySaver):
 
     def generate(
         self,
-        file_name: str,
+        output_path: Union[str, None] = None,
         n_services: int = 1,
         n_services_by_ru: Mapping[str, int] = None,
         seed: Union[int, None] = None,
@@ -355,7 +355,7 @@ class SupplyGenerator(SupplySaver):
         as a global counter.
 
         Args:
-            file_name (str): Name of the output file.
+            output_path (str, optional): Path to the output YAML file. Defaults to None.
             n_services (int, optional): Number of services to generate (if n_services_by_ru is not provided). Defaults to 1.
             n_services_by_ru (Mapping[str, int], optional): Mapping of RU id (TSP id) to the number of services to generate.
             seed (int, optional): Seed for the random number generator.
@@ -379,6 +379,7 @@ class SupplyGenerator(SupplySaver):
         #            service = self._generate_service_for_ru(ru_id, service_id)
         #            services.append(service)
         #else:
+
         self.services: List[Service] = []
         # TODO: The iterator should be a tqdm iterator or range, not always tqdm
         for _ in tqdm(range(n_services), desc='Generating services', unit='service'):
@@ -388,8 +389,13 @@ class SupplyGenerator(SupplySaver):
             except UnfeasibleServiceException:
                 logger.warning(f'Unfeasible service generated. Stopping generation with {len(self.services)} generated services.')
                 break
+        
+        # Save the generated services to a YAML file
         self._filter_rolling_stocks()
-        SupplySaver(self.services).to_yaml(output_path=file_name)
+        if output_path:
+            SupplySaver(self.services).to_yaml(output_path)
+
+        return self.services
 
     def set_seed(self, seed: int) -> None:
         """

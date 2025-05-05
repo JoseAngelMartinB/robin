@@ -76,7 +76,7 @@ class Kernel:
 
     def simulate(
         self,
-        output_path: Union[Path, None] = None,
+        output_path: Union[str, None] = None,
         departure_time_hard_restriction: bool = True,
         calculate_global_utility: bool = False
     ) -> List[Service]:
@@ -87,7 +87,7 @@ class Kernel:
         its origin-destination and date, buying a ticket only if the utility is positive.
 
         Args:
-            output_path (Path, optional): Path to the output csv file. Defaults to None.
+            output_path (str, optional): Path to the output CSV file. Defaults to None.
             departure_time_hard_restriction (bool, optional): If True, the passenger will not
                 be assigned to a service with a departure time that is not valid. Defaults to True.
             calculate_global_utility (bool, optional): If True, it will be calculated the global utility
@@ -178,7 +178,7 @@ class Kernel:
                 passenger.best_seat = seat_arg_max_global.name
                 passenger.best_utility = seat_utility_global
 
-        # Save passengers data to csv file
+        # Save passengers data to a CSV file
         if output_path:
             self._to_csv(passengers, output_path)
 
