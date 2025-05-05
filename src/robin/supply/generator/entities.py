@@ -386,6 +386,9 @@ class SupplyGenerator(SupplySaver):
         self.services: List[Service] = []
         iterator = range(n_services)
         if progress_bar:
+            # Interoperability of the loguru logger with tqdm
+            logger.remove()
+            logger.add(lambda msg: tqdm.write(msg, end=''), colorize=True)
             iterator = tqdm(iterator, desc='Generating services', unit='service')
         for _ in iterator:
             try:
