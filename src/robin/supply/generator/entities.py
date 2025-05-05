@@ -10,6 +10,7 @@ import random
 from robin.supply.entities import Station, TimeSlot, Corridor, Line, Seat, RollingStock, TSP, Service
 from robin.supply.saver.entities import SupplySaver
 
+from robin.supply.generator.exceptions import UnfeasibleServiceException
 from robin.supply.generator.constants import DEFAULT_MAX_RETRY, DEFAULT_SAFETY_GAP
 from robin.supply.generator.utils import build_segments_for_service, get_stations_positions, read_yaml, segments_conflict
 
@@ -260,10 +261,9 @@ class SupplyGenerator(SupplySaver):
             service = Service(service_id, date, line, tsp, time_slot, rolling_stock, prices)
             feasible = self._is_feasible(service)
             retries += 1
-            # TODO: This should raise an exception
             if retries > max_retry:
                 logger.warning(f'Max retries reached. A feasible service could not be generated.')
-                return None
+                raise UnfeasibleServiceException
         return service
 
     def _sample_from_config(self, key: str, id: Union[str, None] = None) -> Any:
@@ -356,8 +356,8 @@ class SupplyGenerator(SupplySaver):
             n_services (int, optional): Number of services to generate (if n_services_by_ru is not provided). Defaults to 1.
             n_services_by_ru (Mapping[str, int], optional): Mapping of RU id (TSP id) to the number of services to generate.
             seed (int, optional): Seed for the random number generator.
-            safety_gap (int, optional): Safety gap for the segments in minutes. Defaults to SAFETY_GAP.
-            max_retry (int, optional): Maximum number of retries to generate a feasible service. Defaults to MAX_RETRY.
+            safety_gap (int, optional): Safety gap for the segments in minutes. Defaults to 10.
+            max_retry (int, optional): Maximum number of retries to generate a feasible service. Defaults to 500.
 
         Returns:
             List[Service]: List of generated Service objects.
@@ -379,10 +379,11 @@ class SupplyGenerator(SupplySaver):
         self.services: List[Service] = []
         # TODO: The iterator should be a tqdm iterator or range, not always tqdm
         for _ in tqdm(range(n_services), desc='Generating services', unit='service'):
-            generated_service = self._generate_service(max_retry=max_retry)
-            if generated_service:
+            try:
+                generated_service = self._generate_service(max_retry=max_retry)
                 self.services.append(generated_service)
-            else:  # Max retries reached
+            except UnfeasibleServiceException:
+                logger.warning(f'Unfeasible service generated. Stopping generation with {len(self.services)} generated services.')
                 break
         self._filter_rolling_stocks()
         SupplySaver(self.services).to_yaml(output_path=file_name)
