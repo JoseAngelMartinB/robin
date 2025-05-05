@@ -121,33 +121,33 @@ seat:
 # Rolling stock
 rollingStock:
   - id: 1
-    name: "Talgo 350"
+    name: "Talgo 350 - A"
     seats:
       - hard_type: 1
         quantity: 50
       - hard_type: 2
         quantity: 250
   - id: 2
-    name: "Talgo 350"
+    name: "Talgo 350 - B"
     seats:
       - hard_type: 1
         quantity: 50
       - hard_type: 2
         quantity: 250
   - id: 3
-    name: "Talgo 350"
+    name: "Talgo 350 - C"
     seats:
       - hard_type: 1
         quantity: 50
       - hard_type: 2
         quantity: 250
   - id: 4
-    name: "Talgo 200"
+    name: "Talgo 200 - A"
     seats:
       - hard_type: 2
         quantity: 200
   - id: 5
-    name: "Talgo 200"
+    name: "Talgo 200 - B"
     seats:
       - hard_type: 2
         quantity: 200

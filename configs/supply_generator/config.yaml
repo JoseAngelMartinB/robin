@@ -29,6 +29,7 @@ time_slots:
     '5': 0.0
 
 # Rolling stocks
+# The first tsp has explicit probabilities, the second one has equal probabilities
 rolling_stocks:
   probabilities:
     '1':
@@ -37,12 +38,7 @@ rolling_stocks:
       '3': 0.2
       '4': 0.1
       '5': 0.1
-    '2':
-      '1': 0.4
-      '2': 0.2
-      '3': 0.2
-      '4': 0.1
-      '5': 0.1
+    '2': {}
 
 # Prices config
 prices:
