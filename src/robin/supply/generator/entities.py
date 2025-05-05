@@ -239,13 +239,14 @@ class SupplyGenerator(SupplySaver):
         """
         return str(len(self.services) + 1).zfill(5)
 
-    def _generate_service(self, max_retry: int) -> Union[Service, None]:
+    def _generate_service(self, safety_gap: int, max_retry: int) -> Union[Service, None]:
         """
         Generate a service based on the configuration probabilities.
 
         It checks if the service is feasible and generates a new one if not until max_retry is reached.
 
         Args:
+            safety_gap (int): Safety gap of the segments in minutes.
             max_retry (int): Maximum number of retries to generate a feasible service.
 
         Returns:
@@ -262,7 +263,7 @@ class SupplyGenerator(SupplySaver):
             prices = self._generate_prices(line, rolling_stock, tsp)
             service_id = self._generate_service_id()
             service = Service(service_id, date, line, tsp, time_slot, rolling_stock, prices)
-            feasible = self._is_feasible(service)
+            feasible = self._is_feasible(service, safety_gap)
             retries += 1
             if retries > max_retry:
                 logger.warning(f'Max retries reached. A feasible service could not be generated.')
@@ -300,15 +301,15 @@ class SupplyGenerator(SupplySaver):
         assert sampled_item in getattr(self, key), f'{sampled_item} not found in {key}'
         return getattr(self, key)[sampled_item]
 
-    def _is_feasible(
-        self,
-        new_service: Service,
-    ) -> bool:
+    def _is_feasible(self, new_service: Service, safety_gap: int = DEFAULT_SAFETY_GAP) -> bool:
         """
-        Check if the service is feasible.
+        Check if the new service is feasible with respect to the existing services.
+
+        It checks if the new service conflicts with any existing service with a safety gap.
 
         Args:
-            new_service (Service): Service to check.
+            new_service (Service): Service to check if feasible.
+            safety_gap (int): Safety gap of the segments in minutes. Defaults to 10.
 
         Returns:
             bool: True if the service is feasible, False otherwise.
@@ -333,7 +334,7 @@ class SupplyGenerator(SupplySaver):
                 # Test all segment pairs
                 for seg1 in new_service_segments:
                     for seg2 in service_segments:
-                        if segments_conflict(seg1, seg2, self.safety_gap):
+                        if segments_conflict(seg1, seg2, safety_gap):
                             return False
 
         return True
@@ -362,7 +363,7 @@ class SupplyGenerator(SupplySaver):
                 to generate for each TSP. Defaults to None.
             seed (int, optional): Seed for the random number generator.
             progress_bar (bool, optional): Whether to show a progress bar. Defaults to True.
-            safety_gap (int, optional): Safety gap for the segments in minutes. Defaults to 10.
+            safety_gap (int, optional): Safety gap of the segments in minutes. Defaults to 10.
             max_retry (int, optional): Maximum number of retries to generate a feasible service. Defaults to 500.
 
         Returns:
@@ -370,9 +371,6 @@ class SupplyGenerator(SupplySaver):
         """
         if seed:
             self.set_seed(seed)
-
-        # NOTE: I'm not sure about this being an attribute of the class here, max_retry is not
-        self.safety_gap = safety_gap
 
         # Generate services per RU if a mapping is provided
         #if n_services_by_ru is not None:
@@ -392,7 +390,7 @@ class SupplyGenerator(SupplySaver):
             iterator = tqdm(iterator, desc='Generating services', unit='service')
         for _ in iterator:
             try:
-                generated_service = self._generate_service(max_retry=max_retry)
+                generated_service = self._generate_service(safety_gap, max_retry)
                 self.services.append(generated_service)
             except UnfeasibleServiceException:
                 logger.warning(f'Unfeasible service generated. Stopping generation with {len(self.services)} generated services.')
