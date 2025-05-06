@@ -7,13 +7,16 @@ import numpy as np
 import os
 import random
 
+from robin.demand.utils import get_scipy_distribution
+
 from robin.supply.entities import Station, TimeSlot, Corridor, Line, Seat, RollingStock, TSP, Service
 from robin.supply.saver.entities import SupplySaver
 
 from robin.supply.generator.exceptions import UnfeasibleServiceException
-from robin.supply.generator.constants import DEFAULT_MAX_RETRY, DEFAULT_SAFETY_GAP
+from robin.supply.generator.constants import MAX_RETRY, SAFETY_GAP, TIME_SLOT_SIZE
 from robin.supply.generator.utils import build_segments_for_service, get_stations_positions, read_yaml, segments_conflict
 
+from functools import cache
 from geopy.distance import geodesic
 from loguru import logger
 from tqdm import tqdm
@@ -171,27 +174,21 @@ class SupplyGenerator(SupplySaver):
         """
         return self._sample_from_config(key='tsps')
 
-    def _generate_time_slot(self) -> TimeSlot:
+    def _generate_time_slot(self, date: datetime.date) -> TimeSlot:
         """
         Generate a time slot based on the configuration probabilities.
 
         Returns:
             TimeSlot: Generated time slot based on the configuration probabilities.
         """
-        return self._sample_from_config(key='time_slots')
-
-        # TODO: Same as for the line
-        # ts_probabilities = self.config['time_slots']['probabilities']
-        # hour = random.choices(list(ts_probabilities.keys()), weights=list(ts_probabilities.values()))[0]
-        # minutes = random.randint(0, 59)
-        # start_time = datetime.timedelta(hours=hour, minutes=minutes)
-        # end_time = start_time + datetime.timedelta(minutes=10)
-        # if end_time >= datetime.timedelta(hours=24):
-        #     # Decrease time by a full day
-        #     end_time -= datetime.timedelta(days=1)
-        # time_slot_id = f'{start_time.seconds}'
-        # time_slot = TimeSlot(time_slot_id, start_time, end_time)
-        # return time_slot
+        start_hour = self._sample_scipy_distribution_from_config(key='time_slots', date=date)
+        minutes = np.random.randint(0, 60)
+        start = datetime.timedelta(hours=int(start_hour), minutes=minutes)
+        # Clip the start time to be within the range of 00:00 to 23:59 - TIME_SLOT_SIZE
+        start = max(min(start, datetime.timedelta(hours=23, minutes=59 - TIME_SLOT_SIZE)), datetime.timedelta(hours=0, minutes=0))
+        end = start + datetime.timedelta(minutes=TIME_SLOT_SIZE)
+        time_slot_id = f'{start.seconds}'
+        return TimeSlot(time_slot_id, start, end)
 
     def _generate_rolling_stock(self, tsp: TSP) -> RollingStock:
         """
@@ -258,7 +255,7 @@ class SupplyGenerator(SupplySaver):
             date = self._generate_date()
             line = self._generate_line()
             tsp = self._generate_tsp()
-            time_slot = self._generate_time_slot()
+            time_slot = self._generate_time_slot(date)
             rolling_stock = self._generate_rolling_stock(tsp)
             prices = self._generate_prices(line, rolling_stock, tsp)
             service_id = self._generate_service_id()
@@ -269,6 +266,55 @@ class SupplyGenerator(SupplySaver):
                 logger.warning(f'Max retries reached. A feasible service could not be generated.')
                 raise UnfeasibleServiceException
         return service
+
+    @cache
+    def _get_distributions_for_key(self, key: str) -> dict:
+        """
+        Get the SciPy distributions for the given key from the configuration.
+
+        Args:
+            key (str): The key in the configuration to get distributions for.
+
+        Returns:
+            dict: Dictionary mapping distribution IDs to their distribution objects and kwargs.
+        """
+        assert key in self.config, f'{key} not found in config'
+        distributions = {}
+        for distribution in self.config[key]['probabilities']:
+            assert 'id' in distribution, f'id not found in {key}'
+            _id = distribution['id']
+            assert 'distribution' in distribution, f'distribution not found in distrbution {_id} of {key}'
+            assert 'distribution_kwargs' in distribution, f'distribution_kwargs not found in distribution {_id} of {key}'
+            distribution_name = distribution['distribution']
+            distribution_kwargs = distribution['distribution_kwargs']
+            distribution, distribution_kwargs = get_scipy_distribution(
+                distribution_name, **distribution_kwargs, is_discrete=True
+            )
+            distributions[_id] = {'distribution': distribution, 'kwargs': distribution_kwargs}
+        return distributions
+
+    def _sample_distribution_by_date(self, key: str, distributions: Mapping[str, Any], date: datetime.date) -> Any:
+        """
+        Sample a value from a distribution based on the date.
+
+        Args:
+            key (str): The key in the configuration to sample from.
+            distributions (Mapping[str, Any]): Mapping of distribution id to distribution object.
+            date (datetime.date): The date to use for sampling.
+
+        Returns:
+            Any: The sampled value from the distribution.
+        """
+        assert 'days' in self.config[key], f'days not found in {key}'
+        # Get the day of the week in the format 'Monday', 'Tuesday', etc
+        day_of_week = date.strftime('%A')
+        assert day_of_week in self.config[key]['days'], f'{day_of_week} not found in days of {key}'
+        distribution_day_of_week = self.config[key]['days'][day_of_week]
+        assert distribution_day_of_week in distributions, \
+            f'distribution {distribution_day_of_week} not found in distributions of {key}'
+        return distributions[distribution_day_of_week]['distribution'].rvs(
+            **distributions[distribution_day_of_week]['kwargs']
+        )
 
     def _sample_from_config(self, key: str, id: Union[str, None] = None) -> Any:
         """
@@ -301,7 +347,22 @@ class SupplyGenerator(SupplySaver):
         assert sampled_item in getattr(self, key), f'{sampled_item} not found in {key}'
         return getattr(self, key)[sampled_item]
 
-    def _is_feasible(self, new_service: Service, safety_gap: int = DEFAULT_SAFETY_GAP) -> bool:
+    def _sample_scipy_distribution_from_config(self, key: str, date: datetime.date) -> Union[np.int64, np.float64]:
+        """
+        Sample a value from a SciPy distribution based on the configuration probabilities.
+
+        Args:
+            key (str): The key in the configuration to sample from.
+            date (datetime.date): The date to use for sampling.
+
+        Returns:
+            Union[np.int64, np.float64]: The sampled value from the distribution.
+        """
+        distributions = self._get_distributions_for_key(key)
+        sampled_value = self._sample_distribution_by_date(key, distributions, date)
+        return sampled_value
+
+    def _is_feasible(self, new_service: Service, safety_gap: int = SAFETY_GAP) -> bool:
         """
         Check if the new service is feasible with respect to the existing services.
 
@@ -314,6 +375,7 @@ class SupplyGenerator(SupplySaver):
         Returns:
             bool: True if the service is feasible, False otherwise.
         """
+        # TODO: Move this to a separate class
         # Get paths of the corridor visited by the new service
         paths = []
         for path in new_service.line.corridor.paths:
@@ -346,15 +408,14 @@ class SupplyGenerator(SupplySaver):
         output_path: Union[str, None] = None,
         seed: Union[int, None] = None,
         progress_bar: bool = True,
-        safety_gap: int = DEFAULT_SAFETY_GAP,
-        max_retry: int = DEFAULT_MAX_RETRY,
+        safety_gap: int = SAFETY_GAP,
+        max_retry: int = MAX_RETRY
     ) -> List[Service]:
         """
         Generate a list of services.
 
-        If the optional parameter n_services_by_ru is provided (a mapping from RU id to number of services),
-        then for each RU the specified number of services will be generated. Otherwise, n_services will be used
-        as a global counter.
+        If the optional parameter n_services_by_tsp is provided, then for each TSP the specified number
+        of services will be generated. Otherwise, n_services will be used as a global counter.
 
         Args:
             output_path (str, optional): Path to the output YAML file. Defaults to None.
@@ -400,7 +461,6 @@ class SupplyGenerator(SupplySaver):
         self._filter_rolling_stocks()
         if output_path:
             SupplySaver(self.services).to_yaml(output_path)
-
         return self.services
 
     def set_seed(self, seed: int) -> None:
@@ -420,9 +480,10 @@ if __name__ == '__main__':
     path_config_generator = 'configs/supply_generator/config.yaml'
     generator = SupplyGenerator.from_yaml(path_config_supply, path_config_generator)
     print('Config:', generator.config)
-    print('Random date:', generator._generate_date())
+    date = generator._generate_date()
+    print('Random date:', date)
     print('Random line:', generator._generate_line())
     tsp = generator._generate_tsp()
     print('Random TSP:', tsp)
-    print('Random time slot:', generator._generate_time_slot())
+    print('Random time slot:', repr(generator._generate_time_slot(date)))
     print('Random rolling stock:', generator._generate_rolling_stock(tsp))

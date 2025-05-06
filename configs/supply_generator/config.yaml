@@ -2,7 +2,7 @@
 # The max date is not included in the range
 dates:
   min: 2024-06-25
-  max: 2024-06-30
+  max: 2024-06-26
 
 # Lines
 # If you want equal probabilities set probabilities equal to {} like with the tsps
@@ -22,11 +22,45 @@ tsps:
 # Time slots
 time_slots:
   probabilities:
-    '1': 0.4
-    '2': 0.3
-    '3': 0.2
-    '4': 0.1
-    '5': 0.0
+    - id: 1
+      distribution: hourly
+      distribution_kwargs:
+        '0': 0
+        '1': 0
+        '2': 0
+        '3': 0
+        '4': 0
+        '5': 0.02
+        '6': 0.06
+        '7': 0.08
+        '8': 0.10
+        '9': 0.06
+        '10': 0.04
+        '11': 0.04
+        '12': 0.03
+        '13': 0.03
+        '14': 0.05
+        '15': 0.07
+        '16': 0.05
+        '17': 0.08
+        '18': 0.10
+        '19': 0.08
+        '20': 0.05
+        '21': 0.03
+        '22': 0.02
+        '23': 0.01
+    - id: 2
+      distribution: poisson
+      distribution_kwargs:
+        mu: 14
+  days:
+    'Monday': 1
+    'Tuesday': 1
+    'Wednesday': 1
+    'Thursday': 1
+    'Friday': 1
+    'Saturday': 2
+    'Sunday': 2
 
 # Rolling stocks
 # The first tsp has explicit probabilities, the second one has equal probabilities
