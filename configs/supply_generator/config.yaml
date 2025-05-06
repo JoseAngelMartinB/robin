@@ -9,9 +9,10 @@ dates:
 # If you don't want noise, just remove the noise_std key
 lines:
   probabilities:
-    '03612': 0.5
-    '04161': 0.3
-    '02731': 0.2
+    '03131': 0.35
+    '03143': 0.15
+    '06305': 0.15
+    '03162': 0.35
   noise_std: 0.05
 
 # Train service providers

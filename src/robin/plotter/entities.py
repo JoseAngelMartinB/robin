@@ -9,6 +9,7 @@ import textwrap
 from robin.plotter.constants import COLORS, DARK_GRAY, SAFETY_GAP, STYLE, WHITE_SMOKE
 from robin.supply.entities import Supply
 from robin.supply.generator.utils import infer_paths, shared_edges_between_services
+from robin.supply.generator.exceptions import ServiceInMultiplePathsException
 
 from geopy.distance import geodesic
 from loguru import logger
@@ -512,14 +513,21 @@ class KernelPlotter:
         # Get services for each path
         services_paths = {}
         for service in services:
+            is_service_in_multiple_paths = False
             for path_idx in paths_dict:
                 if path_idx not in services_paths:
                     services_paths[path_idx] = []
-                for service_path in infer_paths(service):
-                    shared_edges = shared_edges_between_services(service_path, paths_dict[path_idx])
-                    if not shared_edges:
-                        continue
-                    services_paths[path_idx].append(service.id)
+                try:
+                    for service_path in infer_paths(service):
+                        shared_edges = shared_edges_between_services(service_path, paths_dict[path_idx])
+                        if not shared_edges:
+                            continue
+                        services_paths[path_idx].append(service.id)
+                except ServiceInMultiplePathsException:
+                    is_service_in_multiple_paths = True
+                    continue
+            if is_service_in_multiple_paths:
+                logger.warning('It is only possible to plot Marey charts for services with a single path ({service.id})')
 
         # Plot a Marey chart for each path
         for path_index in paths_positions:
@@ -546,6 +554,7 @@ class KernelPlotter:
                 schedule[service.id] = {}
                 time = service.time_slot.start
                 delta = time.total_seconds() // 60
+                # TODO: We have to calculate the timetable of the stations in the path, not the line
                 for station, stop in zip(service.line.stations, service.line.timetable):
                     if station not in station_positions:
                         continue
@@ -629,9 +638,10 @@ class KernelPlotter:
             ax.set_yticks(tuple(station_positions.values()))
             ax.set_yticklabels(station_positions.keys(), fontsize=16)
 
-            ax.grid(True)
             ax.grid(True, color='#A9A9A9', alpha=0.3, zorder=1, linestyle='-', linewidth=1.0)
-            ax.set_title('Marey Chart', fontweight='bold', fontsize=24)
+            start_station = list(station_positions.keys())[0].name
+            last_station = list(station_positions.keys())[-1].name
+            ax.set_title(f'{start_station} - {last_station}', fontweight='bold', fontsize=24, pad=20)
             ax.set_xlabel('Time (HH:MM)', fontsize=18)
             ax.set_ylabel('Stations', fontsize=18)
 

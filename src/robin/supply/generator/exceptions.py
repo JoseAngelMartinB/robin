@@ -1,6 +1,14 @@
 """Exceptions for the supply generator module."""
 
 
+class ServiceInMultiplePathsException(Exception):
+    """Raised when a service is in multiple paths."""
+    
+    def __init__(self, *args, **kwargs):
+        msg = 'The service is in multiple paths.'
+        super().__init__(msg, *args, **kwargs)
+
+
 class UnfeasibleServiceException(Exception):
     """Raised when the generated service is not feasible."""
     

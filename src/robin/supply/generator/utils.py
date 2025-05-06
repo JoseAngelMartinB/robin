@@ -3,6 +3,7 @@
 import yaml
 
 from robin.supply.entities import Station, Service
+from robin.supply.generator.exceptions import ServiceInMultiplePathsException
 
 from datetime import timedelta
 from functools import cache
@@ -29,6 +30,8 @@ def build_segments_for_service(
     stations = service.line.stations
 
     for prev_stn, next_stn in zip(stations, stations[1:]):
+        if prev_stn not in positions or next_stn not in positions:
+            raise ServiceInMultiplePathsException
         start_pos = positions[prev_stn]
         end_pos = positions[next_stn]
 
@@ -150,6 +153,8 @@ def infer_paths(service: Service) -> List[List[Station]]:
         if sum([station in path for station in service.line.stations]) < 2:
             continue
         # Only consider forward paths
+        if not (service.line.stations[0] in path and service.line.stations[-1] in path):
+            raise ServiceInMultiplePathsException
         if path.index(service.line.stations[0]) < path.index(service.line.stations[-1]):
             origin_index = path.index(service.line.stations[0])
             destination_index = path.index(service.line.stations[-1])
