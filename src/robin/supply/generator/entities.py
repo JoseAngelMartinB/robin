@@ -102,7 +102,7 @@ class SupplyGenerator(SupplySaver):
         seats = SupplySaver._get_seats(data, key='seat')
         rolling_stocks = SupplySaver._get_rolling_stock(data, seats, key='rollingStock')
         tsps = SupplySaver._get_tsps(data, rolling_stocks, key='trainServiceProvider')
-        services = SupplySaver._get_services(data, lines, tsps, time_slots, seats, rolling_stocks, key='service')
+        services = list(SupplySaver._get_services(data, lines, tsps, time_slots, seats, rolling_stocks, key='service').values())
         config = read_yaml(path_config_generator)
         return cls(stations, time_slots, corridors, lines, seats, rolling_stocks, tsps, services, config)
 

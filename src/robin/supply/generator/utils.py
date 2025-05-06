@@ -196,8 +196,8 @@ def segments_conflict(
     t2_end = seg2.time_at(overlap_end)
 
     # Time differences in whole minutes
-    dt_start = int((t2_start - t1_start).total_seconds() // 60)
-    dt_end = int((t2_end - t1_end).total_seconds() // 60)
+    dt_start = int((t2_start - t1_start).total_seconds() / 60)
+    dt_end = int((t2_end - t1_end).total_seconds() / 60)
 
     # No conflict if both differences have the same sign (ordering preserved)
     # and both exceed twice the safety headway
