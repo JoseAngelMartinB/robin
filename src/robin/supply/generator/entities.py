@@ -446,13 +446,13 @@ class SupplyGenerator(SupplySaver):
             self.set_seed(seed)
         
         # Initialize the mapping for the number of services to generate per TSP if not provided
-        if n_services and n_services_by_tsp:
+        if n_services != N_SERVICES and n_services_by_tsp:
             logger.warning('Both n_services and n_services_by_tsp are provided. Using n_services_by_tsp.')
         if not n_services_by_tsp:
             n_services_by_tsp = {None: n_services}
 
         # Interoperability of the loguru logger with tqdm
-        if progress_bar:    
+        if progress_bar:
             logger.remove()
             logger.add(lambda msg: tqdm.write(msg, end=''), colorize=True)
 
