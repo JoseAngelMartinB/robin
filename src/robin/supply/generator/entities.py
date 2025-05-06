@@ -165,13 +165,18 @@ class SupplyGenerator(SupplySaver):
             line = Line(line_id, line.name, line.corridor, timetable)
         return line
 
-    def _generate_tsp(self) -> TSP:
+    def _generate_tsp(self, tsp_id: Union[str, None] = None) -> TSP:
         """
         Generate a TSP based on the configuration probabilities.
+
+        Args:
+            tsp_id (Union[str, None], optional): TSP id to generate the TSP for. Defaults to None.
 
         Returns:
             TSP: Generated TSP based on the configuration probabilities.
         """
+        if tsp_id:
+            return self.tsps[tsp_id]
         return self._sample_from_config(key='tsps')
 
     def _generate_time_slot(self, date: datetime.date) -> TimeSlot:
@@ -236,15 +241,21 @@ class SupplyGenerator(SupplySaver):
         """
         return str(len(self.services) + 1).zfill(5)
 
-    def _generate_service(self, safety_gap: int, max_retry: int) -> Union[Service, None]:
+    def _generate_service(
+        self,
+        tsp_id: Union[str, None],
+        safety_gap: int = SAFETY_GAP,
+        max_retry: int = MAX_RETRY
+    ) -> Union[Service, None]:
         """
         Generate a service based on the configuration probabilities.
 
         It checks if the service is feasible and generates a new one if not until max_retry is reached.
 
         Args:
-            safety_gap (int): Safety gap of the segments in minutes.
-            max_retry (int): Maximum number of retries to generate a feasible service.
+            tsp_id (Union[str, None], optional): TSP id to generate the service for.
+            safety_gap (int, optional): Safety gap of the segments in minutes.
+            max_retry (int, optional): Maximum number of retries to generate a feasible service.
 
         Returns:
             Union[Service, None]: Generated service if possible, None if max retries are reached.
@@ -254,7 +265,7 @@ class SupplyGenerator(SupplySaver):
         while not feasible:
             date = self._generate_date()
             line = self._generate_line()
-            tsp = self._generate_tsp()
+            tsp = self._generate_tsp(tsp_id)
             time_slot = self._generate_time_slot(date)
             rolling_stock = self._generate_rolling_stock(tsp)
             prices = self._generate_prices(line, rolling_stock, tsp)
@@ -430,32 +441,34 @@ class SupplyGenerator(SupplySaver):
         Returns:
             List[Service]: List of generated Service objects.
         """
-        if seed:
+        # Set seed for reproducibility
+        if seed is not None:
             self.set_seed(seed)
+        
+        # Initialize the mapping for the number of services to generate per TSP if not provided
+        if n_services and n_services_by_tsp:
+            logger.warning('Both n_services and n_services_by_tsp are provided. Using n_services_by_tsp.')
+        if not n_services_by_tsp:
+            n_services_by_tsp = {None: n_services}
 
-        # Generate services per RU if a mapping is provided
-        #if n_services_by_ru is not None:
-        #    for ru_id, count in n_services_by_ru.items():
-        #        for j in range(count):
-        #            service_id = f"{ru_id}_{j}"
-        #            service = self._generate_service_for_ru(ru_id, service_id)
-        #            services.append(service)
-        #else:
-
-        self.services: List[Service] = []
-        iterator = range(n_services)
-        if progress_bar:
-            # Interoperability of the loguru logger with tqdm
+        # Interoperability of the loguru logger with tqdm
+        if progress_bar:    
             logger.remove()
             logger.add(lambda msg: tqdm.write(msg, end=''), colorize=True)
-            iterator = tqdm(iterator, desc='Generating services', unit='service')
-        for _ in iterator:
-            try:
-                generated_service = self._generate_service(safety_gap, max_retry)
-                self.services.append(generated_service)
-            except UnfeasibleServiceException:
-                logger.warning(f'Unfeasible service generated. Stopping generation with {len(self.services)} generated services.')
-                break
+
+        # Generate services
+        self.services: List[Service] = []
+        for tsp_id, count in n_services_by_tsp.items():
+            iterator = range(count)
+            tsp_id_str = tsp_id if tsp_id else 'all'
+            iterator = tqdm(iterator, desc=f'Generating services {tsp_id_str}', unit='service') if progress_bar else iterator
+            for _ in iterator:
+                try:
+                    generated_service = self._generate_service(tsp_id, safety_gap, max_retry)
+                    self.services.append(generated_service)
+                except UnfeasibleServiceException:
+                    logger.warning(f'Unfeasible service generated. Stopping generation with {len(self.services)} generated services.')
+                    break
         
         # Save the generated services to a YAML file
         self._filter_rolling_stocks()
@@ -487,3 +500,4 @@ if __name__ == '__main__':
     print('Random TSP:', tsp)
     print('Random time slot:', repr(generator._generate_time_slot(date)))
     print('Random rolling stock:', generator._generate_rolling_stock(tsp))
+    print('TSP by ID:', generator._generate_tsp(tsp_id=tsp.id))
