@@ -62,55 +62,6 @@ stations:
   coordinates:
     latitude: 42.264771
     longitude: 2.943547
-- id: '87374'
-  name: PERPIGNAN
-  city: PERPIGNAN
-  short_name: '87374'
-  coordinates:
-    latitude: 42.696421
-    longitude: 2.880381
-- id: '87088'
-  name: NARBONNE
-  city: NARBONNE
-  short_name: '87088'
-  coordinates:
-    latitude: 43.190253
-    longitude: 3.005716
-- id: '87173'
-  name: MONTPELLIER SAINT-ROCH
-  city: MONTPELLIER
-  short_name: '87173'
-  coordinates:
-    latitude: 43.604852
-    longitude: 3.880491
-- id: '87302'
-  name: NIMES
-  city: NIMES
-  short_name: '87302'
-  coordinates:
-    latitude: 43.832291
-    longitude: 4.365845
-- id: '87814'
-  name: AVIGNON TGV
-  city: AVIGNON
-  short_name: '87814'
-  coordinates:
-    latitude: 43.921938
-    longitude: 4.785813
-- id: '87912'
-  name: AIX EN PROVENCE TGV
-  city: AIX EN PROVENCE
-  short_name: '87912'
-  coordinates:
-    latitude: 43.455268
-    longitude: 5.31723
-- id: '87089'
-  name: MARSEILLE ST CHARLES
-  city: MARSEILLE
-  short_name: '87089'
-  coordinates:
-    latitude: 43.30349
-    longitude: 5.382236
 - id: '37200'
   name: CIUDAD REAL
   city: CIUDAD REAL
@@ -330,21 +281,7 @@ corridor:
                 - org: '79206'
                   des:
                   - org: '04307'
-                    des:
-                    - org: '87374'
-                      des:
-                      - org: '87088'
-                        des:
-                        - org: '87173'
-                          des:
-                          - org: '87302'
-                            des:
-                            - org: '87814'
-                              des:
-                              - org: '87912'
-                                des:
-                                - org: '87089'
-                                  des: []
+                    des: []
     - org: '37200'
       des:
       - org: '37300'
@@ -574,27 +511,6 @@ line:
   - station: '04307'
     arrival_time: 252
     departure_time: 255
-  - station: '87374'
-    arrival_time: 282
-    departure_time: 288
-  - station: '87088'
-    arrival_time: 329
-    departure_time: 329
-  - station: '87173'
-    arrival_time: 394
-    departure_time: 404
-  - station: '87302'
-    arrival_time: 434
-    departure_time: 434
-  - station: '87814'
-    arrival_time: 456
-    departure_time: 456
-  - station: '87912'
-    arrival_time: 479
-    departure_time: 479
-  - station: '87089'
-    arrival_time: 494
-    departure_time: 494
 - id: '03143'
   name: Line 03143
   corridor: '1'
@@ -847,46 +763,43 @@ seat:
   name: Elige
   hard_type: 3
   soft_type: 1
-# Rolling stock
 rollingStock:
   - id: 1
-    name: "Talgo 350"
+    name: "Talgo 350 - A"
     seats:
       - hard_type: 1
         quantity: 50
       - hard_type: 2
         quantity: 250
   - id: 2
-    name: "Talgo 350"
+    name: "Talgo 350 - B"
     seats:
       - hard_type: 1
         quantity: 50
       - hard_type: 2
         quantity: 250
   - id: 3
-    name: "Talgo 350"
+    name: "Talgo 350 - C"
     seats:
       - hard_type: 1
         quantity: 50
       - hard_type: 2
         quantity: 250
   - id: 4
-    name: "Talgo 200"
+    name: "Talgo 200 - A"
     seats:
       - hard_type: 2
         quantity: 200
   - id: 5
-    name: "Talgo 200"
+    name: "Talgo 200 - B"
     seats:
       - hard_type: 2
         quantity: 200
 trainServiceProvider:
   - id: 1
     name: "Renfe"
-    rolling_stock: [1]
+    rolling_stock: [1, 2, 3, 4, 5]
   - id: 2
     name: "Ouigo"
-    rolling_stock: [1]
-
-# Service
+    rolling_stock: [1, 2, 3, 4, 5]
 service: []

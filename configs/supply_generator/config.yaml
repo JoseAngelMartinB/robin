@@ -78,6 +78,7 @@ rolling_stocks:
 # Prices config
 prices:
   base: 10  # Base price
+  min: 7 # Min price
   max: 150  # Max price
   distance_factor: 0.05  # Increase price with a factor of f * min_price per station in corridor
   tsp_factor:  # Defines how the TSP affects the price (multiplies each price by the factor)
