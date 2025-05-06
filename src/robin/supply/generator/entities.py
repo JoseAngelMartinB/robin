@@ -158,7 +158,7 @@ class SupplyGenerator(SupplySaver):
                     timetable[station] = (noisy_arrival, noisy_departure)
 
             # Generate a unique line ID based on the timetable with 5 digits
-            timetable_json = json.dumps(str(timetable.values()), sort_keys=True)
+            timetable_json = json.dumps(timetable, sort_keys=True)
             line_id = hashlib.md5(timetable_json.encode()).hexdigest()[:5]
 
             # Create a new line with the updated timetable
