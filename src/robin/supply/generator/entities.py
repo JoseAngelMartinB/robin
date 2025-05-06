@@ -13,7 +13,7 @@ from robin.supply.entities import Station, TimeSlot, Corridor, Line, Seat, Rolli
 from robin.supply.saver.entities import SupplySaver
 
 from robin.supply.generator.exceptions import UnfeasibleServiceException
-from robin.supply.generator.constants import MAX_RETRY, SAFETY_GAP, TIME_SLOT_SIZE
+from robin.supply.generator.constants import MAX_RETRY, N_SERVICES, SAFETY_GAP, TIME_SLOT_SIZE
 from robin.supply.generator.utils import build_segments_for_service, get_stations_positions, read_yaml, segments_conflict
 
 from functools import cache
@@ -414,7 +414,7 @@ class SupplyGenerator(SupplySaver):
 
     def generate(
         self,
-        n_services: int = 1,
+        n_services: int = N_SERVICES,
         n_services_by_tsp: Mapping[str, int] = None,
         output_path: Union[str, None] = None,
         seed: Union[int, None] = None,
@@ -489,7 +489,7 @@ class SupplyGenerator(SupplySaver):
 
 
 if __name__ == '__main__':
-    path_config_supply = 'configs/supply_generator/supply_data.yaml'
+    path_config_supply = 'configs/supply_generator/supply_data_new.yaml'
     path_config_generator = 'configs/supply_generator/config.yaml'
     generator = SupplyGenerator.from_yaml(path_config_supply, path_config_generator)
     print('Config:', generator.config)
