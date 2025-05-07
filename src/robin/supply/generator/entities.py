@@ -169,7 +169,7 @@ class ServiceScheduler:
             diff_start = (t2_start - t1_start).total_seconds() / 60
             diff_end = (t2_end   - t1_end  ).total_seconds() / 60
             # Conflict if different order or gaps below double headway
-            if diff_start * diff_end <= 0 or abs(diff_start) < 2*safety_headway or abs(diff_end) < 2*safety_headway:
+            if diff_start * diff_end <= 0 or abs(diff_start) <= 2*safety_headway or abs(diff_end) <= 2*safety_headway:
                 return True
         return False
 
