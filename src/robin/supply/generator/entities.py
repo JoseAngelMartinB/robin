@@ -12,9 +12,9 @@ from robin.demand.utils import get_scipy_distribution
 from robin.supply.entities import Station, TimeSlot, Corridor, Line, Seat, RollingStock, TSP, Service
 from robin.supply.saver.entities import SupplySaver
 
-from robin.supply.generator.exceptions import ServiceInMultiplePathsException, UnfeasibleServiceException
+from robin.supply.generator.exceptions import UnfeasibleServiceException
 from robin.supply.generator.constants import MAX_RETRY, N_SERVICES, SAFETY_GAP, TIME_SLOT_SIZE
-from robin.supply.generator.utils import build_segments_for_service, get_stations_positions, read_yaml, segments_conflict
+from robin.supply.generator.utils import build_graph, build_segments_for_service, read_yaml, segments_conflict
 
 from functools import cache
 from geopy.distance import geodesic
@@ -271,11 +271,7 @@ class SupplyGenerator(SupplySaver):
             prices = self._generate_prices(line, rolling_stock, tsp)
             service_id = self._generate_service_id()
             service = Service(service_id, date, line, tsp, time_slot, rolling_stock, prices)
-            try:
-                feasible = self._is_feasible(service, safety_gap)
-            except ServiceInMultiplePathsException:
-                logger.error(f'{line} is in multiple paths. A feasible service could not be generated.')
-                raise ServiceInMultiplePathsException
+            feasible = self._is_feasible(service, safety_gap)
             retries += 1
             if retries > max_retry:
                 logger.warning(f'Max retries reached. A feasible service could not be generated.')
@@ -390,29 +386,17 @@ class SupplyGenerator(SupplySaver):
         Returns:
             bool: True if the service is feasible, False otherwise.
         """
-        # TODO: Move this to a separate class
-        # Get paths of the corridor visited by the new service
-        paths = []
-        for path in new_service.line.corridor.paths:
-            if sum([station in path for station in new_service.line.stations]) > 1:
-                paths.append(path)
+        new_service_graph = build_graph(new_service.line.corridor.tree)
+        new_segments = build_segments_for_service(new_service_graph, new_service)
 
-        for path in paths:
-            stations_positions = get_stations_positions(path)
-            new_service_segments = build_segments_for_service(new_service, stations_positions)
+        for service in self.services:
+            service_graph = build_graph(service.line.corridor.tree)
+            existing_segments = build_segments_for_service(service_graph, service)
 
-            for service in self.services:
-                if sum([station in path for station in service.line.stations]) <= 1:
-                    continue
-
-                # Precompute segments per service
-                service_segments = build_segments_for_service(service, stations_positions)
-
-                # Test all segment pairs
-                for seg1 in new_service_segments:
-                    for seg2 in service_segments:
-                        if segments_conflict(seg1, seg2, safety_gap):
-                            return False
+            for seg_new in new_segments:
+                for seg_old in existing_segments:
+                    if segments_conflict(seg_new, seg_old, safety_gap):
+                        return False
         return True
 
     def generate(
@@ -471,9 +455,6 @@ class SupplyGenerator(SupplySaver):
                     self.services.append(generated_service)
                 except UnfeasibleServiceException:
                     logger.warning(f'Unfeasible service generated. Stopping generation with {len(self.services)} generated services.')
-                    break
-                except ServiceInMultiplePathsException:
-                    logger.error(f'Service in multiple paths. Stopping generation with {len(self.services)} generated services.')
                     break
         
         # Save the generated services to a YAML file

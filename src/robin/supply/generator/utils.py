@@ -1,69 +1,119 @@
 """Utils for the supply generator module."""
 
+import networkx as nx
 import yaml
 
 from robin.supply.entities import Station, Service
-from robin.supply.generator.exceptions import ServiceInMultiplePathsException
 
-from datetime import timedelta
+from dataclasses import dataclass, field
+from datetime import datetime, time, timedelta
 from functools import cache
 from geopy.distance import geodesic
-from typing import Any, Callable, List, Mapping, NamedTuple, Set, Tuple
+from typing import Any, Callable, List, Mapping, Tuple
 
 
-class Segment(NamedTuple):
+@dataclass
+class Segment:
     service_idx: str
-    start_pos: float
-    end_pos: float
-    time_at: 'Callable[[float], timedelta]'
+    path: List[Station]
+    time_at: Callable[[Station], datetime]
+    edges: List[Tuple[Station, Station]] = field(init=False)
+
+    def __post_init__(self):
+        # Precompute the edges based on the path
+        self.edges = [
+            (self.path[i], self.path[i+1])
+            for i in range(len(self.path) - 1)
+        ]
+
+
+def build_graph(tree: Mapping[Station, ...], graph=None) -> nx.Graph:
+    """
+    Recursively builds a graph from the given tree structure.
+
+    Args:
+        tree (Mapping): A mapping of Station objects to their branches.
+        graph (nx.Graph, optional): An existing graph to add edges to. If None, a new graph is created.
+
+    Returns:
+        nx.Graph: The graph with edges added based on the tree structure.
+    """
+    if graph is None:
+        graph = nx.Graph()
+
+    for origin_station, branches in tree.items():
+        for destination_station in branches:
+            # Get geodesic distance between the two stations
+            coord_origen = origin_station.coordinates
+            coord_destino = destination_station.coordinates
+            distance_km = geodesic(coord_origen, coord_destino).kilometers
+
+            # Add edge to the graph with the distance as weight
+            graph.add_edge(origin_station, destination_station, weight=distance_km)
+
+            # Recursively build the graph for the branches
+            build_graph({destination_station: branches[destination_station]}, graph)
+
+    return graph
 
 
 def build_segments_for_service(
+    graph: nx.Graph,
     service: Service,
-    positions: Mapping[Station, float]
 ) -> List[Segment]:
     """
     Build a list of motion segments for a service, each with its spatial interval
     and a local linear time interpolator.
-    """
-    segments: List[Segment] = []
-    stations = service.line.stations
-
-    for prev_stn, next_stn in zip(stations, stations[1:]):
-        if prev_stn not in positions or next_stn not in positions:
-            raise ServiceInMultiplePathsException
-        start_pos = positions[prev_stn]
-        end_pos = positions[next_stn]
-
-        # Scheduled departure and arrival
-        depart_time = service.schedule[prev_stn.id][1] + timedelta(days=service.date.toordinal())
-        arrive_time = service.schedule[next_stn.id][0] + timedelta(days=service.date.toordinal())
-
-        # Local interpolator mapping any position in [start_pos, end_pos]
-        time_interp = get_time_from_position(
-            (depart_time, start_pos),
-            (arrive_time, end_pos)
-        )
-        segments.append(Segment(service.id, start_pos, end_pos, time_interp))
-
-    return segments
-
-
-def get_edges_from_path(path: List[Station]) -> Set[Tuple[Station]]:
-    """
-    Returns the set of edges for a given path of stations.
 
     Args:
-        path (List[Station]): A list of Station objects representing the path.
+        graph (nx.Graph): The graph representing the corridor.
+        service (Service): The service for which to build segments.
 
     Returns:
-        Set[Tuple[Station]]: A set of edges, where each edge is represented as a tuple of two stations.
+        List[Segment]: A list of segments, each representing a motion segment for the service.
     """
-    edges: Set[Tuple[Station]] = set()
-    for i in range(len(path) - 1):
-        u, v = path[i], path[i + 1]
-        edges.add((u, v))
-    return edges
+    segments: List[Segment] = []
+    stops = service.line.stations  # EN ORDEN DE VIAJE
+
+    for prev_stn, next_stn in zip(stops, stops[1:]):
+        # Real path between prev_stn and next_stn
+        subpath = nx.shortest_path(graph, prev_stn, next_stn, weight='weight')
+
+        # Cumulate distances between stations
+        dists = [0.0]
+        for u, v in zip(subpath, subpath[1:]):
+            dists.append(dists[-1] + geodesic(u.coordinates, v.coordinates).kilometers)
+
+        total_km = dists[-1]
+        midnight = time.min  # 00:00
+        dep_delta = service.schedule[prev_stn.id][1]  # timedelta desde medianoche
+        arr_delta = service.schedule[next_stn.id][0]
+
+        dep_time = datetime.combine(service.date, midnight) + dep_delta
+        arr_time = datetime.combine(service.date, midnight) + arr_delta
+
+        # Interpolator function to compute time at each station
+        def make_time_at(subpath, dists, dep_time, arr_time):
+            def time_at(st: Station) -> datetime:
+                # Get the index of the station in the subpath
+                idx = subpath.index(st)
+                frac = dists[idx] / (total_km or 1)
+                delta = arr_time - dep_time
+                return dep_time + frac * delta
+
+            return time_at
+
+        time_at_fn = make_time_at(subpath, dists, dep_time, arr_time)
+
+        segments.append(
+            Segment(
+                service_idx=service.id,
+                path=subpath,
+                time_at=time_at_fn
+            )
+        )
+
+    return segments
 
 
 def get_stations_positions(stations: List[Station]) -> Mapping[Station, float]:
@@ -93,75 +143,6 @@ def get_stations_positions(stations: List[Station]) -> Mapping[Station, float]:
     return positions
 
 
-@cache
-def get_time_from_position(
-    point_a: Tuple[timedelta, float],
-    point_b: Tuple[timedelta, float]
-) -> Callable[[float], timedelta]:
-    """
-    Build a linear interpolator that maps a position (float) back to a time.
-
-    Args:
-        point_a: (time, position) for the first sample.
-        point_b: (time, position) for the second sample.
-
-    Returns:
-        A function f(pos: float) -> timedelta giving the interpolated time.
-    """
-    # Convert times to minutes (float)
-    t0 = point_a[0].total_seconds() / 60
-    t1 = point_b[0].total_seconds() / 60
-
-    # Extract positions
-    x0 = point_a[1]
-    x1 = point_b[1]
-
-    # Ensure we have a valid line
-    if t0 == t1:
-        raise ValueError('point_a and point_b must have different times')
-    if x0 == x1:
-        raise ValueError('point_a and point_b must have different positions')
-
-    # Slope: position change per minute
-    slope = (x1 - x0) / (t1 - t0)
-
-    def time_from_position(position: float) -> timedelta:
-        """
-        Given a position, compute the corresponding time via
-        inverse of y = slope * t + intercept.
-        """
-        # Invert the line: t = (position - intercept) / slope
-        minutes = (position - x0) / slope + t0
-        return timedelta(minutes=minutes)
-
-    return time_from_position
-
-
-def infer_paths(service: Service) -> List[List[Station]]:
-    """
-    Infers the path of a service based on its line and corridor.
-
-    Args:
-        service (Service): The service to infer.
-
-    Returns:
-        List[List[Station]]: A list of paths, where each path is a list of Station objects.
-    """
-    paths = []
-    for path in service.line.corridor.paths:
-        # Skip paths that do not contain the service's stations
-        if sum([station in path for station in service.line.stations]) < 2:
-            continue
-        # Only consider forward paths
-        if not (service.line.stations[0] in path and service.line.stations[-1] in path):
-            raise ServiceInMultiplePathsException
-        if path.index(service.line.stations[0]) < path.index(service.line.stations[-1]):
-            origin_index = path.index(service.line.stations[0])
-            destination_index = path.index(service.line.stations[-1])
-            paths.append(path[origin_index:destination_index + 1])
-    return paths
-
-
 def read_yaml(path: str) -> Mapping[str, Any]:
     """
     Read a YAML file and return its content.
@@ -178,52 +159,41 @@ def read_yaml(path: str) -> Mapping[str, Any]:
 
 
 def segments_conflict(
-    seg1: Segment,
-    seg2: Segment,
+    segment_1: Segment,
+    segment_2: Segment,
     safety_headway: int
 ) -> bool:
     """
     Determine if two motion segments conflict within a given safety headway in minutes.
 
-    They conflict if their spatial intervals overlap and their time gaps
-    at the overlap boundaries violate the headway constraint.
-    """
-    # Spatial overlap
-    overlap_start = max(seg1.start_pos, seg2.start_pos)
-    overlap_end = min(seg1.end_pos, seg2.end_pos)
-    if overlap_start >= overlap_end:
-        return False
-
-    # Time at overlap boundaries
-    t1_start = seg1.time_at(overlap_start)
-    t1_end = seg1.time_at(overlap_end)
-    t2_start = seg2.time_at(overlap_start)
-    t2_end = seg2.time_at(overlap_end)
-
-    # Time differences in whole minutes
-    dt_start = int((t2_start - t1_start).total_seconds() / 60)
-    dt_end = int((t2_end - t1_end).total_seconds() / 60)
-
-    # No conflict if both differences have the same sign (ordering preserved)
-    # and both exceed twice the safety headway
-    same_order = dt_start * dt_end > 0
-    if same_order and abs(dt_start) >= 2 * safety_headway and abs(dt_end) >= 2 * safety_headway:
-        return False
-
-    return True
-
-
-def shared_edges_between_services(path1: List[Station], path2: List[Station]) -> Set[Tuple[Station]]:
-    """
-    Checks whether two services (given by their paths) share any track segments.
+    A conflict appears if their spatial intervals overlap and their time gaps at the overlap boundaries violate
+        the headway constraint.
 
     Args:
-        path1: A list of Station objects for the first service.
-        path2: A list of Station objects for the second service.
+        segment_1 (Segment): The first motion segment.
+        segment_2 (Segment): The second motion segment.
+        safety_headway (int): Safety headway in minutes.
 
     Returns:
-        A set of shared edges (track segments), if any.
+        bool: True if the segments conflict, False otherwise.
     """
-    edges1 = get_edges_from_path(path1)
-    edges2 = get_edges_from_path(path2)
-    return edges1.intersection(edges2)
+    common_edges = set(segment_1.edges) & set(segment_2.edges)
+    if not common_edges:
+        return False
+
+    for origin_station, destination_station in common_edges:
+        # Get time intervals for the common edges in both segments
+        start_segment_1 = segment_1.time_at(origin_station)
+        end_segment_1 = segment_1.time_at(destination_station)
+        start_segment_2 = segment_2.time_at(origin_station)
+        end_segment_2 = segment_2.time_at(destination_station)
+
+        delta_start = (start_segment_2 - start_segment_1).total_seconds() / 60
+        delta_end = (end_segment_2 - end_segment_1).total_seconds() / 60
+
+        # Conflict if differences exceed twice the safety headway
+        same_order = delta_start * delta_end > 0
+        if not same_order or abs(delta_start) < 2 * safety_headway or abs(delta_end) < 2 * safety_headway:
+            return True
+
+    return False
