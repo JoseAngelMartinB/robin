@@ -2,7 +2,7 @@
 
 import networkx as nx
 
-from robin.supply.generator.utils import build_graph
+from robin.supply.generator.entities import ServiceScheduler
 from robin.supply.entities import Station, Service
 
 from typing import Any, List, Set, Tuple
@@ -35,7 +35,7 @@ def infer_paths(service: Service) -> List[List[Station]]:
     Returns:
         List[List[Station]]: A list of paths, where each path is a list of Station objects.
     """
-    graph = build_graph(service.line.corridor.tree)
+    graph = ServiceScheduler.build_graph(service.line.corridor.tree)
     stops = service.line.stations
 
     if len(stops) < 2:
