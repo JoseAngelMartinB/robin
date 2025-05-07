@@ -8,8 +8,9 @@ import textwrap
 
 from robin.plotter.constants import COLORS, DARK_GRAY, SAFETY_GAP, STYLE, WHITE_SMOKE
 from robin.plotter.utils import infer_paths, shared_edges_between_services
-from robin.supply.entities import Supply
+from robin.supply.entities import Station, Corridor, Service, Supply
 
+from collections import defaultdict
 from geopy.distance import geodesic
 from loguru import logger
 from matplotlib import pyplot as plt
@@ -18,8 +19,8 @@ from matplotlib.colors import ListedColormap
 from matplotlib.patches import Polygon as MplPolygon
 from matplotlib.ticker import FuncFormatter, MultipleLocator
 from pathlib import Path
-from shapely.geometry.polygon import Polygon
-from typing import Any, List, Mapping, Tuple, Union
+from shapely.geometry import Polygon, MultiPolygon
+from typing import Any, List, Mapping, Optional, Set, Tuple, Union
 
 
 class KernelPlotter:
@@ -45,6 +46,101 @@ class KernelPlotter:
         self.stations_dict = self.supply.get_stations_dict()
         self.colors = COLORS
         plt.style.use(STYLE)
+
+    def _assign_services_to_paths(
+            self,
+            services: List[Service],
+            paths_dict: Mapping[int, Tuple[Station, ...]]
+    ) -> Mapping[int, List[str]]:
+        """
+        Determine which services travel along each path by matching edges.
+
+        Args:
+            services (List[Service]): Services to classify.
+            paths_dict (Dict[int, Tuple[Station]]): Candidate paths.
+
+        Returns:
+            Dict[int, List[str]]: Path index to list of service IDs.
+        """
+        mapping: Mapping[int, List[str]] = defaultdict(list)
+        for svc in services:
+            matched = set()
+            for idx, path in paths_dict.items():
+                for svc_path in infer_paths(svc):
+                    if shared_edges_between_services(svc_path, path):
+                        mapping[idx].append(svc.id)
+                        matched.add(svc.id)
+                        break
+        return mapping
+
+    def _build_service_schedule(
+            self,
+            services: List[Service],
+            station_positions: Mapping[Station, float]
+    ) -> Mapping[str, Mapping[Station, Tuple[int, int]]]:
+        """
+        Build arrival/departure minute offsets for each service at each station.
+
+        Args:
+            services (List[Service]): Services to process.
+            station_positions (Dict[Station, float]): Station positions.
+
+        Returns:
+            Dict: service_id to {station: (arrival_min, departure_min)}.
+        """
+        schedule = {}
+        for svc in services:
+            base = svc.time_slot.start.total_seconds() // 60
+            station_times = {}
+            for station, (arrival, departure) in zip(svc.line.stations, svc.line.timetable.values()):
+                if station in station_positions:
+                    arr = int(base + arrival)
+                    dep = int(base + departure)
+                    station_times[station] = (arr, dep)
+            schedule[svc.id] = station_times
+        return schedule
+
+    def _compute_normalized_positions(
+            self,
+            paths_dict: Mapping[int, Tuple[Station, ...]],
+            scale_max: int = 1000
+    ) -> Mapping[int, Mapping[Station, float]]:
+        """
+        Compute and normalize cumulative distances for each path.
+
+        Args:
+            paths_dict (Dict[int, Tuple[Station]]): Indexed station sequences.
+            scale_max (int): Target maximum for normalized positions.
+
+        Returns:
+            Dict[int, Dict[Station, float]]: Station to normalized position mapping per path.
+        """
+        positions = {}
+        for idx, path in paths_dict.items():
+            cum = {path[0]: 0.0}
+            dist = 0.0
+            for a, b in zip(path, path[1:]):
+                dist += geodesic(a.coordinates, b.coordinates).kilometers
+                cum[b] = dist
+            max_dist = max(cum.values()) or 1.0
+            positions[idx] = {st: (pos / max_dist) * scale_max for st, pos in cum.items()}
+        return positions
+
+    def _enumerate_unique_paths(
+            self,
+            corridors: Set[Corridor]
+    ) -> Mapping[int, Tuple[Station, ...]]:
+        """
+        Enumerate and index each unique path across corridors.
+
+        Args:
+            corridors (Set[Corridor]): Corridors to extract paths from.
+
+        Returns:
+            Dict[int, Tuple[Station, ...]]: Mapping index to station-tuple path.
+        """
+        unique = set(tuple(p) for c in corridors for p in c.paths)
+        return {i: path for i, path in enumerate(unique)}
 
     def _get_passenger_status(self) -> Tuple[Mapping[int, int], List[str]]:
         """
@@ -216,6 +312,22 @@ class KernelPlotter:
         sorted_data = dict(sorted(data.items(), key=lambda x: x[0]))
         return sorted_data
 
+    @staticmethod
+    def _get_time_label(minutes: float, _pos) -> str:
+        """
+        Formatter for x-axis: minutes since midnight to HH:MM h.
+
+        Args:
+            minutes (float): Minutes from midnight.
+            _pos: Required by FuncFormatter, unused.
+
+        Returns:
+            str: Formatted hours and minutes string.
+        """
+        hrs = int(minutes // 60)
+        mins = int(minutes % 60)
+        return f"{hrs:02d}:{mins:02d} h."
+
     def _get_trips_sold(self) -> Mapping[str, Mapping[str, int]]:
         """
         Get number of tickets sold by trip of stations.
@@ -233,6 +345,172 @@ class KernelPlotter:
             result[origin_destination] = group['count'].values[0]
         sorted_count_trip_sold = dict(sorted(result.items(), key=lambda x: x[1], reverse=True))
         return sorted_count_trip_sold
+
+    @staticmethod
+    def _highlight_intersections(
+            polygons: List[Polygon],
+            ax: plt.Axes
+    ) -> None:
+        """
+        Detect overlaps between polygons and highlight intersections, skipping non-area geometries.
+        """
+        for i, p1 in enumerate(polygons):
+            for p2 in polygons[i + 1:]:
+                inter = p1.intersection(p2)
+                if inter.is_empty:
+                    continue
+                # Only handle Polygon or MultiPolygon intersections
+                if isinstance(inter, Polygon):
+                    parts = [inter]
+                elif isinstance(inter, MultiPolygon):
+                    parts = list(inter)
+                else:
+                    continue
+                for part in parts:
+                    ax.add_patch(
+                        MplPolygon(
+                            list(part.exterior.coords), closed=True,
+                            facecolor='crimson', edgecolor='crimson', alpha=0.5
+                        )
+                    )
+
+    @staticmethod
+    def _make_safety_polygon(
+            dep_time: int,
+            arr_time: int,
+            y1: float,
+            y2: float,
+            gap: int
+    ) -> Polygon:
+        """
+        Create a rectangular polygon around a segment for safety margin.
+
+        Args:
+            dep_time (int): departure minute.
+            arr_time (int): arrival minute.
+            y1 (float): position of departure station.
+            y2 (float): position of arrival station.
+            gap (int): safety gap in minutes.
+
+        Returns:
+            Polygon: safety area polygon.
+        """
+        return Polygon([
+            (dep_time - gap, y1),
+            (arr_time - gap, y2),
+            (arr_time + gap, y2),
+            (dep_time + gap, y1)
+        ])
+
+    def _plot_path_marey(
+            self,
+            services: List[Service],
+            station_positions: Mapping[Station, float],
+            safety_gap: int,
+            save_path: Optional[str],
+            path_idx: int
+    ) -> None:
+        """
+        Render Marey chart for a single path.
+
+        Args:
+            services (List[Service]): Services assigned to this path.
+            station_positions (Dict[Station, float]): Normalized station distances.
+            safety_gap (int): Minutes of buffer around each segment.
+            save_path (Optional[str]): Directory to save the plot.
+            path_idx (int): Index of the path (for filename).
+        """
+        # Prepare colors
+        tsps = sorted({svc.tsp.name for svc in services})
+        cmap = ListedColormap(sns.color_palette('pastel', len(tsps)).as_hex())
+        tsp_color = {t: cmap(i) for i, t in enumerate(tsps)}
+        service_color = {svc.id: tsp_color[svc.tsp.name] for svc in services}
+
+        fig, ax = plt.subplots(figsize=(20, 11))
+        min_x, max_x = 0, 24 * 60
+
+        schedule = self._build_service_schedule(services, station_positions)
+
+        polygons: List[Polygon] = []
+        for service in services:
+            times = [t for times in schedule[service.id].values() for t in times]
+            min_x, max_x = min(min_x, min(times)), max(max_x, max(times))
+
+            # Obtén la secuencia de paradas con tiempos
+            schedule_items = list(schedule[service.id].items())
+            first_station, (arrival_first, departure_first) = schedule_items[0]
+            last_station, (arrival_last, departure_last) = schedule_items[-1]
+
+            # Elige forma según si es origen o destino real
+            start_marker = '^' if first_station == service.line.stations[0] else 'o'
+            end_marker = 's' if last_station == service.line.stations[-1] else 'o'
+
+            # Dibuja marcador de salida en el nodo de salida
+            ax.scatter(
+                arrival_first,
+                station_positions[first_station],
+                marker=start_marker,
+                s=100,
+                edgecolors='black',
+                linewidths=1.5,
+                color=service_color[service.id],
+                zorder=5
+            )
+
+            # Plot marker of arrival in the node of arrival
+            ax.scatter(
+                departure_last,
+                station_positions[last_station],
+                marker=end_marker,
+                s=100,
+                edgecolors='black',
+                linewidths=1.5,
+                color=service_color[service.id],
+                zorder=5
+            )
+
+            points = [(time, station_positions[station]) for station, times in schedule[service.id].items() for time in times]
+            ax.plot(
+                [p[0] for p in points],
+                [p[1] for p in points],
+                marker='o',
+                linewidth=2.0,
+                color=service_color[service.id],
+                label=service.tsp.name if service.tsp.name not in ax.get_legend_handles_labels()[1] else None
+            )
+            # Add safety polygons
+            for (st1, times1), (st2, times2) in zip(schedule[service.id].items(), list(schedule[service.id].items())[1:]):
+                poly = self._make_safety_polygon(
+                    times1[1], times2[0],
+                    station_positions[st1], station_positions[st2],
+                    safety_gap
+                )
+                polygons.append(poly)
+                ax.add_patch(
+                    MplPolygon(list(poly.exterior.coords), closed=True, facecolor='#D3D3D3', edgecolor='#D3D3D3',
+                               alpha=0.6))
+
+        # Highlight intersections
+        self._highlight_intersections(polygons, ax)
+
+        # Style axes
+        self._style_axes(ax, station_positions)
+        ax.set_title(f"{list(station_positions.keys())[0].name} - {list(station_positions.keys())[-1].name}",
+                     fontweight='bold', fontsize=24, pad=20)
+        ax.set_xlabel('Time (HH:MM)', fontsize=18)
+        ax.set_ylabel('Stations', fontsize=18)
+        ax.legend()
+        ax.xaxis.set_major_locator(MultipleLocator(60))
+        ax.xaxis.set_major_formatter(FuncFormatter(self._get_time_label))
+        plt.setp(ax.get_xticklabels(), rotation=70, ha='right', fontsize=20)
+        plt.tight_layout()
+
+        plt.show()
+        if save_path:
+            fig.savefig(
+                f"{save_path}marey_chart_{path_idx}.pdf",
+                format='pdf', dpi=300, bbox_inches='tight', transparent=True
+            )
 
     def _plot_service_capacity(
         self,
@@ -408,6 +686,28 @@ class KernelPlotter:
             save_path_dir.mkdir(parents=True, exist_ok=True)
             fig.savefig(save_path, format='pdf', dpi=300, bbox_inches='tight', transparent=True)
 
+    @staticmethod
+    def _style_axes(
+            ax: plt.Axes,
+            station_positions: Mapping[Station, float]
+    ) -> None:
+        """
+        Apply styling to axes: spines, ticks, grid, and labels.
+
+        Args:
+            ax (plt.Axes): Axes to style.
+            station_positions (Dict[Station, float]): Station position mapping.
+        """
+        for side in ('top', 'right', 'bottom', 'left'):
+            spine = ax.spines[side]
+            spine.set_visible(True)
+            spine.set_linewidth(1.0)
+            spine.set_color('#A9A9A9')
+        ax.tick_params(axis='both', which='major', labelsize=16)
+        ax.set_yticks(list(station_positions.values()))
+        ax.set_yticklabels([s.name for s in station_positions.keys()], fontsize=16)
+        ax.grid(True, color='#A9A9A9', alpha=0.3, linestyle='-', linewidth=1.0, zorder=1)
+
     def plot_demand_status(self, ylim: Tuple[float, float] = None, save_path: str = None) -> None:
         """
         Plot the number of passengers attended based on their purchase status.
@@ -447,216 +747,40 @@ class KernelPlotter:
             ax.bar_label(ax.containers[i], labels=[f'{demand_data[status]} ({status_perc}%)'], padding=3)
         self._show_plot(fig=fig, save_path=save_path)
 
-    def plot_marey_chart(self, date: datetime.date, safety_gap: int = SAFETY_GAP, save_path: str = None) -> None:
+    def plot_marey_chart(
+        self,
+        date: datetime.date,
+        safety_gap: int = SAFETY_GAP,
+        save_path: str = None
+    ) -> None:
         """
-        Plot Marey chart for the given supply.
+        Plot Marey chart for all corridors and paths on the given date.
 
         Args:
-            date (datetime.date): Date to filter the services.
-            safety_gap (int, optional): Safety gap in minutes. Defaults to 10.
-            save_path (str, optional): Path to save the plot in PDF format. Defaults to None.
+            date (datetime.date): Date to filter services.
+            safety_gap (int): Safety gap in minutes between segments.
+            save_path (str, optional): Directory path to save PDF files. If None, charts are shown only.
         """
         services = self.supply.filter_services_by_date(date)
+        corridors = set(self.supply.corridors)
 
-        def get_time_label(minutes: int, position) -> str:
-            """
-            Convert minutes to HH:MM format string.
+        paths_dict = self._enumerate_unique_paths(corridors)
+        paths_positions = self._compute_normalized_positions(paths_dict)
+        services_paths = self._assign_services_to_paths(services, paths_dict)
 
-            NOTE: Do not remove the second argument. It is required by FuncFormatter.
-
-            Args:
-                minutes (int): Time in minutes.
-
-            Returns:
-                str: Time in HH:MM format.
-            """
-            hours = int(minutes // 60)
-            minutes = int(minutes % 60)
-            hours = str(hours).zfill(2)
-            minutes = str(minutes).zfill(2)
-            label = f'{hours}:{minutes} h.'
-            return label
-
-        # Get a set of corridors in supply
-        corridors = set([corridor for corridor in self.supply.corridors])
-
-        # Get a set of paths
-        paths = set([tuple(path) for corridor in corridors for path in corridor.paths])
-        paths_dict = {i: path for i, path in enumerate(paths)}
-
-        # Get paths positions
-        paths_positions = {}
-        for path_idx in paths_dict:
-            position = 0
-            path_position = {paths_dict[path_idx][0]: position}
-            for i in range(len(paths_dict[path_idx]) - 1):
-                origin_station = paths_dict[path_idx][i]
-                destination_station = paths_dict[path_idx][i + 1]
-                position += geodesic(origin_station.coordinates, destination_station.coordinates).kilometers
-                path_position[destination_station] = position
-            paths_positions[path_idx] = path_position
-
-        # Paths max distance normalization for Marey chart
-        new_max = 1000
-
-        for path_idx in paths_positions:
-            # Get current max value
-            current_max = max(paths_positions[path_idx].values())
-
-            # Normalize the path positions
-            normalized = {
-                station: round(position / current_max * new_max) for station, position in paths_positions[path_idx].items()
-            }
-            paths_positions[path_idx] = normalized
-
-        # Get services for each path
-        services_paths = {}
-        for service in services:
-            is_service_in_multiple_paths = False
-            for path_idx in paths_dict:
-                if path_idx not in services_paths:
-                    services_paths[path_idx] = []
-                for service_path in infer_paths(service):
-                    shared_edges = shared_edges_between_services(service_path, paths_dict[path_idx])
-                    if not shared_edges:
-                        continue
-                    services_paths[path_idx].append(service.id)
-            if is_service_in_multiple_paths:
-                logger.warning('It is only possible to plot Marey charts for services with a single path ({service.id})')
-
-        # Plot a Marey chart for each path
-        for path_index in paths_positions:
-            services_in_path = [service for service in services if service.id in services_paths[path_index]]
-            if not services_in_path:
+        for path_idx, station_positions in paths_positions.items():
+            service_ids = services_paths.get(path_idx, [])
+            if not service_ids:
                 continue
-            station_positions = paths_positions[path_index]
 
-            qualitative_colors = sns.color_palette('pastel', 10)
-            my_cmap = ListedColormap(sns.color_palette(qualitative_colors).as_hex())
-
-            tsps = sorted(set([service.tsp.name for service in services_in_path]))
-            services_dict = {service.id: service for service in services_in_path}
-            tsp_colors = {tsp: my_cmap(i) for i, tsp in enumerate(tsps)}
-            service_color = {service.id: tsp_colors[service.tsp.name] for service in services_in_path}
-
-            fig, ax = plt.subplots(figsize=(20, 11))
-
-            min_x = 0
-            max_x = 24 * 60
-
-            schedule = {}
-            for service in services_in_path:
-                schedule[service.id] = {}
-                time = service.time_slot.start
-                delta = time.total_seconds() // 60
-                # TODO: We have to calculate the timetable of the stations in the path, not the line
-                for station, stop in zip(service.line.stations, service.line.timetable):
-                    if station not in station_positions:
-                        continue
-                    arrival_time = delta + int(service.line.timetable[stop][0])
-                    departure_time = delta + int(service.line.timetable[stop][1])
-                    schedule[service.id][station] = [arrival_time, departure_time]
-
-            labels_added = set()
-            # Set default color for requested services
-            requested_color = '#D3D3D3'
-            polygons = []
-            for service_id, stations in schedule.items():
-                times = [time for station, (arrival, departure) in stations.items() for time in (arrival, departure)]
-                if min(times) < min_x:
-                    min_x = min(times)
-                if max(times) > max_x:
-                    max_x = max(times)
-                station_indices = [station_positions[station] for station in stations.keys() for _ in range(2)]
-                if services_dict[service_id].tsp.name not in labels_added:
-                    label = services_dict[service_id].tsp.name
-                    labels_added.add(label)
-                else:
-                    label = None
-
-                ax.plot(times,
-                        station_indices,
-                        color=service_color[service_id],
-                        marker='o',
-                        linewidth=2.0,
-                        label=label)
-
-                stops = list(stations.keys())
-                for i in range(len(stops) - 1):
-                    departure_x = stations[stops[i]][1]
-                    arrival_x = stations[stops[i + 1]][0]
-                    if departure_x < min_x:
-                        min_x = departure_x
-                    if arrival_x > max_x:
-                        max_x = arrival_x
-                    departure_station_y = station_positions[stops[i]]
-                    arrival_station_y = station_positions[stops[i + 1]]
-                    vertices = [(departure_x - safety_gap, departure_station_y), (arrival_x - safety_gap, arrival_station_y),
-                                (arrival_x + safety_gap, arrival_station_y), (departure_x + safety_gap, departure_station_y)]
-                    ring_mixed = Polygon(vertices)
-                    polygons.append(ring_mixed)
-
-                    patch = MplPolygon(list(ring_mixed.exterior.coords),
-                                       closed=True,
-                                       facecolor=requested_color,
-                                       edgecolor=requested_color,
-                                       alpha=0.6)
-                    ax.add_patch(patch)
-
-                for i, pa in enumerate(polygons):
-                    for j, pb in enumerate(polygons[i:], start=i):
-                        if i == j:
-                            continue
-                        intersection = pa.intersection(pb)
-                        if not intersection.is_empty:
-                            if intersection.geom_type == 'Polygon':
-                                patches = [intersection]
-                            elif intersection.geom_type == 'MultiPolygon':
-                                patches = list(intersection.geoms)
-                            else:
-                                continue  # Ignorar otros tipos geométricos
-
-                            for poly in patches:
-                                patch = MplPolygon(list(poly.exterior.coords),
-                                                   closed=True,
-                                                   facecolor='crimson',
-                                                   edgecolor='crimson',
-                                                   alpha=0.5)
-                                ax.add_patch(patch)
-
-            for spn in ('top', 'right', 'bottom', 'left'):
-                ax.spines[spn].set_visible(True)
-                ax.spines[spn].set_linewidth(1.0)
-                ax.spines[spn].set_color('#A9A9A9')
-
-            ax.tick_params(axis='both', which='major', labelsize=16)
-            ax.set_yticks(tuple(station_positions.values()))
-            ax.set_yticklabels(station_positions.keys(), fontsize=16)
-
-            ax.grid(True, color='#A9A9A9', alpha=0.3, zorder=1, linestyle='-', linewidth=1.0)
-            start_station = list(station_positions.keys())[0].name
-            last_station = list(station_positions.keys())[-1].name
-            ax.set_title(f'{start_station} - {last_station}', fontweight='bold', fontsize=24, pad=20)
-            ax.set_xlabel('Time (HH:MM)', fontsize=18)
-            ax.set_ylabel('Stations', fontsize=18)
-
-            ax.legend()
-            ax.xaxis.set_major_locator(MultipleLocator(60))
-            formatter = FuncFormatter(get_time_label)
-            ax.xaxis.set_major_formatter(formatter)
-            plt.setp(ax.get_xticklabels(), rotation=70, horizontalalignment='right', fontsize=20)
-
-            plt.tight_layout()
-            plt.show()
-
-            if save_path:
-                fig.savefig(
-                    f'{save_path}marey_chart_{path_index}.pdf',
-                    format='pdf',
-                    dpi=300,
-                    bbox_inches='tight',
-                    transparent=True
-                )
+            services_in_path = [service for service in services if service.id in service_ids]
+            self._plot_path_marey(
+                services=services_in_path,
+                station_positions=station_positions,
+                safety_gap=safety_gap,
+                save_path=save_path,
+                path_idx=path_idx
+            )
 
     def plot_seat_distribution(self, save_path: str = None) -> None:
         """
