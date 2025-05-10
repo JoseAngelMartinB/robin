@@ -436,16 +436,16 @@ class KernelPlotter:
             times = [t for times in schedule[service.id].values() for t in times]
             min_x, max_x = min(min_x, min(times)), max(max_x, max(times))
 
-            # Obtén la secuencia de paradas con tiempos
+            # Get stop times for the first and last station
             schedule_items = list(schedule[service.id].items())
             first_station, (arrival_first, departure_first) = schedule_items[0]
             last_station, (arrival_last, departure_last) = schedule_items[-1]
 
-            # Elige forma según si es origen o destino real
+            # Select markers for the first and last stations
             start_marker = '^' if first_station == service.line.stations[0] else 'o'
             end_marker = 's' if last_station == service.line.stations[-1] else 'o'
 
-            # Dibuja marcador de salida en el nodo de salida
+            # Plot departure marker
             ax.scatter(
                 arrival_first,
                 station_positions[first_station],
@@ -454,10 +454,11 @@ class KernelPlotter:
                 edgecolors='black',
                 linewidths=1.5,
                 color=service_color[service.id],
-                zorder=5
+                zorder=5,
+                label='Departure station'
             )
 
-            # Plot marker of arrival in the node of arrival
+            # Plot arrival marker
             ax.scatter(
                 departure_last,
                 station_positions[last_station],
@@ -466,9 +467,11 @@ class KernelPlotter:
                 edgecolors='black',
                 linewidths=1.5,
                 color=service_color[service.id],
-                zorder=5
+                zorder=5,
+                label='Arrival station'
             )
 
+            # Plot marker for stations in between
             points = [(time, station_positions[station]) for station, times in schedule[service.id].items() for time in times]
             ax.plot(
                 [p[0] for p in points],
