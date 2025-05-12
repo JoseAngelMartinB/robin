@@ -6,6 +6,7 @@ from robin.supply.entities import Station, TimeSlot, Corridor, Line, Seat, Rolli
 from robin.supply.saver.constants import OUTPUT_SUPPLY_PATH
 
 from copy import deepcopy
+from pathlib import Path
 from typing import List, Dict, Any
 
 
@@ -184,5 +185,7 @@ class SupplySaver(Supply):
             'trainServiceProvider': [self.tsp_to_dict(tsp) for tsp in self.tsps],
             'service': [self.service_to_dict(s) for s in self.services]
         }
+        output_dir = Path(output_path).parent
+        output_dir.mkdir(parents=True, exist_ok=True)
         with open(output_path, 'w') as file:
             yaml.dump(data, file, Dumper=yaml.CSafeDumper, sort_keys=False, allow_unicode=True)

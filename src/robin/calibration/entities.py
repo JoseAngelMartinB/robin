@@ -17,6 +17,7 @@ from robin.calibration.exceptions import InvalidArrivalTimeDistribution, Invalid
 from robin.kernel.entities import Kernel
 from robin.supply.entities import Supply
 
+from pathlib import Path
 from sklearn.metrics import mean_squared_error
 from typing import Any, Dict, List, Tuple, Union
 
@@ -852,13 +853,15 @@ class Hyperparameters:
         self._update_user_patterns()
         self._update_demand_patterns()
     
-    def save_demand_yaml(self, path: str) -> None:
+    def save_demand_yaml(self, output_path: str) -> None:
         """
         Save the demand configuration file.
         
         Args:
-            path (str): Path to the demand configuration file.
+            output_path (str): Path to the output demand configuration file.
         """
         self._update_demand_yaml()
-        with open(path, 'w') as file:
+        output_dir = Path(output_path).parent
+        output_dir.mkdir(parents=True, exist_ok=True)
+        with open(output_path, 'w') as file:
             yaml.dump(self.demand_yaml, file, Dumper=yaml.CSafeDumper, sort_keys=False, allow_unicode=True)
