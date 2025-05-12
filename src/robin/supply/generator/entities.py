@@ -173,7 +173,7 @@ class ServiceScheduler:
                 return True
         return False
 
-    def add_service(self, new_service: Service):
+    def add_service(self, new_service: Service) -> None:
         """
         Add a new service after verifying feasibility; update all indexes.
 
@@ -348,25 +348,25 @@ class SupplyGenerator(SupplySaver):
         random_second = np.random.randint(int_delta)
         return start + datetime.timedelta(seconds=random_second)
 
-    def _generate_line(self) -> Line:
+    def _generate_line(self) -> Tuple[Line, Line]:
         """
         Generate a line based on the configuration probabilities.
 
         Returns:
-            Line: Generated line based on the configuration probabilities.
+            Tuple[Line, Line]: Tuple of generated line and sampled line.
         """
-        line: Line = self._sample_from_config(key='lines')
+        sampled_line: Line = self._sample_probabilities_from_config(key='lines')
 
         # Add normal noise to the arrival and departure times
         if self.config['lines'].get('noise_std', None):
             timetable = {}
             travel_time_noise, stop_time_noise = np.random.normal(0, self.config['lines']['noise_std'], size=2)
-            for i, (station, (arrival, departure)) in enumerate(line.timetable.items()):
+            for i, (station, (arrival, departure)) in enumerate(sampled_line.timetable.items()):
                 noisy_arrival = float(round(arrival * (1 + travel_time_noise), ndigits=1))
                 noisy_departure = float(round(noisy_arrival + (departure - arrival) * (1 + stop_time_noise), ndigits=1))
                 if i == 0:
                     timetable[station] = (arrival, departure)
-                elif i == len(line.timetable) - 1:
+                elif i == len(sampled_line.timetable) - 1:
                     timetable[station] = (noisy_arrival, noisy_arrival)
                 else:
                     timetable[station] = (noisy_arrival, noisy_departure)
@@ -376,8 +376,8 @@ class SupplyGenerator(SupplySaver):
             line_id = hashlib.md5(timetable_json.encode()).hexdigest()[:5]
 
             # Create a new line with the updated timetable
-            line = Line(line_id, line.name, line.corridor, timetable)
-        return line
+            line = Line(line_id, sampled_line.name, sampled_line.corridor, timetable)
+        return line, sampled_line
 
     def _generate_tsp(self, tsp_id: Union[str, None] = None) -> TSP:
         """
@@ -391,7 +391,7 @@ class SupplyGenerator(SupplySaver):
         """
         if tsp_id:
             return self.tsps[tsp_id]
-        return self._sample_from_config(key='tsps')
+        return self._sample_probabilities_from_config(key='tsps')
 
     def _generate_time_slot(self, date: datetime.date) -> TimeSlot:
         """
@@ -400,7 +400,7 @@ class SupplyGenerator(SupplySaver):
         Returns:
             TimeSlot: Generated time slot based on the configuration probabilities.
         """
-        start_hour = self._sample_scipy_distribution_from_config(key='time_slots', date=date)
+        start_hour = self._sample_scipy_distribution_from_config(key='time_slots', date=date, is_discrete=True)
         minutes = np.random.randint(0, 60)
         start = datetime.timedelta(hours=int(start_hour), minutes=minutes)
         # Clip the start time to be within the range of 00:00 to 23:59 - TIME_SLOT_SIZE
@@ -419,31 +419,61 @@ class SupplyGenerator(SupplySaver):
         Returns:
             RollingStock: Generated rolling stock based on the configuration probabilities.
         """
-        return self._sample_from_config(key='rolling_stocks', id=tsp.id)
+        return self._sample_probabilities_from_config(key='rolling_stocks', id=tsp.id)
 
     def _generate_prices(
         self,
+        date: datetime.date,
         line: Line,
-        rolling_stock: RollingStock,
-        tsp: TSP
-    ) -> Mapping[Tuple[str, str], Mapping[Seat, float]]:
+        tsp: TSP,
+        time_slot: TimeSlot,
+        rolling_stock: RollingStock
+    ) -> Dict[Tuple[str, str], Dict[Seat, float]]:
         """
+        Generate prices for the given services attributes based on the configuration probabilities and factors.
+
+        Args:
+            date (datetime.date): Date for which to generate prices.
+            line (Line): Line for which to generate prices.
+            tsp (TSP): TSP for which to generate prices.
+            time_slot (TimeSlot): Time slot for which to generate prices.
+            rolling_stock (RollingStock): Rolling stock for which to generate prices.
+        
+        Returns:
+            Dict[Tuple[str, str], Dict[Seat, float]]: Dictionary of station pairs to prices.
         """
         prices = {}
-        hard_types = rolling_stock.seats.keys()
-        seats = list(filter(lambda s: s.hard_type in hard_types, list(self.seats.values())))
-        base_price = self.config['prices']['base']
+        seats = [self.seats[str(seat_id)] for seat_id in rolling_stock.seats if str(seat_id) in self.seats]
+
+        # Get the min and max prices from the configuration
+        assert 'min' in self.config['prices'], "'min' not found in 'prices'"
+        assert 'max' in self.config['prices'], "'max' not found in 'prices'"
+        min_price = self.config['prices']['min']
         max_price = self.config['prices']['max']
-        distance_factor = self.config['prices']['distance_factor']
-        seat_factor = self.config['prices']['seat_type_factor']
-        tsp_factor = self.config['prices']['tsp_factor']
+
+        # Generate a base price for the service
+        base_price = self._sample_scipy_distribution_from_config(key='prices', date=date, is_discrete=False)
+
+        # Get the factors for the line, TSP, and time slot
+        line_factor = self._sample_factor_from_config(key='prices', factor='line', id=line.id)
+        tsp_factor = self._sample_factor_from_config(key='prices', factor='tsp', id=tsp.id)
+        time_slot_hour = str(time_slot.start.seconds // 3600)
+        time_slot_factor = self._sample_factor_from_config(key='prices', factor='time_slot', id=time_slot_hour)
+        base_price *= line_factor * tsp_factor * time_slot_factor
+
+        # Get the factors for each pair of stations and each seat
         for pair in line.pairs:
-            origin_sta, destination_sta = line.pairs[pair]
-            distance = geodesic(origin_sta.coordinates, destination_sta.coordinates).kilometers
+            origin_station, destination_station = line.pairs[pair]
+            origin_station_factor = self._sample_factor_from_config(key='prices', factor='station', id=origin_station.id)
+            destination_station_factor = self._sample_factor_from_config(key='prices', factor='station', id=destination_station.id)
+            distance = geodesic(origin_station.coordinates, destination_station.coordinates).kilometers
+            distance_factor = distance * self._sample_factor_from_config(key='prices', factor='distance')
+            price = (base_price + distance_factor) * origin_station_factor * destination_station_factor
             prices[pair] = {}
             for seat in seats:
-                price_calc = (base_price + distance * distance_factor) * seat_factor[seat.id] * tsp_factor[tsp.id]
-                prices[pair][seat] = str(round(price_calc, 2)) if price_calc < max_price else max_price
+                seat_factor = self._sample_factor_from_config(key='prices', factor='seat', id=seat.id)
+                price *= seat_factor
+                prices[pair][seat] = float(round(np.clip(price, min_price, max_price), 2))
         return prices
 
     def _generate_service_id(self) -> str:
@@ -478,11 +508,11 @@ class SupplyGenerator(SupplySaver):
         feasible = False
         while not feasible:
             date = self._generate_date()
-            line = self._generate_line()
+            line, sampled_line = self._generate_line()
             tsp = self._generate_tsp(tsp_id)
             time_slot = self._generate_time_slot(date)
             rolling_stock = self._generate_rolling_stock(tsp)
-            prices = self._generate_prices(line, rolling_stock, tsp)
+            prices = self._generate_prices(date, sampled_line, tsp, time_slot, rolling_stock)
             service_id = self._generate_service_id()
             service = Service(service_id, date, line, tsp, time_slot, rolling_stock, prices)
             feasible = self.service_scheduler.is_feasible(service, safety_gap)
@@ -493,27 +523,28 @@ class SupplyGenerator(SupplySaver):
         return service
 
     @cache
-    def _get_distributions_for_key(self, key: str) -> dict:
+    def _get_distributions_for_key(self, key: str, is_discrete: bool) -> Dict[str, Any]:
         """
         Get the SciPy distributions for the given key from the configuration.
 
         Args:
             key (str): The key in the configuration to get distributions for.
+            is_discrete (bool): Whether the distributions are discrete or continuous.
 
         Returns:
-            dict: Dictionary mapping distribution IDs to their distribution objects and kwargs.
+            Dict[str, Any]: Dictionary mapping distribution IDs to their distribution objects and kwargs.
         """
-        assert key in self.config, f'{key} not found in config'
+        assert key in self.config, f"'{key}' not found in config"
         distributions = {}
         for distribution in self.config[key]['probabilities']:
-            assert 'id' in distribution, f'id not found in {key}'
+            assert 'id' in distribution, f"'id' not found in '{key}'"
             _id = distribution['id']
-            assert 'distribution' in distribution, f'distribution not found in distrbution {_id} of {key}'
-            assert 'distribution_kwargs' in distribution, f'distribution_kwargs not found in distribution {_id} of {key}'
+            assert 'distribution' in distribution, f"'distribution' not found in distrbution '{_id}' of '{key}'"
+            assert 'distribution_kwargs' in distribution, f"'distribution_kwargs' not found in distribution '{_id}' of '{key}'"
             distribution_name = distribution['distribution']
             distribution_kwargs = distribution['distribution_kwargs']
             distribution, distribution_kwargs = get_scipy_distribution(
-                distribution_name, **distribution_kwargs, is_discrete=True
+                distribution_name, is_discrete, **distribution_kwargs
             )
             distributions[_id] = {'distribution': distribution, 'kwargs': distribution_kwargs}
         return distributions
@@ -530,18 +561,40 @@ class SupplyGenerator(SupplySaver):
         Returns:
             Any: The sampled value from the distribution.
         """
-        assert 'days' in self.config[key], f'days not found in {key}'
+        assert 'days' in self.config[key], f"'days' not found in '{key}'"
         # Get the day of the week in the format 'Monday', 'Tuesday', etc
         day_of_week = date.strftime('%A')
-        assert day_of_week in self.config[key]['days'], f'{day_of_week} not found in days of {key}'
+        assert day_of_week in self.config[key]['days'], f"'{day_of_week}' not found in days of '{key}'"
         distribution_day_of_week = self.config[key]['days'][day_of_week]
         assert distribution_day_of_week in distributions, \
-            f'distribution {distribution_day_of_week} not found in distributions of {key}'
+            f"distribution '{distribution_day_of_week}' not found in distributions of '{key}'"
         return distributions[distribution_day_of_week]['distribution'].rvs(
             **distributions[distribution_day_of_week]['kwargs']
         )
 
-    def _sample_from_config(self, key: str, id: Union[str, None] = None) -> Any:
+    def _sample_factor_from_config(self, key: str, factor: str, id: Union[str, None] = None) -> float:
+        """
+        Sample a factor from the configuration for the given key and id.
+
+        Args:
+            key (str): The key in the configuration to sample from.
+            factor (str): The factor to sample.
+            id (Union[str, None], optional): The id of the item to sample. Defaults to None.
+        
+        Returns:
+            float: The sampled factor value.
+        """
+        assert key in self.config, f"'{key}' not found in config"
+        factor = factor + '_factor'
+        assert factor in self.config[key], f"'{factor}' not found in '{key}'"
+        if not id:
+            return self.config[key][factor]
+        if id not in self.config[key][factor]:
+            assert 'default' in self.config[key][factor], f"'{id}' and 'default' factors not found in '{factor}' of '{key}'"
+            id = 'default'
+        return self.config[key][factor][id]
+        
+    def _sample_probabilities_from_config(self, key: str, id: Union[str, None] = None) -> Any:
         """
         Sample an item from the configuration probabilities for the given key.
 
@@ -555,11 +608,11 @@ class SupplyGenerator(SupplySaver):
             Any: The sampled item from the configuration.
         """
         if id:
-            assert id in self.config[key]['probabilities'], f'{id} not found in {key}'
+            assert id in self.config[key]['probabilities'], f"'{id}' not found in '{key}'"
             items = list(self.config[key]['probabilities'][id].keys())
             probabilities = list(self.config[key]['probabilities'][id].values())
         else:
-            assert key in self.config, f'{key} not found in config'
+            assert key in self.config, f"'{key}' not found in config"
             items = list(self.config[key]['probabilities'].keys())
             probabilities = list(self.config[key]['probabilities'].values())
         
@@ -569,21 +622,27 @@ class SupplyGenerator(SupplySaver):
             probabilities = [1 / len(items)] * len(items)
         
         sampled_item = np.random.choice(items, p=probabilities)
-        assert sampled_item in getattr(self, key), f'{sampled_item} not found in {key}'
+        assert sampled_item in getattr(self, key), f"'{sampled_item}' not found in '{key}'"
         return getattr(self, key)[sampled_item]
 
-    def _sample_scipy_distribution_from_config(self, key: str, date: datetime.date) -> Union[np.int64, np.float64]:
+    def _sample_scipy_distribution_from_config(
+        self,
+        key: str,
+        date: datetime.date,
+        is_discrete: bool
+    ) -> Union[np.int64, np.float64]:
         """
         Sample a value from a SciPy distribution based on the configuration probabilities.
 
         Args:
             key (str): The key in the configuration to sample from.
             date (datetime.date): The date to use for sampling.
+            is_discrete (bool): Whether the distribution is discrete or continuous.
 
         Returns:
             Union[np.int64, np.float64]: The sampled value from the distribution.
         """
-        distributions = self._get_distributions_for_key(key)
+        distributions = self._get_distributions_for_key(key, is_discrete)
         sampled_value = self._sample_distribution_by_date(key, distributions, date)
         return sampled_value
 
@@ -666,15 +725,19 @@ class SupplyGenerator(SupplySaver):
 
 
 if __name__ == '__main__':
-    path_config_supply = 'configs/supply_generator/supply_data_new.yaml'
+    path_config_supply = 'configs/supply_generator/supply_data.yaml'
     path_config_generator = 'configs/supply_generator/config.yaml'
     generator = SupplyGenerator.from_yaml(path_config_supply, path_config_generator)
     print('Config:', generator.config)
     date = generator._generate_date()
     print('Random date:', date)
-    print('Random line:', generator._generate_line())
+    line, sampled_line = generator._generate_line()
+    print('Random line:', line)
     tsp = generator._generate_tsp()
     print('Random TSP:', tsp)
-    print('Random time slot:', repr(generator._generate_time_slot(date)))
-    print('Random rolling stock:', generator._generate_rolling_stock(tsp))
+    timeslot = generator._generate_time_slot(date)
+    print('Random time slot:', repr(timeslot))
+    rolling_stock = generator._generate_rolling_stock(tsp)
+    print('Random rolling stock:', rolling_stock)
     print('TSP by ID:', generator._generate_tsp(tsp_id=tsp.id))
+    print('Prices:', generator._generate_prices(date, sampled_line, tsp, timeslot, rolling_stock))

@@ -756,50 +756,46 @@ seat:
   hard_type: 1
   soft_type: 1
 - id: '2'
-  name: Básico
-  hard_type: 2
-  soft_type: 1
-- id: '3'
   name: Elige
-  hard_type: 3
+  hard_type: 2
   soft_type: 1
 rollingStock:
   - id: 1
-    name: "Talgo 350 - A"
+    name: 'Talgo 350 - A'
     seats:
       - hard_type: 1
         quantity: 50
       - hard_type: 2
         quantity: 250
   - id: 2
-    name: "Talgo 350 - B"
+    name: 'Talgo 350 - B'
     seats:
       - hard_type: 1
         quantity: 50
       - hard_type: 2
         quantity: 250
   - id: 3
-    name: "Talgo 350 - C"
+    name: 'Talgo 350 - C'
     seats:
       - hard_type: 1
         quantity: 50
       - hard_type: 2
         quantity: 250
   - id: 4
-    name: "Talgo 200 - A"
+    name: 'Talgo 200 - A'
     seats:
       - hard_type: 2
         quantity: 200
   - id: 5
-    name: "Talgo 200 - B"
+    name: 'Talgo 200 - B'
     seats:
       - hard_type: 2
         quantity: 200
 trainServiceProvider:
   - id: 1
-    name: "Renfe"
+    name: 'Renfe'
     rolling_stock: [1, 2, 3, 4, 5]
   - id: 2
-    name: "Ouigo"
+    name: 'Ouigo'
     rolling_stock: [1, 2, 3, 4, 5]
 service: []
