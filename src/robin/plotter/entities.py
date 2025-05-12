@@ -16,6 +16,7 @@ from loguru import logger
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
 from matplotlib.colors import ListedColormap
+from matplotlib.lines import Line2D
 from matplotlib.patches import Polygon as MplPolygon
 from matplotlib.ticker import FuncFormatter, MultipleLocator
 from pathlib import Path
@@ -455,7 +456,6 @@ class KernelPlotter:
                 linewidths=1.5,
                 color=service_color[service.id],
                 zorder=5,
-                label='Departure station'
             )
 
             # Plot arrival marker
@@ -468,7 +468,6 @@ class KernelPlotter:
                 linewidths=1.5,
                 color=service_color[service.id],
                 zorder=5,
-                label='Arrival station'
             )
 
             # Plot marker for stations in between
@@ -502,7 +501,15 @@ class KernelPlotter:
                      fontweight='bold', fontsize=24, pad=20)
         ax.set_xlabel('Time (HH:MM)', fontsize=18)
         ax.set_ylabel('Stations', fontsize=18)
-        ax.legend()
+        departure_station = Line2D([], [], marker='^', linestyle='None',
+                                   markerfacecolor='black', markeredgecolor='black', label='Departure Station')
+        arrival_station = Line2D([], [], marker='s', linestyle='None',
+                                 markerfacecolor='black', markeredgecolor='black', label='Arrival Station')
+        intermediate_station = Line2D([], [], marker='o', linestyle='None',
+                                      markerfacecolor='black', markeredgecolor='black', label='Intermediate Station')
+        handles, labels = ax.get_legend_handles_labels()
+        handles += [departure_station, arrival_station, intermediate_station]
+        ax.legend(handles=handles)
         ax.xaxis.set_major_locator(MultipleLocator(60))
         ax.xaxis.set_major_formatter(FuncFormatter(self._get_time_label))
         plt.setp(ax.get_xticklabels(), rotation=70, ha='right', fontsize=20)
