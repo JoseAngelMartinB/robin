@@ -122,8 +122,7 @@ class DataLoader:
             origin, destination = pair
             trip_id = service_id.split('_')[0]
             date = '-'.join(service_id.split('_')[1].split('-')[:-1])
-            departure_time = start_time + datetime.timedelta(minutes=line.timetable[origin][1])
-            departure_time = timedelta_to_str(departure_time)
+            departure_time = timedelta_to_str(start_time)
             sub_service_id = f'{trip_id}_{date}-{departure_time}'
             match_service = self.prices['service_id'] == sub_service_id
             match_origin = self.prices['origin'] == origin
