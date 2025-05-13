@@ -47,6 +47,8 @@ class DriverManager:
         driver_options = Options()
         driver_options.add_argument('--disable-extensions')
         driver_options.add_argument('--headless')
+        driver_options.add_argument('--no-sandbox')
+        driver_options.add_argument('--disable-dev-shm-usage')
         self.driver = webdriver.Chrome(options=driver_options)
         self.stations_df = stations_df
         self.allowed_train_types = allowed_train_types
