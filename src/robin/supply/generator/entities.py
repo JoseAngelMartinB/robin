@@ -41,18 +41,27 @@ class Segment:
 class ServiceScheduler:
     """
     Schedule services on shared corridors, ensuring no conflicts given a safety headway.
+
+    Attributes:
+        services (List[Service]): List of already scheduled services.
+        graphs (Dict[str, nx.Graph]): Graphs representing corridors for each service.
+        segments_cache (Dict[str, List[Segment]]): Cache for segments of each service.
+        edge_index (Dict[Tuple[Station, Station], List[Segment]]): Index of segments by edges.
+        without_conflicts (bool): Whether to check for conflicts when adding new services.
     """
-    def __init__(self, services: List[Service]):
+    def __init__(self, services: List[Service], without_conflicts: bool = True):
         """
         Initialize with a list of pre-existing services, build internal indexes.
 
         Args:
             services (List[Service]): Already scheduled services.
+            without_conflicts (bool): Whether to check for conflicts when adding new services. Defaults to True.
         """
         self.services: List[Service] = services
         self.graphs: Dict[str, nx.Graph] = {}
         self.segments_cache: Dict[str, List[Segment]] = {}
         self.edge_index: Dict[Tuple[Station, Station], List[Segment]] = defaultdict(list)
+        self.without_conflicts: bool = without_conflicts
 
         for service in services:
             self._add_service_to_index(service)
@@ -88,16 +97,17 @@ class ServiceScheduler:
             List[Segment]: one Segment per consecutive station pair.
         """
         segments: List[Segment] = []
-        stops = service.line.stations  # ordered travel stops
+        stops = service.line.stations
 
         for u, v in zip(stops, stops[1:]):
             # Get the detailed station‐by‐station path between stops
             subpath = nx.shortest_path(graph, u, v, weight='weight')
 
-            # Build cumulative distance list along subpath
-            dists = [0.0]
-            for a, b in zip(subpath, subpath[1:]):
-                dists.append(dists[-1] + geodesic(a.coordinates, b.coordinates).kilometers)
+            # Build a cumulative distance list along subpath
+            distances = [0.0]
+            for origin_station, destination_station in zip(subpath, subpath[1:]):
+                distance_between_stations = geodesic(origin_station.coordinates, destination_station.coordinates)
+                distances.append(distances[-1] + distance_between_stations.kilometers)
 
             # Compute datetime at departure and arrival
             midnight = datetime.time.min
@@ -106,7 +116,7 @@ class ServiceScheduler:
             departure_time = datetime.datetime.combine(service.date, midnight) + departure_delta
             arrival_time = datetime.datetime.combine(service.date, midnight) + arrival_delta
 
-            time_at = ServiceScheduler._make_time_interpolator(subpath, dists, departure_time, arrival_time)
+            time_at = ServiceScheduler._make_time_interpolator(subpath, distances, departure_time, arrival_time)
             segments.append(Segment(service_idx=service.id, path=subpath, time_at=time_at))
         return segments
 
@@ -183,7 +193,7 @@ class ServiceScheduler:
         Raises:
             ServiceWithConflicts: if the new service conflicts with existing ones.
         """
-        if not self.is_feasible(new_service):
+        if not self.is_feasible(new_service) and self.without_conflicts:
             raise ServiceWithConflicts
         self.services.append(new_service)
         self._add_service_to_index(new_service)
@@ -251,6 +261,8 @@ class SupplyGenerator(SupplySaver):
         tsps (Mapping[str, TSP]): Mapping of TSP id to TSP object.
         services (List[Service]): List of Service objects.
         config (Mapping[str, Any]): Configuration mapping for the generator.
+        service_scheduler (ServiceScheduler): Service scheduler for managing service conflicts.
+        without_conflicts (bool): Whether to generate services without conflicts. Defaults to True.
     """
 
     def __init__(
@@ -291,6 +303,12 @@ class SupplyGenerator(SupplySaver):
         self.tsps = tsps
         self.services = services
         self.config = config
+        self.without_conflicts = True
+        self.service_scheduler: ServiceScheduler = ServiceScheduler(
+            services=[],
+            without_conflicts=self.without_conflicts
+        )
+
 
     @classmethod
     def from_yaml(
@@ -515,6 +533,8 @@ class SupplyGenerator(SupplySaver):
             prices = self._generate_prices(date, sampled_line, tsp, time_slot, rolling_stock)
             service_id = self._generate_service_id()
             service = Service(service_id, date, line, tsp, time_slot, rolling_stock, prices)
+            if not self.without_conflicts:
+                break
             feasible = self.service_scheduler.is_feasible(service, safety_gap)
             retries += 1
             if retries > max_retry:
@@ -654,7 +674,8 @@ class SupplyGenerator(SupplySaver):
         seed: Union[int, None] = None,
         progress_bar: bool = True,
         safety_gap: int = SAFETY_GAP,
-        max_retry: int = MAX_RETRY
+        max_retry: int = MAX_RETRY,
+        without_conflicts: bool = True
     ) -> List[Service]:
         """
         Generate a list of services.
@@ -671,6 +692,7 @@ class SupplyGenerator(SupplySaver):
             progress_bar (bool, optional): Whether to show a progress bar. Defaults to True.
             safety_gap (int, optional): Safety gap of the segments in minutes. Defaults to 10.
             max_retry (int, optional): Maximum number of retries to generate a feasible service. Defaults to 500.
+            without_conflicts (bool, optional): Whether to generate services without conflicts. Defaults to True.
 
         Returns:
             List[Service]: List of generated Service objects.
@@ -692,7 +714,8 @@ class SupplyGenerator(SupplySaver):
 
         # Generate services
         self.services: List[Service] = []
-        self.service_scheduler = ServiceScheduler([])
+        self.without_conflicts = without_conflicts
+        self.service_scheduler = ServiceScheduler(services=[], without_conflicts=self.without_conflicts)
         for tsp_id, count in n_services_by_tsp.items():
             iterator = range(count)
             tsp_id_str = tsp_id if tsp_id else 'all'
