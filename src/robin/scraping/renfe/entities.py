@@ -749,8 +749,8 @@ class RenfeScraper:
                 new_df_prices = self.driver.scrape_prices(origin_id=origin, destination_id=destination, date=date)
                 if new_df_prices.empty:
                     logger.warning(f'No prices found for {origin} - {destination} on {date}. Skipping...')
-                    continue
-                df_prices = pd.concat([df_prices, new_df_prices], ignore_index=True)
+                else:
+                    df_prices = pd.concat([df_prices, new_df_prices], ignore_index=True)
                 date += datetime.timedelta(days=1)
 
         self._save_df(
@@ -794,8 +794,8 @@ class RenfeScraper:
             new_df_trips = self.driver.scrape_trips(origin_id=origin_id, destination_id=destination_id, date=date)
             if new_df_trips.empty:
                 logger.warning(f'No trips found for {origin_id} - {destination_id} on {date}. Skipping...')
-                continue
-            df_trips = pd.concat([df_trips, new_df_trips], ignore_index=True)
+            else:
+                df_trips = pd.concat([df_trips, new_df_trips], ignore_index=True)
             date += datetime.timedelta(days=1)
 
         if df_trips.empty:
