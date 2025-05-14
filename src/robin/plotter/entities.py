@@ -61,9 +61,9 @@ class KernelPlotter:
             ax.scatter([], [], marker=marker, s=100, edgecolors='black', linewidths=1.5, color='white', label=label)
 
     def _assign_services_to_paths(
-            self,
-            services: List[Service],
-            paths_dict: Mapping[int, Tuple[Station, ...]]
+         self,
+         services: List[Service],
+        paths_dict: Mapping[int, Tuple[Station, ...]]
     ) -> Dict[int, List[str]]:
         """
         Determine which services travel along each path by matching edges.
@@ -87,9 +87,9 @@ class KernelPlotter:
         return mapping
 
     def _build_service_schedule(
-            self,
-            services: List[Service],
-            station_positions: Mapping[Station, float]
+        self,
+        services: List[Service],
+        station_positions: Mapping[Station, float]
     ) -> Dict[str, Dict[Station, Tuple[int, int]]]:
         """
         Build arrival/departure minute offsets for each service at each station.
@@ -114,9 +114,9 @@ class KernelPlotter:
         return schedule
 
     def _compute_normalized_positions(
-            self,
-            paths_dict: Mapping[int, Tuple[Station, ...]],
-            scale_max: int = 1000
+        self,
+        paths_dict: Mapping[int, Tuple[Station, ...]],
+        scale_max: int = 1000
     ) -> Dict[int, Dict[Station, float]]:
         """
         Compute and normalize cumulative distances for each path.
@@ -139,12 +139,60 @@ class KernelPlotter:
             positions[idx] = {st: (pos / max_dist) * scale_max for st, pos in cum.items()}
         return positions
 
+    def _configure_marey_axes(
+        self,
+        ax: plt.Axes,
+        station_positions: Mapping[Station, float],
+        min_x: int,
+        max_x: int,
+        title: str
+    ) -> None:
+        """
+        Configure common axes properties for a Marey chart.
+
+        Args:
+            ax (plt.Axes): Axes to configure.
+            station_positions (Mapping[Station, float]): Station y-positions.
+            min_x (int): Minimum x-axis bound.
+            max_x (int): Maximum x-axis bound.
+            title (str): Title for the plot.
+        """
+        # Style spines
+        for side in ('top', 'right', 'bottom', 'left'):
+            spine = ax.spines[side]
+            spine.set_visible(True)
+            spine.set_linewidth(1.0)
+            spine.set_color('#A9A9A9')
+
+        # Ticks and labels
+        ax.tick_params(axis='both', which='major', labelsize=16)
+        y_positions = list(station_positions.values())
+        ax.set_yticks(y_positions)
+        ax.set_yticklabels([station.name for station in station_positions.keys()], fontsize=16)
+
+        # Grid
+        ax.grid(True, color='#A9A9A9', alpha=0.3, linestyle='-', linewidth=1.0, zorder=1)
+
+        # Axis limits
+        x_range = max_x - min_x
+        ax.set_xlim(-(min_x + 0.03 * x_range), max_x + 0.03 * x_range)
+
+        # Title and axis labels
+        ax.set_title(title, fontweight='bold', fontsize=24, pad=20)
+        ax.set_xlabel('Time (HH:MM)', fontsize=18)
+        ax.set_ylabel('Stations', fontsize=18)
+
+        # X-axis formatting
+        ax.xaxis.set_major_locator(MultipleLocator(60))
+        ax.xaxis.set_major_formatter(FuncFormatter(self._get_time_label))
+        plt.setp(ax.get_xticklabels(), rotation=70, ha='right', fontsize=20)
+
     def _draw_safety_overlay(
-            self,
-            ax: plt.Axes,
-            schedule_times: Mapping[Station, List[int]],
-            station_positions: Mapping[Station, float],
-            safety_gap: int
+        self,
+        ax: plt.Axes,
+        schedule_times: Mapping[Station, List[int]],
+        station_positions: Mapping[Station, float],
+        safety_gap: int
     ) -> List[Polygon]:
         """
         Create and add safety polygons between consecutive station stops.
@@ -180,8 +228,8 @@ class KernelPlotter:
         return polygons
 
     def _enumerate_unique_paths(
-            self,
-            corridors: Set[Corridor]
+        self,
+        corridors: Set[Corridor]
     ) -> Mapping[int, Tuple[Station, ...]]:
         """
         Enumerate and index each unique path across corridors.
@@ -398,11 +446,15 @@ class KernelPlotter:
 
     @staticmethod
     def _highlight_intersections(
-            polygons: List[Polygon],
-            ax: plt.Axes
+        polygons: List[Polygon],
+        ax: plt.Axes
     ) -> None:
         """
         Detect overlaps between polygons and highlight intersections, skipping non-area geometries.
+
+        Args:
+            polygons (List[Polygon]): List of polygons to check for intersections.
+            ax (plt.Axes): Matplotlib axes to draw on.
         """
         for i, p1 in enumerate(polygons):
             for p2 in polygons[i + 1:]:
@@ -426,18 +478,18 @@ class KernelPlotter:
 
     @staticmethod
     def _make_safety_polygon(
-            dep_time: int,
-            arr_time: int,
-            y1: float,
-            y2: float,
-            gap: int
+        departure_time: int,
+        arrival_time: int,
+        y1: float,
+        y2: float,
+        gap: int
     ) -> Polygon:
         """
         Create a rectangular polygon around a segment for safety margin.
 
         Args:
-            dep_time (int): departure minute.
-            arr_time (int): arrival minute.
+            departure_time (int): departure minute.
+            arrival_time (int): arrival minute.
             y1 (float): position of departure station.
             y2 (float): position of arrival station.
             gap (int): safety gap in minutes.
@@ -446,20 +498,20 @@ class KernelPlotter:
             Polygon: safety area polygon.
         """
         return Polygon([
-            (dep_time - gap, y1),
-            (arr_time - gap, y2),
-            (arr_time + gap, y2),
-            (dep_time + gap, y1)
+            (departure_time - gap, y1),
+            (arrival_time - gap, y2),
+            (arrival_time + gap, y2),
+            (departure_time + gap, y1)
         ])
 
     def _plot_path_marey(
-            self,
-            services: List[Service],
-            station_positions: Mapping[Station, float],
-            safety_gap: int,
-            save_path: Optional[str],
-            path_idx: int,
-            markers: Mapping[str, Mapping[str, str]]
+        self,
+        services: List[Service],
+        station_positions: Mapping[Station, float],
+        safety_gap: int,
+        save_path: Optional[str],
+        path_idx: int,
+        markers: Mapping[str, Mapping[str, str]]
     ) -> None:
         """
         Render Marey chart for a single path.
@@ -505,29 +557,10 @@ class KernelPlotter:
 
         self._highlight_intersections(all_polygons, ax)
         self._add_markers_to_legend(markers, ax)
-
-        for side in ('top', 'right', 'bottom', 'left'):
-            spine = ax.spines[side]
-            spine.set_visible(True)
-            spine.set_linewidth(1.0)
-            spine.set_color('#A9A9A9')
-        # TODO: Use auxiliar method to set the properties of the axes
-        ax.tick_params(axis='both', which='major', labelsize=16)
-        ax.set_yticks(list(station_positions.values()))
-        ax.set_yticklabels([s.name for s in station_positions.keys()], fontsize=16)
-        ax.grid(True, color='#A9A9A9', alpha=0.3, linestyle='-', linewidth=1.0, zorder=1)
-        # self._set_ax_properties()
-        ax.set_xlim(min_x, max_x)
-        ax.set_title(
-            f"{list(station_positions.keys())[0].name} - "f"{list(station_positions.keys())[-1].name}",
-            fontweight='bold', fontsize=24, pad=20
-        )
-        ax.set_xlabel('Time (HH:MM)', fontsize=18)
-        ax.set_ylabel('Stations', fontsize=18)
-        ax.legend()
-        ax.xaxis.set_major_locator(MultipleLocator(60))
-        ax.xaxis.set_major_formatter(FuncFormatter(self._get_time_label))
-        plt.setp(ax.get_xticklabels(), rotation=70, ha='right', fontsize=20)
+        start_station = next(iter(station_positions.keys()))
+        end_station = list(station_positions.keys())[-1]
+        title = f"{start_station.name} - {end_station.name}"
+        self._configure_marey_axes(ax, station_positions, min_x, max_x, title)
         plt.tight_layout()
         self._show_plot(fig, f'{save_path}{path_idx}.pdf')
 
@@ -583,12 +616,12 @@ class KernelPlotter:
         self._show_plot(fig=fig, save_path=save_path)
 
     def _plot_service_line(
-            self,
-            ax: plt.Axes,
-            service: Service,
-            schedule_times: Mapping[Station, List[int]],
-            station_positions: Mapping[Station, float],
-            color: str
+        self,
+        ax: plt.Axes,
+        service: Service,
+        schedule_times: Mapping[Station, List[int]],
+        station_positions: Mapping[Station, float],
+        color: str
     ) -> None:
         """
         Plot the path line with markers for intermediate stations.
@@ -611,13 +644,13 @@ class KernelPlotter:
         )
 
     def _plot_service_markers(
-            self,
-            ax: plt.Axes,
-            service: Service,
-            schedule_times: Mapping[Station, List[int]],
-            station_positions: Mapping[Station, float],
-            color: str,
-            markers: Mapping[str, Mapping[str, str]]
+        self,
+        ax: plt.Axes,
+        service: Service,
+        schedule_times: Mapping[Station, List[int]],
+        station_positions: Mapping[Station, float],
+        color: str,
+        markers: Mapping[str, Mapping[str, str]]
     ) -> None:
         """
         Plot departure and arrival markers for a service.
@@ -797,10 +830,10 @@ class KernelPlotter:
             fig.savefig(save_path, format='pdf', dpi=300, bbox_inches='tight', transparent=True)
 
     def _update_time_bounds(
-            self,
-            schedule_times: Mapping[Station, Tuple[int, int]],
-            min_x: int,
-            max_x: int
+        self,
+        schedule_times: Mapping[Station, Tuple[int, int]],
+        min_x: int,
+        max_x: int
     ) -> Tuple[int, int]:
         """
         Update the minimum and maximum time bounds based on schedule times.
