@@ -23,7 +23,7 @@ from functools import cache
 from geopy.distance import geodesic
 from loguru import logger
 from tqdm import tqdm
-from typing import Any, Callable, Dict, List, Mapping, Union, Tuple
+from typing import Any, Callable, Dict, List, Mapping, Set, Union, Tuple
 
 
 @dataclass
@@ -221,30 +221,50 @@ class ServiceScheduler:
                 ServiceScheduler.build_graph({dest: branches.get(dest, [])}, graph)
         return graph
 
-    def is_feasible(self, new_service: Service, safety_gap: int = SAFETY_GAP) -> bool:
+    def find_conflicts(self, new_service: Service, safety_gap: int, early_stop: bool = False) -> Set[str]:
+        """
+        Find all services that conflict with a new service.
+
+        Args:
+            new_service (Service): service to schedule.
+            safety_gap (int): required headway in minutes.
+            early_stop (bool): if True, return the first conflicting service index.
+
+        Returns:
+            Set[str]: a set of service ids that conflict with the new service.
+        """
+        corridor_id = new_service.line.corridor.id
+        if corridor_id not in self.graphs:
+            self.graphs[corridor_id] = ServiceScheduler.build_graph(
+                new_service.line.corridor.tree
+            )
+        graph = self.graphs[corridor_id]
+        new_segments = self._build_segments_for_service(graph, new_service)
+
+        conflicts: set[str] = set()
+        for seg1 in new_segments:
+            for edge in seg1.edges:
+                for seg2 in self.edge_index.get(edge, []):
+                    if self._segments_conflict(seg1, seg2, safety_gap):
+                        if early_stop:
+                            return {seg2.service_idx}
+                        conflicts.add(seg2.service_idx)
+        return conflicts
+
+    def is_feasible(self, new_service: Service, safety_gap: int = SAFETY_GAP, early_stop: bool = True) -> bool:
         """
         Determine if adding a new service would conflict with existing ones.
 
         Args:
             new_service (Service): proposed service to check.
             safety_gap (int): required headway in minutes (default global SAFETY_GAP).
+            early_stop (bool): if True, stop at the first conflict found.
 
         Returns:
             bool: True if no conflict is detected; False otherwise.
         """
-        corridor_id = new_service.line.corridor.id
-        if corridor_id not in self.graphs:
-            self.graphs[corridor_id] = ServiceScheduler.build_graph(new_service.line.corridor.tree)
-        graph = self.graphs[corridor_id]
-
-        # Compute the new service’s segments
-        new_segments = self._build_segments_for_service(graph, new_service)
-        for segment_1 in new_segments:  # Check each new segment against indexed old ones on the same edges
-            for edge in segment_1.edges:
-                for segment_2 in self.edge_index.get(edge, []):
-                    if self._segments_conflict(segment_1, segment_2, safety_gap):
-                        return False
-        return True
+        conflicts = self.find_conflicts(new_service, safety_gap, early_stop)
+        return not conflicts
 
 
 class SupplyGenerator(SupplySaver):
