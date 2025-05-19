@@ -5,8 +5,8 @@ import os
 import pandas as pd
 
 from robin.scraping.renfe.constants import (
-    ALLOWED_RENFE_SERVICES, DEFAULT_PATIENCE, MAIN_MENU_URL, ONE_DAY,
-    PRICES_URL, RENFE_TSP, RENFE_STATIONS_CSV, SAVE_PATH, SCHEDULE_URL
+    ALLOWED_RENFE_SERVICES, DEFAULT_PATIENCE, MAIN_MENU_URL, MAX_ATTEMPTS,
+    ONE_DAY, PRICES_URL, RENFE_TSP, RENFE_STATIONS_CSV, SAVE_PATH, SCHEDULE_URL
 )
 from robin.scraping.renfe.exceptions import NotAvailableStationsException
 from robin.scraping.renfe.utils import time_str_to_minutes, time_to_datetime, time_to_minutes
@@ -714,7 +714,8 @@ class RenfeScraper:
         init_date: datetime.date = None,
         range_days: int = 1,
         df_trips: pd.DataFrame = None,
-        save_path: str = SAVE_PATH
+        save_path: str = SAVE_PATH,
+        max_attempts: int = MAX_ATTEMPTS
     ) -> pd.DataFrame:
         """
         Scrapes the Renfe website for the prices of services between two stations.
@@ -727,6 +728,7 @@ class RenfeScraper:
             df_trips (pd.DataFrame): DataFrame containing the scraped trips. If None, it will scrape only the prices
                 between the origin and destination stations.
             save_path (str): Path to save the scraped data.
+            max_attempts (int): Maximum number of attempts to scrape prices.
         
         Returns:
             pd.DataFrame: DataFrame containing the scraped prices.
@@ -746,11 +748,17 @@ class RenfeScraper:
             date = init_date
             for _ in range(range_days):
                 logger.info(f'Scraping prices for {origin} - {destination} on {date}')
-                new_df_prices = self.driver.scrape_prices(origin_id=origin, destination_id=destination, date=date)
-                if new_df_prices.empty:
-                    logger.warning(f'No prices found for {origin} - {destination} on {date}. Skipping...')
-                else:
-                    df_prices = pd.concat([df_prices, new_df_prices], ignore_index=True)
+                attempt = 0
+                while attempt < max_attempts:
+                    new_df_prices = self.driver.scrape_prices(origin_id=origin, destination_id=destination, date=date)
+                    if new_df_prices.empty:
+                        logger.warning(f'No prices found for {origin} - {destination} on {date}. Attempt {attempt}/{max_attempts}.')
+                        attempt += 1
+                    else:
+                        df_prices = pd.concat([df_prices, new_df_prices], ignore_index=True)
+                        break
+                if attempt == max_attempts:
+                    logger.error(f'Failed to scrape prices for {origin} - {destination} on {date} after {max_attempts} attempts.')
                 date += datetime.timedelta(days=1)
 
         self._save_df(
@@ -770,7 +778,8 @@ class RenfeScraper:
         destination_id: str,
         init_date: datetime.date,
         range_days: int = 1,
-        save_path: str = SAVE_PATH
+        save_path: str = SAVE_PATH,
+        max_attempts: int = MAX_ATTEMPTS
     ) -> pd.DataFrame:
         """
         Scrapes the Renfe website for the trips between two stations.
@@ -781,6 +790,7 @@ class RenfeScraper:
             init_date (datetime.date): Initial date to start scraping.
             range_days (int): Number of days to scrape.
             save_path (str): Path to save the scraped data.
+            max_attempts (int): Maximum number of attempts to scrape trips.
 
         Returns:
             Tuple[pd.DataFrame, pd.DataFrame]: DataFrame containing the scraped trips and scraped stops.
@@ -791,11 +801,17 @@ class RenfeScraper:
         df_trips = pd.DataFrame()
         for _ in range(range_days):
             logger.info(f'Scraping trips for {origin_id} - {destination_id} on {date}')
-            new_df_trips = self.driver.scrape_trips(origin_id=origin_id, destination_id=destination_id, date=date)
-            if new_df_trips.empty:
-                logger.warning(f'No trips found for {origin_id} - {destination_id} on {date}. Skipping...')
-            else:
-                df_trips = pd.concat([df_trips, new_df_trips], ignore_index=True)
+            attempt = 0
+            while attempt < max_attempts:
+                new_df_trips = self.driver.scrape_trips(origin_id=origin_id, destination_id=destination_id, date=date)
+                if new_df_trips.empty:
+                    logger.warning(f'No trips found for {origin_id} - {destination_id} on {date}. Skipping...')
+                    attempt += 1
+                else:
+                    df_trips = pd.concat([df_trips, new_df_trips], ignore_index=True)
+                    break
+            if attempt == max_attempts:
+                logger.error(f'Failed to scrape trips for {origin_id} - {destination_id} on {date} after {max_attempts} attempts.')
             date += datetime.timedelta(days=1)
 
         if df_trips.empty:
