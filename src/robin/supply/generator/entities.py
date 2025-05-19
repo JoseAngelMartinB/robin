@@ -28,14 +28,25 @@ from typing import Any, Callable, Dict, List, Mapping, Set, Union, Tuple
 
 @dataclass
 class Segment:
-    service_idx: str
+    """
+    A segment represents a part of a service's route, including the stations path and timing information.
+
+    Attributes:
+        service_id (str): ID of the service this segment belongs to.
+        path (List[Station]): List of stations in the segment.
+        time_at (Callable[[Station], datetime.datetime]): Function to compute the time at a given station.
+        edges (List[Tuple[Station, Station]]): List of edges in the segment.
+    """
+    service_id: str
     path: List[Station]
-    time_at: Callable[[Station], datetime]
+    time_at: Callable[[Station], datetime.datetime]
     edges: List[Tuple[Station, Station]] = field(init=False)
 
     def __post_init__(self):
-        # Precompute the edges based on the path
-        self.edges = [(self.path[i], self.path[i+1]) for i in range(len(self.path) - 1)]
+        """
+        Post-initialization to compute edges based on the path.
+        """
+        self.edges = [(self.path[i], self.path[i + 1]) for i in range(len(self.path) - 1)]
 
 
 class ServiceScheduler:
@@ -44,64 +55,64 @@ class ServiceScheduler:
 
     Attributes:
         services (List[Service]): List of already scheduled services.
-        graphs (Dict[str, nx.Graph]): Graphs representing corridors for each service.
+        corridor_graphs (Dict[str, nx.Graph]): Graphs representing corridors for each service.
         segments_cache (Dict[str, List[Segment]]): Cache for segments of each service.
         edge_index (Dict[Tuple[Station, Station], List[Segment]]): Index of segments by edges.
         without_conflicts (bool): Whether to check for conflicts when adding new services.
     """
-    def __init__(self, services: List[Service], without_conflicts: bool = True):
+
+    def __init__(self, services: List[Service], without_conflicts: bool = True) -> None:
         """
         Initialize with a list of pre-existing services, build internal indexes.
 
         Args:
             services (List[Service]): Already scheduled services.
-            without_conflicts (bool): Whether to check for conflicts when adding new services. Defaults to True.
+            without_conflicts (bool, optional): Whether to check for conflicts when
+                adding new services. Defaults to True.
         """
-        self.services: List[Service] = services
-        self.graphs: Dict[str, nx.Graph] = {}
-        self.segments_cache: Dict[str, List[Segment]] = {}
-        self.edge_index: Dict[Tuple[Station, Station], List[Segment]] = defaultdict(list)
-        self.without_conflicts: bool = without_conflicts
+        self.services = services
+        self.corridor_graphs = {}
+        self.segments = {}
+        self.edges_index = defaultdict(list)
+        self.without_conflicts = without_conflicts
 
         for service in services:
             self._add_service_to_index(service)
 
-    def _add_service_to_index(self, service: Service):
+    def _add_service_to_index(self, service: Service) -> None:
         """
-        Index one service, build its segments and populate the edge index.
+        Index a service by its edges and build segments for it.
 
         Args:
-            service (Service): Service to index.
+            service (Service): Service to index and build segments for.
         """
-        service_id = service.line.corridor.id
-        if service_id not in self.graphs:
-            self.graphs[service_id] = ServiceScheduler.build_graph(service.line.corridor.tree)
-        graph = self.graphs[service_id]
-
-        segments = self._build_segments_for_service(graph, service)  # Compute all motion segments for this service
-        self.segments_cache[service.id] = segments
-
-        for segment in segments:  # For each segment, index its edges
+        corridor_id = service.line.corridor.id
+        if corridor_id not in self.corridor_graphs:
+            self.corridor_graphs[corridor_id] = ServiceScheduler.build_graph(service.line.corridor.tree)
+        graph = self.corridor_graphs[corridor_id]
+        segments = self._build_segments_for_service(graph, service)
+        self.segments[service.id] = segments
+        for segment in segments:
             for edge in segment.edges:
-                self.edge_index[edge].append(segment)
+                self.edges_index[edge].append(segment)
 
-    def _build_segments_for_service(self, graph: nx.Graph, service: Service) -> List[Segment]:
+    def _build_segments_for_service(self, corridor_graph: nx.Graph, service: Service) -> List[Segment]:
         """
-        Split a service’s route into motion segments with per-edge timing.
+        Split a service's route into motion segments with per-edge timing.
 
         Args:
-            graph (nx.Graph): corridor graph for shortest‐path lookups.
-            service (Service): service containing date, schedule, and line.
+            corridor_graph (nx.Graph): Graph representing a corridor for shortest-path lookups.
+            service (Service): Service to build segments for.
 
         Returns:
-            List[Segment]: one Segment per consecutive station pair.
+            List[Segment]: List of Segment representing the service's route.
         """
         segments: List[Segment] = []
         stops = service.line.stations
 
-        for u, v in zip(stops, stops[1:]):
+        for origin_station, destination_station in zip(stops, stops[1:]):
             # Get the detailed station‐by‐station path between stops
-            subpath = nx.shortest_path(graph, u, v, weight='weight')
+            subpath = nx.shortest_path(corridor_graph, origin_station, destination_station, weight='weight')
 
             # Build a cumulative distance list along subpath
             distances = [0.0]
@@ -111,13 +122,13 @@ class ServiceScheduler:
 
             # Compute datetime at departure and arrival
             midnight = datetime.time.min
-            departure_delta: datetime.timedelta = service.schedule[u.id][1]  # Departure offset from midnight
-            arrival_delta: datetime.timedelta = service.schedule[v.id][0]  # Arrival offset from midnight
+            departure_delta = service.schedule[origin_station.id][1]
+            arrival_delta = service.schedule[destination_station.id][0]
             departure_time = datetime.datetime.combine(service.date, midnight) + departure_delta
             arrival_time = datetime.datetime.combine(service.date, midnight) + arrival_delta
 
             time_at = ServiceScheduler._make_time_interpolator(subpath, distances, departure_time, arrival_time)
-            segments.append(Segment(service_idx=service.id, path=subpath, time_at=time_at))
+            segments.append(Segment(service_id=service.id, path=subpath, time_at=time_at))
         return segments
 
     @staticmethod
@@ -126,72 +137,75 @@ class ServiceScheduler:
         distances: List[float],
         departure: datetime,
         arrival: datetime
-    ) -> Callable[[Station], datetime]:
+    ) -> Callable[[Station], datetime.datetime]:
         """
         Create a function mapping any station on path to its interpolated time.
 
         Args:
-            path (List[Station]): ordered stations along the subpath.
-            distances (List[float]): cumulative km at each index in path.
-            departure (datetime): exact departure datetime from first station.
-            arrival (datetime): exact arrival datetime at last station.
+            path (List[Station]): Ordered stations along the subpath.
+            distances (List[float]): Cumulative km at each index in path.
+            departure (datetime.datetime): Exact departure datetime from first station.
+            arrival (datetime.datetime): Exact arrival datetime at last station.
 
         Returns:
-            Callable[[Station], datetime]: maps a station to its interpolated time.
+            Callable[[Station], datetime]: Function to compute time at a given station.
         """
-        total = distances[-1] or 1.0  # Prevent division by zero
+        # Avoid division by zero if path is empty
+        total = distances[-1] or 1.0
         duration = arrival - departure
-        def time_at(station: Station) -> datetime:
+        def time_at(station: Station) -> datetime.datetime:
             """
             Compute the time at a given station by linear interpolation.
 
             Args:
-                station (Station): station to interpolate.
+                station (Station): Station to interpolate.
 
             Returns:
-                datetime: interpolated time at the station.
+                datetime.datetime: Interpolated time at the given station.
             """
-            path_index = path.index(station)  # Find the station position
+            path_index = path.index(station)
             fraction = distances[path_index] / total
-            return departure + fraction * duration  # Linear interpolation
+            return departure + fraction * duration
         return time_at
 
     @staticmethod
-    def _segments_conflict(s1: Segment, s2: Segment, safety_headway: int) -> bool:
+    def _segments_conflict(segment1: Segment, segment2: Segment, safety_headway: int) -> bool:
         """
         Check if two segments overlap in space and violate headway in time.
 
         Args:
-            s1 (Segment): first service segment.
-            s2 (Segment): second service segment.
-            safety_headway (int): minimum minutes separation required.
+            segment1 (Segment): First service segment.
+            segment2 (Segment): Second service segment.
+            safety_headway (int): Minimum minutes separation required.
 
         Returns:
             bool: True if there is a conflict, False otherwise.
         """
-        common_edges = set(s1.edges) & set(s2.edges)
+        common_edges = set(segment1.edges) & set(segment2.edges)
         if not common_edges:
             return False
-        for (origin_station, destination_station) in common_edges:  # For each overlapping edge, compare start/end times
+        # For each overlapping edge, compare start and end times
+        for (origin_station, destination_station) in common_edges:
             # Time when each enters and exits the edge
-            t1_start, t1_end = s1.time_at(origin_station), s1.time_at(destination_station)
-            t2_start, t2_end = s2.time_at(origin_station), s2.time_at(destination_station)
+            t1_start, t1_end = segment1.time_at(origin_station), segment1.time_at(destination_station)
+            t2_start, t2_end = segment2.time_at(origin_station), segment2.time_at(destination_station)
             diff_start = (t2_start - t1_start).total_seconds() / 60
-            diff_end = (t2_end   - t1_end  ).total_seconds() / 60
+            diff_end = (t2_end - t1_end).total_seconds() / 60
             # Conflict if different order or gaps below double headway
-            if diff_start * diff_end <= 0 or abs(diff_start) <= 2*safety_headway or abs(diff_end) <= 2*safety_headway:
+            double_headway = 2 * safety_headway
+            if diff_start * diff_end <= 0 or abs(diff_start) <= double_headway or abs(diff_end) <= double_headway:
                 return True
         return False
 
     def add_service(self, new_service: Service) -> None:
         """
-        Add a new service after verifying feasibility; update all indexes.
+        Add a new service to the scheduler, checking for conflicts.
 
         Args:
-            new_service (Service): the service to schedule.
+            new_service (Service): Service to schedule.
 
         Raises:
-            ServiceWithConflicts: if the new service conflicts with existing ones.
+            ServiceWithConflicts: If the new service conflicts with existing ones.
         """
         if not self.is_feasible(new_service) and self.without_conflicts:
             raise ServiceWithConflicts
@@ -199,69 +213,68 @@ class ServiceScheduler:
         self._add_service_to_index(new_service)
 
     @staticmethod
-    def build_graph(tree: Mapping[Station, Mapping], graph: nx.Graph = None) -> nx.Graph:
+    def build_graph(tree: Mapping[Station, Mapping], corridor_graph: nx.Graph = None) -> nx.Graph:
         """
-        Recursively convert a station‐tree into a weighted NetworkX graph.
+        Recursively convert a station-tree into a weighted NetworkX graph.
 
         Args:
-            tree (Mapping[Station, Mapping): corridor tree with stations as keys and branches as values.
-            graph (nx.Graph, optional): existing graph to add edges into. Creates new if None.
+            tree (Mapping[Station, Mapping): Corridor tree with stations as keys and branches as values.
+            corridor_graph (nx.Graph, optional): Existing graph representing a corridor
+                to add edges into. Defaults to None.
 
         Returns:
-            nx.Graph: undirected graph with weighted edges representing distances.
+            nx.Graph: Undirected graph with weighted edges representing distances in km.
         """
-        if graph is None:
-            graph = nx.Graph()
+        if corridor_graph is None:
+            corridor_graph = nx.Graph()
         for origin, branches in tree.items():
-            for dest in branches:
-                # Compute distance between station coords
-                km = geodesic(origin.coordinates, dest.coordinates).kilometers
-                graph.add_edge(origin, dest, weight=km)
-                # Recurse into each branch's subtree
-                ServiceScheduler.build_graph({dest: branches.get(dest, [])}, graph)
-        return graph
+            for destination in branches:
+                km = geodesic(origin.coordinates, destination.coordinates).kilometers
+                corridor_graph.add_edge(origin, destination, weight=km)
+                ServiceScheduler.build_graph({destination: branches.get(destination, [])}, corridor_graph)
+        return corridor_graph
 
     def find_conflicts(self, new_service: Service, safety_gap: int, early_stop: bool = False) -> Set[str]:
         """
         Find all services that conflict with a new service.
 
         Args:
-            new_service (Service): service to schedule.
-            safety_gap (int): required headway in minutes.
-            early_stop (bool): if True, return the first conflicting service index.
+            new_service (Service): Service to schedule.
+            safety_gap (int): Required headway in minutes.
+            early_stop (bool, optional): If True, stop at the first conflict found. Defaults to False.
 
         Returns:
-            Set[str]: a set of service ids that conflict with the new service.
+            Set[str]: Set of service ids that conflict with the new service.
         """
         corridor_id = new_service.line.corridor.id
-        if corridor_id not in self.graphs:
-            self.graphs[corridor_id] = ServiceScheduler.build_graph(
+        if corridor_id not in self.corridor_graphs:
+            self.corridor_graphs[corridor_id] = ServiceScheduler.build_graph(
                 new_service.line.corridor.tree
             )
-        graph = self.graphs[corridor_id]
+        graph = self.corridor_graphs[corridor_id]
         new_segments = self._build_segments_for_service(graph, new_service)
 
         conflicts: set[str] = set()
-        for seg1 in new_segments:
-            for edge in seg1.edges:
-                for seg2 in self.edge_index.get(edge, []):
-                    if self._segments_conflict(seg1, seg2, safety_gap):
+        for segment1 in new_segments:
+            for edge in segment1.edges:
+                for segment2 in self.edges_index.get(edge, []):
+                    if self._segments_conflict(segment1, segment2, safety_gap):
                         if early_stop:
-                            return {seg2.service_idx}
-                        conflicts.add(seg2.service_idx)
+                            return {segment2.service_idx}
+                        conflicts.add(segment2.service_idx)
         return conflicts
 
     def is_feasible(self, new_service: Service, safety_gap: int = SAFETY_GAP, early_stop: bool = True) -> bool:
         """
-        Determine if adding a new service would conflict with existing ones.
+        Check if a new service can be scheduled without conflicts.
 
         Args:
-            new_service (Service): proposed service to check.
-            safety_gap (int): required headway in minutes (default global SAFETY_GAP).
-            early_stop (bool): if True, stop at the first conflict found.
+            new_service (Service): Service to check for conflicts.
+            safety_gap (int, optional): Required headway in minutes. Defaults to 10.
+            early_stop (bool, optional): If True, stop at the first conflict found. Defaults to True.
 
         Returns:
-            bool: True if no conflict is detected; False otherwise.
+            bool: True if the service can be scheduled without conflicts, False otherwise.
         """
         conflicts = self.find_conflicts(new_service, safety_gap, early_stop)
         return not conflicts
@@ -281,8 +294,8 @@ class SupplyGenerator(SupplySaver):
         tsps (Mapping[str, TSP]): Mapping of TSP id to TSP object.
         services (List[Service]): List of Service objects.
         config (Mapping[str, Any]): Configuration mapping for the generator.
+        without_conflicts (bool): Whether to generate services without conflicts.
         service_scheduler (ServiceScheduler): Service scheduler for managing service conflicts.
-        without_conflicts (bool): Whether to generate services without conflicts. Defaults to True.
     """
 
     def __init__(
@@ -296,6 +309,7 @@ class SupplyGenerator(SupplySaver):
         tsps: Mapping[str, TSP],
         services: List[Service],
         config: Mapping[str, Any],
+        without_conflicts: bool = True
     ) -> None:
         """
         Initialize a SupplyGenerator with the given parameters.
@@ -312,6 +326,7 @@ class SupplyGenerator(SupplySaver):
             tsps (Mapping[str, TSP]): Mapping of TSP id to TSP object.
             services (List[Service]): List of Service objects.
             config (Mapping[str, Any]): Configuration mapping for the generator.
+            without_conflicts (bool, optional): Whether to generate services without conflicts. Defaults to True.
         """
         SupplySaver.__init__(self, services)
         self.stations = stations
@@ -323,12 +338,8 @@ class SupplyGenerator(SupplySaver):
         self.tsps = tsps
         self.services = services
         self.config = config
-        self.without_conflicts = True
-        self.service_scheduler: ServiceScheduler = ServiceScheduler(
-            services=[],
-            without_conflicts=self.without_conflicts
-        )
-
+        self.without_conflicts = without_conflicts
+        self.service_scheduler = ServiceScheduler(services=[], without_conflicts=without_conflicts)
 
     @classmethod
     def from_yaml(
@@ -765,22 +776,3 @@ class SupplyGenerator(SupplySaver):
         random.seed(seed)
         np.random.seed(seed)
         os.environ['PYTHONHASHSEED'] = str(seed)
-
-
-if __name__ == '__main__':
-    path_config_supply = 'configs/supply_generator/supply_data.yaml'
-    path_config_generator = 'configs/supply_generator/config.yaml'
-    generator = SupplyGenerator.from_yaml(path_config_supply, path_config_generator)
-    print('Config:', generator.config)
-    date = generator._generate_date()
-    print('Random date:', date)
-    line, sampled_line = generator._generate_line()
-    print('Random line:', line)
-    tsp = generator._generate_tsp()
-    print('Random TSP:', tsp)
-    timeslot = generator._generate_time_slot(date)
-    print('Random time slot:', repr(timeslot))
-    rolling_stock = generator._generate_rolling_stock(tsp)
-    print('Random rolling stock:', rolling_stock)
-    print('TSP by ID:', generator._generate_tsp(tsp_id=tsp.id))
-    print('Prices:', generator._generate_prices(date, sampled_line, tsp, timeslot, rolling_stock))
