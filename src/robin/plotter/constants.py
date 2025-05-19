@@ -13,6 +13,12 @@ MARKERS = {
     'intermediate': {'marker': 'o', 'label': 'Intermediate Station'}
 }
 
+# Number of minutes in a day
+MINUTES_IN_A_DAY = 24 * 60
+
+# Maximum scale for normalization in Marey charts
+SCALE_MAX = 1000
+
 # Safety gap in minutes
 SAFETY_GAP = 10
 
