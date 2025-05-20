@@ -446,7 +446,7 @@ class DriverManager:
             url (str): URL to request.
             find_by (str): By method to find the element.
             find_value (str): Value to find the element.
-            patience (int, optional): Patience in seconds. Defaults to 25.
+            patience (int, optional): Patience in seconds. Defaults to 20.
 
         Return:
             Union[WebElement, None]: WebElement with the prices or None if the prices are not loaded.
@@ -748,8 +748,8 @@ class RenfeScraper:
             date = init_date
             for _ in range(range_days):
                 logger.info(f'Scraping prices for {origin} - {destination} on {date}')
-                attempt = 0
-                while attempt < max_attempts:
+                attempt = 1
+                while attempt <= max_attempts:
                     new_df_prices = self.driver.scrape_prices(origin_id=origin, destination_id=destination, date=date)
                     if new_df_prices.empty:
                         logger.warning(f'No prices found for {origin} - {destination} on {date}. Attempt {attempt}/{max_attempts}.')
@@ -801,8 +801,8 @@ class RenfeScraper:
         df_trips = pd.DataFrame()
         for _ in range(range_days):
             logger.info(f'Scraping trips for {origin_id} - {destination_id} on {date}')
-            attempt = 0
-            while attempt < max_attempts:
+            attempt = 1
+            while attempt <= max_attempts:
                 new_df_trips = self.driver.scrape_trips(origin_id=origin_id, destination_id=destination_id, date=date)
                 if new_df_trips.empty:
                     logger.warning(f'No trips found for {origin_id} - {destination_id} on {date}. Skipping...')
