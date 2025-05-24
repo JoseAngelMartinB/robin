@@ -303,8 +303,8 @@ class KernelPlotter:
         }
 
         # Labels corresponding to each status:
-        # Note: The order of labels is based on the original mapping:
-        #  key 3 -> label[0], key 0 -> label[1], key 2 -> label[2], key 1 -> label[3]
+        # NOTE: The order of labels is based on the original mapping:
+        # key 3 -> label[0], key 0 -> label[1], key 2 -> label[2], key 1 -> label[3]
         labels = [
             'Found a useful ticket but was unable to purchase.',
             'Purchased a ticket different from the most beneficial.',
@@ -506,7 +506,7 @@ class KernelPlotter:
         arrival_time: int,
         y1: float,
         y2: float,
-        gap: int
+        safety_gap: int
     ) -> Polygon:
         """
         Create a safety polygon between two stations.
@@ -516,14 +516,14 @@ class KernelPlotter:
             arrival_time (int): Arrival time in minutes.
             y1 (float): Position of the first station.
             y2 (float): Position of the second station.
-            gap (int): Safety gap in minutes.
+            safety_gap (int): Safety gap in minutes.
 
         Returns:
             Polygon: Safety polygon between two stations.
         """
         return Polygon([
-            (departure_time - gap, y1), (arrival_time - gap, y2),
-            (arrival_time + gap, y2), (departure_time + gap, y1)
+            (departure_time - safety_gap, y1), (arrival_time - safety_gap, y2),
+            (arrival_time + safety_gap, y2), (departure_time + safety_gap, y1)
         ])
 
     def _plot_path_marey(
