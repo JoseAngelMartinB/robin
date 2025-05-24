@@ -116,8 +116,8 @@ class ServiceScheduler:
 
             # Build a cumulative distance list along subpath
             distances = [0.0]
-            for origin_station, destination_station in zip(subpath, subpath[1:]):
-                distance_between_stations = geodesic(origin_station.coordinates, destination_station.coordinates)
+            for origin_substation, destination_substation in zip(subpath, subpath[1:]):
+                distance_between_stations = geodesic(origin_substation.coordinates, destination_substation.coordinates)
                 distances.append(distances[-1] + distance_between_stations.kilometers)
 
             # Compute datetime at departure and arrival
@@ -260,8 +260,8 @@ class ServiceScheduler:
                 for segment2 in self.edges_index.get(edge, []):
                     if self._segments_conflict(segment1, segment2, safety_gap):
                         if early_stop:
-                            return {segment2.service_idx}
-                        conflicts.add(segment2.service_idx)
+                            return {segment2.service_id}
+                        conflicts.add(segment2.service_id)
         return conflicts
 
     def is_feasible(self, new_service: Service, safety_gap: int = SAFETY_GAP, early_stop: bool = True) -> bool:
