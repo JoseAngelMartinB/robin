@@ -9,7 +9,6 @@ from robin.scraping.exceptions import InvalidHardTypesException
 from robin.scraping.constants import (
     PRICES_COLUMNS, RENFE_STATIONS_PATH, SPANISH_CORRIDOR_PATH, TIME_SLOT_SIZE
 )
-from robin.scraping.utils import timedelta_to_str
 from robin.supply.entities import Station, TimeSlot, Corridor, Line, Seat, RollingStock, TSP, Service, Supply
 from robin.supply.utils import get_time
 
@@ -100,12 +99,7 @@ class DataLoader:
         line_id = stops['service_id'].values[0].split('_')[0]
         return Line(line_id, f'Line {line_id}', corridor, line_data)
 
-    def _get_trip_prices(
-        self,
-        service_id: str,
-        line: Line,
-        start_time: datetime.timedelta
-    ) -> Dict[Tuple[str, str], Dict[Seat, float]]:
+    def _get_trip_prices(self, service_id: str, line: Line) -> Dict[Tuple[str, str], Dict[Seat, float]]:
         """
         Get trip prices for a given service ID, line and start time.
 
@@ -120,11 +114,7 @@ class DataLoader:
         total_prices = {}
         for pair in line.pairs:
             origin, destination = pair
-            trip_id = service_id.split('_')[0]
-            date = '-'.join(service_id.split('_')[1].split('-')[:-1])
-            departure_time = timedelta_to_str(start_time)
-            sub_service_id = f'{trip_id}_{date}-{departure_time}'
-            match_service = self.prices['service_id'] == sub_service_id
+            match_service = self.prices['service_id'] == service_id
             match_origin = self.prices['origin'] == origin
             match_destination = self.prices['destination'] == destination
             condition = match_service & match_origin & match_destination
@@ -271,9 +261,7 @@ class DataLoader:
         )
         trips['rolling_stock'] = trips['service_id'].apply(lambda _: self.rolling_stocks['1'])
         trips['prices'] = trips['service_id'].apply(
-            lambda service_id: self._get_trip_prices(
-                service_id=service_id, line=trips['line'].values[0], start_time=get_time(service_id.split('-')[-1].replace('.', ':') + ':00')
-            )
+            lambda service_id: self._get_trip_prices(service_id=service_id, line=trips['line'].values[0])
         )
         trips['service'] = trips.apply(
             lambda service: Service(
