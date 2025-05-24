@@ -1,11 +1,13 @@
 """Utils for the plotter module."""
 
+import functools
 import networkx as nx
 
 from robin.supply.generator.entities import ServiceScheduler
 from robin.supply.entities import Station, Service
 
-from typing import Any, List, Set, Tuple
+from loguru import logger
+from typing import Any, Callable, List, Optional, Set, Tuple
 
 
 def get_edges_from_path(path: List[Station]) -> Set[Tuple[Station]]:
@@ -86,3 +88,51 @@ def shared_edges_between_services(path1: List[Station], path2: List[Station]) ->
     edges1 = get_edges_from_path(path1)
     edges2 = get_edges_from_path(path2)
     return edges1.intersection(edges2)
+
+
+def requires_config_supply(method) -> Callable:
+    """
+    Decorator to ensure that the method requires supply configuration.
+
+    Args:
+        method (Callable): The method to be decorated.
+    """
+    @functools.wraps(method)
+    def wrapper(self, *args, **kwargs) -> Optional[Callable]:
+        """
+        Wrapper function to check if supply configuration is available.
+
+        Args:
+            self: Instance of the class.
+            *args: Positional arguments for the method.
+            **kwargs: Keyword arguments for the method.
+        """
+        if not getattr(self, 'supply', None):
+            logger.error(f"Method '{method.__name__}' requires supply configuration. Please provide 'path_config_supply'.")
+            return
+        return method(self, *args, **kwargs)
+    return wrapper
+
+
+def requires_output_csv(method) -> Callable:
+    """
+    Decorator to ensure that the method requires output CSV data.
+
+    Args:
+        method (Callable): The method to be decorated.
+    """
+    @functools.wraps(method)
+    def wrapper(self, *args, **kwargs) -> Optional[Callable]:
+        """
+        Wrapper function to check if output CSV data is available.
+
+        Args:
+            self: Instance of the class.
+            *args: Positional arguments for the method.
+            **kwargs: Keyword arguments for the method.
+        """
+        if getattr(self, 'output', None) is None:
+            logger.error(f"Method '{method.__name__}' requires output CSV data. Please provide 'path_output_csv'.")
+            return
+        return method(self, *args, **kwargs)
+    return wrapper

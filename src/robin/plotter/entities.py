@@ -5,12 +5,11 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import textwrap
-import types
 
 from robin.plotter.constants import COLORS, DARK_GRAY, MARKERS, \
     MINUTES_IN_A_DAY, SCALE_MAX, SAFETY_GAP, STYLE, WHITE_SMOKE
 from robin.plotter.exceptions import NoFileProvided
-from robin.plotter.utils import infer_paths, shared_edges_between_services
+from robin.plotter.utils import infer_paths, shared_edges_between_services, requires_config_supply, requires_output_csv
 from robin.supply.entities import Station, Corridor, Service, Supply
 
 from collections import defaultdict
@@ -23,7 +22,7 @@ from matplotlib.patches import Polygon as MplPolygon
 from matplotlib.ticker import FuncFormatter, MultipleLocator
 from pathlib import Path
 from shapely.geometry import Polygon, MultiPolygon
-from typing import Any, Dict, List, Mapping, Optional, Set, Tuple, Union
+from typing import Any, Dict, List, Mapping, Optional, Set, Tuple
 
 
 class KernelPlotter:
@@ -44,32 +43,13 @@ class KernelPlotter:
             path_output_csv (str): Path to the CSV file containing kernel results.
             path_config_supply (Path): Path to the supply configuration YAML file.
         """
-        # TODO: Why do we want to block the methods? I think we can delete that
         if not path_output_csv and not path_config_supply:
             raise NoFileProvided
-
-        blocked_methods = []
         if path_output_csv:
             self.output = pd.read_csv(path_output_csv, dtype={'departure_station': str, 'arrival_station': str})
-        else:
-            self.output = None
-
         if path_config_supply:
             self.supply = Supply.from_yaml(path=path_config_supply)
             self.stations_dict = self.supply.get_stations_dict()
-        else:
-            self.supply = None
-            blocked_methods = ['plot_service_capacity']
-
-        if self.supply and not self.output:
-            blocked_methods = ['plot_demand_status', 'plot_seat_distribution', 'plot_service_capacity',
-                               'plot_tickets_by_date', 'plot_tickets_by_trip', 'plot_tickets_by_user']
-        elif not self.supply and self.output:
-            blocked_methods = ['plot_service_capacity', 'plot_marey_chart']
-
-        for method in blocked_methods:
-            self._block_method(method)
-
         self.colors = COLORS
         plt.style.use(STYLE)
 
@@ -111,19 +91,6 @@ class KernelPlotter:
                         matched.add(service.id)
                         break
         return service_path_mapping
-
-    def _block_method(self, name: str):
-        """
-        This method blocks the execution of a method by replacing it with a stub that raises an AttributeError.
-
-        Args:
-            name (str): Name of the method to block.
-        """
-        # TODO: I don't think this is needed, I think a decorator would be better
-        def _stub(*args, **kwargs):
-            logger.error(f"Method '{name}' not available in this context. Missing supply or output data.")
-            return
-        setattr(self, name, types.MethodType(_stub, self))
 
     def _build_service_schedule(
         self,
@@ -858,6 +825,7 @@ class KernelPlotter:
         times = [time for times in schedule_times.values() for time in times]
         return min(min_x, min(times)), max(max_x, max(times))
 
+    @requires_output_csv
     def plot_demand_status(self, ylim: Tuple[float, float] = None, save_path: str = None) -> None:
         """
         Plot the number of passengers attended based on their purchase status.
@@ -897,6 +865,7 @@ class KernelPlotter:
             ax.bar_label(ax.containers[i], labels=[f'{demand_data[status]} ({status_perc}%)'], padding=3)
         self._show_plot(fig=fig, save_path=save_path)
 
+    @requires_config_supply
     def plot_marey_chart(
         self,
         date: datetime.date,
@@ -935,6 +904,7 @@ class KernelPlotter:
                 markers=markers
             )
 
+    @requires_output_csv
     def plot_seat_distribution(self, save_path: str = None) -> None:
         """
         Plot a pie chart with the distribution of tickets sold by seat type.
@@ -954,6 +924,8 @@ class KernelPlotter:
         ax.legend(bbox_to_anchor=(0.2, 0.2))
         self._show_plot(fig=fig, save_path=save_path)
 
+    @requires_config_supply
+    @requires_output_csv
     def plot_service_capacity(self, service_id: str, save_path: str = None) -> None:
         """
         Plot the capacity of the service grouped by departure, arrival station, and purchase day.
@@ -977,6 +949,7 @@ class KernelPlotter:
             save_path=save_path
         )
 
+    @requires_output_csv
     def plot_tickets_by_date(self, ylim: Tuple[float, float] = None, save_path: str = None) -> None:
         """
         Plot the number of tickets sold by date.
@@ -1013,6 +986,8 @@ class KernelPlotter:
         ax.legend()
         self._show_plot(fig=fig, save_path=save_path)
 
+    @requires_config_supply
+    @requires_output_csv
     def plot_tickets_by_trip(
         self,
         seat_disaggregation: bool = False,
@@ -1038,6 +1013,7 @@ class KernelPlotter:
         ax.legend()
         self._show_plot(fig=fig, save_path=save_path)
 
+    @requires_output_csv
     def plot_tickets_by_user(self, save_path: str = None) -> None:
         """
         Plot the number of tickets sold by user type.
