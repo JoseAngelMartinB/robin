@@ -35,6 +35,7 @@ class KernelPlotter:
         stations_dict (Mapping[str, str]): Dictionary from station IDs to their names.
         colors (List[str]): List of plot colors.
     """
+
     def __init__(self, path_output_csv: str = None, path_config_supply: str = None) -> None:
         """
         Initialize KernelPlotter with CSV and supply configuration paths.
