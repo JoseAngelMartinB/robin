@@ -552,7 +552,7 @@ class KernelPlotter:
         title = f'{start_station.name} - {end_station.name}'
         self._configure_marey_axes(ax, station_positions, min_x, max_x, title)
         plt.tight_layout()
-        self._show_plot(fig, f'{save_path}{path_idx}.pdf')
+        self._show_plot(fig, f'{save_path}/{start_station.name}_{end_station.name}.pdf')
 
     def _plot_service_capacity(
         self,
