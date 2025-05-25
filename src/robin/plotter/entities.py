@@ -551,6 +551,7 @@ class KernelPlotter:
         end_station = list(station_positions.keys())[-1]
         title = f'{start_station.name} - {end_station.name}'
         self._configure_marey_axes(ax, station_positions, min_x, max_x, title)
+        ax.legend()
         plt.tight_layout()
         self._show_plot(fig, f'{save_path}/{start_station.name}_{end_station.name}.pdf')
 
