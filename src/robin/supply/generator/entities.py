@@ -285,15 +285,15 @@ class SupplyGenerator(SupplySaver):
     A SupplyGenerator is a class that generates supply entities based on configuration probabilities.
 
     Attributes:
-        stations (Mapping[str, Station]): Mapping of station id to Station object.
-        time_slots (Mapping[str, TimeSlot]): Mapping of time slot id to TimeSlot object.
-        corridors (Mapping[str, Corridor]): Mapping of corridor id to Corridor object.
-        lines (Mapping[str, Line]): Mapping of line id to Line object.
-        seats (Mapping[str, Seat]): Mapping of seat id to Seat object.
-        rolling_stocks (Mapping[str, RollingStock]): Mapping of rolling stock id to RollingStock object.
-        tsps (Mapping[str, TSP]): Mapping of TSP id to TSP object.
+        stations (Dict[str, Station]): Dictionary of station id to Station object.
+        time_slots (Dict[str, TimeSlot]): Dictionary of time slot id to TimeSlot object.
+        corridors (Dict[str, Corridor]): Dictionary of corridor id to Corridor object.
+        lines (Dict[str, Line]): Dictionary of line id to Line object.
+        seats (Dict[str, Seat]): Dictionary of seat id to Seat object.
+        rolling_stocks (Dict[str, RollingStock]): Dictionary of rolling stock id to RollingStock object.
+        tsps (Dict[str, TSP]): Dictionary of TSP id to TSP object.
         services (List[Service]): List of Service objects.
-        config (Mapping[str, Any]): Configuration mapping for the generator.
+        config (Dict[str, Any]): Configuration dictionary for the generator.
         without_conflicts (bool): Whether to generate services without conflicts.
         service_scheduler (ServiceScheduler): Service scheduler for managing service conflicts.
     """

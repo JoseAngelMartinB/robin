@@ -25,8 +25,8 @@ class DataLoader:
         stops (pd.Dataframe): DataFrame containing the stops data.
         prices (pd.Dataframe): DataFrame containing the prices data.
         renfe_stations (pd.Dataframe): DataFrame containing the Renfe stations data.
-        seat_components (Mapping[int, int]): Dictionary with seat components.
-        seat_quantity (Mapping[int, int]): Dictionary with seat quantity.
+        seat_components (Dict[int, int]): Dictionary with seat components.
+        seat_quantity (Dict[int, int]): Dictionary with seat quantity.
         seat_names (List[str]): List of seat names.
         spanish_corridor (Dict[str, List[str]]): Dictionary with Spanish corridor data.
         time_slot_size (int): Time slot size in minutes.
@@ -66,12 +66,12 @@ class DataLoader:
         self,
         seat_components: Mapping[int, int],
         seat_quantity: Mapping[int, int]
-    ) -> Tuple[Mapping[int, int], Mapping[int, int]]:
+    ) -> Tuple[Dict[int, int], Dict[int, int]]:
         """
         Check if hard types in seat components are present in seat quantity.
 
         Returns:
-            Tuple[Mapping[int, int], Mapping[int, int]]: Tuple of seat components and seat quantity.
+            Tuple[Dict[int, int], Dict[int, int]]: Tuple of seat components and seat quantity.
         
         Raises:
             InvalidHardTypesException: If hard types in seat components are not present in seat quantity

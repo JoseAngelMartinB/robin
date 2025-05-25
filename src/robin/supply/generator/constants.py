@@ -10,4 +10,4 @@ SAFETY_GAP = 10
 """Default safety gap in minutes of the segments when generating a service."""
 
 TIME_SLOT_SIZE = 10
-"""efault size of a time slot in minutes."""
+"""Default size of a time slot in minutes."""

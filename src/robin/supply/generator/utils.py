@@ -2,10 +2,10 @@
 
 import yaml
 
-from typing import Any, Mapping
+from typing import Any, Dict
 
 
-def read_yaml(path: str) -> Mapping[str, Any]:
+def read_yaml(path: str) -> Dict[str, Any]:
     """
     Read a YAML file and return its content.
 
@@ -13,7 +13,7 @@ def read_yaml(path: str) -> Mapping[str, Any]:
         path (str): Path to the YAML file.
 
     Returns:
-        Mapping[str, Any]: Content of the YAML file.
+        Dict[str, Any]: Content of the YAML file.
     """
     with open(path, 'r') as file:
         data = yaml.load(file, Loader=yaml.CSafeLoader)

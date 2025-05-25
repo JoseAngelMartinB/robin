@@ -1,6 +1,5 @@
 """Utils for the labs module."""
 
-import datetime
 import numpy as np
 import pandas as pd
 import re
@@ -24,7 +23,7 @@ def get_file_key(file: str) -> Tuple[int, ...]:
     return tuple(map(int, re.findall(pattern='\d+', string=file_stem)))
 
 
-def get_passenger_status(df: pd.DataFrame) -> Tuple[Mapping[int, int], List[str]]:
+def get_passenger_status(df: pd.DataFrame) -> Tuple[Dict[int, int], List[str]]:
     """
     Get number of attended passenger based on their purchase status.
 
@@ -32,7 +31,8 @@ def get_passenger_status(df: pd.DataFrame) -> Tuple[Mapping[int, int], List[str]
         df (pd.DataFrame): Dataframe with the information of the passengers.
 
     Returns:
-        Mapping[str, int]: Dictionary with the number of passengers attended based on their purchase status.
+        Tuple[Dict[int, int], List[str]]: Dictionary with number of attended passengers by status and
+            list of labels for the x-axis.
     """
     data = {
         3: df[df.best_service.isnull()].shape[0],

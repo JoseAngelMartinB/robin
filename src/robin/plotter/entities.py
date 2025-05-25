@@ -32,7 +32,7 @@ class KernelPlotter:
     Attributes:
         output (pd.DataFrame): Kernel results dataframe.
         supply (Supply): Supply object instance.
-        stations_dict (Mapping[str, str]): Dictionary from station IDs to their names.
+        stations_dict (Dict[str, str]): Dictionary from station IDs to their names.
         colors (List[str]): List of plot colors.
     """
 
@@ -229,7 +229,7 @@ class KernelPlotter:
             )
         return polygons
 
-    def _enumerate_unique_paths(self, corridors: Set[Corridor]) -> Mapping[int, Tuple[Station, ...]]:
+    def _enumerate_unique_paths(self, corridors: Set[Corridor]) -> Dict[int, Tuple[Station, ...]]:
         """
         Enumerate and index each unique path across corridors.
 
@@ -237,7 +237,7 @@ class KernelPlotter:
             corridors (Set[Corridor]): Corridors to extract paths from.
 
         Returns:
-            Dict[int, Tuple[Station, ...]]: Dict mapping path index to unique paths.
+            Dict[int, Tuple[Station, ...]]: Dictionary mapping unique path indices to station sequences.
         """
         unique = set(tuple(path) for corridor in corridors for path in corridor.paths)
         return {idx: path for idx, path in enumerate(unique)}

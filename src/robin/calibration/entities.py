@@ -19,7 +19,7 @@ from robin.supply.entities import Supply
 
 from pathlib import Path
 from sklearn.metrics import mean_squared_error
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any, Dict, List, Mapping, Tuple, Union
 
 
 class Calibration:
@@ -434,7 +434,7 @@ class Hyperparameters:
         trial: optuna.Trial,
         pattern: str,
         hyperparameter_name: str,
-        distribution_kwargs: Dict[str, float]
+        distribution_kwargs: Mapping[str, float]
     ) -> None:
         """
         Suggest Poisson distribution hyperparameters.
@@ -443,7 +443,7 @@ class Hyperparameters:
             trial (optuna.Trial): Optuna trial object.
             pattern (str): Name of the pattern.
             hyperparameter_name (str): Name of the hyperparameter.
-            distribution_kwargs (Dict[str, float]): Poisson distribution hyperparameters.
+            distribution_kwargs (Mapping[str, float]): Poisson distribution hyperparameters.
         """
         if distribution_kwargs.get('mu') is None:
             distribution_kwargs['mu'] = trial.suggest_float(
@@ -457,7 +457,7 @@ class Hyperparameters:
         trial: optuna.Trial,
         pattern: str,
         hyperparameter_name: str,
-        distribution_kwargs: Dict[str, float],
+        distribution_kwargs: Mapping[str, float],
     ) -> None:
         """
         Suggest normal distribution hyperparameters.
@@ -466,7 +466,7 @@ class Hyperparameters:
             trial (optuna.Trial): Optuna trial object.
             pattern (str): Name of the pattern.
             hyperparameter_name (str): Name of the hyperparameter.
-            distribution_kwargs (Dict[str, float]): Normal distribution hyperparameters.
+            distribution_kwargs (Mapping[str, float]): Normal distribution hyperparameters.
         """
         if distribution_kwargs.get('loc') is None:
             distribution_kwargs['loc'] = trial.suggest_float(
@@ -486,7 +486,7 @@ class Hyperparameters:
         trial: optuna.Trial,
         pattern: str,
         hyperparameter_name: str,
-        distribution_kwargs: Dict[str, float],
+        distribution_kwargs: Mapping[str, float],
     ) -> None:
         """
         Suggest randint distribution hyperparameters.
@@ -495,7 +495,7 @@ class Hyperparameters:
             trial (optuna.Trial): Optuna trial object.
             pattern (str): Name of the pattern.
             hyperparameter_name (str): Name of the hyperparameter.
-            distribution_kwargs (Dict[str, float]): Randint distribution hyperparameters.
+            distribution_kwargs (Mapping[str, float]): Randint distribution hyperparameters.
         """
         if distribution_kwargs.get('low') is None:
             distribution_kwargs['low'] = trial.suggest_int(
@@ -516,7 +516,7 @@ class Hyperparameters:
         distribution_name: str,
         pattern: str,
         hyperparameter_name: str,
-        distribution_kwargs: Dict[str, float]
+        distribution_kwargs: Mapping[str, float]
     ) -> None:
         """
         Suggest distribution hyperparameters.
@@ -526,7 +526,7 @@ class Hyperparameters:
             distribution_name (str): Name of the distribution.
             pattern (str): Name of the pattern.
             hyperparameter_name (str): Name of the hyperparameter.
-            distribution_kwargs (Dict[str, float]): Distribution hyperparameters.
+            distribution_kwargs (Mapping[str, float]): Distribution hyperparameters.
         """
         args = (trial, pattern, hyperparameter_name, distribution_kwargs)
         if distribution_name == 'poisson':
@@ -599,7 +599,7 @@ class Hyperparameters:
         self,
         trial: optuna.Trial,
         hyperparameter_name: str,
-        utility_dict: Dict[str, List[Dict[str, Union[int, None]]]],
+        utility_dict: Mapping[str, List[Mapping[str, Union[int, None]]]],
         low: int,
         high: int
     ) -> None:
@@ -609,7 +609,7 @@ class Hyperparameters:
         Args:
             trial (optuna.Trial): Optuna trial object.
             hyperparameter_name (str): Name of the hyperparameter.
-            utility_dict (Dict[str, List[Dict[str, Union[int, None]]]]): Utility hyperparameters.
+            utility_dict (Mapping[str, List[Mapping[str, Union[int, None]]]]): Utility hyperparameters.
             low (int): Low value for the utility.
             high (int): High value for the utility.
         """
@@ -639,14 +639,14 @@ class Hyperparameters:
         self,
         trial: optuna.Trial,
         penalty_name: str,
-        penalty_kwargs: Dict[str, Dict[str, Union[float, None]]]
+        penalty_kwargs: Mapping[str, Mapping[str, Union[float, None]]]
     ) -> None:
         """
         Suggest penalty hyperparameters.
         
         Args:
             trial (optuna.Trial): Optuna trial object.
-            penalty_kwargs (Dict[str, Dict[str, Union[float, None]]]): Penalty hyperparameters.
+            penalty_kwargs (Mapping[str, Mapping[str, Union[float, None]]]): Penalty hyperparameters.
         """
         for user_pattern, penalty_kwargs in penalty_kwargs.items():
             for beta, value in penalty_kwargs.items():

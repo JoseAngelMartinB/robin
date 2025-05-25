@@ -145,7 +145,7 @@ class Corridor:
     Attributes:
         id (str): Corridor ID.
         name (str): Corridor name.
-        tree (Mapping[Station, Mapping]): Tree of stations (with Station objects).
+        tree (Dict[Station, Dict]): Tree of stations (with Station objects).
         paths (List[List[Station]]): List of paths (list of stations).
         stations (Dict[str, Station]): Dictionary of stations (with Station IDs as keys).
     """
@@ -268,11 +268,11 @@ class Line:
         id (str): Line ID.
         name (str): Line name.
         corridor (Corridor): Corridor ID where the Line belongs to.
-        timetable (Mapping[str, Tuple[float, float]]): Dict with pairs of stations (origin, destination)
+        timetable (Dict[str, Tuple[float, float]]): Dictionary with pairs of stations (origin, destination)
             with (origin ID, destination ID) as keys, and (origin time, destination time) as values.
         stations (List[Station]): List of Stations being served by the Line.
         stations_ids (List[str]): List of Station IDs being served by the Line.
-        pairs (Mapping[Tuple[str, str], Tuple[Station, Station]]): Dict with pairs of stations (origin, destination)
+        pairs (Dict[Tuple[str, str], Tuple[Station, Station]]): Dictorionary with pairs of stations (origin, destination)
             with (origin ID, destination ID) as keys, and (origin Station, destination Station) as values.
     """
 
@@ -389,7 +389,7 @@ class RollingStock(object):
     Attributes:
         id (str): Rolling Stock ID.
         name (str): Rolling Stock name.
-        seats (Mapping[int, int]): Number of seats for each hard type.
+        seats (Dict[int, int]): Number of seats for each hard type.
         total_capacity (int): Total number of seats.
     """
 
@@ -493,23 +493,23 @@ class Service:
         line (Line): Line in which the service is provided.
         tsp (TSP): Train Service Provider which provides the service.
         time_slot (TimeSlot): Time Slot. Defines the start time of the service.
-        schedule (Mapping[str, Tuple[datetime.timedelta, datetime.timedelta]]): Absolute schedule of the service per station.
-        departure_time (Mapping[str, float]): Service departure time in hours per station.
-        arrival_time (Mapping[str, float]): Service arrival time in hours per station.
+        schedule (Dict[str, Tuple[datetime.timedelta, datetime.timedelta]]): Absolute schedule of the service per station.
+        departure_time (Dict[str, float]): Service departure time in hours per station.
+        arrival_time (Dict[str, float]): Service arrival time in hours per station.
         rolling_stock (RollingStock): Rolling Stock used in the service.
-        capacity_constraints (Mapping[Tuple[str, str], Mapping[int, int]]): Constrained capacity (limit seats available
+        capacity_constraints (Dict[Tuple[str, str], Dict[int, int]]): Constrained capacity (limit seats available
             between a specific pair of stations).
         lift_constraints (datetime.date): Date when capacity constraints are lifted.
-        prices (Mapping[Tuple[str, str], Mapping[Seat, float]]): Prices for each pair of stations and each Seat type.
-        seat_types (Mapping[str, Seat]): Seat types available in the service.
-        tickets_sold_seats (Mapping[Seat, int]): Number of seats sold for each Seat type.
-        tickets_sold_hard_types (Mapping[int, int]): Number of seats sold for each hard type.
-        tickets_sold_pair_seats (Mapping[Tuple[str, str], Dict[Seat, int]]): Number of seats sold for each pair of stations
+        prices (Dict[Tuple[str, str], Dict[Seat, float]]): Prices for each pair of stations and each Seat type.
+        seat_types (Dict[str, Seat]): Seat types available in the service.
+        tickets_sold_seats (Dict[Seat, int]): Number of seats sold for each Seat type.
+        tickets_sold_hard_types (Dict[int, int]): Number of seats sold for each hard type.
+        tickets_sold_pair_seats (Dict[Tuple[str, str], Dict[Seat, int]]): Number of seats sold for each pair of stations
             and each Seat types.
-        tickets_sold_pair_hard_types (Mapping[Tuple[str, str], Mapping[int, int]]): Number of seats sold for each pair of
+        tickets_sold_pair_hard_types (Dict[Tuple[str, str], Dict[int, int]]): Number of seats sold for each pair of
             stations and each hard types.
         total_profit (float): Total profit of the service.
-        profit_pair_seats (Mapping[Tuple[str, str], Mapping[Seat, float]]): Profit per pair of stations and each Seat type.
+        profit_pair_seats (Dict[Tuple[str, str], Dict[Seat, float]]): Profit per pair of stations and each Seat type.
     """
 
     def __init__(
@@ -563,12 +563,12 @@ class Service:
             pair: {hard_type: 0 for hard_type in self.rolling_stock.seats.keys()} for pair in self.line.pairs
         }
 
-    def _get_tickets_sold_pair_hard_type(self) -> Mapping[Tuple[str, str], Mapping[int, int]]:
+    def _get_tickets_sold_pair_hard_type(self) -> Dict[Tuple[str, str], Dict[int, int]]:
         """
         Private method to get the hard type tickets sold of the service.
 
         Returns:
-            Mapping[Tuple[str, str], Mapping[int, int]]: Hard type tickets sold of the service.
+            Dict[Tuple[str, str], Dict[int, int]]: Hard type tickets sold of the service.
         """
         tickets_sold_pair_hard_type = {}
         for pair in self.tickets_sold_pair_seats:
@@ -580,12 +580,12 @@ class Service:
                     tickets_sold_pair_hard_type[pair][seat.hard_type] += self.tickets_sold_pair_seats[pair][seat]
         return tickets_sold_pair_hard_type
 
-    def _get_absolute_schedule(self) -> Mapping[str, Tuple[datetime.timedelta, datetime.timedelta]]:
+    def _get_absolute_schedule(self) -> Dict[str, Tuple[datetime.timedelta, datetime.timedelta]]:
         """
         Private method to get the absolute schedule of the service per station.
 
         Returns:
-            Mapping[str, Tuple[datetime.timedelta, datetime.timedelta]]: Absolute schedule of the service per station.
+            Dict[str, Tuple[datetime.timedelta, datetime.timedelta]]: Absolute schedule of the service per station.
         """
         absolute_schedule = {}
         for station, (departure_time, arrival_time) in self.line.timetable.items():
@@ -1011,7 +1011,7 @@ class Supply:
         cls,
         service_line: Line,
         service_rolling_stock: RollingStock,
-        yaml_capacity_constraints: Mapping
+        yaml_capacity_constraints: Mapping[str, Any]
     ) -> Union[Dict, None]:
         """
         Private method to build a dict of capacity constraints from YAML data.
@@ -1049,7 +1049,7 @@ class Supply:
         cls,
         service_line: Line,
         seats: Mapping[str, Seat],
-        yaml_service_prices: Mapping
+        yaml_service_prices: Mapping[str, Any]
     ) -> Dict[Tuple[str, str], Dict[Seat, float]]:
         """
         Private method to build a dict of service prices from YAML data.
@@ -1151,13 +1151,12 @@ class Supply:
             )
         return services
 
-    def get_stations_dict(self) -> Mapping[str, str]:
+    def get_stations_dict(self) -> Dict[str, str]:
         """
         Get a dictionary of stations in the supply with the station id as key and the station name as value.
 
         Returns:
-            Mapping[str, str]: Dictionary of stations in the supply with
-            the station id as key and the station name as value.
+            Dict[str, str]: Dictionary of stations in the supply with the station id as key and the station name as value.
         """
         return {str(station.id): station.name for service in self.services for station in service.line.stations}
 
