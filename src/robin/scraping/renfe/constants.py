@@ -6,10 +6,13 @@ import importlib.resources
 ALLOWED_RENFE_SERVICES = ('AVE', 'AVLO', 'AVE INT', 'ALVIA', 'AVANT')
 
 # Default patience of the driver when waiting for an element to load
-DEFAULT_PATIENCE = 10
+DEFAULT_PATIENCE = 20
 
 # Renfe main menu URL (where it is listed the stations names)
 MAIN_MENU_URL = 'https://www.renfe.com/content/renfe/es/es/viajar/informacion-util/horarios/app-horarios.html'
+
+# Maximum number of attempts for the Renfe scraping
+MAX_ATTEMPTS = 3
 
 # Number of minutes in a day
 ONE_DAY = 24 * 60

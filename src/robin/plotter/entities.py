@@ -1,17 +1,28 @@
 """Entities for the plotter module."""
 
+import datetime
 import numpy as np
 import pandas as pd
+import seaborn as sns
 import textwrap
 
-from robin.plotter.constants import COLORS, DARK_GRAY, STYLE, WHITE_SMOKE
-from robin.supply.entities import Supply
+from robin.plotter.constants import COLORS, DARK_GRAY, MARKERS, \
+    MINUTES_IN_A_DAY, SCALE_MAX, SAFETY_GAP, STYLE, WHITE_SMOKE
+from robin.plotter.exceptions import NoFileProvided
+from robin.plotter.utils import infer_paths, shared_edges_between_services, requires_config_supply, requires_output_csv
+from robin.supply.entities import Station, Corridor, Service, Supply
 
+from collections import defaultdict
+from geopy.distance import geodesic
 from loguru import logger
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
+from matplotlib.colors import ListedColormap
+from matplotlib.patches import Polygon as MplPolygon
+from matplotlib.ticker import FuncFormatter, MultipleLocator
 from pathlib import Path
-from typing import Any, List, Mapping, Tuple, Union
+from shapely.geometry import Polygon, MultiPolygon
+from typing import Any, Dict, List, Mapping, Optional, Set, Tuple
 
 
 class KernelPlotter:
@@ -21,10 +32,11 @@ class KernelPlotter:
     Attributes:
         output (pd.DataFrame): Kernel results dataframe.
         supply (Supply): Supply object instance.
-        stations_dict (Mapping[str, str]): Dictionary from station IDs to their names.
+        stations_dict (Dict[str, str]): Dictionary from station IDs to their names.
         colors (List[str]): List of plot colors.
     """
-    def __init__(self, path_output_csv: str, path_config_supply: str) -> None:
+
+    def __init__(self, path_output_csv: str = None, path_config_supply: str = None) -> None:
         """
         Initialize KernelPlotter with CSV and supply configuration paths.
 
@@ -32,22 +44,205 @@ class KernelPlotter:
             path_output_csv (str): Path to the CSV file containing kernel results.
             path_config_supply (Path): Path to the supply configuration YAML file.
         """
-        self.output = pd.read_csv(path_output_csv, dtype={'departure_station': str, 'arrival_station': str})
-        self.supply = Supply.from_yaml(path=path_config_supply)
-        self.stations_dict = self._create_stations_dict()
+        if not path_output_csv and not path_config_supply:
+            raise NoFileProvided
+        if path_output_csv:
+            self.output = pd.read_csv(path_output_csv, dtype={'departure_station': str, 'arrival_station': str})
+        if path_config_supply:
+            self.supply = Supply.from_yaml(path=path_config_supply)
+            self.stations_dict = self.supply.get_stations_dict()
         self.colors = COLORS
         plt.style.use(STYLE)
 
-    def _create_stations_dict(self) -> Mapping[str, str]:
+    def _add_markers_to_legend(self, markers: Mapping[str, Mapping[str, str]], ax: plt.Axes) -> None:
         """
-        Create dictionary mapping station IDs to names.
+        Add legend entries for markers used in the plot.
+
+        Args:
+            marker (Mapping[str, Mapping[str, str]): Mapping of marker styles with marker as key and label as value.
+            ax (plt.Axes): Matplotlib axes to add the legend to.
+        """
+        for _, marker_data in markers.items():
+            marker = marker_data['marker']
+            label = marker_data['label']
+            ax.scatter([], [], marker=marker, s=100, edgecolors='black', linewidths=1.5, color='white', label=label)
+
+    def _assign_services_to_paths(
+        self,
+        services: List[Service],
+        paths_dict: Mapping[int, Tuple[Station, ...]]
+    ) -> Dict[int, List[str]]:
+        """
+        Classify services into paths based on shared edges.
+
+        Args:
+            services (List[Service]): Services to classify.
+            paths_dict (Mapping[int, Tuple[Station, ...]]): Candidate paths to classify services.
 
         Returns:
-            Mapping[str, str]: Dictionary mapping station IDs to names.
+            Dict[int, List[str]]: Path index to list of service IDs.
         """
-        return {str(station.id): station.name for service in self.supply.services for station in service.line.stations}
+        service_path_mapping: Mapping[int, List[str]] = defaultdict(list)
+        for service in services:
+            matched = set()
+            for idx, path in paths_dict.items():
+                for service_path in infer_paths(service):
+                    if shared_edges_between_services(service_path, path):
+                        service_path_mapping[idx].append(service.id)
+                        matched.add(service.id)
+                        break
+        return service_path_mapping
 
-    def _get_passenger_status(self) -> Tuple[Mapping[int, int], List[str]]:
+    def _build_service_schedule(
+        self,
+        services: List[Service],
+        station_positions: Mapping[Station, float]
+    ) -> Dict[str, Dict[Station, Tuple[int, int]]]:
+        """
+        Build a schedule for services with arrival and departure times as offsets in minutes.
+
+        Args:
+            services (List[Service]): List of services to build the schedule for.
+            station_positions (Mapping[Station, float]): Station positions for plotting.
+
+        Returns:
+            Dict[str, Dict[Station, Tuple[int, int]]]: Service ID to station times dictionary.
+        """
+        schedule = {}
+        for service in services:
+            base = service.time_slot.start.total_seconds() // 60
+            station_times = {}
+            for station, (arrival, departure) in zip(service.line.stations, service.line.timetable.values()):
+                if station in station_positions:
+                    arrival_offset = int(base + arrival)
+                    departure_offset = int(base + departure)
+                    station_times[station] = (arrival_offset, departure_offset)
+            schedule[service.id] = station_times
+        return schedule
+
+    def _compute_normalized_positions(
+        self,
+        paths_dict: Mapping[int, Tuple[Station, ...]],
+        scale_max: int = SCALE_MAX
+    ) -> Dict[int, Dict[Station, float]]:
+        """
+        Compute and normalize cumulative distances for each path.
+
+        Args:
+            paths_dict (Mapping[int, Tuple[Station, ...]]): Indexed station sequences.
+            scale_max (int, optional): Maximum scale for normalization. Defaults to SCALE_MAX.
+
+        Returns:
+            Dict[int, Dict[Station, float]]: Station to normalized position mapping per path.
+        """
+        positions = {}
+        for idx, path in paths_dict.items():
+            cumulative_distances = {path[0]: 0.0}
+            distance = 0.0
+            for origin_station, destination_station in zip(path, path[1:]):
+                distance += geodesic(origin_station.coordinates, destination_station.coordinates).kilometers
+                cumulative_distances[destination_station] = distance
+            max_distance = max(cumulative_distances.values()) or 1.0
+            positions[idx] = {
+                station: (position / max_distance) * scale_max for station, position in cumulative_distances.items()
+            }
+        return positions
+
+    def _configure_marey_axes(
+        self,
+        ax: plt.Axes,
+        station_positions: Mapping[Station, float],
+        min_x: int,
+        max_x: int,
+        title: str
+    ) -> None:
+        """
+        Configure common axes properties for a Marey chart.
+
+        Args:
+            ax (plt.Axes): Axes to configure.
+            station_positions (Mapping[Station, float]): Station y-positions.
+            min_x (int): Minimum x-axis bound.
+            max_x (int): Maximum x-axis bound.
+            title (str): Title for the plot.
+        """
+        # Style spines
+        for side in ('top', 'right', 'bottom', 'left'):
+            spine = ax.spines[side]
+            spine.set_visible(True)
+            spine.set_linewidth(1.0)
+            spine.set_color('#A9A9A9')
+
+        # Ticks and labels
+        ax.tick_params(axis='both', which='major', labelsize=16)
+        y_positions = list(station_positions.values())
+        ax.set_yticks(y_positions)
+        ax.set_yticklabels([station.name for station in station_positions.keys()], fontsize=16)
+
+        # Grid
+        ax.grid(True, color='#A9A9A9', alpha=0.3, linestyle='-', linewidth=1.0, zorder=1)
+
+        # Axis limits
+        x_range = max_x - min_x
+        ax.set_xlim(-(min_x + 0.03 * x_range), max_x + 0.03 * x_range)
+
+        # Title and axis labels
+        ax.set_title(title, fontweight='bold', fontsize=24, pad=20)
+        ax.set_xlabel('Time (HH:MM)', fontsize=18)
+        ax.set_ylabel('Stations', fontsize=18)
+
+        # X-axis formatting
+        ax.xaxis.set_major_locator(MultipleLocator(60))
+        ax.xaxis.set_major_formatter(FuncFormatter(self._get_time_label))
+        plt.setp(ax.get_xticklabels(), rotation=70, ha='right', fontsize=20)
+
+    def _draw_safety_overlay(
+        self,
+        ax: plt.Axes,
+        schedule_times: Mapping[Station, List[int]],
+        station_positions: Mapping[Station, float],
+        safety_gap: int
+    ) -> List[Polygon]:
+        """
+        Create and add safety polygons between consecutive station stops.
+
+        Args:
+            ax (plt.Axes): Matplotlib axes to draw on.
+            schedule_times (Mapping[Station, List[int]]): Times per station.
+            station_positions (Mapping[Station, float]): Station y-positions.
+            safety_gap (int): Safety gap in minutes.
+
+        Returns:
+            List[Polygon]: List of safety polygons created.
+        """
+        polygons: List[Polygon] = []
+        items = list(schedule_times.items())
+        for (station1, (_, departure1)), (station2, (arrival2, _)) in zip(items, items[1:]):
+            poly = self._make_safety_polygon(
+                departure_time=departure1, arrival_time=arrival2, y1=station_positions[station1],
+                y2=station_positions[station2], safety_gap=safety_gap
+            )
+            polygons.append(poly)
+            ax.add_patch(MplPolygon(
+                    list(poly.exterior.coords), closed=True, facecolor='#D3D3D3', edgecolor='#D3D3D3', alpha=0.6
+                )
+            )
+        return polygons
+
+    def _enumerate_unique_paths(self, corridors: Set[Corridor]) -> Dict[int, Tuple[Station, ...]]:
+        """
+        Enumerate and index each unique path across corridors.
+
+        Args:
+            corridors (Set[Corridor]): Corridors to extract paths from.
+
+        Returns:
+            Dict[int, Tuple[Station, ...]]: Dictionary mapping unique path indices to station sequences.
+        """
+        unique = set(tuple(path) for corridor in corridors for path in corridor.paths)
+        return {idx: path for idx, path in enumerate(unique)}
+
+    def _get_passenger_status(self) -> Tuple[Dict[int, int], List[str]]:
         """
         Retrieve the number of passengers based on their ticket purchase status.
 
@@ -57,11 +252,8 @@ class KernelPlotter:
             2: Purchased the most beneficial ticket.
             1: Did not find any useful ticket.
 
-        Args:
-            df (pd.DataFrame): DataFrame containing passenger information.
-
         Returns:
-            Tuple[Mapping[int, int], List[str]]:
+            Tuple[Dict[int, int], List[str]]:
                 - A dictionary mapping purchase status codes to the number of passengers.
                 - A list of labels corresponding to each purchase status.
         """
@@ -79,8 +271,8 @@ class KernelPlotter:
         }
 
         # Labels corresponding to each status:
-        # Note: The order of labels is based on the original mapping:
-        #  key 3 -> label[0], key 0 -> label[1], key 2 -> label[2], key 1 -> label[3]
+        # NOTE: The order of labels is based on the original mapping:
+        # key 3 -> label[0], key 0 -> label[1], key 2 -> label[2], key 1 -> label[3]
         labels = [
             'Found a useful ticket but was unable to purchase.',
             'Purchased a ticket different from the most beneficial.',
@@ -92,18 +284,15 @@ class KernelPlotter:
         sorted_status_counts = dict(sorted(status_counts.items(), key=lambda item: item[1], reverse=True))
         return sorted_status_counts, labels
 
-    def _get_service_capacity(
-        self,
-        service_id: Union[int, str]
-    ) -> Tuple[Mapping[str, Tuple[int, int, int]], int]:
+    def _get_service_capacity(self, service_id: str) -> Tuple[Dict[str, Tuple[int, int, int]], int]:
         """
-        Get the capacity of the service grouped by departure, arrival station and purchase day.
+        Get the capacity of the service grouped by departure, arrival station, and purchase day.
 
         Args:
-            service_id (Union[int, str]): Id of the service.
+            service_id (str): Id of the service.
 
         Returns:
-            Tuple[Mapping[str, Tuple[int, int, int], int]: Tuple which contains a Dictionary with the occupancy,
+            Tuple[Dict[str, Tuple[int, int, int], int]: Tuple which contains a dictionary with the occupancy,
                 number of people boarding and number of people getting off per station, and an integer with the
                 maximum capacity of the service.
         """
@@ -132,7 +321,7 @@ class KernelPlotter:
         stations_tickets = {self.stations_dict[station]: stations_tickets[station] for station in stations_tickets}
         return stations_tickets, service_max_capacity
 
-    def _get_tickets_by_date_seat(self) -> Mapping[str, Mapping[str, int]]:
+    def _get_tickets_by_date_seat(self) -> Dict[str, Dict[str, int]]:
         """
         Get the total number of tickets sold per day and seat type.
 
@@ -140,7 +329,7 @@ class KernelPlotter:
             df (pd.DataFrame): Dataframe with the information of the passengers.
 
         Returns:
-            Mapping[str, Mapping[str, int]]: Dictionary with the total number of tickets sold per day and seat type.
+            Dict[str, Dict[str, int]]: Dictionary with the total number of tickets sold per day and seat type.
         """
         grouped_data = self.output[~self.output.service.isnull()]
         grouped_data = grouped_data.groupby(by=['purchase_date', 'seat'], as_index=False).size()
@@ -157,7 +346,7 @@ class KernelPlotter:
         sorted_data = dict(sorted(result_dict.items(), key=lambda x: x[0]))
         return sorted_data
 
-    def _get_tickets_by_seat(self) -> Mapping[str, int]:
+    def _get_tickets_by_seat(self) -> Dict[str, int]:
         """
         Get the percentage of tickets sold for each seat type.
 
@@ -165,11 +354,11 @@ class KernelPlotter:
             df (pd.DataFrame): Dataframe with the information of the passengers.
 
         Returns:
-            Mapping[str, int]: Dictionary with the percentage of tickets sold per seat type.
+            Dict[str, int]: Dictionary with the percentage of tickets sold per seat type.
         """
         return self.output.groupby(by=['seat']).size().to_dict()
 
-    def _get_tickets_by_trip_seat(self) -> Mapping[str, Mapping[str, int]]:
+    def _get_tickets_by_trip_seat(self) -> Dict[str, Dict[str, int]]:
         """
         Get number of tickets sold by trip of stations and seat type.
 
@@ -178,7 +367,7 @@ class KernelPlotter:
             stations_dict (Mapping): Dictionary with the mapping between station id and station name.
 
         Returns:
-            Mapping[str, Mapping[str, int]]: Dictionary with number of tickets sold by trip of stations and seat type.
+            Dict[str, Dict[str, int]]: Dictionary with number of tickets sold by trip of stations and seat type.
         """
         passengers_with_ticket = self.output[~self.output.service.isnull()]
         tickets_sold = passengers_with_ticket.groupby(by=['departure_station', 'arrival_station', 'seat']).size()
@@ -193,13 +382,13 @@ class KernelPlotter:
         sorted_count_trip_sold = dict(sorted(result.items(), key=lambda x: sum(x[1].values()), reverse=True))
         return sorted_count_trip_sold
 
-    def _get_tickets_sold_by_user(self) -> Mapping[str, Mapping[str, Mapping[str, int]]]:
+    def _get_tickets_sold_by_user(self) -> Dict[str, Dict[str, Dict[str, int]]]:
         """
         Get the total number of tickets sold per day, user pattern and seat type.
 
         Returns:
-            Mapping[str, Mapping[str, Mapping[str, int]]]: Dictionary with the total number of tickets sold per day,
-                user pattern and seat type.
+            Dict[str, Dict[str, Dict[str, int]]]: Dictionary with the total number of tickets sold per day,
+                user pattern, and seat type.
         """
         # Remove rows where the 'seat' value is missing
         df_filtered = self.output.dropna(subset=['seat'])
@@ -217,12 +406,28 @@ class KernelPlotter:
         sorted_data = dict(sorted(data.items(), key=lambda x: x[0]))
         return sorted_data
 
-    def _get_trips_sold(self) -> Mapping[str, Mapping[str, int]]:
+    @staticmethod
+    def _get_time_label(minutes: float, pos: int) -> str:
+        """
+        Format time in HH:MM format for x-axis labels.
+
+        Args:
+            minutes (float): Minutes from midnight.
+            pos (int): Tick position (required by FuncFormatter, unused).
+
+        Returns:
+            str: Formatted hours and minutes string.
+        """
+        hrs = int(minutes // 60)
+        mins = int(minutes % 60)
+        return f'{hrs:02d}:{mins:02d} h.'
+
+    def _get_trips_sold(self) -> Dict[str, Dict[str, int]]:
         """
         Get number of tickets sold by trip of stations.
 
         Returns:
-            Mapping[str, Mapping[str, int]]: Dictionary with number of tickets sold by trip of stations.
+            Dict[str, Dict[str, int]]: Dictionary with number of tickets sold by trip of stations.
         """
         passengers_with_ticket = self.output[~self.output.service.isnull()]
         tickets_sold = passengers_with_ticket.groupby(by=['departure_station', 'arrival_station']).size()
@@ -234,6 +439,121 @@ class KernelPlotter:
             result[origin_destination] = group['count'].values[0]
         sorted_count_trip_sold = dict(sorted(result.items(), key=lambda x: x[1], reverse=True))
         return sorted_count_trip_sold
+
+    @staticmethod
+    def _highlight_intersections(polygons: List[Polygon], ax: plt.Axes) -> None:
+        """
+        Highlight intersections between polygons by drawing them on the axes.
+
+        Args:
+            polygons (List[Polygon]): List of polygons to check for intersections.
+            ax (plt.Axes): Matplotlib axes to draw on.
+        """
+        for i, polygon1 in enumerate(polygons):
+            for polygon2 in polygons[i + 1:]:
+                inter = polygon1.intersection(polygon2)
+                if inter.is_empty:
+                    continue
+                # Only handle Polygon or MultiPolygon intersections
+                if isinstance(inter, Polygon):
+                    parts = [inter]
+                elif isinstance(inter, MultiPolygon):
+                    parts = list(inter)
+                else:
+                    continue
+                for part in parts:
+                    ax.add_patch(
+                        MplPolygon(
+                            list(part.exterior.coords), closed=True, facecolor='crimson', edgecolor='crimson', alpha=0.5
+                        )
+                    )
+
+    @staticmethod
+    def _make_safety_polygon(
+        departure_time: int,
+        arrival_time: int,
+        y1: float,
+        y2: float,
+        safety_gap: int
+    ) -> Polygon:
+        """
+        Create a safety polygon between two stations.
+
+        Args:
+            departure_time (int): Departure time in minutes.
+            arrival_time (int): Arrival time in minutes.
+            y1 (float): Position of the first station.
+            y2 (float): Position of the second station.
+            safety_gap (int): Safety gap in minutes.
+
+        Returns:
+            Polygon: Safety polygon between two stations.
+        """
+        return Polygon([
+            (departure_time - safety_gap, y1), (arrival_time - safety_gap, y2),
+            (arrival_time + safety_gap, y2), (departure_time + safety_gap, y1)
+        ])
+
+    def _plot_path_marey(
+        self,
+        services: List[Service],
+        station_positions: Mapping[Station, float],
+        safety_gap: int,
+        save_path: Optional[str],
+        path_idx: int,
+        markers: Mapping[str, Mapping[str, str]]
+    ) -> None:
+        """
+        Plot a Marey chart for a given path.
+
+        Args:
+            services (List[Service]): Services assigned to this path.
+            station_positions (Dict[Station, float]): Normalized station distances.
+            safety_gap (int): Minutes of buffer around each segment.
+            save_path (Optional[str]): Directory to save the plot.
+            path_idx (int): Index of the path used for the file name.
+            markers (Mapping[str, Mapping[str, str]]): Markers for departure, arrival and intermediate stations.
+        """
+        service_colors = self._prepare_service_colors(services)
+        fig, ax = plt.subplots(figsize=(20, 11))
+        min_x, max_x = 0, MINUTES_IN_A_DAY
+        schedule = self._build_service_schedule(services, station_positions)
+        all_polygons: List[Polygon] = []
+        for service in services:
+            service_schedule = schedule[service.id]
+            min_x, max_x = self._update_time_bounds(schedule_times=service_schedule, min_x=min_x, max_x=max_x)
+            self._plot_service_markers(
+                ax=ax,
+                service=service,
+                schedule_times=service_schedule,
+                station_positions=station_positions,
+                color=service_colors[service.id],
+                markers=markers
+            )
+            self._plot_service_line(
+                ax=ax,
+                service=service,
+                schedule_times=service_schedule,
+                station_positions=station_positions,
+                color=service_colors[service.id]
+            )
+            polygons = self._draw_safety_overlay(
+                ax=ax,
+                schedule_times=service_schedule,
+                station_positions=station_positions,
+                safety_gap=safety_gap
+            )
+            all_polygons.extend(polygons)
+
+        self._highlight_intersections(all_polygons, ax)
+        self._add_markers_to_legend(markers, ax)
+        start_station = next(iter(station_positions.keys()))
+        end_station = list(station_positions.keys())[-1]
+        title = f'{start_station.name} - {end_station.name}'
+        self._configure_marey_axes(ax, station_positions, min_x, max_x, title)
+        ax.legend()
+        plt.tight_layout()
+        self._show_plot(fig, f'{save_path}/{start_station.name}_{end_station.name}.pdf')
 
     def _plot_service_capacity(
         self,
@@ -285,6 +605,69 @@ class KernelPlotter:
         ax.axhline(y=service_max_capacity, color='lightcoral', linewidth=2, zorder=1)
         ax.axhline(y=-service_max_capacity, color='lightcoral', linewidth=2, zorder=1)
         self._show_plot(fig=fig, save_path=save_path)
+
+    def _plot_service_line(
+        self,
+        ax: plt.Axes,
+        service: Service,
+        schedule_times: Mapping[Station, List[int]],
+        station_positions: Mapping[Station, float],
+        color: str
+    ) -> None:
+        """
+        Plot the path line with markers for intermediate stations.
+
+        Args:
+            ax (plt.Axes): Matplotlib axes.
+            service (Service): Service to plot.
+            schedule_times (Mapping[Station, List[int]]): Times per station.
+            station_positions (Mapping[Station, float]): Station y-positions.
+            color (str): Hex color for the service.
+        """
+        points = [(time, station_positions[station]) for station, times in schedule_times.items() for time in times]
+        ax.plot(
+            [point[0] for point in points],
+            [point[1] for point in points],
+            marker='o', linewidth=2.0, color=color,
+            label=service.tsp.name if service.tsp.name not in ax.get_legend_handles_labels()[1] else None
+        )
+
+    def _plot_service_markers(
+        self,
+        ax: plt.Axes,
+        service: Service,
+        schedule_times: Mapping[Station, List[int]],
+        station_positions: Mapping[Station, float],
+        color: str,
+        markers: Mapping[str, Mapping[str, str]]
+    ) -> None:
+        """
+        Plot departure and arrival markers for a service.
+
+        Args:
+            ax (plt.Axes): Matplotlib axes.
+            service (Service): Service to plot.
+            schedule_times (Mapping[Station, List[int]]): Times per station.
+            station_positions (Mapping[Station, float]): Station y-positions.
+            color (str): Hex color for the service.
+        """
+        items = list(schedule_times.items())
+        first_station, (arrival_first, _) = items[0]
+        last_station, (_, departure_last) = items[-1]
+        is_first_station = first_station == service.line.stations[0]
+        is_last_station = last_station == service.line.stations[-1]
+        start_marker = markers['departure']['marker'] if is_first_station else markers['intermediate']['marker']
+        end_marker = markers['arrival']['marker'] if is_last_station else markers['intermediate']['marker']
+
+        # Plot markers for the first and last stations in the plotted path
+        ax.scatter(
+            arrival_first, station_positions[first_station], marker=start_marker, s=100,
+            edgecolors='black', linewidths=1.5, color=color, zorder=5
+        )
+        ax.scatter(
+            departure_last, station_positions[last_station], marker=end_marker, s=100,
+            edgecolors='black', linewidths=1.5, color=color, zorder=5
+        )
 
     def _plot_tickets_by_trip_aggregated(self, ax: Axes, ylim: Tuple[float, float] = None) -> None:
         """
@@ -355,6 +738,21 @@ class KernelPlotter:
         for i, total_value in enumerate(total_values):
             ax.text(i, total_value + 0.01 * ylim[1], str(total_value), ha='center', va='bottom')
 
+    def _prepare_service_colors(self, services: List[Service]) -> Dict[int, str]:
+        """
+        Prepare color mapping for services based on TSP names.
+
+        Args:
+            services (List[Service]): List of service objects.
+
+        Returns:
+            Dict[int, str]: Mapping of service IDs to hex color strings.
+        """
+        tsps = sorted({svc.tsp.name for svc in services})
+        cmap = ListedColormap(sns.color_palette('pastel', len(tsps)).as_hex())
+        tsp_color = {tsp: cmap(i) for i, tsp in enumerate(tsps)}
+        return {svc.id: tsp_color[svc.tsp.name] for svc in services}
+
     def _set_ax_properties(
         self,
         ax: Axes,
@@ -409,6 +807,27 @@ class KernelPlotter:
             save_path_dir.mkdir(parents=True, exist_ok=True)
             fig.savefig(save_path, format='pdf', dpi=300, bbox_inches='tight', transparent=True)
 
+    def _update_time_bounds(
+        self,
+        schedule_times: Mapping[Station, Tuple[int, int]],
+        min_x: int,
+        max_x: int
+    ) -> Tuple[int, int]:
+        """
+        Update the minimum and maximum time bounds based on schedule times.
+
+        Args:
+            schedule_times (Mapping[Station, List[int]]): Arrival/departure times per station.
+            min_x (int): Current minimum x-axis bound.
+            max_x (int): Current maximum x-axis bound.
+
+        Returns:
+            Tuple[int, int]: Updated (min_x, max_x) bounds.
+        """
+        times = [time for times in schedule_times.values() for time in times]
+        return min(min_x, min(times)), max(max_x, max(times))
+
+    @requires_output_csv
     def plot_demand_status(self, ylim: Tuple[float, float] = None, save_path: str = None) -> None:
         """
         Plot the number of passengers attended based on their purchase status.
@@ -448,6 +867,46 @@ class KernelPlotter:
             ax.bar_label(ax.containers[i], labels=[f'{demand_data[status]} ({status_perc}%)'], padding=3)
         self._show_plot(fig=fig, save_path=save_path)
 
+    @requires_config_supply
+    def plot_marey_chart(
+        self,
+        date: datetime.date,
+        safety_gap: int = SAFETY_GAP,
+        save_path: str = None,
+        markers: Mapping[str, Tuple[str, str]] = MARKERS
+    ) -> None:
+        """
+        Plot Marey chart for all corridors and paths on the given date.
+
+        Args:
+            date (datetime.date): Date to filter services.
+            safety_gap (int): Safety gap in minutes between segments.
+            save_path (str, optional): Directory path to save PDF files. If None, charts are shown only.
+            markers (Mapping[str, Tuple[str, str]], optional): Markers for departure and arrival.
+        """
+        services = self.supply.filter_services_by_date(date)
+        corridors = set(self.supply.corridors)
+
+        paths_dict = self._enumerate_unique_paths(corridors)
+        paths_positions = self._compute_normalized_positions(paths_dict)
+        services_paths = self._assign_services_to_paths(services, paths_dict)
+
+        for path_idx, station_positions in paths_positions.items():
+            service_ids = services_paths.get(path_idx, [])
+            if not service_ids:
+                continue
+
+            services_in_path = [service for service in services if service.id in service_ids]
+            self._plot_path_marey(
+                services=services_in_path,
+                station_positions=station_positions,
+                safety_gap=safety_gap,
+                save_path=save_path,
+                path_idx=path_idx,
+                markers=markers
+            )
+
+    @requires_output_csv
     def plot_seat_distribution(self, save_path: str = None) -> None:
         """
         Plot a pie chart with the distribution of tickets sold by seat type.
@@ -467,9 +926,11 @@ class KernelPlotter:
         ax.legend(bbox_to_anchor=(0.2, 0.2))
         self._show_plot(fig=fig, save_path=save_path)
 
+    @requires_config_supply
+    @requires_output_csv
     def plot_service_capacity(self, service_id: str, save_path: str = None) -> None:
         """
-        Plot the capacity of the service grouped by departure, arrival station and purchase day.
+        Plot the capacity of the service grouped by departure, arrival station, and purchase day.
 
         Args:
             service_id (str): Id of the service.
@@ -490,6 +951,7 @@ class KernelPlotter:
             save_path=save_path
         )
 
+    @requires_output_csv
     def plot_tickets_by_date(self, ylim: Tuple[float, float] = None, save_path: str = None) -> None:
         """
         Plot the number of tickets sold by date.
@@ -526,19 +988,21 @@ class KernelPlotter:
         ax.legend()
         self._show_plot(fig=fig, save_path=save_path)
 
+    @requires_config_supply
+    @requires_output_csv
     def plot_tickets_by_trip(
         self,
+        seat_disaggregation: bool = False,
         ylim: Tuple[float, float] = None,
-        save_path: str = None,
-        seat_disaggregation: bool = False
+        save_path: str = None
     ) -> None:
         """
         Plot the number of tickets sold by trip of stations.
 
         Args:
+            seat_disaggregation (bool, optional): If True, disaggregate by seat type. Defaults to False.
             ylim (Tuple[float, float], optional): Bounds of the y-axis. Defaults to None.
             save_path (str, optional): Path to save the plot in PDF format. Defaults to None.
-            seat_disaggregation (bool, optional): If True, disaggregate by seat type. Defaults to False.
         """
         fig, ax = plt.subplots(1, 1, figsize=(7, 4))
         fig.subplots_adjust(hspace=0.75, bottom=0.2, top=0.9)
@@ -551,6 +1015,7 @@ class KernelPlotter:
         ax.legend()
         self._show_plot(fig=fig, save_path=save_path)
 
+    @requires_output_csv
     def plot_tickets_by_user(self, save_path: str = None) -> None:
         """
         Plot the number of tickets sold by user type.

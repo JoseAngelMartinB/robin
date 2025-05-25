@@ -158,9 +158,9 @@ class Labs:
                                                    sorted_supply_files,
                                                    sorted_demand_files):
                 kernel = Kernel(path_config_supply=self.tmp_path / 'supply' / supply_file,
-                                path_config_demand=self.tmp_path / 'demand' / demand_file,
-                                seed=seed)
+                                path_config_demand=self.tmp_path / 'demand' / demand_file)
                 kernel.simulate(output_path=Path(f'{self.tmp_path}/output/output_{r}_{i}.csv'),
+                                seed=seed,
                                 calculate_global_utility=True)
 
     def _get_tickets_sold(self) -> Mapping:

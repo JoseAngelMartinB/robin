@@ -11,7 +11,7 @@ market:
 userPattern:
 - id: 1
   name: Business
-  arrival_time: custom_arrival_time
+  arrival_time: hourly
   arrival_time_kwargs:
     '0': 0
     '1': 0
@@ -75,7 +75,7 @@ userPattern:
     scale: 1
 - id: 2
   name: Student
-  arrival_time: custom_arrival_time
+  arrival_time: hourly
   arrival_time_kwargs:
     '0': 0
     '1': 0

@@ -8,7 +8,7 @@ from robin.demand.constants import DEFAULT_RVS_SIZE, DEFAULT_SEAT_UTILITY, DEFAU
 from robin.demand.exceptions import InvalidForbiddenDepartureHoursException
 from robin.demand.utils import get_function, get_scipy_distribution
 
-from typing import Any, List, Mapping, Union, Tuple
+from typing import Any, Dict, List, Mapping, Union, Tuple
 
 
 class Market:
@@ -66,21 +66,21 @@ class UserPattern:
         id (int): The user pattern id.
         name(str): The user pattern name.
         arrival_time (Callable): The arrival time distribution function.
-        arrival_time_kwargs (Mapping[str, Union[int, float]]): The arrival time distribution parameters.
+        arrival_time_kwargs (Dict[str, Union[int, float]]): The arrival time distribution parameters.
         purchase_day (Callable): The purchase day distribution function.
-        purchase_day_kwargs (Mapping[str, Union[int, float]]): The purchase day distribution named parameters.
+        purchase_day_kwargs (Dict[str, Union[int, float]]): The purchase day distribution named parameters.
         forbidden_departure_hours (Tuple[int, int]): The forbidden departure hours.
-        seats (Mapping[int, float]): The utility of the seats.
+        seats (Dict[int, float]): The utility of the seats.
         penalty_arrival_time (Callable): The penalty function for the arrival time.
-        penalty_arrival_time_kwargs (Mapping[str, Union[int, float]]): The penalty function named parameters.
+        penalty_arrival_time_kwargs (Dict[str, Union[int, float]]): The penalty function named parameters.
         penalty_departure_time (Callable): The penalty function for the departure time.
-        penalty_departure_time_kwargs (Mapping[str, Union[int, float]]): The penalty function named parameters.
+        penalty_departure_time_kwargs (Dict[str, Union[int, float]]): The penalty function named parameters.
         penalty_cost (Callable): The penalty function for the cost.
-        penalty_cost_kwargs (Mapping[str, Union[int, float]]): The penalty function named parameters.
+        penalty_cost_kwargs (Dict[str, Union[int, float]]): The penalty function named parameters.
         penalty_travel_time (Callable): The penalty function for the travel time.
-        penalty_travel_time_kwargs (Mapping[str, Union[int, float]]): The penalty function named parameters.
+        penalty_travel_time_kwargs (Dict[str, Union[int, float]]): The penalty function named parameters.
         error (Callable): The error distribution function.
-        error_kwargs (Mapping[str, Union[int, float]]): The error distribution named parameters.
+        error_kwargs (Dict[str, Union[int, float]]): The error distribution named parameters.
         default_seat_utility (float): The default utility of the seats.
         default_rvs_size (int): The default size of the random variables sample.
 
@@ -382,10 +382,10 @@ class DemandPattern:
         id (int): The demand pattern id.
         name(str): The demand pattern name.
         markets (List[Market]): The list of markets.
-        potential_demands(Mapping[Market, Callable]): The potential demand distribution for each market.
-        potential_demands_kwargs (Mapping[Market, Mapping[str, Union[int, float]]]): The keyword arguments
+        potential_demands(Dict[Market, Callable]): The potential demand distribution for each market.
+        potential_demands_kwargs (Dict[Market, Dict[str, Union[int, float]]]): The keyword arguments
             for the potential demand distribution for each market.
-        user_patterns_distribution (Mapping[Market, Mapping[UserPattern, float]]): The distribution of user patterns
+        user_patterns_distribution (Dict[Market, Dict[UserPattern, float]]): The distribution of user patterns
             for each market.
         default_rvs_size (int): The default size of the random variables sample.
 
@@ -811,7 +811,7 @@ class Demand:
         self.days = days
 
     @classmethod
-    def _get_markets(cls, data: Mapping[str, Any]) -> Mapping[int, Market]:
+    def _get_markets(cls, data: Mapping[str, Any]) -> Dict[int, Market]:
         """
         Returns the markets.
 
@@ -819,7 +819,7 @@ class Demand:
             data (Mapping[str, Any]): The data of the YAML file.
 
         Returns:
-            Mapping[int, Market]: The markets.
+            Dict[int, Market]: The markets.
         """
         markets = {}
         for market in data['market']:
@@ -827,7 +827,7 @@ class Demand:
         return markets
 
     @classmethod
-    def _utility_list_to_dict(cls, list_: List[Mapping[str, Any]]) -> Mapping[int, float]:
+    def _utility_list_to_dict(cls, list_: List[Mapping[str, Any]]) -> Dict[int, float]:
         """
         Convert a list of utilities into a dictionary.
 
@@ -835,12 +835,12 @@ class Demand:
             list_ (List[Mapping[str, Any]]): The list of utilities.
 
         Returns:
-            Mapping[int, float]: The dictionary of utilities.
+            Dict[int, float]: The dictionary of utilities.
         """
         return {item['id']: item['utility'] for item in list_}
 
     @classmethod
-    def _get_user_patterns(cls, data: Mapping[str, Any]) -> Mapping[int, UserPattern]:
+    def _get_user_patterns(cls, data: Mapping[str, Any]) -> Dict[int, UserPattern]:
         """
         Returns the user patterns.
 
@@ -848,7 +848,7 @@ class Demand:
             data (Mapping[str, Any]): The data of the YAML file.
 
         Returns:
-            Mapping[int, UserPattern]: The user patterns.
+            Dict[int, UserPattern]: The user patterns.
         """
         user_patterns = {}
         for user_pattern in data['userPattern']:
@@ -876,7 +876,7 @@ class Demand:
         data: Mapping[str, Any],
         markets: Mapping[int, Market],
         user_patterns: Mapping[int, UserPattern]
-    ) -> Mapping[int, DemandPattern]:
+    ) -> Dict[int, DemandPattern]:
         """
         Returns the demand patterns.
 
@@ -886,7 +886,7 @@ class Demand:
             user_patterns (Mapping[int, UserPattern]): The user patterns.
 
         Returns:
-            Mapping[int, DemandPattern]: The demand patterns.
+            Dict[int, DemandPattern]: The demand patterns.
         """
         demand_patterns = {}
         for demand_pattern in data['demandPattern']:
@@ -921,7 +921,7 @@ class Demand:
         cls,
         data: Mapping[str, Any],
         demand_patterns: Mapping[int, DemandPattern]
-    ) -> Mapping[int, Day]:
+    ) -> Dict[int, Day]:
         """
         Returns the days.
 
@@ -930,7 +930,7 @@ class Demand:
             demand_patterns (Mapping[int, DemandPattern]): The demand patterns.
 
         Returns:
-            Mapping[int, Day]: The days.
+            Dict[int, Day]: The days.
         """
         days = {}
         for day in data['day']:
