@@ -8,8 +8,8 @@ stations:
     longitude: -3.690886
 - id: '04007'
   name: GUADALAJARA - YEBES
-  city: GUADALAJARA - YEBES
-  short_name: 2055
+  city: GUADALAJARA
+  short_name: '04007'
   coordinates:
     latitude: 40.587315
     longitude: -3.124301
@@ -125,6 +125,13 @@ stations:
   coordinates:
     latitude: 38.69128
     longitude: -4.111655
+- id: '37704'
+  name: VILLANUEVA DE CÓRDOBA-LOS PEDROCHES
+  city: VILLANUEVA DE CÓRDOBA
+  short_name: '37704'
+  coordinates:
+    latitude: 38.2554049
+    longitude: -4.570952
 - id: '50500'
   name: CÓRDOBA
   city: CÓRDOBA
@@ -139,6 +146,90 @@ stations:
   coordinates:
     latitude: 37.3921277
     longitude: -5.9752694
+- id: '43011'
+  name: LA PALMA DEL CONDADO
+  city: LA PALMA DEL CONDADO
+  short_name: '43011'
+  coordinates:
+    latitude: 37.390665
+    longitude: -6.554444
+- id: '43019'
+  name: HUELVA
+  city: HUELVA
+  short_name: '43019'
+  coordinates:
+    latitude: 37.2525922
+    longitude: -6.9448154
+- id: '51300'
+  name: JEREZ DE LA FRONTERA
+  city: JEREZ DE LA FRONTERA
+  short_name: '51300'
+  coordinates:
+    latitude: 36.680029
+    longitude: -6.1264716
+- id: '51400'
+  name: PUERTO DE SANTA MARÍA
+  city: PUERTO DE SANTA MARÍA
+  short_name: '51400'
+  coordinates:
+    latitude: 36.6037962
+    longitude: -6.2171641
+- id: '51406'
+  name: SAN FERNANDO-BAHÍA SUR
+  city: SAN FERNANDO
+  short_name: '51406'
+  coordinates:
+    latitude: 36.4680361
+    longitude: -6.2067638
+- id: '51405'
+  name: CÁDIZ
+  city: CÁDIZ
+  short_name: '51405'
+  coordinates:
+    latitude: 36.5290083
+    longitude: -6.2882055
+- id: '02002'
+  name: PUENTE GENIL-HERRERA
+  city: PUENTE GENIL
+  short_name: PTE G
+  coordinates:
+    latitude: 37.3579
+    longitude: -4.821638
+- id: '02003'
+  name: ANTEQUERA-SANTA ANA
+  city: ANTEQUERA
+  short_name: ANTEQ
+  coordinates:
+    latitude: 37.069881
+    longitude: -4.719014
+- id: '02030'
+  name: ANTEQUERA AV
+  city: ANTEQUERA
+  short_name: '02030'
+  coordinates:
+    latitude: 37.0334437
+    longitude: -4.5612901
+- id: '55007'
+  name: RONDA
+  city: RONDA
+  short_name: '55007'
+  coordinates:
+    latitude: 36.748401
+    longitude: -5.16197
+- id: '55018'
+  name: SAN ROQUE-LA LÍNEA
+  city: SAN ROQUE
+  short_name: '55018'
+  coordinates:
+    latitude: 36.214482
+    longitude: -5.432399
+- id: '55020'
+  name: ALGECIRAS
+  city: ALGECIRAS
+  short_name: '55020'
+  coordinates:
+    latitude: 36.126831
+    longitude: -5.451108
 - id: '54413'
   name: MÁLAGA MARÍA ZAMBRANO
   city: MÁLAGA
@@ -146,6 +237,13 @@ stations:
   coordinates:
     latitude: 36.7113388
     longitude: -4.4313888
+- id: '05012'
+  name: LOJA
+  city: LOJA
+  short_name: '05012'
+  coordinates:
+    latitude: 37.175372
+    longitude: -4.134841
 - id: '05000'
   name: GRANADA
   city: GRANADA
@@ -153,6 +251,20 @@ stations:
   coordinates:
     latitude: 37.184038
     longitude: -3.609154
+- id: '56200'
+  name: GUADIX
+  city: GUADIX
+  short_name: '56200'
+  coordinates:
+    latitude: 37.316873
+    longitude: -3.127209
+- id: '56312'
+  name: ALMERÍA
+  city: ALMERÍA
+  short_name: '56312'
+  coordinates:
+    latitude: 36.834951
+    longitude: -2.455519
 - id: 08004
   name: SEGOVIA GUIOMAR
   city: SEGOVIA
@@ -160,6 +272,13 @@ stations:
   coordinates:
     latitude: 40.910577
     longitude: -4.094564
+- id: 08240
+  name: MEDINA DEL CAMPO ALTA VELOCIDAD
+  city: MEDINA DEL CAMPO
+  short_name: 08240
+  coordinates:
+    latitude: 41.317459
+    longitude: -4.910071
 - id: '30200'
   name: ZAMORA
   city: ZAMORA
@@ -167,6 +286,20 @@ stations:
   coordinates:
     latitude: 41.515892
     longitude: -5.739675
+- id: 08247
+  name: SANABRIA ALTA VELOCIDAD
+  city: PUEBLA DE SANABRIA
+  short_name: 08247
+  coordinates:
+    latitude: 42.045763
+    longitude: -6.626848
+- id: 08251
+  name: A GUDIÑA-PORTA DE GALICIA
+  city: A GUDIÑA
+  short_name: 08251
+  coordinates:
+    latitude: 42.0606439
+    longitude: -7.132532
 - id: '22100'
   name: OURENSE
   city: OURENSE
@@ -174,13 +307,13 @@ stations:
   coordinates:
     latitude: 42.350389
     longitude: -7.872777
-- id: '23004'
-  name: PONTEVEDRA
-  city: PONTEVEDRA
-  short_name: '23004'
+- id: '31400'
+  name: SANTIAGO DE COMPOSTELA
+  city: SANTIAGO DE COMPOSTELA
+  short_name: '31400'
   coordinates:
-    latitude: 42.421969
-    longitude: -8.635546
+    latitude: 42.870842
+    longitude: -8.544697
 - id: '31412'
   name: A CORUÑA
   city: A CORUÑA
@@ -188,6 +321,55 @@ stations:
   coordinates:
     latitude: 43.3496932
     longitude: -8.4155629
+- id: '20400'
+  name: BETANZOS-INFESTA
+  city: BETANZOS
+  short_name: '20400'
+  coordinates:
+    latitude: 43.270698
+    longitude: -8.225847
+- id: '21001'
+  name: BETANZOS-CIDADE
+  city: BETANZOS
+  short_name: '21001'
+  coordinates:
+    latitude: 43.284137
+    longitude: -8.215874
+- id: '21004'
+  name: PONTEDEUME
+  city: PONTEDEUME
+  short_name: '21004'
+  coordinates:
+    latitude: 43.411797
+    longitude: -8.180416
+- id: '21010'
+  name: FERROL
+  city: FERROL
+  short_name: '21010'
+  coordinates:
+    latitude: 43.4880349
+    longitude: -8.231143
+- id: '23008'
+  name: VILAGARCIA DE AROUSA
+  city: VILAGARCIA DE AROUSA
+  short_name: '23008'
+  coordinates:
+    latitude: 42.602189
+    longitude: -8.762523
+- id: '23004'
+  name: PONTEVEDRA
+  city: PONTEVEDRA
+  short_name: '23004'
+  coordinates:
+    latitude: 42.421969
+    longitude: -8.635546
+- id: 08223
+  name: VIGO URZAIZ
+  city: VIGO
+  short_name: VIGO-
+  coordinates:
+    latitude: 42.234189
+    longitude: -8.713728
 - id: '10600'
   name: VALLADOLID
   city: VALLADOLID
@@ -279,6 +461,13 @@ stations:
   coordinates:
     latitude: 38.999384
     longitude: -1.84845
+- id: 03309
+  name: VILLENA AV
+  city: VILLENA
+  short_name: 03309
+  coordinates:
+    latitude: 38.585302
+    longitude: -0.873295
 - id: '60911'
   name: ALICANTE/ALACANT
   city: ALICANTE
@@ -286,6 +475,20 @@ stations:
   coordinates:
     latitude: 38.34445
     longitude: -0.4950527
+- id: '03410'
+  name: ELCHE AV/ELX AV
+  city: ELCHE
+  short_name: '03410'
+  coordinates:
+    latitude: 38.24551
+    longitude: -0.76675
+- id: '62002'
+  name: ORIHUELA-MIGUEL HERNÁNDEZ
+  city: ORIHUELA
+  short_name: '62002'
+  coordinates:
+    latitude: 38.0779194
+    longitude: -0.94445
 - id: '61200'
   name: MURCIA
   city: MURCIA
@@ -336,9 +539,6 @@ timeSlot:
 - id: '104710'
   start: '17:27:00'
   end: '17:37:00'
-- id: '107710'
-  start: '17:57:00'
-  end: '18:07:00'
 - id: '110710'
   start: '18:27:00'
   end: '18:37:00'
@@ -397,36 +597,88 @@ corridor:
       des:
       - org: '37300'
         des:
-        - org: '50500'
+        - org: '37704'
           des:
-          - org: '51003'
-            des: []
-          - org: '54413'
-            des: []
-          - org: '05000'
-            des: []
+          - org: '50500'
+            des:
+            - org: '51003'
+              des:
+              - org: '43011'
+                des:
+                - org: '43019'
+                  des: []
+              - org: '51300'
+                des:
+                - org: '51400'
+                  des:
+                  - org: '51406'
+                    des:
+                    - org: '51405'
+                      des: []
+            - org: '02002'
+              des:
+              - org: '02003'
+                des:
+                - org: '02030'
+                  des:
+                  - org: '55007'
+                    des:
+                    - org: '55018'
+                      des:
+                      - org: '55020'
+                        des: []
+                  - org: '54413'
+                    des: []
+                  - org: '05012'
+                    des:
+                    - org: '05000'
+                      des:
+                      - org: '56200'
+                        des:
+                        - org: '56312'
+                          des: []
     - org: 08004
       des:
-      - org: '30200'
+      - org: 08240
         des:
-        - org: '22100'
+        - org: '30200'
           des:
-          - org: '23004'
-            des: []
-          - org: '31412'
-            des: []
-        - org: '10600'
-          des:
-          - org: '14100'
+          - org: 08247
             des:
-            - org: '15100'
+            - org: 08251
               des:
-              - org: '15211'
+              - org: '22100'
                 des:
-                - org: '15402'
-                  des: []
-            - org: '11014'
-              des: []
+                - org: '31400'
+                  des:
+                  - org: '31412'
+                    des:
+                    - org: '20400'
+                      des:
+                      - org: '21001'
+                        des:
+                        - org: '21004'
+                          des:
+                          - org: '21010'
+                            des: []
+                  - org: '23008'
+                    des:
+                    - org: '23004'
+                      des:
+                      - org: 08223
+                        des: []
+      - org: '10600'
+        des:
+        - org: '14100'
+          des:
+          - org: '15100'
+            des:
+            - org: '15211'
+              des:
+              - org: '15402'
+                des: []
+          - org: '11014'
+            des: []
   - org: '17000'
     des:
     - org: 03208
@@ -441,10 +693,16 @@ corridor:
               des: []
       - org: '60600'
         des:
-        - org: '60911'
+        - org: 03309
           des:
-          - org: '61200'
-            des: []
+          - org: '60911'
+            des:
+            - org: '03410'
+              des:
+              - org: '62002'
+                des:
+                - org: '61200'
+                  des: []
 line:
 - id: '06301'
   name: Line 06301
@@ -742,19 +1000,6 @@ line:
   - station: '71801'
     arrival_time: 199
     departure_time: 199
-- id: '02553'
-  name: Line 02553
-  corridor: '1'
-  stops:
-  - station: '54413'
-    arrival_time: 0
-    departure_time: 0
-  - station: '60000'
-    arrival_time: 164
-    departure_time: 179
-  - station: '71801'
-    arrival_time: 336
-    departure_time: 336
 - id: 03183
   name: Line 03183
   corridor: '1'
@@ -918,7 +1163,7 @@ service:
     destination: '71801'
     seats:
     - seat: '1'
-      price: 69.0
+      price: 55.0
   capacity_constraints: null
 - id: 03073_01-06-2025-07.27
   date: '2025-06-01'
@@ -931,13 +1176,13 @@ service:
     destination: '71801'
     seats:
     - seat: '2'
-      price: 57.9
+      price: 81.05
     - seat: '3'
-      price: 69.5
+      price: 92.65
     - seat: '4'
-      price: 107.8
+      price: 123.2
     - seat: '5'
-      price: 126.8
+      price: 142.2
   capacity_constraints: null
 - id: 03083_01-06-2025-08.27
   date: '2025-06-01'
@@ -950,13 +1195,13 @@ service:
     destination: '71801'
     seats:
     - seat: '2'
-      price: 69.5
+      price: 115.8
     - seat: '3'
-      price: 81.05
+      price: 127.4
     - seat: '4'
-      price: 92.4
+      price: 138.6
     - seat: '5'
-      price: 111.4
+      price: 157.6
   capacity_constraints: null
 - id: 02561_01-06-2025-09.27
   date: '2025-06-01'
@@ -969,13 +1214,13 @@ service:
     destination: '71801'
     seats:
     - seat: '2'
-      price: 81.05
+      price: 104.2
     - seat: '3'
-      price: 92.65
+      price: 115.8
     - seat: '4'
-      price: 77.0
+      price: 184.8
     - seat: '5'
-      price: 96.0
+      price: 203.8
   capacity_constraints: null
 - id: 03113_01-06-2025-11.27
   date: '2025-06-01'
@@ -1007,13 +1252,13 @@ service:
     destination: '71801'
     seats:
     - seat: '2'
-      price: 92.65
+      price: 127.4
     - seat: '3'
-      price: 104.2
+      price: 138.95
     - seat: '4'
-      price: 77.0
+      price: 184.8
     - seat: '5'
-      price: 96.0
+      price: 203.8
   capacity_constraints: null
 - id: 03131_01-06-2025-12.57
   date: '2025-06-01'
@@ -1026,13 +1271,13 @@ service:
     destination: '71801'
     seats:
     - seat: '2'
-      price: 95.7
-    - seat: '3'
       price: 109.35
+    - seat: '3'
+      price: 123.05
     - seat: '4'
-      price: 127.25
+      price: 145.45
     - seat: '5'
-      price: 146.25
+      price: 164.45
   capacity_constraints: null
 - id: 09725_01-06-2025-13.18
   date: '2025-06-01'
@@ -1045,13 +1290,13 @@ service:
     destination: '71801'
     seats:
     - seat: '2'
-      price: 114.9
+      price: 103.4
     - seat: '3'
-      price: 126.4
+      price: 114.9
     - seat: '4'
-      price: 183.4
+      price: 152.8
     - seat: '5'
-      price: 202.4
+      price: 171.8
   capacity_constraints: null
 - id: 03143_01-06-2025-14.27
   date: '2025-06-01'
@@ -1064,13 +1309,9 @@ service:
     destination: '71801'
     seats:
     - seat: '2'
-      price: 92.65
+      price: 138.95
     - seat: '3'
-      price: 104.2
-    - seat: '4'
-      price: 169.4
-    - seat: '5'
-      price: 188.4
+      price: 150.55
   capacity_constraints: null
 - id: 06305_01-06-2025-15.27
   date: '2025-06-01'
@@ -1083,7 +1324,7 @@ service:
     destination: '71801'
     seats:
     - seat: '1'
-      price: 89.0
+      price: 129.0
   capacity_constraints: null
 - id: 03161_01-06-2025-15.57
   date: '2025-06-01'
@@ -1096,13 +1337,13 @@ service:
     destination: '71801'
     seats:
     - seat: '2'
-      price: 95.7
+      price: 136.7
     - seat: '3'
-      price: 109.35
+      price: 150.35
     - seat: '4'
-      price: 127.25
+      price: 145.45
     - seat: '5'
-      price: 146.25
+      price: 164.45
   capacity_constraints: null
 - id: 03163_01-06-2025-16.27
   date: '2025-06-01'
@@ -1115,13 +1356,13 @@ service:
     destination: '71801'
     seats:
     - seat: '2'
-      price: 92.65
+      price: 115.8
     - seat: '3'
-      price: 104.2
+      price: 127.4
     - seat: '4'
-      price: 123.2
+      price: 184.8
     - seat: '5'
-      price: 142.2
+      price: 203.8
   capacity_constraints: null
 - id: 03171_01-06-2025-16.57
   date: '2025-06-01'
@@ -1134,13 +1375,13 @@ service:
     destination: '71801'
     seats:
     - seat: '2'
-      price: 95.7
+      price: 136.7
     - seat: '3'
-      price: 109.35
+      price: 150.35
     - seat: '4'
-      price: 127.25
+      price: 163.65
     - seat: '5'
-      price: 146.25
+      price: 182.65
   capacity_constraints: null
 - id: 06373_01-06-2025-17.27
   date: '2025-06-01'
@@ -1153,32 +1394,83 @@ service:
     destination: '71801'
     seats:
     - seat: '1'
-      price: 99.0
-  capacity_constraints: null
-- id: 02553_01-06-2025-17.57
-  date: '2025-06-01'
-  line: '02553'
-  train_service_provider: '1'
-  time_slot: '107710'
-  rolling_stock: '1'
-  origin_destination_tuples:
-  - origin: '60000'
-    destination: '71801'
-    seats:
-    - seat: '2'
-      price: 104.2
-    - seat: '3'
-      price: 115.8
-    - seat: '4'
-      price: 107.8
-    - seat: '5'
-      price: 126.8
+      price: 139.0
   capacity_constraints: null
 - id: 03183_01-06-2025-18.27
   date: '2025-06-01'
   line: 03183
   train_service_provider: '1'
   time_slot: '110710'
+  rolling_stock: '1'
+  origin_destination_tuples:
+  - origin: '60000'
+    destination: '71801'
+    seats:
+    - seat: '2'
+      price: 138.95
+    - seat: '3'
+      price: 150.55
+    - seat: '4'
+      price: 184.8
+    - seat: '5'
+      price: 203.8
+  capacity_constraints: null
+- id: 03191_01-06-2025-18.57
+  date: '2025-06-01'
+  line: 03191
+  train_service_provider: '1'
+  time_slot: '113710'
+  rolling_stock: '1'
+  origin_destination_tuples:
+  - origin: '60000'
+    destination: '71801'
+    seats:
+    - seat: '2'
+      price: 136.7
+    - seat: '3'
+      price: 150.35
+    - seat: '4'
+      price: 163.65
+    - seat: '5'
+      price: 182.65
+  capacity_constraints: null
+- id: 06309_01-06-2025-19.34
+  date: '2025-06-01'
+  line: 06309
+  train_service_provider: '1'
+  time_slot: '117410'
+  rolling_stock: '1'
+  origin_destination_tuples:
+  - origin: '60000'
+    destination: '71801'
+    seats:
+    - seat: '1'
+      price: 139.0
+  capacity_constraints: null
+- id: 03201_01-06-2025-20.05
+  date: '2025-06-01'
+  line: '03201'
+  train_service_provider: '1'
+  time_slot: '120510'
+  rolling_stock: '1'
+  origin_destination_tuples:
+  - origin: '60000'
+    destination: '71801'
+    seats:
+    - seat: '2'
+      price: 136.7
+    - seat: '3'
+      price: 150.35
+    - seat: '4'
+      price: 145.45
+    - seat: '5'
+      price: 164.45
+  capacity_constraints: null
+- id: 03203_01-06-2025-20.27
+  date: '2025-06-01'
+  line: '03203'
+  train_service_provider: '1'
+  time_slot: '122710'
   rolling_stock: '1'
   origin_destination_tuples:
   - origin: '60000'
@@ -1193,76 +1485,6 @@ service:
     - seat: '5'
       price: 157.6
   capacity_constraints: null
-- id: 03191_01-06-2025-18.57
-  date: '2025-06-01'
-  line: 03191
-  train_service_provider: '1'
-  time_slot: '113710'
-  rolling_stock: '1'
-  origin_destination_tuples:
-  - origin: '60000'
-    destination: '71801'
-    seats:
-    - seat: '2'
-      price: 95.7
-    - seat: '3'
-      price: 109.35
-    - seat: '4'
-      price: 145.45
-    - seat: '5'
-      price: 164.45
-  capacity_constraints: null
-- id: 06309_01-06-2025-19.34
-  date: '2025-06-01'
-  line: 06309
-  train_service_provider: '1'
-  time_slot: '117410'
-  rolling_stock: '1'
-  origin_destination_tuples:
-  - origin: '60000'
-    destination: '71801'
-    seats:
-    - seat: '1'
-      price: 109.0
-  capacity_constraints: null
-- id: 03201_01-06-2025-20.05
-  date: '2025-06-01'
-  line: '03201'
-  train_service_provider: '1'
-  time_slot: '120510'
-  rolling_stock: '1'
-  origin_destination_tuples:
-  - origin: '60000'
-    destination: '71801'
-    seats:
-    - seat: '2'
-      price: 95.7
-    - seat: '3'
-      price: 109.35
-    - seat: '4'
-      price: 127.25
-    - seat: '5'
-      price: 146.25
-  capacity_constraints: null
-- id: 03203_01-06-2025-20.27
-  date: '2025-06-01'
-  line: '03203'
-  train_service_provider: '1'
-  time_slot: '122710'
-  rolling_stock: '1'
-  origin_destination_tuples:
-  - origin: '60000'
-    destination: '71801'
-    seats:
-    - seat: '2'
-      price: 81.05
-    - seat: '3'
-      price: 92.65
-    - seat: '4'
-      price: 107.8
-    - seat: '5'
-      price: 126.8
-  capacity_constraints: null
 - id: 02883_01-06-2025-21.07
   date: '2025-06-01'
   line: 02883
@@ -1274,11 +1496,11 @@ service:
     destination: '71801'
     seats:
     - seat: '2'
-      price: 92.65
+      price: 138.95
     - seat: '3'
-      price: 104.2
+      price: 150.55
     - seat: '4'
-      price: 107.8
+      price: 123.2
     - seat: '5'
-      price: 126.8
+      price: 142.2
   capacity_constraints: null
