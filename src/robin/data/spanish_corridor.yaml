@@ -27,6 +27,20 @@ stations:
   coordinates:
     lat: 41.658649
     lon: -0.911615
+- id: '78200'
+  name: TARDIENTA
+  city: TARDIENTA
+  short_name: '78200'
+  coordinates:
+    lat: 41.975716
+    lon: -0.538223
+- id: '74200'
+  name: HUESCA
+  city: HUESCA
+  short_name: '74200'
+  coordinates:
+    lat: 42.133594
+    lon: -0.409745
 - id: '78400'
   name: LLEIDA-PIRINEUS
   city: LLEIDA
@@ -509,6 +523,10 @@ corridor:
         des:
         - org: '04040'  # ZARAGOZA-DELICIAS
           des:
+          - org: '78200'  # TARDIENTA
+            des:
+            - org: '74200'  # HUESCA
+              des: []
           - org: '78400'  # LLEIDA-PIRINEUS
             des:
             - org: '04104'  # CAMP TARRAGONA
