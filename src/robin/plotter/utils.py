@@ -132,13 +132,33 @@ def requires_attribute(attr_name: str, error_msg: str) -> Callable:
     return decorator
 
 
-requires_config_supply = requires_attribute(
-    'supply',
-    "requires supply configuration. Please provide 'path_config_supply'."
-)
+def requires_config_supply(method: Callable) -> Callable:
+    """
+    Decorator to ensure that the method requires a supply configuration.
+
+    Args:
+        method (Callable): The method to be decorated.
+    
+    Returns:
+        Callable: The wrapped method that checks for the supply configuration.
+    """
+    return requires_attribute(
+        'supply',
+        "requires supply configuration. Please provide 'path_config_supply'."
+    )(method)
 
 
-requires_output_csv = requires_attribute(
-    'output',
-    "requires output CSV data. Please provide 'path_output_csv'."
-)
+def requires_output_csv(method: Callable) -> Callable:
+    """
+    Decorator to ensure that the method requires an output CSV.
+
+    Args:
+        method (Callable): The method to be decorated.
+    
+    Returns:
+        Callable: The wrapped method that checks for the output CSV.
+    """
+    return requires_attribute(
+        'output',
+        "requires output CSV. Please provide 'path_output_csv'."
+    )(method)
