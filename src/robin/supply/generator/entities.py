@@ -56,7 +56,7 @@ class ServiceScheduler:
     Attributes:
         services (List[Service]): List of already scheduled services.
         corridor_graphs (Dict[str, nx.Graph]): Graphs representing corridors for each service.
-        segments_cache (Dict[str, List[Segment]]): Cache for segments of each service.
+        segments (Dict[str, List[Segment]]): Segments indexed by service ID, representing the route of each service.
         edge_index (Dict[Tuple[Station, Station], List[Segment]]): Index of segments by edges.
         without_conflicts (bool): Whether to check for conflicts when adding new services.
     """
