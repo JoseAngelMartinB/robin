@@ -468,6 +468,34 @@ stations:
   coordinates:
     lat: 39.9882552
     lon: -0.0524126
+- id: '65318'
+  name: BENICÀSSIM
+  city: BENICÀSSIM
+  short_name: '65318'
+  coordinates:
+    lat: 40.0579451
+    lon: 0.0577646
+- id: '65304'
+  name: ORPESA
+  city: ORPESA
+  short_name: '65304'
+  coordinates:
+    lat: 40.092258
+    lon: 0.139861
+- id: '65311'
+  name: BENICARLÓ-PEÑÍSCOLA
+  city: BENICARLÓ-PEÑÍSCOLA
+  short_name: '65311'
+  coordinates:
+    lat: 40.427639
+    lon: 0.415217
+- id: '65312'
+  name: VINARÒS
+  city: VINARÒS
+  short_name: '65312'
+  coordinates:
+    lat: 40.471682
+    lon: 0.455727
 - id: '60600'
   name: ALBACETE-LOS LLANOS
   city: ALBACETE
@@ -648,7 +676,15 @@ corridor:
           - org: '65200'  # SAGUNT/SAGUNTO
             des:
             - org: '65300'  # CASTELLÓ
-              des: []
+              des:
+                - org: '65318'  # BENICÀSSIM
+                  des:
+                  - org: '65304'  # ORPESA
+                    des:
+                    - org: '65311'  # BENICARLÓ-PEÑÍSCOLA
+                      des:
+                      - org: '65312'  # VINARÒS
+                        des: []
       - org: '60600'  # ALBACETE-LOS LLANOS
         des:
         - org: '03309'  # VILLENA AV
