@@ -147,7 +147,7 @@ stations:
     lat: 38.2554049
     lon: -4.570952
 - id: '50500'
-  name: CÓRDOBA
+  name: CÓRDOBA-JULIO ANGUITA
   city: CÓRDOBA
   short_name: '50500'
   coordinates:
