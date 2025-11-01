@@ -27,6 +27,223 @@ stations:
   coordinates:
     lat: 41.658649
     lon: -0.911615
+- id: '81202'
+  name: TUDELA DE NAVARRA
+  city: TUDELA
+  short_name: '81202'
+  coordinates:
+    lat: 42.059434
+    lon: -1.597931
+- id: '81200'
+  name: CASTEJÓN DE EBRO
+  city: CASTEJÓN
+  short_name: '81200'
+  coordinates:
+    lat: 42.172719
+    lon: -1.692114
+- id: '81108'
+  name: CALAHORRA
+  city: CALAHORRA
+  short_name: '81108'
+  coordinates:
+    lat: 42.310458
+    lon: -1.957755
+- id: '81100'
+  name: LOGROÑO
+  city: LOGROÑO
+  short_name: '81100'
+  coordinates:
+    lat: 42.457459
+    lon: -2.442193
+- id: '81002'
+  name: HARO
+  city: HARO
+  short_name: '81002'
+  coordinates:
+    lat: 42.583635
+    lon: -2.849396
+- id: '11200'
+  name: MIRANDA DE EBRO
+  city: MIRANDA DE EBRO
+  short_name: '11200'
+  coordinates:
+    lat: 42.691024
+    lon: -2.940366
+- id: '13200'
+  name: BILBAO-INTERMOD. ABANDO INDALECIO PRIETO
+  city: BILBAO-INTERMOD. ABANDO INDALECIO PRIETO
+  short_name: BILBA
+  coordinates:
+    lat: 43.259609
+    lon: -2.92915
+- id: '80108'
+  name: TAFALLA
+  city: TAFALLA
+  short_name: '80108'
+  coordinates:
+    lat: 42.525756
+    lon: -1.671467
+- id: '80100'
+  name: PAMPLONA/IRUÑA
+  city: PAMPLONA/IRUÑA
+  short_name: '80100'
+  coordinates:
+    lat: 42.824877
+    lon: -1.661419
+- id: '11300'
+  name: ALTSASU
+  city: ALTSASU/ALSASUA
+  short_name: '11300'
+  coordinates:
+    lat: 42.894847
+    lon: -2.181237
+- id: '11400'
+  name: ZUMARRAGA
+  city: ZUMARRAGA
+  short_name: '11400'
+  coordinates:
+    lat: 43.088273
+    lon: -2.318462
+- id: '11511'
+  name: SAN SEBASTIÁN-DONOSTIA
+  city: DONOSTIA/SAN SEBASTIÁN
+  short_name: '11511'
+  coordinates:
+    lat: 43.317669
+    lon: -1.976704
+- id: '11208'
+  name: VITORIA-GASTEIZ
+  city: VITORIA-GASTEIZ
+  short_name: '11208'
+  coordinates:
+    lat: 42.841517
+    lon: -2.672601
+- id: '11200'
+  name: MIRANDA DE EBRO
+  city: MIRANDA DE EBRO
+  short_name: '11200'
+  coordinates:
+    lat: 42.691024
+    lon: -2.940366
+- id: '11014'
+  name: BURGOS ROSA MANZANO
+  city: BURGOS
+  short_name: '11014'
+  coordinates:
+    lat: 42.371197
+    lon: -3.666308
+- id: '14100'
+  name: PALENCIA
+  city: PALENCIA
+  short_name: '14100'
+  coordinates:
+    lat: 42.015711
+    lon: -4.534135
+- id: '15100'
+  name: LEÓN
+  city: LEÓN
+  short_name: '15100'
+  coordinates:
+    lat: 42.596048
+    lon: -5.582428
+- id: '20100'
+  name: ASTORGA
+  city: ASTORGA
+  short_name: '20100'
+  coordinates:
+    lat: 42.459489
+    lon: -6.047212
+- id: '20111'
+  name: BEMBIBRE
+  city: BEMBIBRE
+  short_name: '20111'
+  coordinates:
+    lat: 42.609558
+    lon: -6.422048
+- id: '20200'
+  name: PONFERRADA
+  city: PONFERRADA
+  short_name: '20200'
+  coordinates:
+    lat: 42.545429
+    lon: -6.602376
+- id: '20211'
+  name: O BARCO DE VALDEORRAS
+  city: BARCO DE VALDEORRAS (O)
+  short_name: '20211'
+  coordinates:
+    lat: 42.418301
+    lon: -6.98503
+- id: '20213'
+  name: A RÚA-PETÍN
+  city: RÚA (A)
+  short_name: '20213'
+  coordinates:
+    lat: 42.39276
+    lon: -7.113284
+- id: '20216'
+  name: SAN CLODIO-QUIROGA
+  city: RIBAS DE SIL
+  short_name: '20216'
+  coordinates:
+    lat: 42.465271
+    lon: -7.287198
+- id: '20300'
+  name: MONFORTE DE LEMOS
+  city: MONFORTE DE LEMOS
+  short_name: '20300'
+  coordinates:
+    lat: 42.529682
+    lon: -7.503589
+- id: '22100'
+  name: OURENSE
+  city: OURENSE
+  short_name: '22100'
+  coordinates:
+    lat: 42.350389
+    lon: -7.872777
+- id: '22200'
+  name: GUILLAREI
+  city: TUI
+  short_name: '22200'
+  coordinates:
+    lat: 42.065663
+    lon: -8.62253
+- id: '22300'
+  name: REDONDELA
+  city: REDONDELA
+  short_name: REDON
+  coordinates:
+    lat: 42.286005
+    lon: -8.619402
+- id: '22308'
+  name: VIGO-GUIXAR
+  city: VIGO
+  short_name: '22308'
+  coordinates:
+    lat: 42.2392656
+    lon: -8.7146089
+- id: '10600'
+  name: VALLADOLID-CAMPO GRANDE
+  city: VALLADOLID
+  short_name: '10600'
+  coordinates:
+    lat: 41.642167
+    lon: -4.726986
+- id: '10500'
+  name: MEDINA DEL CAMPO
+  city: MEDINA DEL CAMPO
+  short_name: MEDIN
+  coordinates:
+    lat: 41.317617
+    lon: -4.909923
+- id: '30100'
+  name: SALAMANCA
+  city: SALAMANCA
+  short_name: SALAM
+  coordinates:
+    lat: 40.972235
+    lon: -5.64899
 - id: '78200'
   name: TARDIENTA
   city: TARDIENTA
@@ -125,6 +342,20 @@ stations:
   coordinates:
     lat: 43.30349
     lon: 5.382236
+- id: '87010'
+  name: MONTPELLIER SUD DE FRANCE
+  city: MONTPELLIER
+  short_name: '87010'
+  coordinates:
+    lat: 43.5951821
+    lon: 3.9216961
+- id: '87101'
+  name: NIMES PONT DU GARD
+  city: NIMES
+  short_name: '87101'
+  coordinates:
+    lat: 43.8168789
+    lon: 4.3617439
 - id: '37200'
   name: CIUDAD REAL
   city: CIUDAD REAL
@@ -538,6 +769,97 @@ stations:
   coordinates:
     lat: 37.97465
     lon: -1.1299555
+- id: '50403'
+  name: ANDÚJAR
+  city: ANDÚJAR
+  short_name: '50403'
+  coordinates:
+    lat: 38.028225
+    lon: -4.066036
+- id: '50400'
+  name: ESPELÚY
+  city: ESPELÚY
+  short_name: '50400'
+  coordinates:
+    lat: 38.010247
+    lon: -3.832726
+- id: '50300'
+  name: LINARES-BAEZA
+  city: LINARES
+  short_name: '50300'
+  coordinates:
+    lat: 38.068864
+    lon: -3.589396
+- id: '50207'
+  name: VILCHES
+  city: VILCHES
+  short_name: '50207'
+  coordinates:
+    lat: 38.215742
+    lon: -3.517576
+- id: '50102'
+  name: VALDEPEÑAS
+  city: VALDEPEÑAS
+  short_name: '50102'
+  coordinates:
+    lat: 38.762868
+    lon: -3.39572
+- id: '50100'
+  name: MANZANARES
+  city: MANZANARES
+  short_name: '50100'
+  coordinates:
+    lat: 39.005837
+    lon: -3.370507
+- id: '60400'
+  name: ALCÁZAR DE SAN JUAN
+  city: ALCÁZAR DE SAN JUAN
+  short_name: '60400'
+  coordinates:
+    lat: 39.395628
+    lon: -3.205744
+- id: '60406'
+  name: SOCUÉLLAMOS
+  city: SOCUÉLLAMOS
+  short_name: '60406'
+  coordinates:
+    lat: 39.278776
+    lon: -2.775571
+- id: '60500'
+  name: VILLARROBLEDO
+  city: VILLARROBLEDO
+  short_name: '60500'
+  coordinates:
+    lat: 39.260868
+    lon: -2.598621
+- id: '64100'
+  name: XÀTIVA
+  city: XÀTIVA
+  short_name: '64100'
+  coordinates:
+    lat: 38.9920972
+    lon: -0.5244888
+- id: '65000'
+  name: VALÈNCIA-ESTACIÓ DEL NORD
+  city: VALENCIA
+  short_name: '65000'
+  coordinates:
+    lat: 39.4669346
+    lon: -0.3771842
+- id: '65402'
+  name: L'ALDEA-AMPOSTA-TORTOSA
+  city: ALDEA (L')
+  short_name: '65402'
+  coordinates:
+    lat: 40.753542
+    lon: 0.614314
+- id: '65409'
+  name: CAMBRILS
+  city: CAMBRILS
+  short_name: '65409'
+  coordinates:
+    lat: 41.081648
+    lon: 1.046055
 
 corridor:
 - id: '1'
@@ -551,6 +873,68 @@ corridor:
         des:
         - org: '04040'  # ZARAGOZA-DELICIAS
           des:
+          - org: '81202'  # TUDELA DE NAVARRA
+            des:
+            - org: '81200'  # CASTEJÓN DE EBRO
+              des:
+              - org: '81108'  # CALAHORRA
+                des:
+                - org: '81100'  # LOGROÑO
+                  des:
+                  - org: '81002'  # HARO
+                    des:
+                    - org: '11200'  # MIRANDA DE EBRO
+                      des:
+                      - org: '13200'  # BILBAO-INTERMOD. ABANDO INDALECIO PRIETO
+                        des: []
+                - org: '80108'  # TAFALLA
+                  des:
+                  - org: '80100'  # PAMPLONA/IRUÑA
+                    des:
+                    - org: '11300'  # ALTSASU
+                      des:
+                      - org: '11400'  # ZUMARRAGA
+                        des:
+                        - org: '11511'  # SAN SEBASTIÁN-DONOSTIA
+                          des: []
+                      - org: '11208'  # VITORIA-GASTEIZ
+                        des:
+                        - org: '11200'  # MIRANDA DE EBRO
+                          des:
+                          - org: '11014'  # BURGOS ROSA MANZANO
+                            des:
+                            - org: '14100'  # PALENCIA
+                              des:
+                              - org: '15100'  # LEÓN
+                                des:
+                                - org: '20100'  # ASTORGA
+                                  des:
+                                  - org: '20111'  # BEMBIBRE
+                                    des:
+                                    - org: '20200'  # PONFERRADA
+                                      des:
+                                      - org: '20211'  # O BARCO DE VALDEORRAS
+                                        des:
+                                        - org: '20213'  # A RÚA-PETÍN
+                                          des:
+                                          - org: '20216'  # SAN CLODIO-QUIROGA
+                                            des:
+                                            - org: '20300'  # MONFORTE DE LEMOS
+                                              des:
+                                              - org: '22100'  # OURENSE
+                                                des:
+                                                - org: '22200'  # GUILLAREI
+                                                  des:
+                                                  - org: '22300'  # REDONDELA
+                                                    des:
+                                                    - org: '22308'  # VIGO-GUIXAR
+                                                      des: []
+                            - org: '10600'  # VALLADOLID-CAMPO GRANDE
+                              des:
+                              - org: '10500'  # MEDINA DEL CAMPO
+                                des:
+                                - org: '30100'  # SALAMANCA
+                                  des: []
           - org: '78200'  # TARDIENTA
             des:
             - org: '74200'  # HUESCA
@@ -575,7 +959,17 @@ corridor:
                             des:
                             - org: '87814'  # AVIGNON TGV
                               des:
-                              - org: '87912'  # AIX EN PROVENCE TGV 
+                              - org: '87912'  # AIX EN PROVENCE TGV
+                                des:
+                                - org: '87089'  # MARSEILLE ST CHARLES
+                                  des: []
+                        - org: '87010'  # MONTPELLIER SUD DE FRANCE
+                          des:
+                          - org: '87101'  # NIMES PONT DU GARD
+                            des:
+                            - org: '87814'  # AVIGNON TGV
+                              des:
+                              - org: '87912'  # AIX EN PROVENCE TGV
                                 des:
                                 - org: '87089'  # MARSEILLE ST CHARLES
                                   des: []
@@ -697,3 +1091,53 @@ corridor:
                 des:
                 - org: '61200'  # MURCIA
                   des: []
+  - org: '51405'  # CÁDIZ
+    des:
+    - org: '51406'  # SAN FERNANDO-BAHÍA SUR
+      des:
+      - org: '51400'  # PUERTO DE SANTA MARÍA
+        des:
+        - org: '51300'  # JEREZ DE LA FRONTERA
+          des:
+          - org: '51003'  # SEVILLA-SANTA JUSTA
+            des:
+            - org: '50500'  # CÓRDOBA-JULIO ANGUITA
+              des:
+              - org: '50403'  # ANDÚJAR
+                des:
+                - org: '50400'  # ESPELÚY
+                  des:
+                  - org: '50300'  # LINARES-BAEZA
+                    des:
+                    - org: '50207'  # VILCHES
+                      des:
+                      - org: '50102'  # VALDEPEÑAS
+                        des:
+                        - org: '50100'  # MANZANARES
+                          des:
+                          - org: '60400'  # ALCÁZAR DE SAN JUAN
+                            des:
+                            - org: '60406'  # SOCUÉLLAMOS
+                              des:
+                              - org: '60500'  # VILLARROBLEDO
+                                des:
+                                - org: '60600'  # ALBACETE-LOS LLANOS
+                                  des:
+                                  - org: '64100'  # XÀTIVA
+                                    des:
+                                    - org: '65000'  # VALÈNCIA-ESTACIÓ DEL NORD
+                                      des:
+                                      - org: '65300'  # CASTELLÓ
+                                        des:
+                                        - org: '65311'  # BENICARLÓ-PEÑÍSCOLA
+                                          des:
+                                          - org: '65312'  # VINARÒS
+                                            des:
+                                            - org: '65402'  # L'ALDEA-AMPOSTA-TORTOSA
+                                              des:
+                                              - org: '65409'  # CAMBRILS
+                                                des:
+                                                - org: '04104'  # CAMP TARRAGONA
+                                                  des:
+                                                  - org: '71801'  # BARCELONA-SANTS
+                                                    des: []
