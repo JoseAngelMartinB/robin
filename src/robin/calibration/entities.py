@@ -14,11 +14,12 @@ from robin.calibration.constants import (
     HIGH_TSPS_UTILITY, HIGH_USER_PATTERN_DISTRIBUTION
 )
 from robin.calibration.exceptions import InvalidArrivalTimeDistribution, InvalidPenaltyFunction
+from robin.demand.entities import Market
 from robin.kernel.entities import Kernel
 from robin.supply.entities import Supply
 
 from pathlib import Path
-from sklearn.metrics import mean_squared_error
+from sklearn.metrics import mean_squared_error, root_mean_squared_error
 from typing import Any, Dict, List, Mapping, Tuple, Union
 
 
@@ -45,6 +46,7 @@ class Calibration:
         target_output_path: str,
         calibration_logs: str = 'calibration_logs',
         departure_time_hard_restriction: bool = True,
+        aggregated_target: bool = False,
         keep_top_k: int = DEFAULT_KEEP_TOP_K
     ) -> None:
         """
@@ -57,11 +59,22 @@ class Calibration:
             calibration_logs (str): Path to the calibration logs. Defaults to 'calibration_logs'.
             departure_time_hard_restriction (bool, optional): If True, the passenger will not
                 be assigned to a service with a departure time that is not valid. Defaults to True.
+            aggregated_target (bool, optional): If True, target data is aggregated by market and tsp. Defaults to False
+                indicating disaggregated target data by service.
             keep_top_k (int, optional): Number of top k trials to keep. Defaults to 3.
         """
         self.path_config_supply = path_config_supply
         self.path_config_demand = path_config_demand
-        self.df_target_output = self._get_df_target_output(target_output_path)
+        self.aggregated_target = aggregated_target
+        self.supply = Supply.from_yaml(self.path_config_supply)
+
+        if not self.aggregated_target:
+            self.df_target_output = self._get_df_target_output(target_output_path)
+        else:
+            self.service_to_operator_map = {service.id: service.tsp.id for service in self.supply.services}
+            self.od_to_market_map = self._get_od_to_market_map(path_config_demand)
+            self.df_target_output = self._get_df_target_output_aggregated(target_output_path)
+
         self.calibration_logs = self._create_directory(calibration_logs)
         self.departure_time_hard_restriction = departure_time_hard_restriction
         self.top_k_trials = {}
@@ -79,6 +92,24 @@ class Calibration:
         """
         os.makedirs(directory, exist_ok=True)
         return directory
+
+    def _get_df_target_output_aggregated(self, target_output_path: str) -> pd.DataFrame:
+        """
+        Reads the target output CSV file and returns a DataFrame with the number of tickets sold for market and tsp
+        pairs.
+
+        Args:
+            target_output_path (str): File path to the aggregated target CSV file.
+
+        Returns:
+            pd.DataFrame: DataFrame with 'tickets_sold_target' and 'tickets_sold_prediction' columns, and 'tsp'
+                and 'market' as index.
+        """
+        df_target = pd.read_csv(target_output_path, dtype={'tsp': str, 'market': int})
+        df_target = df_target.rename(columns={'tickets_sold': 'tickets_sold_target'})
+        df_target['tickets_sold_prediction'] = 0
+        df_target = df_target.set_index(['market', 'tsp'])
+        return df_target
     
     def _get_df_target_output(self, target_output_path: str) -> pd.DataFrame:
         """
@@ -91,7 +122,7 @@ class Calibration:
             pd.DataFrame: DataFrame with 'tickets_sold_target' and 'tickets_sold_prediction'
                 columns and service IDs as the index.
         """
-        services = [service.id for service in Supply.from_yaml(self.path_config_supply).services]
+        services = [service.id for service in self.supply.services]
         df_target_output = pd.DataFrame(0, columns=['tickets_sold_target', 'tickets_sold_prediction'], index=services)
         df_target = pd.read_csv(target_output_path)
         df_result = df_target.groupby(by='service').size().to_frame()
@@ -99,10 +130,33 @@ class Calibration:
         df_target_output.update(df_result)
         return df_target_output
 
+    def _get_od_to_market_map(self, path_config_demand: str) -> Dict[Tuple[str, str], int]:
+        """
+        Get a mapping from (departure_station, arrival_station) to market id.
+
+        Args:
+            path_config_demand (str): Path to the demand configuration file.
+
+        Returns:
+            Dict[Tuple[str, str], int]: Mapping from (departure_station, arrival_station) to market id.
+        """
+        # NOTE: Demand config file can't be loaded with the Demand module, since parameters may be missing in this file.
+        with open(path_config_demand, 'r') as f:
+            demand_yaml = f.read()
+
+        data = yaml.load(demand_yaml, Loader=yaml.CSafeLoader)
+        od_to_market_map = {}
+
+        for market_data in data['market']:
+            market = Market(**market_data)
+            od_to_market_map[(market.departure_station, market.arrival_station)] = market.id
+
+        return od_to_market_map
+
     def create_study(
         self,
         direction: str = 'minimize',
-        study_name: Union[int, None] = None,
+        study_name: Union[str, None] = None,
         storage: Union[str, None] = None,
         n_trials: Union[int, None] = None,
         timeout: Union[int, None] = None,
@@ -191,10 +245,31 @@ class Calibration:
             trial (optuna.Trial): Optuna trial object.
             trial_directory (str): Path to the trial directory.
         """
-        df_checkpoint = pd.read_csv(f'{trial_directory}/checkpoint_{trial.number}.csv')
-        df_checkpoint = df_checkpoint.groupby(by='service').size().to_frame()
-        df_checkpoint.columns = ['tickets_sold_prediction']
-        self.df_target_output.update(df_checkpoint)
+        df_checkpoint = pd.read_csv(f'{trial_directory}/checkpoint_{trial.number}.csv', low_memory=False)
+
+        self.df_target_output['tickets_sold_prediction'] = 0
+        if not self.aggregated_target:
+            # Disaggregated target logic
+            df_prediction = df_checkpoint.groupby(by='service').size().to_frame()
+            df_prediction.columns = ['tickets_sold_prediction']
+            self.df_target_output.update(df_prediction)
+
+        else:
+            # Aggregated target logic
+            df_checkpoint.dropna(subset=['service'], inplace=True)
+            df_sim_sold = df_checkpoint[['departure_station', 'arrival_station', 'service']].copy()
+
+            od_tuples = list(zip(
+                df_sim_sold['departure_station'].astype(str),
+                df_sim_sold['arrival_station'].astype(str)
+            ))
+
+            df_sim_sold['market'] = [self.od_to_market_map.get(t) for t in od_tuples]
+            df_sim_sold['tsp'] = df_sim_sold['service'].map(self.service_to_operator_map)
+            df_prediction = df_sim_sold.groupby(by=['market', 'tsp']).size().to_frame()
+
+            df_prediction.columns = ['tickets_sold_prediction']
+            self.df_target_output.update(df_prediction)
 
     def _save_df_target_output(self, trial: optuna.Trial, trial_directory: str) -> None:
         """
@@ -204,7 +279,7 @@ class Calibration:
             trial (optuna.Trial): Optuna trial object.
             trial_directory (str): Path to the trial directory.
         """
-        self.df_target_output.to_csv(f'{trial_directory}/df_target_output_{trial.number}.csv', index_label='service')
+        self.df_target_output.to_csv(f'{trial_directory}/df_target_output_{trial.number}.csv')
 
     def objetive_function(self, trial: optuna.Trial, trial_directory: str) -> float:
         """
@@ -221,7 +296,7 @@ class Calibration:
         self._save_df_target_output(trial, trial_directory)
         actual = self.df_target_output['tickets_sold_target'].values
         prediction = self.df_target_output['tickets_sold_prediction'].values
-        error = mean_squared_error(actual, prediction)
+        error = root_mean_squared_error(actual, prediction)
         return error
 
     def _replace_highest_error(self, trial: optuna.Trial, trial_directory: str, error: float) -> None:

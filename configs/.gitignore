@@ -11,6 +11,7 @@
 !calibration/demand_data_target.yaml
 !calibration/demand_data.yaml
 !calibration/supply_data.yaml
+!calibration/target_aggregated.csv
 !calibration/target.csv
 
 !supply_generator
