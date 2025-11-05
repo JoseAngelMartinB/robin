@@ -3,6 +3,23 @@
 # Except these files
 !.gitignore
 
+!calibration_rl
+!calibration_rl/iryo
+!calibration_rl/iryo/prices
+!calibration_rl/iryo/prices/prices_60000_71801_2025-11-01_2025-12-01.csv
+!calibration_rl/iryo/stopTimes
+!calibration_rl/iryo/stopTimes/stopTimes_60000_71801_2025-11-01_2025-12-01.csv
+!calibration_rl/ouigo
+!calibration_rl/ouigo/prices
+!calibration_rl/ouigo/prices/prices_60000_71801_2025-11-01_2025-12-01.csv
+!calibration_rl/ouigo/stopTimes
+!calibration_rl/ouigo/stopTimes/stopTimes_60000_71801_2025-11-01_2025-12-01.csv
+!calibration_rl/renfe
+!calibration_rl/renfe/prices
+!calibration_rl/renfe/prices/prices_60000_71801_2025-11-01_2025-12-01_cleaned_sorted.csv
+!calibration_rl/renfe/stopTimes
+!calibration_rl/renfe/stopTimes/stopTimes_60000_71801_2025-11-01_2025-12-01_cleaned.csv
+
 !scraping
 !scraping/renfe
 !scraping/renfe/supply_60000_71801_2025-06-01_2025-06-02.yaml
