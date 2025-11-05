@@ -247,7 +247,7 @@ class DataLoader:
         Returns:
             List[Service]: List of services.
         """
-        trips = deepcopy(self.prices)
+        trips = pd.DataFrame(self.prices[['service_id', 'tsp']].drop_duplicates().reset_index(drop=True))
         trips['date'] = trips['service_id'].apply(lambda service_id: datetime.datetime.strptime(service_id.split('_')[1], '%d-%m-%Y-%H.%M').date())
         trips['line'] = trips['service_id'].apply(lambda service_id: self.lines[service_id.split('_')[0]])
         trips['train_service_provider'] = trips['tsp'].apply(
