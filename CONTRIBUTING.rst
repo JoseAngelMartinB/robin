@@ -131,20 +131,6 @@ all the dependencies which were removed from the environment file::
    conda activate robin
    conda env update --file environment.yml --prune
 
-This project uses pre-commit, please make sure to install it before making any changes:
-
-3. install several [pre-commit] git hooks with::
-   
-      bash
-      pre-commit install
-   
-   It is a good idea to update the hooks to the latest version::
-   
-      bash
-      pre-commit autoupdate
-
-   ``robin`` comes with a lot of hooks configured to automatically help the
-   developer to check the code being written.
 
 Implement your changes
 ----------------------
@@ -166,11 +152,6 @@ Implement your changes
       git commit
 
    to record your changes in git_.
-
-   Please make sure to see the validation messages from |pre-commit|_ and fix
-   any eventual issues.
-   This should automatically use flake8_/black_ to check/fix the code style
-   in a way that is compatible with the project.
 
    .. important:: Don't forget to add unit tests and documentation in case your
       contribution adds an additional feature and is not just a bugfix.
@@ -303,7 +284,6 @@ on PyPI_, the following steps can be used to release a new version for
 
 
 .. |virtualenv| replace:: ``virtualenv``
-.. |pre-commit| replace:: ``pre-commit``
 .. |tox| replace:: ``tox``
 
 
@@ -321,7 +301,6 @@ on PyPI_, the following steps can be used to release a new version for
 .. _Miniconda: https://docs.conda.io/en/latest/miniconda.html
 .. _MyST: https://myst-parser.readthedocs.io/en/latest/syntax/syntax.html
 .. _other kinds of contributions: https://opensource.guide/how-to-contribute
-.. _pre-commit: https://pre-commit.com/
 .. _PyPI: https://pypi.org/
 .. _PyScaffold's contributor's guide: https://pyscaffold.org/en/stable/contributing.html
 .. _Pytest can drop you: https://docs.pytest.org/en/stable/usage.html#dropping-to-pdb-python-debugger-at-the-start-of-a-test

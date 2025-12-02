@@ -55,17 +55,6 @@ In order to contribute to this proyect it is necessary to set up the following e
 > **_NOTE:_**  The conda environment will have the package `robin` installed in editable mode.
 > Some changes, e.g. in `setup.cfg`, might require you to run `pip install -e .` again.
 
-This project uses pre-commit, please make sure to install it before making any changes:
-
-3. install several [pre-commit] git hooks with:
-   ```bash
-   pre-commit install
-   ```
-   It is a good idea to update the hooks to the latest version:
-    ```bash
-   pre-commit autoupdate
-   ```
-
 For more information you can refer to the [contributing guide](CONTRIBUTING.rst).
 
 
@@ -100,5 +89,4 @@ For more information you can refer to the [contributing guide](CONTRIBUTING.rst)
 ├── tests                   <- Unit tests which can be run with `pytest`.
 ├── .coveragerc             <- Configuration for coverage reports of unit tests.
 ├── .isort.cfg              <- Configuration for git hook that sorts imports.
-└── .pre-commit-config.yaml <- Configuration of pre-commit git hooks.
 ```

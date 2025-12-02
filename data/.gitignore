@@ -1,4 +1,12 @@
 # Ignore everything in this directory
 *
-# Except this file
+# Except these files
 !.gitignore
+
+!scraping
+!scraping/renfe
+!scraping/renfe/supply_60000_71801_2025-06-01_2025-06-02.yaml
+!scraping/renfe/prices
+!scraping/renfe/prices/prices_60000_71801_2025-06-01_2025-06-02.csv
+!scraping/renfe/stopTimes
+!scraping/renfe/stopTimes/stopTimes_60000_71801_2025-06-01_2025-06-02.csv

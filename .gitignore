@@ -51,3 +51,9 @@ MANIFEST
 # Per-project virtualenvs
 .venv*/
 .conda*/
+
+# Profiling files
+profiling/*
+
+# Calibration logs files
+calibration_logs/*

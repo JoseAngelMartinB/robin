@@ -1,0 +1,235 @@
+market:
+- id: 1
+  departure_station: '60000'
+  arrival_station: '04040'
+- id: 2
+  departure_station: '04040'
+  arrival_station: '71801'
+- id: 3
+  departure_station: '60000'
+  arrival_station: '71801'
+userPattern:
+- id: 1
+  name: Business
+  arrival_time: hourly
+  arrival_time_kwargs:
+    '0': 0
+    '1': 0
+    '2': 0
+    '3': 0
+    '4': 0
+    '5': 0.02
+    '6': null
+    '7': null
+    '8': null
+    '9': null
+    '10': null
+    '11': null
+    '12': null
+    '13': null
+    '14': null
+    '15': null
+    '16': null
+    '17': null
+    '18': null
+    '19': null
+    '20': null
+    '21': null
+    '22': null
+    '23': null
+  purchase_day: poisson
+  purchase_day_kwargs:
+    mu: 1.25
+  forbidden_departure_hours:
+    start: 0
+    end: 4
+  seats:
+  - id: 1
+    utility: null
+  - id: 2
+    utility: null
+  - id: 3
+    utility: null
+  train_service_providers:
+  - id: 1
+    utility: null
+  penalty_arrival_time: polynomial
+  penalty_arrival_time_kwargs:
+    b_0: 0
+    b_1: null
+  penalty_departure_time: polynomial
+  penalty_departure_time_kwargs:
+    b_0: 0
+    b_1: null
+  penalty_cost: polynomial
+  penalty_cost_kwargs:
+    b_0: 0
+    b_1: null
+  penalty_travel_time: polynomial
+  penalty_travel_time_kwargs:
+    b_0: 0
+    b_1: null
+  error: null
+  error_kwargs: null
+- id: 2
+  name: Student
+  arrival_time: hourly
+  arrival_time_kwargs:
+    '0': 0
+    '1': 0
+    '2': 0
+    '3': 0
+    '4': 0
+    '5': null
+    '6': null
+    '7': null
+    '8': null
+    '9': null
+    '10': null
+    '11': null
+    '12': null
+    '13': null
+    '14': null
+    '15': null
+    '16': null
+    '17': null
+    '18': null
+    '19': null
+    '20': null
+    '21': null
+    '22': null
+    '23': null
+  purchase_day: null
+  purchase_day_kwargs: null
+  forbidden_departure_hours:
+    start: 0
+    end: 4
+  seats:
+  - id: 1
+    utility: null
+  - id: 2
+    utility: null
+  - id: 3
+    utility: null
+  train_service_providers:
+  - id: 1
+    utility: 0
+  penalty_arrival_time: polynomial
+  penalty_arrival_time_kwargs:
+    b_0: null
+    b_1: null
+  penalty_departure_time: polynomial
+  penalty_departure_time_kwargs:
+    b_0: null
+    b_1: null
+  penalty_cost: polynomial
+  penalty_cost_kwargs:
+    b_0: null
+    b_1: null
+  penalty_travel_time: polynomial
+  penalty_travel_time_kwargs:
+    b_0: null
+    b_1: null
+  error: norm
+  error_kwargs:
+    loc: 1
+    scale: 0.5
+demandPattern:
+- id: 1
+  name: Monday-Thursday
+  markets:
+  - market: 3
+    potential_demand: randint
+    potential_demand_kwargs:
+      low: 3500
+      high: 5000
+    user_pattern_distribution:
+    - id: 1
+      percentage: 0.8
+    - id: 2
+      percentage: 0.2
+- id: 2
+  name: Friday-Saturday
+  markets:
+  - market: 3
+    potential_demand: randint
+    potential_demand_kwargs:
+      low: 5000
+      high: null
+    user_pattern_distribution:
+    - id: 1
+      percentage: 0.4
+    - id: 2
+      percentage: null
+- id: 3
+  name: Sunday
+  markets:
+  - market: 3
+    potential_demand: randint
+    potential_demand_kwargs:
+      low: null
+      high: null
+    user_pattern_distribution:
+    - id: 1
+      percentage: null
+    - id: 2
+      percentage: 0.7
+- id: 4
+  name: Holiday
+  markets:
+  - market: 3
+    potential_demand: null
+    potential_demand_kwargs:
+      low: null
+      high: null
+    user_pattern_distribution:
+    - id: 1
+      percentage: null
+    - id: 2
+      percentage: null
+day:
+- id: 1
+  date: 2023-01-01
+  demandPattern: 4
+- id: 2
+  date: 2023-01-02
+  demandPattern: 4
+- id: 3
+  date: 2023-01-03
+  demandPattern: 4
+- id: 4
+  date: 2023-01-04
+  demandPattern: 4
+- id: 5
+  date: 2023-01-05
+  demandPattern: 4
+- id: 6
+  date: 2023-01-06
+  demandPattern: 4
+- id: 7
+  date: 2023-01-07
+  demandPattern: 2
+- id: 8
+  date: 2023-01-08
+  demandPattern: 3
+- id: 9
+  date: 2023-01-09
+  demandPattern: 1
+- id: 10
+  date: 2023-01-10
+  demandPattern: 1
+- id: 11
+  date: 2023-01-11
+  demandPattern: 1
+- id: 12
+  date: 2023-01-12
+  demandPattern: 1
+- id: 13
+  date: 2023-01-13
+  demandPattern: 2
+- id: 14
+  date: 2023-01-14
+  demandPattern: 2
+- id: 15
+  date: 2023-01-15
+  demandPattern: 3

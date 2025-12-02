@@ -1,0 +1,801 @@
+stations:
+- id: '60000'
+  name: MADRID PTA. ATOCHA - ALMUDENA GRANDES
+  city: MADRID
+  short_name: MADRI
+  coordinates:
+    latitude: 40.406442
+    longitude: -3.690886
+- id: '04007'
+  name: GUADALAJARA - YEBES
+  city: GUADALAJARA - YEBES
+  short_name: 2055
+  coordinates:
+    latitude: 40.587315
+    longitude: -3.124301
+- id: '70600'
+  name: CALATAYUD
+  city: CALATAYUD
+  short_name: '70600'
+  coordinates:
+    latitude: 41.346692
+    longitude: -1.63868
+- id: '04040'
+  name: ZARAGOZA-DELICIAS
+  city: ZARAGOZA
+  short_name: ZARAG
+  coordinates:
+    latitude: 41.658649
+    longitude: -0.911615
+- id: '78400'
+  name: LLEIDA-PIRINEUS
+  city: LLEIDA
+  short_name: '78400'
+  coordinates:
+    latitude: 41.620696
+    longitude: 0.632669
+- id: '04104'
+  name: CAMP TARRAGONA
+  city: TARRAGONA
+  short_name: '04104'
+  coordinates:
+    latitude: 41.192066
+    longitude: 1.272666
+- id: '71801'
+  name: BARCELONA-SANTS
+  city: BARCELONA
+  short_name: BARCE
+  coordinates:
+    latitude: 41.37922
+    longitude: 2.140624
+- id: '79206'
+  name: GIRONA
+  city: GIRONA
+  short_name: '79206'
+  coordinates:
+    latitude: 41.953481
+    longitude: 2.80536
+- id: '04307'
+  name: FIGUERES VILAFANT
+  city: FIGUERES
+  short_name: '04307'
+  coordinates:
+    latitude: 42.264771
+    longitude: 2.943547
+- id: '37200'
+  name: CIUDAD REAL
+  city: CIUDAD REAL
+  short_name: '37200'
+  coordinates:
+    latitude: 38.9853
+    longitude: -3.913633
+- id: '37300'
+  name: PUERTOLLANO
+  city: PUERTOLLANO
+  short_name: '37300'
+  coordinates:
+    latitude: 38.69128
+    longitude: -4.111655
+- id: '50500'
+  name: CÓRDOBA
+  city: CÓRDOBA
+  short_name: '50500'
+  coordinates:
+    latitude: 37.888291
+    longitude: -4.789453
+- id: '51003'
+  name: SEVILLA-SANTA JUSTA
+  city: SEVILLA
+  short_name: '51003'
+  coordinates:
+    latitude: 37.3921277
+    longitude: -5.9752694
+- id: '54413'
+  name: MÁLAGA MARÍA ZAMBRANO
+  city: MÁLAGA
+  short_name: '54413'
+  coordinates:
+    latitude: 36.7113388
+    longitude: -4.4313888
+- id: '05000'
+  name: GRANADA
+  city: GRANADA
+  short_name: '05000'
+  coordinates:
+    latitude: 37.184038
+    longitude: -3.609154
+- id: 08004
+  name: SEGOVIA GUIOMAR
+  city: SEGOVIA
+  short_name: 08004
+  coordinates:
+    latitude: 40.910577
+    longitude: -4.094564
+- id: '30200'
+  name: ZAMORA
+  city: ZAMORA
+  short_name: '30200'
+  coordinates:
+    latitude: 41.515892
+    longitude: -5.739675
+- id: '22100'
+  name: OURENSE
+  city: OURENSE
+  short_name: '22100'
+  coordinates:
+    latitude: 42.350389
+    longitude: -7.872777
+- id: '23004'
+  name: PONTEVEDRA
+  city: PONTEVEDRA
+  short_name: '23004'
+  coordinates:
+    latitude: 42.421969
+    longitude: -8.635546
+- id: '31412'
+  name: A CORUÑA
+  city: A CORUÑA
+  short_name: '31412'
+  coordinates:
+    latitude: 43.3496932
+    longitude: -8.4155629
+- id: '10600'
+  name: VALLADOLID
+  city: VALLADOLID
+  short_name: '10600'
+  coordinates:
+    latitude: 41.642167
+    longitude: -4.726986
+- id: '14100'
+  name: PALENCIA
+  city: PALENCIA
+  short_name: '14100'
+  coordinates:
+    latitude: 42.015711
+    longitude: -4.534135
+- id: '15100'
+  name: LEÓN
+  city: LEÓN
+  short_name: '15100'
+  coordinates:
+    latitude: 42.596048
+    longitude: -5.582428
+- id: '15211'
+  name: OVIEDO/UVIÉU
+  city: OVIEDO
+  short_name: '15211'
+  coordinates:
+    latitude: 43.366841
+    longitude: -5.854263
+- id: '15402'
+  name: GIJÓN/XIXÓN
+  city: GIJÓN
+  short_name: '15402'
+  coordinates:
+    latitude: 43.539243
+    longitude: -5.675436
+- id: '11014'
+  name: BURGOS ROSA MANZANO
+  city: BURGOS
+  short_name: '11014'
+  coordinates:
+    latitude: 42.371197
+    longitude: -3.666308
+- id: '17000'
+  name: MADRID-CHAMARTÍN-CLARA CAMPOAMOR
+  city: MADRID
+  short_name: '17000'
+  coordinates:
+    latitude: 40.4720993
+    longitude: -3.6824687
+- id: 03208
+  name: CUENCA FERNANDO ZÓBEL
+  city: CUENCA
+  short_name: 03208
+  coordinates:
+    latitude: 40.035192
+    longitude: -2.14441
+- id: '03213'
+  name: REQUENA UTIEL
+  city: REQUENA
+  short_name: '03213'
+  coordinates:
+    latitude: 39.519834
+    longitude: -1.127601
+- id: '03216'
+  name: VALENCIA JOAQUÍN SOROLLA
+  city: VALENCIA
+  short_name: VALEN
+  coordinates:
+    latitude: 39.459051
+    longitude: -0.382923
+- id: '65200'
+  name: SAGUNT/SAGUNTO
+  city: SAGUNT
+  short_name: '65200'
+  coordinates:
+    latitude: 39.6756611
+    longitude: -0.2715972
+- id: '65300'
+  name: CASTELLÓ
+  city: CASTELLÓ
+  short_name: '65300'
+  coordinates:
+    latitude: 39.9882552
+    longitude: -0.0524126
+- id: '60600'
+  name: ALBACETE-LOS LLANOS
+  city: ALBACETE
+  short_name: '60600'
+  coordinates:
+    latitude: 38.999384
+    longitude: -1.84845
+- id: '60911'
+  name: ALICANTE/ALACANT
+  city: ALICANTE
+  short_name: '60911'
+  coordinates:
+    latitude: 38.34445
+    longitude: -0.4950527
+- id: '61200'
+  name: MURCIA
+  city: MURCIA
+  short_name: '61200'
+  coordinates:
+    latitude: 37.97465
+    longitude: -1.1299555
+timeSlot:
+- id: '1'
+  start: '6:27:00'
+  end: '6:37:00'
+- id: '2'
+  start: '7:27:00'
+  end: '7:37:00'
+- id: '3'
+  start: '8:27:00'
+  end: '8:37:00'
+- id: '4'
+  start: '9:27:00'
+  end: '9:37:00'
+- id: '5'
+  start: '11:27:00'
+  end: '11:37:00'
+corridor:
+- id: '1'
+  name: Spanish Corridor
+  stations:
+  - org: '60000'
+    des:
+    - org: '04007'
+      des:
+      - org: '70600'
+        des:
+        - org: '04040'
+          des:
+          - org: '78400'
+            des:
+            - org: '04104'
+              des:
+              - org: '71801'
+                des:
+                - org: '79206'
+                  des:
+                  - org: '04307'
+                    des: []
+    - org: '37200'
+      des:
+      - org: '37300'
+        des:
+        - org: '50500'
+          des:
+          - org: '51003'
+            des: []
+          - org: '54413'
+            des: []
+          - org: '05000'
+            des: []
+    - org: 08004
+      des:
+      - org: '30200'
+        des:
+        - org: '22100'
+          des:
+          - org: '23004'
+            des: []
+          - org: '31412'
+            des: []
+        - org: '10600'
+          des:
+          - org: '14100'
+            des:
+            - org: '15100'
+              des:
+              - org: '15211'
+                des:
+                - org: '15402'
+                  des: []
+            - org: '11014'
+              des: []
+  - org: '17000'
+    des:
+    - org: 03208
+      des:
+      - org: '03213'
+        des:
+        - org: '03216'
+          des:
+          - org: '65200'
+            des:
+            - org: '65300'
+              des: []
+      - org: '60600'
+        des:
+        - org: '60911'
+          des:
+          - org: '61200'
+            des: []
+line:
+- id: '06301'
+  name: Line 06301
+  corridor: '1'
+  stops:
+  - station: '60000'
+    arrival_time: 0
+    departure_time: 0
+  - station: '70600'
+    arrival_time: 59
+    departure_time: 60
+  - station: '04040'
+    arrival_time: 85
+    departure_time: 86
+  - station: '71801'
+    arrival_time: 178
+    departure_time: 178
+- id: '03073'
+  name: Line 03073
+  corridor: '1'
+  stops:
+  - station: '60000'
+    arrival_time: 0
+    departure_time: 0
+  - station: '04007'
+    arrival_time: 25
+    departure_time: 26
+  - station: '04040'
+    arrival_time: 84
+    departure_time: 85
+  - station: '78400'
+    arrival_time: 128
+    departure_time: 130
+  - station: '04104'
+    arrival_time: 157
+    departure_time: 159
+  - station: '71801'
+    arrival_time: 199
+    departure_time: 207
+  - station: '79206'
+    arrival_time: 245
+    departure_time: 247
+  - station: '04307'
+    arrival_time: 262
+    departure_time: 262
+- id: 03083
+  name: Line 03083
+  corridor: '1'
+  stops:
+  - station: '60000'
+    arrival_time: 0
+    departure_time: 0
+  - station: '04040'
+    arrival_time: 78
+    departure_time: 79
+  - station: '71801'
+    arrival_time: 172
+    departure_time: 172
+- id: '02561'
+  name: Line 02561
+  corridor: '1'
+  stops:
+  - station: '51003'
+    arrival_time: 0
+    departure_time: 0
+  - station: '50500'
+    arrival_time: 43
+    departure_time: 45
+  - station: '37300'
+    arrival_time: 92
+    departure_time: 94
+  - station: '37200'
+    arrival_time: 109
+    departure_time: 111
+  - station: '60000'
+    arrival_time: 176
+    departure_time: 207
+  - station: '04040'
+    arrival_time: 286
+    departure_time: 287
+  - station: '78400'
+    arrival_time: 332
+    departure_time: 334
+  - station: '04104'
+    arrival_time: 360
+    departure_time: 362
+  - station: '71801'
+    arrival_time: 401
+    departure_time: 409
+  - station: '79206'
+    arrival_time: 450
+    departure_time: 452
+  - station: '04307'
+    arrival_time: 467
+    departure_time: 467
+- id: '03113'
+  name: Line 03113
+  corridor: '1'
+  stops:
+  - station: '60000'
+    arrival_time: 0
+    departure_time: 0
+  - station: '70600'
+    arrival_time: 58
+    departure_time: 59
+  - station: '04040'
+    arrival_time: 84
+    departure_time: 85
+  - station: '78400'
+    arrival_time: 128
+    departure_time: 130
+  - station: '04104'
+    arrival_time: 157
+    departure_time: 159
+  - station: '71801'
+    arrival_time: 199
+    departure_time: 199
+- id: 02591
+  name: Line 02591
+  corridor: '1'
+  stops:
+  - station: '51003'
+    arrival_time: 0
+    departure_time: 0
+  - station: '60000'
+    arrival_time: 157
+    departure_time: 171
+  - station: '04040'
+    arrival_time: 249
+    departure_time: 250
+  - station: '78400'
+    arrival_time: 293
+    departure_time: 295
+  - station: '71801'
+    arrival_time: 368
+    departure_time: 378
+  - station: '79206'
+    arrival_time: 419
+    departure_time: 421
+  - station: '04307'
+    arrival_time: 436
+    departure_time: 436
+- id: '03131'
+  name: Line 03131
+  corridor: '1'
+  stops:
+  - station: '60000'
+    arrival_time: 0
+    departure_time: 0
+  - station: '71801'
+    arrival_time: 157
+    departure_time: 157
+- id: 09725
+  name: Line 09725
+  corridor: '1'
+  stops:
+  - station: '60000'
+    arrival_time: 0
+    departure_time: 0
+  - station: '04007'
+    arrival_time: 26
+    departure_time: 28
+  - station: '04040'
+    arrival_time: 85
+    departure_time: 88
+  - station: '04104'
+    arrival_time: 142
+    departure_time: 144
+  - station: '71801'
+    arrival_time: 184
+    departure_time: 196
+  - station: '79206'
+    arrival_time: 235
+    departure_time: 238
+  - station: '04307'
+    arrival_time: 252
+    departure_time: 255
+- id: '03143'
+  name: Line 03143
+  corridor: '1'
+  stops:
+  - station: '60000'
+    arrival_time: 0
+    departure_time: 0
+  - station: '70600'
+    arrival_time: 58
+    departure_time: 59
+  - station: '04040'
+    arrival_time: 84
+    departure_time: 85
+  - station: '71801'
+    arrival_time: 177
+    departure_time: 187
+  - station: '79206'
+    arrival_time: 231
+    departure_time: 234
+  - station: '04307'
+    arrival_time: 250
+    departure_time: 250
+- id: '06305'
+  name: Line 06305
+  corridor: '1'
+  stops:
+  - station: '60000'
+    arrival_time: 0
+    departure_time: 0
+  - station: '70600'
+    arrival_time: 58
+    departure_time: 59
+  - station: '04040'
+    arrival_time: 84
+    departure_time: 85
+  - station: '78400'
+    arrival_time: 128
+    departure_time: 130
+  - station: '04104'
+    arrival_time: 157
+    departure_time: 159
+  - station: '71801'
+    arrival_time: 199
+    departure_time: 199
+- id: '03161'
+  name: Line 03161
+  corridor: '1'
+  stops:
+  - station: '60000'
+    arrival_time: 0
+    departure_time: 0
+  - station: '71801'
+    arrival_time: 157
+    departure_time: 157
+- id: '03162'
+  name: Line 03162
+  corridor: '1'
+  stops:
+  - station: '71801'
+    arrival_time: 0
+    departure_time: 0
+  - station: '60000'
+    arrival_time: 157
+    departure_time: 157
+- id: '03163'
+  name: Line 03163
+  corridor: '1'
+  stops:
+  - station: '60000'
+    arrival_time: 0
+    departure_time: 0
+  - station: '04040'
+    arrival_time: 78
+    departure_time: 79
+  - station: '71801'
+    arrival_time: 172
+    departure_time: 172
+- id: '03171'
+  name: Line 03171
+  corridor: '1'
+  stops:
+  - station: '60000'
+    arrival_time: 0
+    departure_time: 0
+  - station: '71801'
+    arrival_time: 157
+    departure_time: 157
+- id: '06373'
+  name: Line 06373
+  corridor: '1'
+  stops:
+  - station: '60000'
+    arrival_time: 0
+    departure_time: 0
+  - station: '04007'
+    arrival_time: 26
+    departure_time: 27
+  - station: '04040'
+    arrival_time: 84
+    departure_time: 85
+  - station: '78400'
+    arrival_time: 128
+    departure_time: 130
+  - station: '04104'
+    arrival_time: 157
+    departure_time: 159
+  - station: '71801'
+    arrival_time: 199
+    departure_time: 199
+- id: '02553'
+  name: Line 02553
+  corridor: '1'
+  stops:
+  - station: '54413'
+    arrival_time: 0
+    departure_time: 0
+  - station: '60000'
+    arrival_time: 164
+    departure_time: 179
+  - station: '71801'
+    arrival_time: 336
+    departure_time: 336
+- id: 03183
+  name: Line 03183
+  corridor: '1'
+  stops:
+  - station: '60000'
+    arrival_time: 0
+    departure_time: 0
+  - station: '04040'
+    arrival_time: 78
+    departure_time: 79
+  - station: '04104'
+    arrival_time: 137
+    departure_time: 139
+  - station: '71801'
+    arrival_time: 177
+    departure_time: 177
+- id: 03191
+  name: Line 03191
+  corridor: '1'
+  stops:
+  - station: '60000'
+    arrival_time: 0
+    departure_time: 0
+  - station: '71801'
+    arrival_time: 157
+    departure_time: 167
+  - station: '79206'
+    arrival_time: 208
+    departure_time: 210
+  - station: '04307'
+    arrival_time: 225
+    departure_time: 225
+- id: 06309
+  name: Line 06309
+  corridor: '1'
+  stops:
+  - station: '60000'
+    arrival_time: 0
+    departure_time: 0
+  - station: '04007'
+    arrival_time: 26
+    departure_time: 27
+  - station: '70600'
+    arrival_time: 62
+    departure_time: 63
+  - station: '04040'
+    arrival_time: 88
+    departure_time: 89
+  - station: '78400'
+    arrival_time: 132
+    departure_time: 134
+  - station: '04104'
+    arrival_time: 161
+    departure_time: 163
+  - station: '71801'
+    arrival_time: 201
+    departure_time: 211
+  - station: '79206'
+    arrival_time: 252
+    departure_time: 253
+  - station: '04307'
+    arrival_time: 268
+    departure_time: 268
+- id: '03201'
+  name: Line 03201
+  corridor: '1'
+  stops:
+  - station: '60000'
+    arrival_time: 0
+    departure_time: 0
+  - station: '71801'
+    arrival_time: 157
+    departure_time: 157
+- id: '03203'
+  name: Line 03203
+  corridor: '1'
+  stops:
+  - station: '60000'
+    arrival_time: 0
+    departure_time: 0
+  - station: '04007'
+    arrival_time: 25
+    departure_time: 26
+  - station: '70600'
+    arrival_time: 65
+    departure_time: 66
+  - station: '04040'
+    arrival_time: 90
+    departure_time: 91
+  - station: '78400'
+    arrival_time: 133
+    departure_time: 135
+  - station: '04104'
+    arrival_time: 160
+    departure_time: 162
+  - station: '71801'
+    arrival_time: 201
+    departure_time: 201
+- id: 02883
+  name: Line 02883
+  corridor: '1'
+  stops:
+  - station: '54413'
+    arrival_time: 0
+    departure_time: 0
+  - station: '50500'
+    arrival_time: 49
+    departure_time: 51
+  - station: '60000'
+    arrival_time: 170
+    departure_time: 192
+  - station: '04040'
+    arrival_time: 271
+    departure_time: 272
+  - station: '71801'
+    arrival_time: 364
+    departure_time: 364
+seat:
+- id: '1'
+  name: Básica
+  hard_type: 1
+  soft_type: 1
+- id: '2'
+  name: Elige
+  hard_type: 2
+  soft_type: 1
+rollingStock:
+  - id: 1
+    name: 'Talgo 350 - A'
+    seats:
+      - hard_type: 1
+        quantity: 50
+      - hard_type: 2
+        quantity: 250
+  - id: 2
+    name: 'Talgo 350 - B'
+    seats:
+      - hard_type: 1
+        quantity: 50
+      - hard_type: 2
+        quantity: 250
+  - id: 3
+    name: 'Talgo 350 - C'
+    seats:
+      - hard_type: 1
+        quantity: 50
+      - hard_type: 2
+        quantity: 250
+  - id: 4
+    name: 'Talgo 200 - A'
+    seats:
+      - hard_type: 2
+        quantity: 200
+  - id: 5
+    name: 'Talgo 200 - B'
+    seats:
+      - hard_type: 2
+        quantity: 200
+trainServiceProvider:
+  - id: 1
+    name: 'Renfe'
+    rolling_stock: [1, 2, 3, 4, 5]
+  - id: 2
+    name: 'Ouigo'
+    rolling_stock: [1, 2, 3, 4, 5]
+service: []
