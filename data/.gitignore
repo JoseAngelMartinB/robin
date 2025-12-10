@@ -4,6 +4,11 @@
 !.gitignore
 
 !calibration_rl
+!calibration_rl/all
+!calibration_rl/all/prices
+!calibration_rl/all/prices/prices_60000_71801_2025-11-01_2025-12-01.csv
+!calibration_rl/all/stopTimes
+!calibration_rl/all/stopTimes/stopTimes_60000_71801_2025-11-01_2025-12-01.csv
 !calibration_rl/iryo
 !calibration_rl/iryo/prices
 !calibration_rl/iryo/prices/prices_60000_71801_2025-11-01_2025-12-01.csv
@@ -16,9 +21,9 @@
 !calibration_rl/ouigo/stopTimes/stopTimes_60000_71801_2025-11-01_2025-12-01.csv
 !calibration_rl/renfe
 !calibration_rl/renfe/prices
-!calibration_rl/renfe/prices/prices_60000_71801_2025-11-01_2025-12-01_cleaned_sorted.csv
+!calibration_rl/renfe/prices/prices_60000_71801_2025-11-01_2025-12-01.csv
 !calibration_rl/renfe/stopTimes
-!calibration_rl/renfe/stopTimes/stopTimes_60000_71801_2025-11-01_2025-12-01_cleaned.csv
+!calibration_rl/renfe/stopTimes/stopTimes_60000_71801_2025-11-01_2025-12-01.csv
 
 !scraping
 !scraping/renfe
