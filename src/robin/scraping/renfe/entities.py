@@ -661,7 +661,7 @@ class RenfeScraper:
             destination (str): Adif station id of the destination station.
             init_date (datetime.date): Initial date to start scraping.
             range_days (int): Number of days to scrape.
-            all_pairs (bool): If True, scrape prices for all origin-destination pairs in the trips dataframe.
+            all_pairs (bool): If True, scrape prices for all pairs between origin and destination stations.
             save_path (str): Path to save the CSV files.
         """
         # Assert that the origin and destination stations are in the list of stations operated by Renfe
@@ -736,6 +736,9 @@ class RenfeScraper:
         if df_trips is not None:
             # Get set of trips from the trips dataframe
             trips = set(df_trips.groupby('service_id')['stop_id'].apply(tuple))
+            origin = self.driver.get_value_from_stations(search_column='RENFE_ID', value=origin_id, objective_column='ADIF_ID')
+            destination = self.driver.get_value_from_stations(search_column='RENFE_ID', value=destination_id, objective_column='ADIF_ID')
+            trips = [trip[trip.index(origin):trip.index(destination)+1] for trip in trips]
 
             # Get the origin-destination pairs from the trips dataframe
             od_pairs = {pair for trip in trips for pair in self._od_pairs_from_trip(trip)}
