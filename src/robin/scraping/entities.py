@@ -261,7 +261,7 @@ class DataLoader:
         )
         trips['rolling_stock'] = trips['service_id'].apply(lambda _: self.rolling_stocks['1'])
         trips['prices'] = trips['service_id'].apply(
-            lambda service_id: self._get_trip_prices(service_id=service_id, line=trips.loc[trips['service_id'] == service_id, 'line'].values[0])
+            lambda service_id: self._get_trip_prices(service_id=service_id, line=trips[trips['service_id'] == service_id]['line'].values[0])
         )
         trips['service'] = trips.apply(
             lambda service: Service(
