@@ -208,7 +208,12 @@ class DataLoader:
         Returns:
             Dict[str, RollingStock]: Dictionary of rolling stocks with their IDs as keys.
         """
-        return {'1': RollingStock('1', 'S-114', self.seat_quantity)}
+        unique_train_types = self.prices['train_type'].unique()
+        rolling_stocks_dict = {}
+        for i, train_type in enumerate(unique_train_types, start=1):
+            rolling_stock_id = str(i)
+            rolling_stocks_dict[rolling_stock_id] = RollingStock(rolling_stock_id, train_type, self.seat_quantity)
+        return rolling_stocks_dict
 
     @cached_property
     def seats(self) -> Dict[str, Seat]:
@@ -232,11 +237,14 @@ class DataLoader:
         Returns:
             Dict[str, TSP]: Dictionary of train service providers with their IDs as keys.
         """
-        unique_tsps = self.prices['tsp'].unique()
+        unique_tsps_train_type = self.prices[['tsp', 'train_type']].drop_duplicates()
+        unique_tsps = unique_tsps_train_type['tsp'].drop_duplicates()
         tsps_dict = {}
         for i, tsp_name in enumerate(unique_tsps, start=1):
             tsp_id = str(i)
-            tsps_dict[tsp_id] = TSP(tsp_id, tsp_name, [rolling_stock for rolling_stock in self.rolling_stocks.values()])
+            train_types = unique_tsps_train_type[unique_tsps_train_type['tsp'] == tsp_name]['train_type'].values
+            rolling_stocks = [rolling_stock for rolling_stock in self.rolling_stocks.values() if rolling_stock.name in train_types]
+            tsps_dict[tsp_id] = TSP(tsp_id, tsp_name, rolling_stocks)
         return tsps_dict
 
     @cached_property
@@ -259,7 +267,9 @@ class DataLoader:
                 f'{datetime.timedelta(minutes=self.time_slot_size).seconds // 60}'
             ]
         )
-        trips['rolling_stock'] = trips['service_id'].apply(lambda _: self.rolling_stocks['1'])
+        trips['rolling_stock'] = trips['train_type'].apply(
+            lambda train_type: next(rolling_stock for rolling_stock in self.rolling_stocks.values() if rolling_stock.name == train_type)
+        )
         trips['prices'] = trips['service_id'].apply(
             lambda service_id: self._get_trip_prices(service_id=service_id, line=trips[trips['service_id'] == service_id]['line'].values[0])
         )
