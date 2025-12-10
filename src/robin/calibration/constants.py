@@ -52,6 +52,22 @@ LOW_RANDINT = {
     '2_potential_demand_kwargs': {
         'low': 1250,
         'high': 1750
+    },
+    '3_potential_demand_kwargs': {
+        'low': 1250,
+        'high': 1750
+    },
+    '4_potential_demand_kwargs': {
+        'low': 1250,
+        'high': 1750
+    },
+    '5_potential_demand_kwargs': {
+        'low': 1250,
+        'high': 1750
+    },
+    '6_potential_demand_kwargs': {
+        'low': 1250,
+        'high': 1750
     }
 }
 """Minimum values for randint distribution parameters."""
@@ -102,6 +118,22 @@ HIGH_RANDINT = {
     '2_potential_demand_kwargs': {
         'low': 1500,
         'high': 3500
+    },
+    '3_potential_demand_kwargs': {
+        'low': 1500,
+        'high': 3500
+    },
+    '4_potential_demand_kwargs': {
+        'low': 1500,
+        'high': 3500
+    },
+    '5_potential_demand_kwargs': {
+        'low': 1500,
+        'high': 3500
+    },
+    '6_potential_demand_kwargs': {
+        'low': 1500,
+        'high': 3500
     }
 }
 """Maximum values for randint distribution parameters."""
@@ -114,3 +146,6 @@ HIGH_TSPS_UTILITY = 30
 
 HIGH_USER_PATTERN_DISTRIBUTION = 1.0
 """Maximum value for user pattern distribution."""
+
+OTHER_MARKET_ID = -1
+"""Identifier for 'other' market."""

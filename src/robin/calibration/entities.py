@@ -11,7 +11,7 @@ from robin.calibration.constants import (
     CHOICES_ARRIVAL_TIME, CHOICES_CONTINUOUS, CHOICES_DISCRETE, CHOICES_POTENCIAL_DEMAND, DEFAULT_KEEP_TOP_K,
     LOW_ARRIVAL_TIME_HOURLY, LOW_NORM, LOW_PENALTY_UTILITY, LOW_POISSON, LOW_RANDINT, LOW_SEATS_UTILITY, LOW_TSPS_UTILITY,
     LOW_USER_PATTERN_DISTRIBUTION, HIGH_ARRIVAL_TIME_HOURLY, HIGH_NORM, HIGH_PENALTY_UTILITY, HIGH_POISSON, HIGH_RANDINT,
-    HIGH_SEATS_UTILITY, HIGH_TSPS_UTILITY, HIGH_USER_PATTERN_DISTRIBUTION
+    HIGH_SEATS_UTILITY, HIGH_TSPS_UTILITY, HIGH_USER_PATTERN_DISTRIBUTION, OTHER_MARKET_ID
 )
 from robin.calibration.exceptions import InvalidPenaltyFunction
 from robin.demand.entities import Market
@@ -72,8 +72,8 @@ class Calibration:
             self.df_target_output = self._get_df_target_output(target_output_path)
         else:
             self.service_to_operator_map = {service.id: service.tsp.id for service in self.supply.services}
-            self.od_to_market_map = self._get_od_to_market_map(path_config_demand)
             self.df_target_output = self._get_df_target_output_aggregated(target_output_path)
+            self.od_to_market_map = self._get_od_to_market_map(path_config_demand)
 
         self.calibration_logs = self._create_directory(calibration_logs)
         self.departure_time_hard_restriction = departure_time_hard_restriction
@@ -132,7 +132,7 @@ class Calibration:
 
     def _get_od_to_market_map(self, path_config_demand: str) -> Dict[Tuple[str, str], int]:
         """
-        Get a mapping from (departure_station, arrival_station) to market id.
+        Get a mapping from (departure_station, arrival_station) to market id taking into account the other market.
 
         Args:
             path_config_demand (str): Path to the demand configuration file.
@@ -143,14 +143,15 @@ class Calibration:
         # NOTE: Demand config file can't be loaded with the Demand module, since parameters may be missing in this file.
         with open(path_config_demand, 'r') as f:
             demand_yaml = f.read()
-
         data = yaml.load(demand_yaml, Loader=yaml.CSafeLoader)
-        od_to_market_map = {}
 
+        od_to_market_map = {}
         for market_data in data['market']:
             market = Market(**market_data)
-            od_to_market_map[(market.departure_station, market.arrival_station)] = market.id
-
+            if market.id in self.df_target_output.index.get_level_values('market'):
+                od_to_market_map[(market.departure_station, market.arrival_station)] = market.id
+            else:
+                od_to_market_map[(market.departure_station, market.arrival_station)] = OTHER_MARKET_ID
         return od_to_market_map
 
     def create_study(
