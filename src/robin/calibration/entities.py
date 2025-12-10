@@ -245,14 +245,15 @@ class Calibration:
             trial (optuna.Trial): Optuna trial object.
             trial_directory (str): Path to the trial directory.
         """
-        df_checkpoint = pd.read_csv(f'{trial_directory}/checkpoint_{trial.number}.csv', low_memory=False)
+        df_checkpoint = pd.read_csv(
+            f'{trial_directory}/checkpoint_{trial.number}.csv', dtype={'departure_station': str, 'arrival_station': str},
+            low_memory=False
+        )
 
         self.df_target_output['tickets_sold_prediction'] = 0
         if not self.aggregated_target:
             # Disaggregated target logic
             df_prediction = df_checkpoint.groupby(by='service').size().to_frame()
-            df_prediction.columns = ['tickets_sold_prediction']
-            self.df_target_output.update(df_prediction)
         else:
             # Aggregated target logic
             df_checkpoint.dropna(subset=['service'], inplace=True)
@@ -263,12 +264,12 @@ class Calibration:
                 df_sim_sold['arrival_station'].astype(str)
             ))
 
-            df_sim_sold['market'] = [self.od_to_market_map.get(t) for t in od_tuples]
+            df_sim_sold['market'] = [self.od_to_market_map.get(od) for od in od_tuples]
             df_sim_sold['tsp'] = df_sim_sold['service'].map(self.service_to_operator_map)
             df_prediction = df_sim_sold.groupby(by=['market', 'tsp']).size().to_frame()
 
-            df_prediction.columns = ['tickets_sold_prediction']
-            self.df_target_output.update(df_prediction)
+        df_prediction.columns = ['tickets_sold_prediction']
+        self.df_target_output.update(df_prediction)
 
     def _save_df_target_output(self, trial: optuna.Trial, trial_directory: str) -> None:
         """

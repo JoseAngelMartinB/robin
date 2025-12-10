@@ -48,6 +48,10 @@ LOW_RANDINT = {
     '1_potential_demand_kwargs': {
         'low': 12500,
         'high': 17500
+    },
+    '2_potential_demand_kwargs': {
+        'low': 1250,
+        'high': 1750
     }
 }
 """Minimum values for randint distribution parameters."""
@@ -94,6 +98,10 @@ HIGH_RANDINT = {
     '1_potential_demand_kwargs': {
         'low': 15000,
         'high': 35000
+    },
+    '2_potential_demand_kwargs': {
+        'low': 1500,
+        'high': 3500
     }
 }
 """Maximum values for randint distribution parameters."""
