@@ -2542,40 +2542,40 @@ rollingStock:
   name: Frecciarossa
   seats:
   - hard_type: 1
-    quantity: 300
+    quantity: 600
   - hard_type: 2
-    quantity: 160
+    quantity: 320
 - id: '2'
   name: Euroduplex
   seats:
   - hard_type: 1
-    quantity: 509
+    quantity: 1018
 - id: '3'
   name: AVE
   seats:
   - hard_type: 1
-    quantity: 264
+    quantity: 528
   - hard_type: 2
-    quantity: 140
+    quantity: 280
 - id: '4'
   name: AVANT
   seats:
   - hard_type: 1
-    quantity: 280
+    quantity: 560
 - id: '5'
   name: ALVIA
   seats:
   - hard_type: 1
-    quantity: 236
+    quantity: 472
   - hard_type: 2
-    quantity: 63
+    quantity: 126
 - id: '6'
   name: AVE INT
   seats:
   - hard_type: 1
-    quantity: 264
+    quantity: 528
   - hard_type: 2
-    quantity: 140
+    quantity: 280
 trainServiceProvider:
 - id: '1'
   name: IRYO

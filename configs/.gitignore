@@ -14,6 +14,13 @@
 !calibration/target_aggregated.csv
 !calibration/target.csv
 
+!calibration_rl
+!calibration_rl/demand_data.yaml
+!calibration_rl/supply_data.yaml
+!calibration_rl/target_aggregated.csv
+!calibration_rl/target_aggregated_one_day.csv
+!calibration_rl/target_aggregated_one_week.csv
+
 !supply_generator
 !supply_generator/config.yaml
 !supply_generator/supply_data.yaml
