@@ -8,12 +8,12 @@ import shutil
 import yaml
 
 from robin.calibration.constants import (
-    CHOICES_CONTINUOUS, CHOICES_DISCRETE, CHOICES_POTENCIAL_DEMAND, DEFAULT_KEEP_TOP_K, LOW_ARRIVAL_TIME, LOW_NORM,
-    LOW_PENALTY_UTILITY, LOW_POISSON, LOW_RANDINT, LOW_SEATS_UTILITY, LOW_TSPS_UTILITY, LOW_USER_PATTERN_DISTRIBUTION,
-    HIGH_ARRIVAL_TIME, HIGH_NORM, HIGH_PENALTY_UTILITY, HIGH_POISSON, HIGH_RANDINT, HIGH_SEATS_UTILITY,
-    HIGH_TSPS_UTILITY, HIGH_USER_PATTERN_DISTRIBUTION
+    CHOICES_ARRIVAL_TIME, CHOICES_CONTINUOUS, CHOICES_DISCRETE, CHOICES_POTENCIAL_DEMAND, DEFAULT_KEEP_TOP_K,
+    LOW_ARRIVAL_TIME, LOW_NORM, LOW_PENALTY_UTILITY, LOW_POISSON, LOW_RANDINT, LOW_SEATS_UTILITY, LOW_TSPS_UTILITY,
+    LOW_USER_PATTERN_DISTRIBUTION, HIGH_ARRIVAL_TIME, HIGH_NORM, HIGH_PENALTY_UTILITY, HIGH_POISSON, HIGH_RANDINT,
+    HIGH_SEATS_UTILITY, HIGH_TSPS_UTILITY, HIGH_USER_PATTERN_DISTRIBUTION
 )
-from robin.calibration.exceptions import InvalidArrivalTimeDistribution, InvalidPenaltyFunction
+from robin.calibration.exceptions import InvalidPenaltyFunction
 from robin.demand.entities import Market
 from robin.kernel.entities import Kernel
 from robin.supply.entities import Supply
@@ -253,7 +253,6 @@ class Calibration:
             df_prediction = df_checkpoint.groupby(by='service').size().to_frame()
             df_prediction.columns = ['tickets_sold_prediction']
             self.df_target_output.update(df_prediction)
-
         else:
             # Aggregated target logic
             df_checkpoint.dropna(subset=['service'], inplace=True)
@@ -368,6 +367,7 @@ class Hyperparameters:
         """
         self.path_config_demand = path_config_demand
         self.demand_yaml = self._get_demand_yaml()
+        self.arrival_time = self._get_arrival_time()
         self.arrival_time_kwargs = self._get_arrival_time_kwargs()
         self.purchase_day, self.purchase_day_kwargs = self._get_purchase_day()
         self.seats_utility = self._get_utility(key='seats')
@@ -391,7 +391,19 @@ class Hyperparameters:
             data = f.read()
         demand_yaml = yaml.load(data, Loader=yaml.CSafeLoader)
         return demand_yaml
+
+    def _get_arrival_time(self) -> Dict[str, str]:
+        """
+        Get arrival time distribution name from the demand configuration file.
         
+        Returns:
+            Dict[str, str]: Arrival time distribution name per user pattern.
+        """
+        arrival_time = {}
+        for user_pattern in self.demand_yaml['userPattern']:
+            arrival_time[user_pattern['name']] = user_pattern['arrival_time']
+        return arrival_time
+
     def _get_arrival_time_kwargs(self) -> Dict[str, Dict[str, Union[float, None]]]:
         """
         Get arrival time hyperparameters from the demand configuration file.
@@ -401,9 +413,7 @@ class Hyperparameters:
         """
         arrival_time_kwargs = {}
         for user_pattern in self.demand_yaml['userPattern']:
-            if user_pattern['arrival_time'] != 'hourly':
-                raise InvalidArrivalTimeDistribution(distribution_name=user_pattern['arrival_time'])
-            arrival_time_kwargs[user_pattern['name']] = user_pattern['arrival_time_kwargs']
+            arrival_time_kwargs[user_pattern['name']] = user_pattern['arrival_time_kwargs'] or {}
         return arrival_time_kwargs
     
     def _get_purchase_day(self) -> Tuple[Dict[str, str], Dict[str, Dict[str, Union[float, None]]]]:
@@ -611,6 +621,21 @@ class Hyperparameters:
         elif distribution_name == 'randint':
             self._suggest_randint_kwargs(*args) 
  
+    def suggest_arrival_time(self, trial: optuna.Trial) -> None:
+        """
+        Suggest arrival time hyperparameters.
+        
+        Args:
+            trial (optuna.Trial): Optuna trial object.
+        """
+        for user_pattern, arrival_time in self.arrival_time.items():
+            # Suggestions are only made for None values
+            if arrival_time is None:
+                self.arrival_time[user_pattern] = trial.suggest_categorical(
+                    name=f'{user_pattern}_arrival_time',
+                    choices=CHOICES_ARRIVAL_TIME
+                )
+
     def suggest_arrival_time_kwargs(self, trial: optuna.Trial) -> None:
         """
         Suggest arrival time hyperparameters.
@@ -621,23 +646,34 @@ class Hyperparameters:
             trial (optuna.Trial): Optuna trial object.
         """
         for user_pattern, arrival_time_kwargs in self.arrival_time_kwargs.items():
-            for hour, value in arrival_time_kwargs.items():
-                # Suggestions are only made for None values
-                if value is None:
-                    arrival_time_kwargs[hour] = trial.suggest_float(
-                        name=f'{user_pattern}_arrival_time_{hour}',
-                        low=LOW_ARRIVAL_TIME,
-                        high=HIGH_ARRIVAL_TIME
-                    )
-            # Normalize arrival time hyperparameters to sum to 1
-            total_arrival_time = sum(arrival_time_kwargs.values())
-            for hour in range(len(arrival_time_kwargs)):
-                hour = str(hour)
-                arrival_time_kwargs[hour] /= total_arrival_time
-                trial.set_user_attr(
-                    key=f'{user_pattern}_arrival_time_{hour}',
-                    value=arrival_time_kwargs[hour]
+            if self.arrival_time[user_pattern] != 'hourly':
+                self._suggest_distribution(
+                    trial=trial,
+                    distribution_name=self.arrival_time[user_pattern],
+                    pattern=user_pattern,
+                    hyperparameter_name='arrival_time_kwargs',
+                    distribution_kwargs=arrival_time_kwargs
                 )
+            else:
+                if not arrival_time_kwargs:
+                    arrival_time_kwargs.update({str(hour): None for hour in range(24)})
+                for hour, value in arrival_time_kwargs.items():
+                    # Suggestions are only made for None values
+                    if value is None:
+                        arrival_time_kwargs[hour] = trial.suggest_float(
+                            name=f'{user_pattern}_arrival_time_{hour}',
+                            low=LOW_ARRIVAL_TIME,
+                            high=HIGH_ARRIVAL_TIME
+                        )
+                # Normalize arrival time hyperparameters to sum to 1
+                total_arrival_time = sum(arrival_time_kwargs.values())
+                for hour in range(len(arrival_time_kwargs)):
+                    hour = str(hour)
+                    arrival_time_kwargs[hour] /= total_arrival_time
+                    trial.set_user_attr(
+                        key=f'{user_pattern}_arrival_time_{hour}',
+                        value=arrival_time_kwargs[hour]
+                    )
     
     def suggest_purchase_day(self, trial: optuna.Trial) -> None:
         """
@@ -859,6 +895,7 @@ class Hyperparameters:
         Args:
             trial (optuna.Trial): Optuna trial object.
         """
+        self.suggest_arrival_time(trial)
         self.suggest_arrival_time_kwargs(trial)
         self.suggest_purchase_day(trial)
         self.suggest_purchase_day_kwargs(trial)
@@ -898,6 +935,7 @@ class Hyperparameters:
         Update the user patterns with the suggested hyperparameters.
         """
         for user_pattern in self.demand_yaml['userPattern']:
+            user_pattern['arrival_time'] = self.arrival_time[user_pattern['name']]
             user_pattern['arrival_time_kwargs'] = self.arrival_time_kwargs[user_pattern['name']]
             user_pattern['purchase_day'] = self.purchase_day[user_pattern['name']]
             user_pattern['purchase_day_kwargs'] = self.purchase_day_kwargs[user_pattern['name']]

@@ -3,6 +3,9 @@
 CHOICES_CONTINUOUS = ['norm']
 """List of continuous distributions available for the calibration process."""
 
+CHOICES_ARRIVAL_TIME = CHOICES_CONTINUOUS + ['hourly']
+"""List of distributions available for modeling arrival time."""
+
 CHOICES_DISCRETE = ['randint', 'poisson']
 """List of discrete distributions available for the calibration process."""
 
@@ -16,6 +19,10 @@ LOW_ARRIVAL_TIME = 0.0
 """Minimum value for arrival time parameters."""
 
 LOW_NORM = {
+    'arrival_time_kwargs': {
+        'loc': 0.0,
+        'scale': 0.0
+    },
     'error_kwargs': {
         'loc': 0.0,
         'scale': 0.0
@@ -38,9 +45,9 @@ LOW_RANDINT = {
         'low': 0,
         'high': 1
     },
-    '3_potential_demand_kwargs': {
+    '1_potential_demand_kwargs': {
         'low': 0,
-        'high': 5000
+        'high': 25000
     }
 }
 """Minimum values for randint distribution parameters."""
@@ -58,6 +65,10 @@ HIGH_ARRIVAL_TIME = 1.0
 """Maximum value for arrival time parameters."""
 
 HIGH_NORM = {
+    'arrival_time_kwargs': {
+        'loc': 24.0,
+        'scale': 12.0
+    },
     'error_kwargs': {
         'loc': 3.0,
         'scale': 2.0
@@ -80,9 +91,9 @@ HIGH_RANDINT = {
         'low': 0,
         'high': 7
     },
-    '3_potential_demand_kwargs': {
-        'low': 5000,
-        'high': 10000
+    '1_potential_demand_kwargs': {
+        'low': 25000,
+        'high': 50000
     }
 }
 """Maximum values for randint distribution parameters."""
