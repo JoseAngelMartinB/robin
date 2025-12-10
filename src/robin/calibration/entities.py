@@ -9,8 +9,8 @@ import yaml
 
 from robin.calibration.constants import (
     CHOICES_ARRIVAL_TIME, CHOICES_CONTINUOUS, CHOICES_DISCRETE, CHOICES_POTENCIAL_DEMAND, DEFAULT_KEEP_TOP_K,
-    LOW_ARRIVAL_TIME, LOW_NORM, LOW_PENALTY_UTILITY, LOW_POISSON, LOW_RANDINT, LOW_SEATS_UTILITY, LOW_TSPS_UTILITY,
-    LOW_USER_PATTERN_DISTRIBUTION, HIGH_ARRIVAL_TIME, HIGH_NORM, HIGH_PENALTY_UTILITY, HIGH_POISSON, HIGH_RANDINT,
+    LOW_ARRIVAL_TIME_HOURLY, LOW_NORM, LOW_PENALTY_UTILITY, LOW_POISSON, LOW_RANDINT, LOW_SEATS_UTILITY, LOW_TSPS_UTILITY,
+    LOW_USER_PATTERN_DISTRIBUTION, HIGH_ARRIVAL_TIME_HOURLY, HIGH_NORM, HIGH_PENALTY_UTILITY, HIGH_POISSON, HIGH_RANDINT,
     HIGH_SEATS_UTILITY, HIGH_TSPS_UTILITY, HIGH_USER_PATTERN_DISTRIBUTION
 )
 from robin.calibration.exceptions import InvalidPenaltyFunction
@@ -662,8 +662,8 @@ class Hyperparameters:
                     if value is None:
                         arrival_time_kwargs[hour] = trial.suggest_float(
                             name=f'{user_pattern}_arrival_time_{hour}',
-                            low=LOW_ARRIVAL_TIME,
-                            high=HIGH_ARRIVAL_TIME
+                            low=LOW_ARRIVAL_TIME_HOURLY,
+                            high=HIGH_ARRIVAL_TIME_HOURLY
                         )
                 # Normalize arrival time hyperparameters to sum to 1
                 total_arrival_time = sum(arrival_time_kwargs.values())

@@ -15,12 +15,12 @@ CHOICES_POTENCIAL_DEMAND = ['randint']
 DEFAULT_KEEP_TOP_K = 3
 """Default number of best trials per execution to keep during calibration."""
 
-LOW_ARRIVAL_TIME = 0.0
-"""Minimum value for arrival time parameters."""
+LOW_ARRIVAL_TIME_HOURLY = 0.0
+"""Minimum value for hourly arrival time parameters."""
 
 LOW_NORM = {
     'arrival_time_kwargs': {
-        'loc': 0.0,
+        'loc': 6.0,
         'scale': 0.0
     },
     'error_kwargs': {
@@ -46,8 +46,8 @@ LOW_RANDINT = {
         'high': 1
     },
     '1_potential_demand_kwargs': {
-        'low': 0,
-        'high': 25000
+        'low': 12500,
+        'high': 17500
     }
 }
 """Minimum values for randint distribution parameters."""
@@ -61,8 +61,8 @@ LOW_TSPS_UTILITY = 0
 LOW_USER_PATTERN_DISTRIBUTION = 0.0
 """Minimum value for user pattern distribution."""
 
-HIGH_ARRIVAL_TIME = 1.0
-"""Maximum value for arrival time parameters."""
+HIGH_ARRIVAL_TIME_HOURLY = 1.0
+"""Maximum value for hourly arrival time parameters."""
 
 HIGH_NORM = {
     'arrival_time_kwargs': {
@@ -76,7 +76,7 @@ HIGH_NORM = {
 }
 """Maximum values for normal distribution parameters."""
 
-HIGH_PENALTY_UTILITY = 1.0
+HIGH_PENALTY_UTILITY = 10.0
 """Maximum value for utility penalty function parameters."""
 
 HIGH_POISSON = {
@@ -92,8 +92,8 @@ HIGH_RANDINT = {
         'high': 7
     },
     '1_potential_demand_kwargs': {
-        'low': 25000,
-        'high': 50000
+        'low': 15000,
+        'high': 35000
     }
 }
 """Maximum values for randint distribution parameters."""
@@ -101,7 +101,7 @@ HIGH_RANDINT = {
 HIGH_SEATS_UTILITY = 40
 """Maximum value for seats utility in the preference model."""
 
-HIGH_TSPS_UTILITY = 10
+HIGH_TSPS_UTILITY = 30
 """Maximum value for train service providers (TSPs) utility."""
 
 HIGH_USER_PATTERN_DISTRIBUTION = 1.0
