@@ -30,5 +30,13 @@
 !scraping/renfe/supply_60000_71801_2025-06-01_2025-06-02.yaml
 !scraping/renfe/prices
 !scraping/renfe/prices/prices_60000_71801_2025-06-01_2025-06-02.csv
+!scraping/renfe/prices/prices_60000_71801_2026-02-01_2026-03-01.csv
 !scraping/renfe/stopTimes
 !scraping/renfe/stopTimes/stopTimes_60000_71801_2025-06-01_2025-06-02.csv
+!scraping/renfe/stopTimes/stopTimes_60000_71801_2026-02-01_2026-03-01.csv
+!scraping/iryo
+!scraping/iryo/prices
+!scraping/iryo/prices/prices_60000_71801_2026-02-01_2026-03-01.csv
+!scraping/ouigo
+!scraping/ouigo/prices
+!scraping/ouigo/prices/prices_60000_71801_2026-02-01_2026-03-01.csv
