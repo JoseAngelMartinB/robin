@@ -19,7 +19,7 @@ from robin.kernel.entities import Kernel
 from robin.supply.entities import Supply
 
 from pathlib import Path
-from sklearn.metrics import mean_squared_error, root_mean_squared_error
+from sklearn.metrics import root_mean_squared_log_error
 from typing import Any, Dict, List, Mapping, Tuple, Union
 
 
@@ -291,13 +291,13 @@ class Calibration:
             trial_directory (str): Path to the trial directory.
         
         Returns:
-            float: Mean squared error between the target tickets sold and the predicted tickets sold.
+            float: Mean squared log error between the target tickets sold and the predicted tickets sold.
         """
         self._update_df_target_output(trial, trial_directory)
         self._save_df_target_output(trial, trial_directory)
         actual = self.df_target_output['tickets_sold_target'].values
         prediction = self.df_target_output['tickets_sold_prediction'].values
-        error = root_mean_squared_error(actual, prediction)
+        error = root_mean_squared_log_error(actual, prediction)
         return error
 
     def _replace_highest_error(self, trial: optuna.Trial, trial_directory: str, error: float) -> None:
