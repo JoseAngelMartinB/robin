@@ -20,7 +20,7 @@ LOW_ARRIVAL_TIME_HOURLY = 0.0
 
 LOW_NORM = {
     'arrival_time_kwargs': {
-        'loc': 6.0,
+        'loc': 7.0,
         'scale': 0.0
     },
     'error_kwargs': {
@@ -86,7 +86,7 @@ HIGH_ARRIVAL_TIME_HOURLY = 1.0
 
 HIGH_NORM = {
     'arrival_time_kwargs': {
-        'loc': 24.0,
+        'loc': 22.0,
         'scale': 12.0
     },
     'error_kwargs': {
@@ -138,10 +138,10 @@ HIGH_RANDINT = {
 }
 """Maximum values for randint distribution parameters."""
 
-HIGH_SEATS_UTILITY = 40
+HIGH_SEATS_UTILITY = 50
 """Maximum value for seats utility in the preference model."""
 
-HIGH_TSPS_UTILITY = 30
+HIGH_TSPS_UTILITY = 50
 """Maximum value for train service providers (TSPs) utility."""
 
 HIGH_USER_PATTERN_DISTRIBUTION = 1.0
