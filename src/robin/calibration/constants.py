@@ -46,29 +46,65 @@ LOW_RANDINT = {
         'high': 1
     },
     '1_potential_demand_kwargs': {
+        'low': 100,
+        'high': 300
+    },
+    '2_potential_demand_kwargs': {
+        'low': 2000,
+        'high': 2500
+    },
+    '3_potential_demand_kwargs': {
+        'low': 100,
+        'high': 300
+    },
+    '4_potential_demand_kwargs': {
+        'low': 100,
+        'high': 300
+    },
+    '5_potential_demand_kwargs': {
         'low': 12500,
         'high': 17500
     },
-    '2_potential_demand_kwargs': {
-        'low': 1250,
-        'high': 1750
-    },
-    '3_potential_demand_kwargs': {
-        'low': 1250,
-        'high': 1750
-    },
-    '4_potential_demand_kwargs': {
-        'low': 1250,
-        'high': 1750
-    },
-    '5_potential_demand_kwargs': {
-        'low': 1250,
-        'high': 1750
-    },
     '6_potential_demand_kwargs': {
-        'low': 1250,
-        'high': 1750
-    }
+        'low': 100,
+        'high': 300
+    },
+    '7_potential_demand_kwargs': {
+        'low': 100,
+        'high': 300
+    },
+    '8_potential_demand_kwargs': {
+        'low': 100,
+        'high': 300
+    },
+    '9_potential_demand_kwargs': {
+        'low': 100,
+        'high': 300
+    },
+    '10_potential_demand_kwargs': {
+        'low': 100,
+        'high': 300
+    },
+    '11_potential_demand_kwargs': {
+        'low': 100,
+        'high': 300
+    },
+    '12_potential_demand_kwargs': {
+        'low': 100,
+        'high': 300
+    },
+    '13_potential_demand_kwargs': {
+        'low': 100,
+        'high': 300
+    },
+    '14_potential_demand_kwargs': {
+        'low': 100,
+        'high': 300
+    },
+    '15_potential_demand_kwargs': {
+        'low': 100,
+        'high': 300
+    },
 }
 """Minimum values for randint distribution parameters."""
 
@@ -112,29 +148,65 @@ HIGH_RANDINT = {
         'high': 7
     },
     '1_potential_demand_kwargs': {
-        'low': 15000,
-        'high': 35000
+        'low': 250,
+        'high': 3000
     },
     '2_potential_demand_kwargs': {
-        'low': 1500,
+        'low': 2250,
         'high': 3500
     },
     '3_potential_demand_kwargs': {
-        'low': 1500,
-        'high': 3500
+        'low': 250,
+        'high': 3000
     },
     '4_potential_demand_kwargs': {
-        'low': 1500,
-        'high': 3500
+        'low': 250,
+        'high': 3000
     },
     '5_potential_demand_kwargs': {
-        'low': 1500,
-        'high': 3500
+        'low': 15000,
+        'high': 35000
     },
     '6_potential_demand_kwargs': {
-        'low': 1500,
-        'high': 3500
-    }
+        'low': 250,
+        'high': 3000
+    },
+    '7_potential_demand_kwargs': {
+        'low': 250,
+        'high': 3000
+    },
+    '8_potential_demand_kwargs': {
+        'low': 250,
+        'high': 3000
+    },
+    '9_potential_demand_kwargs': {
+        'low': 250,
+        'high': 3000
+    },
+    '10_potential_demand_kwargs': {
+        'low': 250,
+        'high': 3000
+    },
+    '11_potential_demand_kwargs': {
+        'low': 250,
+        'high': 3000
+    },
+    '12_potential_demand_kwargs': {
+        'low': 250,
+        'high': 3000
+    },
+    '13_potential_demand_kwargs': {
+        'low': 250,
+        'high': 3000
+    },
+    '14_potential_demand_kwargs': {
+        'low': 250,
+        'high': 3000
+    },
+    '15_potential_demand_kwargs': {
+        'low': 250,
+        'high': 3000
+    },
 }
 """Maximum values for randint distribution parameters."""
 
