@@ -299,6 +299,8 @@ class Calibration:
         actual = self.df_target_output['tickets_sold_target'].values
         prediction = self.df_target_output['tickets_sold_prediction'].values
         error = root_mean_squared_log_error(actual, prediction)
+        wmape = sum(abs(prediction - actual)) / sum(actual)
+        trial.set_user_attr('wmape', wmape)
         return error
 
     def _replace_highest_error(self, trial: optuna.Trial, trial_directory: str, error: float) -> None:
