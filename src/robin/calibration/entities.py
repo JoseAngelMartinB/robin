@@ -186,6 +186,7 @@ class Calibration:
             func=lambda trial: self.optimize(trial, seed),
             n_trials=n_trials,
             timeout=timeout,
+            gc_after_trial=True,
             show_progress_bar=show_progress_bar
         )
 
