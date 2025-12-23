@@ -12,7 +12,6 @@ from robin.scraping.constants import (
 from robin.supply.entities import Station, TimeSlot, Corridor, Line, Seat, RollingStock, TSP, Service, Supply
 from robin.supply.utils import get_time
 
-from copy import deepcopy
 from functools import cached_property
 from typing import Dict, List, Mapping, Tuple
 
@@ -255,7 +254,7 @@ class DataLoader:
         Returns:
             List[Service]: List of services.
         """
-        trips = deepcopy(self.prices)
+        trips = pd.DataFrame(self.prices[['service_id', 'tsp', 'train_type']].drop_duplicates().reset_index(drop=True))
         trips['date'] = trips['service_id'].apply(lambda service_id: datetime.datetime.strptime(service_id.split('_')[1], '%d-%m-%Y-%H.%M').date())
         trips['line'] = trips['service_id'].apply(lambda service_id: self.lines[service_id.split('_')[0]])
         trips['train_service_provider'] = trips['tsp'].apply(
