@@ -32,11 +32,11 @@ There are no known issues at this moment.
 
 
 ## Support
-If you have any kind of problem with the program, please feel free to contact José Ángel Martin at JoseAngel.Martin@uclm.es and Ricardo García at Ricardo.Garcia@uclm.es
+If you encounter any problems with the program, please feel free to contact the main maintainers of the package: José Ángel Martín (JoseAngel.Martin@uclm.es), Enrique Villarrubia (Enrique.Villarrubia@uclm.es), and David Muñoz (David.Munoz@uclm.es).
 
 
 ## Authors
-This project is developed by the [MAT](https://blog.uclm.es/grupomat/) and [ORETO](https://www.uclm.es/Home/Misiones/Investigacion/OfertaCientificoTecnica/GruposInvestigacion/DetalleGrupo?idgrupo=75) research groups of the [Escuela Superior de Informática](https://esi.uclm.es) of the [University of Castilla-La Mancha (UCLM)](https://www.uclm.es).
+This project is jointly developed by the [MAT](https://blog.uclm.es/grupomat/) and [ORETO](https://www.uclm.es/Home/Misiones/Investigacion/OfertaCientificoTecnica/GruposInvestigacion/DetalleGrupo?idgrupo=75) research groups of the [Escuela Superior de Informática](https://esi.uclm.es) of the [University of Castilla-La Mancha (UCLM)](https://www.uclm.es).
 
 
 
